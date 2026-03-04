@@ -122,6 +122,22 @@ Payment proof images go to bucket `payment-proofs` at path: `{property_id}/{tena
 | `mark-overdue` | Daily midnight | Mark pending payments past due_day as overdue |
 | `send-reminders` | Daily 9 AM | Remind tenants 3 days before/on/3 days after due_day |
 
+## Git Workflow
+
+After every meaningful unit of work, commit and push to GitHub immediately. Never leave work uncommitted.
+
+```bash
+git add <specific-files>
+git commit -m "type: short summary
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+git push
+```
+
+Commit types: `feat`, `fix`, `refactor`, `chore`, `style`, `docs`. One logical change per commit — do not batch unrelated changes. Never force-push `main`.
+
+**When to commit:** after adding a screen or component, after wiring up a Supabase query, after writing a migration, after implementing an Edge Function, after any bug fix or refactor, before and after large structural changes.
+
 ## Implementation Phases
 
 The PRD defines 4 phases: A (Core + Auth + CRUD), B (Payments + Invites), C (AI Bot + PDFs + Notifications), D (Testing + Launch). Start from Phase A when building from scratch.
