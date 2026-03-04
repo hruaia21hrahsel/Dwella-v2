@@ -38,3 +38,15 @@ Thumbs.db
 # Misc
 *.log
 .cache/
+
+# Expo
+.expo/
+expo-env.d.ts
+
+# iOS/Android (Expo managed — generated)
+ios/
+android/
+
+# Supabase local
+supabase/.branches
+supabase/.temp
