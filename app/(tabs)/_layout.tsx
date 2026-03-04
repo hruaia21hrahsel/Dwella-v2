@@ -1,8 +1,13 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
+import { useAuthStore } from '@/lib/store';
+import { useNotifications } from '@/hooks/useNotifications';
 
-export default function TabsLayout() {
+function TabsLayout() {
+  const { user } = useAuthStore();
+  const { unreadCount } = useNotifications(user?.id);
+
   return (
     <Tabs
       screenOptions={{
@@ -40,7 +45,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="bot/index"
         options={{
-          title: 'Bot',
+          title: 'Assistant',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="robot" size={size} color={color} />
           ),
@@ -53,8 +59,11 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />
     </Tabs>
   );
 }
+
+export default TabsLayout;

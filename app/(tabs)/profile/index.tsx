@@ -1,16 +1,22 @@
-import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, Avatar, Divider } from 'react-native-paper';
+import { useState, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, Alert, Share } from 'react-native';
+import { Text, TextInput, Button, Avatar, Divider, Chip } from 'react-native-paper';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
+import { useNotifications } from '@/hooks/useNotifications';
+import { formatDate } from '@/lib/utils';
 
 export default function ProfileScreen() {
   const { user, setUser } = useAuthStore();
+  const { notifications, unreadCount, markAllRead, markRead } = useNotifications(user?.id);
   const [fullName, setFullName] = useState(user?.full_name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [linkingTelegram, setLinkingTelegram] = useState(false);
+  const [unlinkingTelegram, setUnlinkingTelegram] = useState(false);
 
   async function handleSave() {
     if (!user) return;
@@ -39,9 +45,62 @@ export default function ProfileScreen() {
     setLoggingOut(false);
   }
 
+  const handleLinkTelegram = useCallback(async () => {
+    if (!user) return;
+    setLinkingTelegram(true);
+    try {
+      const token = await generateTelegramLinkToken(user.id);
+      // Refresh user to persist the token state locally
+      const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+      if (data) setUser(data);
+
+      const botUsername = 'DwellaBot'; // Update this with your actual bot username
+      const deepLink = `https://t.me/${botUsername}?start=${token}`;
+
+      await Share.share({
+        message: `Open this link to link your Telegram with Dwella:\n${deepLink}`,
+        url: deepLink,
+        title: 'Link Telegram to Dwella',
+      });
+    } catch (err) {
+      Alert.alert('Error', String(err));
+    } finally {
+      setLinkingTelegram(false);
+    }
+  }, [user, setUser]);
+
+  const handleUnlinkTelegram = useCallback(() => {
+    Alert.alert(
+      'Unlink Telegram',
+      'Disconnect your Telegram account from Dwella?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unlink',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user) return;
+            setUnlinkingTelegram(true);
+            try {
+              await unlinkTelegram(user.id);
+              const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+              if (data) setUser(data);
+            } catch (err) {
+              Alert.alert('Error', String(err));
+            } finally {
+              setUnlinkingTelegram(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [user, setUser]);
+
   const initials = user?.full_name
     ? user.full_name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? '?';
+
+  const telegramLinked = !!user?.telegram_chat_id;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -91,6 +150,92 @@ export default function ProfileScreen() {
       >
         Save Changes
       </Button>
+
+      <Divider style={styles.divider} />
+
+      {/* Telegram */}
+      <Text variant="titleSmall" style={styles.sectionTitle}>Telegram Bot</Text>
+
+      <View style={styles.telegramCard}>
+        <View style={styles.telegramRow}>
+          <Text variant="bodyMedium" style={styles.telegramLabel}>Status</Text>
+          <Chip
+            compact
+            style={telegramLinked ? styles.chipLinked : styles.chipUnlinked}
+            textStyle={{ color: telegramLinked ? Colors.statusConfirmed : Colors.textSecondary, fontSize: 12 }}
+          >
+            {telegramLinked ? 'Linked' : 'Not linked'}
+          </Chip>
+        </View>
+        <Text variant="bodySmall" style={styles.telegramHint}>
+          {telegramLinked
+            ? 'You can chat with Dwella Assistant directly on Telegram.'
+            : 'Link your Telegram to chat with Dwella Assistant and receive rent reminders on Telegram.'}
+        </Text>
+      </View>
+
+      {telegramLinked ? (
+        <Button
+          mode="outlined"
+          icon="link-off"
+          onPress={handleUnlinkTelegram}
+          loading={unlinkingTelegram}
+          disabled={unlinkingTelegram}
+          textColor={Colors.error}
+          style={[styles.telegramBtn, { borderColor: Colors.error }]}
+        >
+          Unlink Telegram
+        </Button>
+      ) : (
+        <Button
+          mode="contained-tonal"
+          icon="send"
+          onPress={handleLinkTelegram}
+          loading={linkingTelegram}
+          disabled={linkingTelegram}
+          style={styles.telegramBtn}
+        >
+          Link Telegram
+        </Button>
+      )}
+
+      <Divider style={styles.divider} />
+
+      {/* Notifications */}
+      <View style={styles.notifHeader}>
+        <Text variant="titleSmall" style={styles.sectionTitle}>Notifications</Text>
+        {unreadCount > 0 && (
+          <Button compact mode="text" onPress={markAllRead} textColor={Colors.primary}>
+            Mark all read
+          </Button>
+        )}
+      </View>
+
+      {notifications.length === 0 ? (
+        <Text variant="bodySmall" style={styles.emptyNotif}>No notifications yet.</Text>
+      ) : (
+        <View style={styles.notifList}>
+          {notifications.slice(0, 10).map((n) => (
+            <View
+              key={n.id}
+              style={[styles.notifRow, !n.is_read && styles.notifUnread]}
+            >
+              <View style={styles.notifContent}>
+                <Text variant="bodyMedium" style={[styles.notifTitle, !n.is_read && styles.notifTitleUnread]}>
+                  {n.title}
+                </Text>
+                <Text variant="bodySmall" style={styles.notifBody}>{n.body}</Text>
+                <Text variant="bodySmall" style={styles.notifTime}>{formatDate(n.created_at)}</Text>
+              </View>
+              {!n.is_read && (
+                <Button compact mode="text" onPress={() => markRead(n.id)} textColor={Colors.textSecondary}>
+                  ✓
+                </Button>
+              )}
+            </View>
+          ))}
+        </View>
+      )}
 
       <Divider style={styles.divider} />
 
@@ -151,4 +296,51 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
     marginTop: 8,
   },
+  telegramCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 14,
+    gap: 8,
+  },
+  telegramRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  telegramLabel: { color: Colors.textPrimary },
+  telegramHint: { color: Colors.textSecondary },
+  chipLinked: { backgroundColor: Colors.statusConfirmed + '22' },
+  chipUnlinked: { backgroundColor: Colors.border },
+  telegramBtn: { marginTop: 4 },
+  notifHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  emptyNotif: { color: Colors.textSecondary },
+  notifList: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  notifRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  notifUnread: {
+    backgroundColor: Colors.primary + '08',
+  },
+  notifContent: { flex: 1 },
+  notifTitle: { color: Colors.textPrimary },
+  notifTitleUnread: { fontWeight: '600' },
+  notifBody: { color: Colors.textSecondary, marginTop: 2 },
+  notifTime: { color: Colors.textDisabled, marginTop: 4, fontSize: 11 },
 });

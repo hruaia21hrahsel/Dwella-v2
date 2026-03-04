@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Share, Alert } from 'react-native';
-import { Text, Chip, Button, IconButton, Divider, ActivityIndicator } from 'react-native-paper';
+import { Text, Chip, Button, IconButton, Divider, ActivityIndicator, Menu } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { Tenant } from '@/lib/types';
+import { Tenant, Property, Payment } from '@/lib/types';
 import { Colors } from '@/constants/colors';
 import { formatCurrency, formatDate, getOrdinal } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
@@ -12,7 +12,7 @@ import { PaymentLedger } from '@/components/PaymentLedger';
 import { useAuthStore } from '@/lib/store';
 import { usePayments } from '@/hooks/usePayments';
 import { useProperties } from '@/hooks/useProperties';
-import { Payment } from '@/lib/types';
+import { sharePaymentReceipt, shareAnnualSummary } from '@/lib/pdf';
 
 export default function TenantDetailScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId: string }>();
@@ -26,12 +26,53 @@ export default function TenantDetailScreen() {
   const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
 
   const { payments, isLoading: paymentsLoading, refresh: refreshPayments } = usePayments(tenant);
+  const [property, setProperty] = useState<Property | null>(null);
+  const [pdfMenuVisible, setPdfMenuVisible] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
 
   useEffect(() => {
     fetchTenant();
+    fetchProperty();
   }, [tenantId]);
+
+  async function fetchProperty() {
+    if (!propertyId) return;
+    const { data } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .single<Property>();
+    setProperty(data);
+  }
+
+  async function handleExportReceipt(payment: Payment) {
+    if (!tenant || !property) return;
+    setExportingPdf(true);
+    try {
+      await sharePaymentReceipt(payment, tenant, property, user?.full_name ?? 'Landlord');
+    } catch (err) {
+      Alert.alert('Export Failed', String(err));
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
+  async function handleExportAnnual() {
+    if (!tenant || !property || payments.length === 0) return;
+    setExportingPdf(true);
+    setPdfMenuVisible(false);
+    const year = new Date().getFullYear();
+    const yearPayments = payments.filter((p) => p.year === year);
+    try {
+      await shareAnnualSummary(yearPayments, tenant, property, year);
+    } catch (err) {
+      Alert.alert('Export Failed', String(err));
+    } finally {
+      setExportingPdf(false);
+    }
+  }
 
   async function fetchTenant() {
     setLoading(true);
@@ -115,9 +156,28 @@ export default function TenantDetailScreen() {
           headerShown: true,
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.textPrimary,
-          headerRight: isOwner
-            ? () => (
-                <View style={styles.headerActions}>
+          headerRight: () => (
+            <View style={styles.headerActions}>
+              <Menu
+                visible={pdfMenuVisible}
+                onDismiss={() => setPdfMenuVisible(false)}
+                anchor={
+                  <IconButton
+                    icon="file-pdf-box"
+                    size={22}
+                    onPress={() => setPdfMenuVisible(true)}
+                    disabled={exportingPdf}
+                  />
+                }
+              >
+                <Menu.Item
+                  leadingIcon="calendar-month"
+                  onPress={handleExportAnnual}
+                  title={`Annual Summary ${new Date().getFullYear()}`}
+                />
+              </Menu>
+              {isOwner && (
+                <>
                   <IconButton
                     icon="pencil"
                     size={22}
@@ -129,9 +189,10 @@ export default function TenantDetailScreen() {
                     iconColor={Colors.error}
                     onPress={() => setArchiveDialogVisible(true)}
                   />
-                </View>
-              )
-            : undefined,
+                </>
+              )}
+            </View>
+          ),
         }}
       />
 
@@ -199,6 +260,7 @@ export default function TenantDetailScreen() {
           onPressRow={handleViewPayment}
           onMarkPaid={handleMarkPaid}
           onConfirm={handleConfirmPayment}
+          onExportReceipt={handleExportReceipt}
         />
       </ScrollView>
 
