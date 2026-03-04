@@ -2,8 +2,7 @@
 -- Dwella v2 — Initial Schema
 -- ============================================================
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- UUID generation is built-in via gen_random_uuid() in Postgres 13+
 
 -- ============================================================
 -- USERS
@@ -22,7 +21,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- PROPERTIES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.properties (
-  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   name         TEXT NOT NULL,
   address      TEXT NOT NULL,
@@ -39,7 +38,7 @@ CREATE TABLE IF NOT EXISTS public.properties (
 -- TENANTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.tenants (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id       UUID NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
   user_id           UUID REFERENCES public.users(id) ON DELETE SET NULL,
   flat_no           TEXT NOT NULL,
@@ -49,7 +48,7 @@ CREATE TABLE IF NOT EXISTS public.tenants (
   due_day           INTEGER NOT NULL DEFAULT 1 CHECK (due_day BETWEEN 1 AND 28),
   lease_start       DATE NOT NULL,
   lease_end         DATE,
-  invite_token      UUID NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
+  invite_token      UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE,
   invite_status     TEXT NOT NULL DEFAULT 'pending' CHECK (invite_status IN ('pending', 'accepted', 'expired')),
   is_archived       BOOLEAN NOT NULL DEFAULT FALSE,
   archived_at       TIMESTAMPTZ,
@@ -61,7 +60,7 @@ CREATE TABLE IF NOT EXISTS public.tenants (
 -- PAYMENTS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.payments (
-  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id       UUID NOT NULL REFERENCES public.tenants(id) ON DELETE RESTRICT,
   property_id     UUID NOT NULL REFERENCES public.properties(id) ON DELETE RESTRICT,
   amount_due      NUMERIC(12,2) NOT NULL,
@@ -84,7 +83,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
 -- NOTIFICATIONS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.notifications (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   tenant_id   UUID REFERENCES public.tenants(id) ON DELETE SET NULL,
   payment_id  UUID REFERENCES public.payments(id) ON DELETE SET NULL,
@@ -99,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 -- BOT CONVERSATIONS
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.bot_conversations (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   role        TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
   content     TEXT NOT NULL,
