@@ -8,14 +8,26 @@ import { Colors } from '@/constants/colors';
 import { formatCurrency, formatDate, getOrdinal } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { PaymentLedger } from '@/components/PaymentLedger';
+import { useAuthStore } from '@/lib/store';
+import { usePayments } from '@/hooks/usePayments';
+import { useProperties } from '@/hooks/useProperties';
+import { Payment } from '@/lib/types';
 
 export default function TenantDetailScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId: string }>();
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { ownedProperties } = useProperties();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [archiveDialogVisible, setArchiveDialogVisible] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [confirmingPayment, setConfirmingPayment] = useState<string | null>(null);
+
+  const { payments, isLoading: paymentsLoading, refresh: refreshPayments } = usePayments(tenant);
+
+  const isOwner = ownedProperties.some((p) => p.id === propertyId);
 
   useEffect(() => {
     fetchTenant();
@@ -44,20 +56,37 @@ export default function TenantDetailScreen() {
   async function handleArchive() {
     if (!tenant) return;
     setArchiving(true);
-
     const { error } = await supabase
       .from('tenants')
       .update({ is_archived: true, archived_at: new Date().toISOString() })
       .eq('id', tenant.id);
-
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
-      router.back();
-    }
-
+    if (error) Alert.alert('Error', error.message);
+    else router.back();
     setArchiving(false);
     setArchiveDialogVisible(false);
+  }
+
+  async function handleConfirmPayment(payment: Payment) {
+    setConfirmingPayment(payment.id);
+    const { error } = await supabase
+      .from('payments')
+      .update({
+        status: 'confirmed',
+        confirmed_at: new Date().toISOString(),
+        auto_confirmed: false,
+      })
+      .eq('id', payment.id);
+    if (error) Alert.alert('Error', error.message);
+    else refreshPayments();
+    setConfirmingPayment(null);
+  }
+
+  function handleMarkPaid(payment: Payment) {
+    router.push(`/property/${propertyId}/tenant/${tenantId}/payment/mark-paid?paymentId=${payment.id}`);
+  }
+
+  function handleViewPayment(payment: Payment) {
+    router.push(`/property/${propertyId}/tenant/${tenantId}/payment/${payment.id}`);
   }
 
   const inviteStatusColor = {
@@ -75,11 +104,7 @@ export default function TenantDetailScreen() {
   }
 
   if (!tenant) {
-    return (
-      <View style={styles.centered}>
-        <Text>Tenant not found.</Text>
-      </View>
-    );
+    return <View style={styles.centered}><Text>Tenant not found.</Text></View>;
   }
 
   return (
@@ -90,21 +115,23 @@ export default function TenantDetailScreen() {
           headerShown: true,
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.textPrimary,
-          headerRight: () => (
-            <View style={styles.headerActions}>
-              <IconButton
-                icon="pencil"
-                size={22}
-                onPress={() => router.push(`/property/${propertyId}/tenant/${tenantId}/edit`)}
-              />
-              <IconButton
-                icon="delete"
-                size={22}
-                iconColor={Colors.error}
-                onPress={() => setArchiveDialogVisible(true)}
-              />
-            </View>
-          ),
+          headerRight: isOwner
+            ? () => (
+                <View style={styles.headerActions}>
+                  <IconButton
+                    icon="pencil"
+                    size={22}
+                    onPress={() => router.push(`/property/${propertyId}/tenant/${tenantId}/edit`)}
+                  />
+                  <IconButton
+                    icon="delete"
+                    size={22}
+                    iconColor={Colors.error}
+                    onPress={() => setArchiveDialogVisible(true)}
+                  />
+                </View>
+              )
+            : undefined,
         }}
       />
 
@@ -157,24 +184,21 @@ export default function TenantDetailScreen() {
           </View>
         </View>
 
-        {/* Share Invite (if pending) */}
         {tenant.invite_status === 'pending' && (
-          <Button
-            mode="outlined"
-            icon="share-variant"
-            onPress={handleShareInvite}
-            style={styles.shareButton}
-          >
+          <Button mode="outlined" icon="share-variant" onPress={handleShareInvite} style={styles.shareButton}>
             Share Invite Link
           </Button>
         )}
 
-        {/* Payment Ledger — Phase B Placeholder */}
+        {/* Payment Ledger */}
         <Text variant="titleMedium" style={styles.sectionTitle}>Payment History</Text>
-        <EmptyState
-          icon="receipt"
-          title="No payments yet"
-          subtitle="Payment tracking will be available in Phase B."
+        <PaymentLedger
+          payments={payments}
+          isLoading={paymentsLoading}
+          isOwner={isOwner}
+          onPressRow={handleViewPayment}
+          onMarkPaid={handleMarkPaid}
+          onConfirm={handleConfirmPayment}
         />
       </ScrollView>
 
@@ -193,22 +217,10 @@ export default function TenantDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerActions: {
-    flexDirection: 'row',
-  },
+  container: { flex: 1, backgroundColor: Colors.background },
+  content: { padding: 16, gap: 16 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  headerActions: { flexDirection: 'row' },
   card: {
     backgroundColor: Colors.surface,
     borderRadius: 12,
@@ -222,18 +234,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
   },
-  label: {
-    color: Colors.textSecondary,
-  },
-  value: {
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-  shareButton: {
-    borderColor: Colors.primary,
-  },
-  sectionTitle: {
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
+  label: { color: Colors.textSecondary },
+  value: { color: Colors.textPrimary, fontWeight: '500' },
+  shareButton: { borderColor: Colors.primary },
+  sectionTitle: { fontWeight: '600', color: Colors.textPrimary },
 });
