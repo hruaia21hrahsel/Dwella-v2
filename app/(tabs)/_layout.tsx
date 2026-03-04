@@ -29,7 +29,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="payments"
+        name="payments/index"
         options={{
           title: 'Payments',
           tabBarIcon: ({ color, size }) => (
@@ -38,7 +38,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="bot"
+        name="bot/index"
         options={{
           title: 'Bot',
           tabBarIcon: ({ color, size }) => (
@@ -47,7 +47,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="profile/index"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
