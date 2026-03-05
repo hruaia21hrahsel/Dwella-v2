@@ -79,6 +79,16 @@ export default function RootLayout() {
         <Stack.Screen name="property/create" options={{ headerShown: true, title: 'Property', presentation: 'modal' }} />
         <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', title: 'Log Payment', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary }} />
         <Stack.Screen name="invite/[token]" />
+        <Stack.Screen
+          name="reminders"
+          options={{
+            headerShown: true,
+            title: 'Send Reminders',
+            presentation: 'modal',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     </PaperProvider>

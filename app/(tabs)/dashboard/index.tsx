@@ -227,6 +227,16 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       )}
 
+      {/* Send Reminders shortcut */}
+      <TouchableOpacity
+        style={styles.remindersBtn}
+        onPress={() => router.push('/reminders')}
+        activeOpacity={0.8}
+      >
+        <MaterialCommunityIcons name="bell-ring-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+        <Text style={styles.remindersBtnText}>Send Reminders</Text>
+      </TouchableOpacity>
+
       {/* Section 2 — Stats (global, all tenants) */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
         {getMonthName(currentMonth)} {currentYear}
@@ -384,6 +394,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logPaymentBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  remindersBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  remindersBtnText: {
     color: '#fff',
     fontWeight: '700',
     fontSize: 14,
