@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   ScrollView,
   View,
@@ -9,12 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-
-const SCREEN_W = Dimensions.get('window').width;
-// outer padding 32, block padding 24, 5 gaps of 4px between 6 chips
-const CHIP_W = Math.floor((SCREEN_W - 32 - 24 - 20) / 6);
 import { useRouter } from 'expo-router';
-import { Menu } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
@@ -25,47 +20,14 @@ import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@
 import { getStatusColor } from '@/lib/payments';
 import { PaymentStatus } from '@/lib/types';
 
+const SCREEN_W = Dimensions.get('window').width;
+// outer padding 32, block padding 24, 5 gaps of 4px between 6 chips
+const CHIP_W = Math.floor((SCREEN_W - 32 - 24 - 20) / 6);
+
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-type SortKey = 'name' | 'property' | 'overdue';
-
-const STATUS_ORDER: Record<PaymentStatus, number> = {
-  overdue: 0,
-  pending: 1,
-  partial: 2,
-  paid: 3,
-  confirmed: 4,
-};
-
-function worstStatus(row: TenantRow): number {
-  const { month } = getCurrentMonthYear();
-  const p = row.paymentsByMonth[month];
-  if (!p) return 1;
-  return STATUS_ORDER[p.status];
-}
-
-function sortRows(rows: TenantRow[], key: SortKey): TenantRow[] {
-  const copy = [...rows];
-  if (key === 'name') {
-    copy.sort((a, b) => a.tenantName.localeCompare(b.tenantName));
-  } else if (key === 'property') {
-    copy.sort((a, b) => a.propertyName.localeCompare(b.propertyName));
-  } else {
-    copy.sort((a, b) => worstStatus(a) - worstStatus(b));
-  }
-  return copy;
-}
-
-function StatCard({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <View style={[styles.statCard, { borderLeftColor: color }]}>
       <Text style={[styles.statValue, { color }]}>{formatCurrency(value)}</Text>
@@ -77,18 +39,47 @@ function StatCard({
 export default function DashboardScreen() {
   const router = useRouter();
   const { tenantRows, stats, recentTransactions, isLoading, refresh } = useDashboard();
-  const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [menuVisible, setMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
+
+  // Derive unique properties from tenant rows
+  const properties = [
+    ...new Map(
+      tenantRows.map((r) => [r.propertyId, { id: r.propertyId, name: r.propertyName }])
+    ).values(),
+  ];
+
+  // Tenants for the selected property
+  const tenantsForProperty = tenantRows.filter((r) => r.propertyId === selectedPropertyId);
+
+  // Auto-select first property and first tenant when data loads
+  useEffect(() => {
+    if (tenantRows.length === 0) return;
+    if (!selectedPropertyId) {
+      const firstProp = tenantRows[0].propertyId;
+      setSelectedPropertyId(firstProp);
+      setSelectedTenantId(tenantRows.find((r) => r.propertyId === firstProp)?.tenantId ?? null);
+    }
+  }, [tenantRows]);
+
+  // When property changes, auto-select first tenant of that property
+  function selectProperty(propId: string) {
+    setSelectedPropertyId(propId);
+    const firstTenant = tenantRows.find((r) => r.propertyId === propId);
+    setSelectedTenantId(firstTenant?.tenantId ?? null);
+  }
+
+  const selectedRow: TenantRow | undefined = tenantRows.find(
+    (r) => r.tenantId === selectedTenantId
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     refresh();
     setTimeout(() => setRefreshing(false), 800);
   }, [refresh]);
-
-  const sortedRows = sortRows(tenantRows, sortKey);
 
   if (isLoading) {
     return (
@@ -114,59 +105,82 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Section 1 — Payment Grid (hero) */}
-      <View style={styles.gridHeader}>
-        <Text style={styles.sectionTitle}>Payment Status — {currentYear}</Text>
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <TouchableOpacity style={styles.sortBtn} onPress={() => setMenuVisible(true)}>
-              <MaterialCommunityIcons name="sort" size={16} color={Colors.primary} />
-              <Text style={styles.sortBtnText}>Sort</Text>
-            </TouchableOpacity>
-          }
-        >
-          <Menu.Item
-            onPress={() => { setSortKey('name'); setMenuVisible(false); }}
-            title="Tenant Name (A→Z)"
-            leadingIcon={sortKey === 'name' ? 'check' : undefined}
-          />
-          <Menu.Item
-            onPress={() => { setSortKey('property'); setMenuVisible(false); }}
-            title="Property"
-            leadingIcon={sortKey === 'property' ? 'check' : undefined}
-          />
-          <Menu.Item
-            onPress={() => { setSortKey('overdue'); setMenuVisible(false); }}
-            title="Overdue First"
-            leadingIcon={sortKey === 'overdue' ? 'check' : undefined}
-          />
-        </Menu>
-      </View>
+      {/* Section 1 — Payment Status with selectors */}
+      <Text style={styles.sectionTitle}>Payment Status — {currentYear}</Text>
 
-      {sortedRows.map((row) => (
-        <View key={row.tenantId} style={styles.tenantBlock}>
-          <View style={styles.tenantMeta}>
-            <Text style={styles.tenantName}>{row.tenantName}</Text>
-            <Text style={styles.tenantSub}>
-              Flat {row.flatNo} · {row.propertyName}
-            </Text>
-          </View>
+      {/* Property selector */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.selectorRow}
+        contentContainerStyle={styles.selectorContent}
+      >
+        {properties.map((p) => {
+          const active = p.id === selectedPropertyId;
+          return (
+            <TouchableOpacity
+              key={p.id}
+              style={[styles.selectorChip, active && styles.selectorChipActive]}
+              onPress={() => selectProperty(p.id)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons
+                name="home-city"
+                size={13}
+                color={active ? Colors.primary : Colors.textSecondary}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.selectorChipText, active && styles.selectorChipTextActive]}>
+                {p.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Tenant selector */}
+      {tenantsForProperty.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.selectorRow}
+          contentContainerStyle={styles.selectorContent}
+        >
+          {tenantsForProperty.map((t) => {
+            const active = t.tenantId === selectedTenantId;
+            const monthStatus = t.paymentsByMonth[currentMonth]?.status ?? null;
+            const dotColor = monthStatus ? getStatusColor(monthStatus) : Colors.textDisabled;
+            return (
+              <TouchableOpacity
+                key={t.tenantId}
+                style={[styles.selectorChip, active && styles.selectorChipActive]}
+                onPress={() => setSelectedTenantId(t.tenantId)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
+                <Text style={[styles.selectorChipText, active && styles.selectorChipTextActive]}>
+                  {t.tenantName}
+                </Text>
+                <Text style={[styles.selectorChipSub, active && { color: Colors.primary }]}>
+                  {' '}· {t.flatNo}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {/* Payment grid for selected tenant */}
+      {selectedRow ? (
+        <View style={styles.tenantBlock}>
           <View style={styles.monthGrid}>
             {MONTHS.map((m) => {
-              const payment = row.paymentsByMonth[m];
+              const payment = selectedRow.paymentsByMonth[m];
               const status: PaymentStatus | null = payment?.status ?? null;
               const isCurrentMonth = m === currentMonth;
 
-              let bgColor = Colors.statusPending + '22';
-              let textColor = Colors.statusPending;
-
-              if (status) {
-                bgColor = getStatusColor(status) + '22';
-                textColor = getStatusColor(status);
-              }
-
+              const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPending + '22';
+              const textColor = status ? getStatusColor(status) : Colors.statusPending;
               const canNavigate = !!payment?.id;
 
               return (
@@ -176,7 +190,7 @@ export default function DashboardScreen() {
                   onPress={() => {
                     if (canNavigate) {
                       router.push(
-                        `/property/${row.propertyId}/tenant/${row.tenantId}/payment/${payment!.id}`,
+                        `/property/${selectedRow.propertyId}/tenant/${selectedRow.tenantId}/payment/${payment!.id}`,
                       );
                     }
                   }}
@@ -197,9 +211,9 @@ export default function DashboardScreen() {
             })}
           </View>
         </View>
-      ))}
+      ) : null}
 
-      {/* Section 2 — Stats */}
+      {/* Section 2 — Stats (global, all tenants) */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
         {getMonthName(currentMonth)} {currentYear}
       </Text>
@@ -266,8 +280,86 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: Colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: 10,
   },
+  // Selector rows
+  selectorRow: {
+    marginBottom: 8,
+  },
+  selectorContent: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  selectorChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  selectorChipActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '12',
+  },
+  selectorChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  selectorChipTextActive: {
+    color: Colors.primary,
+    fontWeight: '700',
+  },
+  selectorChipSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  // Tenant payment block
+  tenantBlock: {
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  monthChip: {
+    borderRadius: 8,
+    paddingVertical: 6,
+    width: CHIP_W,
+    alignItems: 'center',
+  },
+  monthChipCurrent: {
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  monthChipLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  monthChipSub: {
+    fontSize: 9,
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+  // Stats
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -296,76 +388,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
   },
-  gridHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  sortBtnText: {
-    fontSize: 13,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  tenantBlock: {
-    backgroundColor: Colors.surface,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  tenantMeta: {
-    marginBottom: 8,
-  },
-  tenantName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  tenantSub: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  monthGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  monthChip: {
-    borderRadius: 8,
-    paddingVertical: 6,
-    width: CHIP_W,
-    alignItems: 'center',
-  },
-  monthChipCurrent: {
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-  },
-  monthChipLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  monthChipSub: {
-    fontSize: 9,
-    marginTop: 2,
-    textTransform: 'uppercase',
-  },
+  // Transactions
   txCard: {
     backgroundColor: Colors.surface,
     borderRadius: 10,
