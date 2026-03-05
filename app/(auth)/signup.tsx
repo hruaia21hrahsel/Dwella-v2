@@ -15,27 +15,39 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSignup() {
-    if (!fullName || !email || !password) {
+    if (!fullName.trim() || !email.trim() || !password) {
       setError('Full name, email, and password are required.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
       return;
     }
 
     setLoading(true);
     setError('');
 
-    const { error: authError } = await supabase.auth.signUp({
-      email,
+    const { error: signupError } = await supabase.auth.signUp({
+      email: email.trim(),
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          phone: phone || null,
-        },
-      },
+      options: { data: { full_name: fullName.trim(), phone: phone.trim() || null } },
     });
 
-    if (authError) {
-      setError(authError.message);
+    if (signupError) {
+      setError(signupError.message);
+      setLoading(false);
+      return;
+    }
+
+    // Auto-sign in immediately — email is auto-confirmed via DB trigger
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (loginError) {
+      // Signed up but can't auto-login (e.g. confirmation still required)
+      setError('Account created! Please sign in.');
     }
 
     setLoading(false);

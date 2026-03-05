@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -85,6 +86,14 @@ export default function LoginScreen() {
             Sign In
           </Button>
 
+          <TouchableOpacity
+            style={styles.forgotRow}
+            onPress={() => router.push('/(auth)/forgot-password')}
+            activeOpacity={0.7}
+          >
+            <Text variant="bodySmall" style={styles.forgotText}>Forgot password?</Text>
+          </TouchableOpacity>
+
           <View style={styles.footer}>
             <Text variant="bodyMedium" style={styles.footerText}>
               Don't have an account?{' '}
@@ -133,6 +142,8 @@ const styles = StyleSheet.create({
   buttonContent: {
     paddingVertical: 6,
   },
+  forgotRow: { alignItems: 'center', marginTop: 2 },
+  forgotText: { color: Colors.primary },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
