@@ -29,10 +29,17 @@ export async function sendBotMessage(userId: string, message: string): Promise<B
   return res.json() as Promise<BotResponse>;
 }
 
+function randomUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 /** Generate a one-time telegram link token for the current user */
 export async function generateTelegramLinkToken(userId: string): Promise<string> {
-  // Generate a random token
-  const token = crypto.randomUUID();
+  const token = randomUUID();
 
   const { error } = await supabase
     .from('users')
