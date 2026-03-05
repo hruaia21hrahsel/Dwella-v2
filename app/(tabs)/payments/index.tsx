@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity, Alert } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { Text, ActivityIndicator, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -151,6 +151,8 @@ export default function PaymentsScreen() {
     }
   }
 
+  const isLandlord = ownedProperties.length > 0;
+
   return (
     <>
       <ScrollView
@@ -235,6 +237,17 @@ export default function PaymentsScreen() {
         )}
       </ScrollView>
 
+      {/* Log Payment FAB — landlords only */}
+      {isLandlord && (
+        <FAB
+          icon="plus"
+          label="Log Payment"
+          style={styles.fab}
+          color="#fff"
+          onPress={() => router.push('/log-payment')}
+        />
+      )}
+
       {/* Year Picker Modal */}
       <Modal
         visible={yearPickerVisible}
@@ -271,6 +284,12 @@ export default function PaymentsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  fab: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    backgroundColor: Colors.primary,
+  },
   content: { padding: 16, gap: 8, paddingBottom: 32 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },

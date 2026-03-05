@@ -213,6 +213,20 @@ export default function DashboardScreen() {
         </View>
       ) : null}
 
+      {/* Log Payment shortcut */}
+      {selectedRow && (
+        <TouchableOpacity
+          style={styles.logPaymentBtn}
+          onPress={() =>
+            router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`)
+          }
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
+          <Text style={styles.logPaymentBtnText}>Log Payment</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Section 2 — Stats (global, all tenants) */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
         {getMonthName(currentMonth)} {currentYear}
@@ -358,6 +372,21 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginTop: 2,
     textTransform: 'uppercase',
+  },
+  logPaymentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  logPaymentBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
   },
   // Stats
   statsGrid: {
