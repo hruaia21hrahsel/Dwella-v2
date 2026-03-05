@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Share } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
 import { Text, TextInput, Button, Avatar, Divider, Chip } from 'react-native-paper';
+import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
@@ -54,14 +55,13 @@ export default function ProfileScreen() {
       const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
       if (data) setUser(data);
 
-      const botUsername = 'DwellaBot'; // Update this with your actual bot username
-      const deepLink = `https://t.me/${botUsername}?start=${token}`;
-
-      await Share.share({
-        message: `Open this link to link your Telegram with Dwella:\n${deepLink}`,
-        url: deepLink,
-        title: 'Link Telegram to Dwella',
-      });
+      const deepLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`;
+      const canOpen = await Linking.canOpenURL(deepLink);
+      if (canOpen) {
+        await Linking.openURL(deepLink);
+      } else {
+        Alert.alert('Telegram not found', 'Please install Telegram, then try again.');
+      }
     } catch (err) {
       Alert.alert('Error', String(err));
     } finally {
