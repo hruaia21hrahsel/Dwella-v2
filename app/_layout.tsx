@@ -24,6 +24,16 @@ function AuthGuard() {
       setSession(newSession);
 
       if (newSession?.user) {
+        // Upsert ensures a profile row exists even if the DB trigger missed it
+        await supabase.from('users').upsert(
+          {
+            id: newSession.user.id,
+            email: newSession.user.email!,
+            full_name: newSession.user.user_metadata?.full_name ?? null,
+            phone: newSession.user.user_metadata?.phone ?? null,
+          },
+          { onConflict: 'id', ignoreDuplicates: true }
+        );
         const { data } = await supabase
           .from('users')
           .select('*')

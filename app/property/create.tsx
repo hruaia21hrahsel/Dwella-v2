@@ -57,7 +57,11 @@ export default function PropertyCreateScreen() {
   }
 
   async function handleSubmit() {
-    if (!validate() || !user) return;
+    if (!validate()) return;
+    if (!user) {
+      Alert.alert('Not signed in', 'Your session expired. Please log out and log back in.');
+      return;
+    }
     setLoading(true);
 
     const payload = {
@@ -81,14 +85,18 @@ export default function PropertyCreateScreen() {
         router.back();
       }
     } else {
-      const { error } = await supabase
+      const { data: created, error } = await supabase
         .from('properties')
-        .insert({ ...payload, owner_id: user.id });
+        .insert({ ...payload, owner_id: user.id })
+        .select()
+        .single();
 
       if (error) {
-        Alert.alert('Error', error.message);
+        Alert.alert('Error saving property', error.message);
+      } else if (!created) {
+        Alert.alert('Error', 'Property was not saved. Check your connection and try again.');
       } else {
-        bumpPropertyRefresh(); // signal all useProperties instances to re-fetch
+        bumpPropertyRefresh();
         router.dismiss();
       }
     }
