@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -48,6 +48,7 @@ export default function LogPaymentScreen() {
   const [properties, setProperties] = useState<PropertyOption[]>([]);
   const [tenants, setTenants] = useState<TenantOption[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const loadedRef = useRef(false);
 
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(params.propertyId ?? null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(params.tenantId ?? null);
@@ -62,6 +63,8 @@ export default function LogPaymentScreen() {
   const tenantsForProperty = tenants.filter((t) => t.property_id === selectedPropertyId);
 
   useEffect(() => {
+    if (!user?.id || loadedRef.current) return;
+    loadedRef.current = true;
     loadProperties();
   }, [user?.id]);
 
