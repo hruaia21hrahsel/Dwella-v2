@@ -87,7 +87,7 @@ export default function PropertyCreateScreen() {
       if (error) {
         Alert.alert('Error', error.message);
       } else {
-        router.back();
+        router.navigate('/(tabs)/properties');
       }
     }
 
