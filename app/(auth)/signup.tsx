@@ -4,7 +4,7 @@ import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
-import { getBiometricType, isBiometricEnabled, saveBiometricSession } from '@/lib/biometric-auth';
+import { savePinSession } from '@/lib/biometric-auth';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -53,14 +53,11 @@ export default function SignupScreen() {
       return;
     }
 
-    // Offer biometric setup if available
+    // Offer PIN setup after signup
     if (data.session?.refresh_token) {
-      const biometricType = await getBiometricType();
-      if (biometricType !== 'none') {
-        await saveBiometricSession(data.session.refresh_token);
-        router.replace('/pin-setup');
-        return;
-      }
+      await savePinSession(data.session.refresh_token);
+      router.replace('/pin-setup');
+      return;
     }
 
     setLoading(false);
