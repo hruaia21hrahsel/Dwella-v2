@@ -84,6 +84,15 @@ export default function RootLayout() {
         <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', title: 'Log Payment', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
+          name="pin-setup"
+          options={{
+            headerShown: true,
+            title: 'Set Up PIN',
+            headerStyle: { backgroundColor: Colors.surface },
+            headerTintColor: Colors.textPrimary,
+          }}
+        />
+        <Stack.Screen
           name="reminders/index"
           options={{
             headerShown: true,

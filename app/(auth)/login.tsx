@@ -39,7 +39,7 @@ export default function LoginScreen() {
       ]);
       if (!alreadyEnabled && biometricType !== 'none') {
         await saveBiometricSession(data.session.refresh_token);
-        router.replace('/(auth)/pin-setup');
+        router.replace('/pin-setup');
         return;
       }
     }

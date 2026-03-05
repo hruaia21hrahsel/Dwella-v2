@@ -62,7 +62,7 @@ export default function ProfileScreen() {
       // If no PIN yet, go set one up
       const pinSet = await isPinSet();
       if (!pinSet) {
-        router.push('/(auth)/pin-setup');
+        router.push('/pin-setup');
       }
     } else {
       Alert.alert(
@@ -90,7 +90,7 @@ export default function ProfileScreen() {
   }
 
   function handleSetupPin() {
-    router.push('/(auth)/pin-setup');
+    router.push('/pin-setup');
   }
 
   async function handleSave() {
