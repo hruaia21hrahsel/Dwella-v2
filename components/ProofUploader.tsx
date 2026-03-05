@@ -27,8 +27,8 @@ export function ProofUploader({ storagePath, onUploaded, existingUrl }: ProofUpl
     }
 
     const result = source === 'camera'
-      ? await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 })
-      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.7 });
+      ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
 
     if (result.canceled || !result.assets[0]) return;
 
