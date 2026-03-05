@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,7 +7,11 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
+
+// outer padding 32, 5 gaps of 6px between 6 chips
+const MONTH_CHIP_W = Math.floor((Dimensions.get('window').width - 32 - 30) / 6);
 import { Text, TextInput, Button, ActivityIndicator, HelperText, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -15,7 +19,7 @@ import { useAuthStore } from '@/lib/store';
 import { Colors } from '@/constants/colors';
 import { getDueDate, getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
-import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
+import { formatCurrency, getCurrentMonthYear } from '@/lib/utils';
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -225,13 +229,13 @@ export default function LogPaymentScreen() {
 
           {/* Property selector */}
           <Text style={styles.fieldLabel}>Property</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={{ gap: 8 }}>
-            {properties.map((p) => {
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+            {properties.map((p, i) => {
               const active = p.id === selectedPropertyId;
               return (
                 <TouchableOpacity
                   key={p.id}
-                  style={[styles.chip, active && styles.chipActive]}
+                  style={[styles.chip, active && styles.chipActive, i < properties.length - 1 && styles.chipMargin]}
                   onPress={() => selectProperty(p.id)}
                   activeOpacity={0.7}
                 >
@@ -245,13 +249,13 @@ export default function LogPaymentScreen() {
           {tenantsForProperty.length > 0 ? (
             <>
               <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>Tenant</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={{ gap: 8 }}>
-                {tenantsForProperty.map((t) => {
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+                {tenantsForProperty.map((t, i) => {
                   const active = t.id === selectedTenantId;
                   return (
                     <TouchableOpacity
                       key={t.id}
-                      style={[styles.chip, active && styles.chipActive]}
+                      style={[styles.chip, active && styles.chipActive, i < tenantsForProperty.length - 1 && styles.chipMargin]}
                       onPress={() => selectTenant(t)}
                       activeOpacity={0.7}
                     >
@@ -389,6 +393,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
   },
+  chipMargin: {
+    marginRight: 8,
+  },
   chipActive: {
     borderColor: Colors.primary,
     backgroundColor: Colors.primary + '12',
@@ -399,12 +406,11 @@ const styles = StyleSheet.create({
   monthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     marginBottom: 4,
   },
   monthChip: {
-    width: '14%',
-    minWidth: 48,
+    width: MONTH_CHIP_W,
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1.5,
