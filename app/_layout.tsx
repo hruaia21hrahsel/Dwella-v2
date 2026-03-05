@@ -77,7 +77,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="property/create" options={{ headerShown: true, title: 'Property', presentation: 'modal' }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', title: 'Log Payment', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen name="+not-found" />
       </Stack>

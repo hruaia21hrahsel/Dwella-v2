@@ -214,11 +214,6 @@ export default function LogPaymentScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Log Payment',
-          headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface },
-          headerTintColor: Colors.textPrimary,
-          presentation: 'modal',
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />
           ),
