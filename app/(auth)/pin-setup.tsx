@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { savePin } from '@/lib/biometric-auth';
 import { Colors } from '@/constants/colors';
@@ -10,10 +10,19 @@ type Step = 'enter' | 'confirm';
 
 export default function PinSetupScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const [step, setStep] = useState<Step>('enter');
   const [pin, setPin] = useState('');
   const [firstPin, setFirstPin] = useState('');
   const [error, setError] = useState('');
+
+  function finish() {
+    if (navigation.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/dashboard');
+    }
+  }
 
   const DIGITS = [['1','2','3'],['4','5','6'],['7','8','9'],['','0','⌫']];
 
@@ -31,7 +40,7 @@ export default function PinSetupScreen() {
       } else {
         if (newPin === firstPin) {
           await savePin(newPin);
-          router.replace('/(tabs)/dashboard');
+          finish();
         } else {
           setError('PINs do not match. Try again.');
           setPin('');
@@ -48,7 +57,7 @@ export default function PinSetupScreen() {
   }
 
   function handleSkip() {
-    router.replace('/(tabs)/dashboard');
+    finish();
   }
 
   return (

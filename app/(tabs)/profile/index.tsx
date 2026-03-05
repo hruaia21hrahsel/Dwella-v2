@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
+import { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, Alert, Linking, Switch } from 'react-native';
 import { Text, TextInput, Button, Avatar, Divider, Chip } from 'react-native-paper';
+import { useRouter } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
@@ -8,8 +9,17 @@ import { Colors } from '@/constants/colors';
 import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDate } from '@/lib/utils';
+import {
+  getBiometricType,
+  isBiometricEnabled,
+  saveBiometricSession,
+  clearBiometricSession,
+  clearPin,
+  isPinSet,
+} from '@/lib/biometric-auth';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, setUser } = useAuthStore();
   const { notifications, unreadCount, markAllRead, markRead } = useNotifications(user?.id);
   const [fullName, setFullName] = useState(user?.full_name ?? '');
@@ -18,6 +28,70 @@ export default function ProfileScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [linkingTelegram, setLinkingTelegram] = useState(false);
   const [unlinkingTelegram, setUnlinkingTelegram] = useState(false);
+
+  // Security state
+  const [biometricHardware, setBiometricHardware] = useState<'face' | 'fingerprint' | 'none'>('none');
+  const [biometricOn, setBiometricOn] = useState(false);
+  const [pinReady, setPinReady] = useState(false);
+  const [togglingBiometric, setTogglingBiometric] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [type, enabled, pinSet] = await Promise.all([
+        getBiometricType(),
+        isBiometricEnabled(),
+        isPinSet(),
+      ]);
+      setBiometricHardware(type);
+      setBiometricOn(enabled);
+      setPinReady(pinSet);
+    })();
+  }, []);
+
+  async function handleToggleBiometric(value: boolean) {
+    setTogglingBiometric(true);
+    if (value) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.refresh_token) {
+        Alert.alert('Error', 'Could not retrieve session. Please sign in again.');
+        setTogglingBiometric(false);
+        return;
+      }
+      await saveBiometricSession(session.refresh_token);
+      setBiometricOn(true);
+      // If no PIN yet, go set one up
+      const pinSet = await isPinSet();
+      if (!pinSet) {
+        router.push('/(auth)/pin-setup');
+      }
+    } else {
+      Alert.alert(
+        'Disable Biometric Sign-in',
+        'This will also remove your saved PIN. You can set it up again anytime.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setTogglingBiometric(false) },
+          {
+            text: 'Disable',
+            style: 'destructive',
+            onPress: async () => {
+              await clearBiometricSession();
+              await clearPin();
+              setBiometricOn(false);
+              setPinReady(false);
+              setTogglingBiometric(false);
+            },
+          },
+        ]
+      );
+      setTogglingBiometric(false);
+      return;
+    }
+    setTogglingBiometric(false);
+  }
+
+  function handleSetupPin() {
+    router.push('/(auth)/pin-setup');
+  }
 
   async function handleSave() {
     if (!user) return;
@@ -239,6 +313,42 @@ export default function ProfileScreen() {
 
       <Divider style={styles.divider} />
 
+      {/* Security */}
+      <Text variant="titleSmall" style={styles.sectionTitle}>Security</Text>
+
+      {biometricHardware !== 'none' && (
+        <View style={styles.securityCard}>
+          <View style={styles.securityRow}>
+            <View style={{ flex: 1 }}>
+              <Text variant="bodyMedium" style={styles.securityLabel}>
+                {biometricHardware === 'face' ? 'Face ID' : 'Fingerprint'}
+              </Text>
+              <Text variant="bodySmall" style={styles.securityHint}>
+                {biometricOn ? 'Biometric sign-in is enabled' : 'Enable to sign in faster'}
+              </Text>
+            </View>
+            <Switch
+              value={biometricOn}
+              onValueChange={handleToggleBiometric}
+              disabled={togglingBiometric}
+              trackColor={{ false: Colors.border, true: Colors.primary + '88' }}
+              thumbColor={biometricOn ? Colors.primary : Colors.textSecondary}
+            />
+          </View>
+        </View>
+      )}
+
+      <Button
+        mode="outlined"
+        icon="lock-outline"
+        onPress={handleSetupPin}
+        style={styles.pinBtn}
+      >
+        {pinReady ? 'Change PIN' : 'Set Up PIN'}
+      </Button>
+
+      <Divider style={styles.divider} />
+
       <Button
         mode="outlined"
         onPress={handleLogout}
@@ -314,6 +424,21 @@ const styles = StyleSheet.create({
   chipLinked: { backgroundColor: Colors.statusConfirmed + '22' },
   chipUnlinked: { backgroundColor: Colors.border },
   telegramBtn: { marginTop: 4 },
+  securityCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 14,
+  },
+  securityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  securityLabel: { color: Colors.textPrimary, fontWeight: '500' },
+  securityHint: { color: Colors.textSecondary, marginTop: 2 },
+  pinBtn: { marginTop: 4 },
   notifHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
