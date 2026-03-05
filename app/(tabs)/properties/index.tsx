@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
 import { Text, FAB, ActivityIndicator } from 'react-native-paper';
-import { useRouter, Stack, useFocusEffect } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
 import { PropertyCard } from '@/components/PropertyCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -10,8 +10,6 @@ import { Colors } from '@/constants/colors';
 export default function PropertiesScreen() {
   const router = useRouter();
   const { ownedProperties, tenantProperties, isLoading, refresh } = useProperties();
-
-  useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   const handleAddProperty = useCallback(() => {
     router.push('/property/create');

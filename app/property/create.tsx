@@ -10,7 +10,7 @@ import { Property } from '@/lib/types';
 export default function PropertyCreateScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, bumpPropertyRefresh } = useAuthStore();
   const isEditing = !!id;
 
   const [name, setName] = useState('');
@@ -77,6 +77,7 @@ export default function PropertyCreateScreen() {
       if (error) {
         Alert.alert('Error', error.message);
       } else {
+        bumpPropertyRefresh();
         router.back();
       }
     } else {
@@ -87,6 +88,7 @@ export default function PropertyCreateScreen() {
       if (error) {
         Alert.alert('Error', error.message);
       } else {
+        bumpPropertyRefresh(); // signal all useProperties instances to re-fetch
         router.dismiss();
       }
     }
