@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Property, Tenant } from '@/lib/types';
@@ -43,6 +44,12 @@ export function useProperties(): UsePropertiesResult {
   useEffect(() => {
     fetch();
   }, [fetch]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetch();
+    }, [fetch]),
+  );
 
   useEffect(() => {
     if (!user) return;

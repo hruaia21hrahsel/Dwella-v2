@@ -48,7 +48,7 @@ function AuthGuard() {
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (session && inAuthGroup) {
-      router.replace('/(tabs)/properties');
+      router.replace('/(tabs)/dashboard');
     }
   }, [session, isLoading, segments]);
 
