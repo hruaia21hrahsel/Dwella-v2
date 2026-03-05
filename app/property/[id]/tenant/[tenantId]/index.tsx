@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Share, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Share, Alert, Modal, TouchableOpacity } from 'react-native';
 import { Text, Chip, Button, IconButton, Divider, ActivityIndicator, Menu } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -29,6 +29,7 @@ export default function TenantDetailScreen() {
   const [property, setProperty] = useState<Property | null>(null);
   const [pdfMenuVisible, setPdfMenuVisible] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [yearPickerVisible, setYearPickerVisible] = useState(false);
 
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
 
@@ -59,14 +60,23 @@ export default function TenantDetailScreen() {
     }
   }
 
-  async function handleExportAnnual() {
-    if (!tenant || !property || payments.length === 0) return;
-    setExportingPdf(true);
+  function handleExportAnnual() {
     setPdfMenuVisible(false);
-    const year = new Date().getFullYear();
-    const yearPayments = payments.filter((p) => p.year === year);
+    setYearPickerVisible(true);
+  }
+
+  async function handleExportAnnualForYear(selectedYear: number) {
+    if (!tenant || !property) return;
+    setYearPickerVisible(false);
+    setExportingPdf(true);
+    const yearPayments = payments.filter((p) => p.year === selectedYear);
+    if (yearPayments.length === 0) {
+      Alert.alert('No Data', `No payments found for ${selectedYear}.`);
+      setExportingPdf(false);
+      return;
+    }
     try {
-      await shareAnnualSummary(yearPayments, tenant, property, year);
+      await shareAnnualSummary(yearPayments, tenant, property, selectedYear);
     } catch (err) {
       Alert.alert('Export Failed', String(err));
     } finally {
@@ -173,7 +183,8 @@ export default function TenantDetailScreen() {
                 <Menu.Item
                   leadingIcon="calendar-month"
                   onPress={handleExportAnnual}
-                  title={`Annual Summary ${new Date().getFullYear()}`}
+                  title="Annual Summary…"
+                  disabled={payments.length === 0}
                 />
               </Menu>
               {isOwner && (
@@ -274,6 +285,37 @@ export default function TenantDetailScreen() {
         onConfirm={handleArchive}
         onCancel={() => setArchiveDialogVisible(false)}
       />
+
+      {/* Year Picker Modal */}
+      <Modal
+        visible={yearPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setYearPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setYearPickerVisible(false)}
+        >
+          <View style={styles.yearPickerSheet}>
+            <Text variant="titleMedium" style={styles.yearPickerTitle}>Select Year</Text>
+            {[...new Set(payments.map((p) => p.year))].sort((a, b) => b - a).map((y) => (
+              <TouchableOpacity
+                key={y}
+                style={styles.yearOption}
+                onPress={() => handleExportAnnualForYear(y)}
+                activeOpacity={0.7}
+              >
+                <Text variant="bodyLarge" style={styles.yearOptionText}>{y}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.cancelOption} onPress={() => setYearPickerVisible(false)}>
+              <Text variant="bodyMedium" style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </>
   );
 }
@@ -300,4 +342,37 @@ const styles = StyleSheet.create({
   value: { color: Colors.textPrimary, fontWeight: '500' },
   shareButton: { borderColor: Colors.primary },
   sectionTitle: { fontWeight: '600', color: Colors.textPrimary },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  yearPickerSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 24,
+    paddingBottom: 40,
+    gap: 4,
+  },
+  yearPickerTitle: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  yearOption: {
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  yearOptionText: { color: Colors.primary, fontWeight: '600' },
+  cancelOption: {
+    paddingVertical: 14,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    alignItems: 'center',
+  },
+  cancelText: { color: Colors.textSecondary },
 });

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, ActivityIndicator, Chip } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity, Alert } from 'react-native';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -10,7 +10,7 @@ import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { EmptyState } from '@/components/EmptyState';
 import { Colors } from '@/constants/colors';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
-import { TouchableOpacity } from 'react-native';
+import { shareAnnualSummary } from '@/lib/pdf';
 
 interface PaymentWithContext extends Payment {
   tenant_name: string;
@@ -27,6 +27,10 @@ export default function PaymentsScreen() {
   const [payments, setPayments] = useState<PaymentWithContext[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { month, year } = getCurrentMonthYear();
+
+  // Year picker state
+  const [yearPickerVisible, setYearPickerVisible] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   const fetch = useCallback(async () => {
     if (!user) return;
@@ -64,8 +68,7 @@ export default function PaymentsScreen() {
         .select('*')
         .eq('tenant_id', tp.id)
         .order('year', { ascending: false })
-        .order('month', { ascending: false })
-        .limit(12);
+        .order('month', { ascending: false });
 
       (data ?? []).forEach((p: any) => {
         results.push({
@@ -115,76 +118,154 @@ export default function PaymentsScreen() {
   const totalDue = landlordPayments.reduce((s, p) => s + p.amount_due, 0);
   const totalCollected = landlordPayments.reduce((s, p) => s + p.amount_paid, 0);
 
+  // Available years from tenant payments
+  const availableYears = [...new Set(tenantPayments.map((p) => p.year))].sort((a, b) => b - a);
+
+  async function handleExportYear(selectedYear: number) {
+    setYearPickerVisible(false);
+    if (tenantPayments.length === 0) return;
+
+    const firstTenantPayment = tenantPayments[0];
+    const tp = tenantProperties.find((t) => t.id === firstTenantPayment.tenantId);
+    if (!tp) return;
+
+    const property = tp.properties;
+    if (!property) return;
+
+    const yearPayments = tenantPayments
+      .filter((p) => p.year === selectedYear && p.tenantId === tp.id)
+      .map((p) => p as Payment);
+
+    if (yearPayments.length === 0) {
+      Alert.alert('No Data', `No payments found for ${selectedYear}.`);
+      return;
+    }
+
+    setExportingPdf(true);
+    try {
+      await shareAnnualSummary(yearPayments, tp, property, selectedYear);
+    } catch (err) {
+      Alert.alert('Export Failed', String(err));
+    } finally {
+      setExportingPdf(false);
+    }
+  }
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={fetch} />}
-    >
-      {/* Landlord Overview */}
-      {landlordPayments.length > 0 && (
-        <>
-          <Text variant="titleMedium" style={styles.sectionHeader}>
-            {getMonthName(month)} {year} — My Properties
-          </Text>
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={fetch} />}
+      >
+        {/* Landlord Overview */}
+        {landlordPayments.length > 0 && (
+          <>
+            <Text variant="titleMedium" style={styles.sectionHeader}>
+              {getMonthName(month)} {year} — My Properties
+            </Text>
 
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryCard}>
-              <Text variant="headlineSmall" style={styles.summaryValue}>{formatCurrency(totalCollected)}</Text>
-              <Text variant="bodySmall" style={styles.summaryLabel}>Collected</Text>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryCard}>
+                <Text variant="headlineSmall" style={styles.summaryValue}>{formatCurrency(totalCollected)}</Text>
+                <Text variant="bodySmall" style={styles.summaryLabel}>Collected</Text>
+              </View>
+              <View style={styles.summaryCard}>
+                <Text variant="headlineSmall" style={styles.summaryValue}>{formatCurrency(totalDue - totalCollected)}</Text>
+                <Text variant="bodySmall" style={styles.summaryLabel}>Outstanding</Text>
+              </View>
             </View>
-            <View style={styles.summaryCard}>
-              <Text variant="headlineSmall" style={styles.summaryValue}>{formatCurrency(totalDue - totalCollected)}</Text>
-              <Text variant="bodySmall" style={styles.summaryLabel}>Outstanding</Text>
+
+            {landlordPayments.map((p) => (
+              <TouchableOpacity
+                key={p.id}
+                style={styles.paymentRow}
+                onPress={() => router.push(`/property/${p.property_id}/tenant/${p.tenantId}/payment/${p.id}`)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.paymentInfo}>
+                  <Text variant="titleSmall" style={styles.tenantName}>{p.tenant_name}</Text>
+                  <Text variant="bodySmall" style={styles.propertyMeta}>
+                    Flat {p.flat_no} · {p.property_name}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.rent}>{formatCurrency(p.amount_due)}</Text>
+                </View>
+                <PaymentStatusBadge status={p.status} />
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+
+        {/* Tenant Payment History */}
+        {tenantPayments.length > 0 && (
+          <>
+            <View style={[styles.sectionRow, landlordPayments.length > 0 && styles.sectionHeaderSpaced]}>
+              <Text variant="titleMedium" style={styles.sectionHeader}>My Rent History</Text>
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={() => setYearPickerVisible(true)}
+                disabled={exportingPdf}
+                activeOpacity={0.7}
+              >
+                {exportingPdf ? (
+                  <ActivityIndicator size="small" color={Colors.primary} />
+                ) : (
+                  <Text variant="labelMedium" style={styles.exportLabel}>Export PDF</Text>
+                )}
+              </TouchableOpacity>
             </View>
+            {tenantPayments.map((p) => (
+              <TouchableOpacity
+                key={p.id}
+                style={styles.paymentRow}
+                onPress={() => router.push(`/property/${p.property_id}/tenant/${p.tenantId}/payment/${p.id}`)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.paymentInfo}>
+                  <Text variant="titleSmall" style={styles.tenantName}>
+                    {getMonthName(p.month)} {p.year}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.propertyMeta}>{p.property_name} · Flat {p.flat_no}</Text>
+                  <Text variant="bodySmall" style={styles.rent}>{formatCurrency(p.amount_due)}</Text>
+                </View>
+                <PaymentStatusBadge status={p.status} />
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+      </ScrollView>
+
+      {/* Year Picker Modal */}
+      <Modal
+        visible={yearPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setYearPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setYearPickerVisible(false)}
+        >
+          <View style={styles.yearPickerSheet}>
+            <Text variant="titleMedium" style={styles.yearPickerTitle}>Select Year to Export</Text>
+            {availableYears.map((y) => (
+              <TouchableOpacity
+                key={y}
+                style={styles.yearOption}
+                onPress={() => handleExportYear(y)}
+                activeOpacity={0.7}
+              >
+                <Text variant="bodyLarge" style={styles.yearOptionText}>{y}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.cancelOption} onPress={() => setYearPickerVisible(false)}>
+              <Text variant="bodyMedium" style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
-
-          {landlordPayments.map((p) => (
-            <TouchableOpacity
-              key={p.id}
-              style={styles.paymentRow}
-              onPress={() => router.push(`/property/${p.property_id}/tenant/${p.tenantId}/payment/${p.id}`)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.paymentInfo}>
-                <Text variant="titleSmall" style={styles.tenantName}>{p.tenant_name}</Text>
-                <Text variant="bodySmall" style={styles.propertyMeta}>
-                  Flat {p.flat_no} · {p.property_name}
-                </Text>
-                <Text variant="bodySmall" style={styles.rent}>{formatCurrency(p.amount_due)}</Text>
-              </View>
-              <PaymentStatusBadge status={p.status} />
-            </TouchableOpacity>
-          ))}
-        </>
-      )}
-
-      {/* Tenant Payment History */}
-      {tenantPayments.length > 0 && (
-        <>
-          <Text variant="titleMedium" style={[styles.sectionHeader, landlordPayments.length > 0 && styles.sectionHeaderSpaced]}>
-            My Rent History
-          </Text>
-          {tenantPayments.map((p) => (
-            <TouchableOpacity
-              key={p.id}
-              style={styles.paymentRow}
-              onPress={() => router.push(`/property/${p.property_id}/tenant/${p.tenantId}/payment/${p.id}`)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.paymentInfo}>
-                <Text variant="titleSmall" style={styles.tenantName}>
-                  {getMonthName(p.month)} {p.year}
-                </Text>
-                <Text variant="bodySmall" style={styles.propertyMeta}>{p.property_name} · Flat {p.flat_no}</Text>
-                <Text variant="bodySmall" style={styles.rent}>{formatCurrency(p.amount_due)}</Text>
-              </View>
-              <PaymentStatusBadge status={p.status} />
-            </TouchableOpacity>
-          ))}
-        </>
-      )}
-    </ScrollView>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -192,14 +273,24 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content: { padding: 16, gap: 8, paddingBottom: 32 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   sectionHeader: {
     color: Colors.textSecondary,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 4,
   },
   sectionHeaderSpaced: { marginTop: 20 },
+  exportButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  exportLabel: { color: Colors.primary },
   summaryRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   summaryCard: {
     flex: 1,
@@ -227,4 +318,38 @@ const styles = StyleSheet.create({
   tenantName: { color: Colors.textPrimary, fontWeight: '600' },
   propertyMeta: { color: Colors.textSecondary },
   rent: { color: Colors.textSecondary, fontWeight: '500' },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  yearPickerSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 24,
+    paddingBottom: 40,
+    gap: 4,
+  },
+  yearPickerTitle: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  yearOption: {
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  yearOptionText: { color: Colors.primary, fontWeight: '600' },
+  cancelOption: {
+    paddingVertical: 14,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    alignItems: 'center',
+  },
+  cancelText: { color: Colors.textSecondary },
 });

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
+import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
 import { Text, IconButton, ActivityIndicator, Chip } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
@@ -157,6 +157,21 @@ export default function PropertyDetailScreen() {
           )}
         </View>
 
+        {/* Expenses Link (owner only) */}
+        {isOwner && (
+          <TouchableOpacity
+            style={styles.expensesLink}
+            onPress={() => router.push(`/property/${id}/expenses`)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.expensesLinkLeft}>
+              <IconButton icon="cash-minus" size={20} iconColor={Colors.primary} style={styles.expensesIcon} />
+              <Text variant="titleSmall" style={styles.expensesLinkText}>Expenses</Text>
+            </View>
+            <IconButton icon="chevron-right" size={20} iconColor={Colors.textSecondary} />
+          </TouchableOpacity>
+        )}
+
         {property.notes ? (
           <View style={styles.notesCard}>
             <Text variant="labelMedium" style={styles.notesLabel}>Notes</Text>
@@ -256,4 +271,20 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textTransform: 'uppercase',
   },
+  expensesLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingRight: 4,
+  },
+  expensesLinkLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  expensesIcon: { margin: 0 },
+  expensesLinkText: { color: Colors.textPrimary, fontWeight: '600' },
 });

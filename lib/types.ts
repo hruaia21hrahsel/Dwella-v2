@@ -79,6 +79,22 @@ export interface Notification {
   created_at: string;
 }
 
+export type ExpenseCategory =
+  | 'repairs' | 'insurance' | 'rates' | 'utilities'
+  | 'maintenance' | 'cleaning' | 'management' | 'other';
+
+export interface Expense {
+  id: string;
+  property_id: string;
+  user_id: string;
+  amount: number;
+  category: ExpenseCategory;
+  description: string | null;
+  expense_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BotConversation {
   id: string;
   user_id: string;
