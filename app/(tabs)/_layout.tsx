@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
@@ -14,7 +15,20 @@ function TabsLayout() {
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: {
-          borderTopColor: Colors.border,
+          backgroundColor: Colors.surface,
+          borderTopWidth: 0,
+          shadowColor: '#1E1B4B',
+          shadowOpacity: 0.08,
+          shadowOffset: { width: 0, height: -4 },
+          shadowRadius: 12,
+          elevation: 8,
+          height: Platform.OS === 'ios' ? 88 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          marginTop: -2,
         },
         headerStyle: {
           backgroundColor: Colors.surface,

@@ -49,10 +49,8 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   bubbleBot: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.primarySoft,
     borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   text: {
     fontSize: 15,

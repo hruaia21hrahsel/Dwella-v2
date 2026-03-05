@@ -8,7 +8,7 @@ import { useProperties } from '@/hooks/useProperties';
 import { Payment } from '@/lib/types';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { shareAnnualSummary } from '@/lib/pdf';
 import { getStatusColor } from '@/lib/payments';
@@ -279,21 +279,24 @@ export default function PaymentsScreen() {
                   }
                   activeOpacity={0.7}
                 >
-                  <View style={styles.paymentInfo}>
-                    <Text style={styles.paymentMonth}>
-                      {getMonthName(p.month)} {p.year}
-                    </Text>
-                    {selectedTenant && (
-                      <Text style={styles.paymentMeta}>
-                        {selectedTenant.tenant_name} · Flat {selectedTenant.flat_no}
+                  <View style={[styles.paymentAccent, { backgroundColor: getStatusColor(p.status) }]} />
+                  <View style={styles.paymentRowInner}>
+                    <View style={styles.paymentInfo}>
+                      <Text style={styles.paymentMonth}>
+                        {getMonthName(p.month)} {p.year}
                       </Text>
-                    )}
-                    <Text style={styles.paymentMeta}>
-                      Due {formatCurrency(p.amount_due)}
-                      {p.amount_paid > 0 && ` · Paid ${formatCurrency(p.amount_paid)}`}
-                    </Text>
+                      {selectedTenant && (
+                        <Text style={styles.paymentMeta}>
+                          {selectedTenant.tenant_name} · Flat {selectedTenant.flat_no}
+                        </Text>
+                      )}
+                      <Text style={styles.paymentMeta}>
+                        Due {formatCurrency(p.amount_due)}
+                        {p.amount_paid > 0 && ` · Paid ${formatCurrency(p.amount_paid)}`}
+                      </Text>
+                    </View>
+                    <PaymentStatusBadge status={p.status} />
                   </View>
-                  <PaymentStatusBadge status={p.status} />
                 </TouchableOpacity>
               ))
             )}
@@ -327,16 +330,19 @@ export default function PaymentsScreen() {
                 }
                 activeOpacity={0.7}
               >
-                <View style={styles.paymentInfo}>
-                  <Text style={styles.paymentMonth}>
-                    {getMonthName(p.month)} {p.year}
-                  </Text>
-                  <Text style={styles.paymentMeta}>
-                    {p.property_name} · Flat {p.flat_no}
-                  </Text>
-                  <Text style={styles.paymentMeta}>{formatCurrency(p.amount_due)}</Text>
+                <View style={[styles.paymentAccent, { backgroundColor: getStatusColor(p.status) }]} />
+                <View style={styles.paymentRowInner}>
+                  <View style={styles.paymentInfo}>
+                    <Text style={styles.paymentMonth}>
+                      {getMonthName(p.month)} {p.year}
+                    </Text>
+                    <Text style={styles.paymentMeta}>
+                      {p.property_name} · Flat {p.flat_no}
+                    </Text>
+                    <Text style={styles.paymentMeta}>{formatCurrency(p.amount_due)}</Text>
+                  </View>
+                  <PaymentStatusBadge status={p.status} />
                 </View>
-                <PaymentStatusBadge status={p.status} />
               </TouchableOpacity>
             ))}
           </>
@@ -421,11 +427,12 @@ const styles = StyleSheet.create({
   summaryCard: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: 10,
+    borderRadius: 14,
     padding: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderTopWidth: 3,
+    borderTopColor: Colors.primary,
+    ...Shadows.sm,
   },
   summaryValue: { fontSize: 18, fontWeight: '700', color: Colors.primary },
   summaryLabel: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
@@ -434,11 +441,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: 14,
     marginBottom: 8,
+    overflow: 'hidden',
+    ...Shadows.sm,
+  },
+  paymentAccent: {
+    width: 3,
+    alignSelf: 'stretch',
+  },
+  paymentRowInner: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    paddingLeft: 17,
   },
   paymentInfo: { flex: 1, gap: 3, marginRight: 8 },
   paymentMonth: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
@@ -459,7 +477,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   exportLabel: { fontSize: 12, fontWeight: '600', color: Colors.primary },
-  fab: { position: 'absolute', right: 16, bottom: 24, backgroundColor: Colors.primary },
+  fab: { position: 'absolute', right: 16, bottom: 24, backgroundColor: Colors.primary, borderRadius: 16 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   yearPickerSheet: {
     backgroundColor: Colors.surface,

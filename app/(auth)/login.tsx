@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
@@ -49,13 +51,23 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text variant="displaySmall" style={styles.logo}>Dwella</Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>Manage your rentals with ease</Text>
-        </View>
+      {/* Hero gradient top */}
+      <LinearGradient
+        colors={Colors.gradientHero as [string, string]}
+        style={styles.hero}
+      >
+        <MaterialCommunityIcons name="home-city" size={40} color="#fff" style={{ marginBottom: 12 }} />
+        <Text style={styles.heroTitle}>Dwella</Text>
+        <Text style={styles.heroSubtitle}>Manage your rentals with ease</Text>
+      </LinearGradient>
 
-        <View style={styles.form}>
+      {/* White card overlapping gradient */}
+      <ScrollView
+        style={styles.cardScroll}
+        contentContainerStyle={styles.cardContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.card}>
           <TextInput
             label="Email"
             value={email}
@@ -124,26 +136,37 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.primary,
   },
-  scroll: {
+  hero: {
+    height: '35%',
+    justifyContent: 'flex-end',
+    paddingBottom: 32,
+    paddingHorizontal: 32,
+  },
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    fontSize: 15,
+    color: Colors.textOnGradientMuted,
+  },
+  cardScroll: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    marginTop: -24,
+  },
+  cardContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  logo: {
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    marginTop: 8,
-  },
-  form: {
+  card: {
+    padding: 28,
+    paddingTop: 32,
     gap: 12,
   },
   input: {
@@ -151,9 +174,10 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
+    borderRadius: 14,
   },
   buttonContent: {
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   forgotRow: { alignItems: 'center', marginTop: 2 },
   forgotText: { color: Colors.primary },

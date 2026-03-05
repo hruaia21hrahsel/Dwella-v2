@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
-import { Text, TextInput, Button, Avatar, Divider, Chip } from 'react-native-paper';
+import { Text, TextInput, Button, Avatar, Chip } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDate } from '@/lib/utils';
@@ -143,59 +144,60 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Avatar */}
-      <View style={styles.avatarRow}>
-        <Avatar.Text size={72} label={initials} style={styles.avatar} />
-        <Text variant="titleLarge" style={styles.name}>{user?.full_name ?? 'User'}</Text>
-        <Text variant="bodyMedium" style={styles.email}>{user?.email}</Text>
+      {/* Avatar gradient header */}
+      <LinearGradient
+        colors={Colors.gradientHero as [string, string]}
+        style={styles.avatarGradient}
+      >
+        <Avatar.Text
+          size={72}
+          label={initials}
+          style={styles.avatar}
+          labelStyle={{ color: Colors.primary, fontWeight: '700' }}
+        />
+        <Text style={styles.name}>{user?.full_name ?? 'User'}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
+      </LinearGradient>
+
+      {/* Edit Profile section */}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Edit Profile</Text>
+        <TextInput
+          label="Full Name"
+          value={fullName}
+          onChangeText={setFullName}
+          mode="outlined"
+          style={styles.input}
+        />
+        <TextInput
+          label="Phone"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          mode="outlined"
+          style={styles.input}
+        />
+        <TextInput
+          label="Email"
+          value={user?.email ?? ''}
+          mode="outlined"
+          style={styles.input}
+          disabled
+        />
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          loading={saving}
+          disabled={saving}
+          style={styles.saveButton}
+        >
+          Save Changes
+        </Button>
       </View>
 
-      <Divider style={styles.divider} />
-
-      {/* Edit Form */}
-      <Text variant="titleSmall" style={styles.sectionTitle}>Edit Profile</Text>
-
-      <TextInput
-        label="Full Name"
-        value={fullName}
-        onChangeText={setFullName}
-        mode="outlined"
-        style={styles.input}
-      />
-
-      <TextInput
-        label="Phone"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        mode="outlined"
-        style={styles.input}
-      />
-
-      <TextInput
-        label="Email"
-        value={user?.email ?? ''}
-        mode="outlined"
-        style={styles.input}
-        disabled
-      />
-
-      <Button
-        mode="contained"
-        onPress={handleSave}
-        loading={saving}
-        disabled={saving}
-        style={styles.saveButton}
-      >
-        Save Changes
-      </Button>
-
-      <Divider style={styles.divider} />
-
-      {/* Telegram */}
-      <Text variant="titleSmall" style={styles.sectionTitle}>Telegram Bot</Text>
-
-      <View style={styles.telegramCard}>
+      {/* Telegram Bot section */}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Telegram Bot</Text>
         <View style={styles.telegramRow}>
           <Text variant="bodyMedium" style={styles.telegramLabel}>Status</Text>
           <Chip
@@ -211,97 +213,92 @@ export default function ProfileScreen() {
             ? 'You can chat with Dwella Assistant directly on Telegram.'
             : 'Link your Telegram to chat with Dwella Assistant and receive rent reminders on Telegram.'}
         </Text>
-      </View>
-
-      {telegramLinked ? (
-        <Button
-          mode="outlined"
-          icon="link-off"
-          onPress={handleUnlinkTelegram}
-          loading={unlinkingTelegram}
-          disabled={unlinkingTelegram}
-          textColor={Colors.error}
-          style={[styles.telegramBtn, { borderColor: Colors.error }]}
-        >
-          Unlink Telegram
-        </Button>
-      ) : (
-        <Button
-          mode="contained-tonal"
-          icon="send"
-          onPress={handleLinkTelegram}
-          loading={linkingTelegram}
-          disabled={linkingTelegram}
-          style={styles.telegramBtn}
-        >
-          Link Telegram
-        </Button>
-      )}
-
-      <Divider style={styles.divider} />
-
-      {/* Notifications */}
-      <View style={styles.notifHeader}>
-        <Text variant="titleSmall" style={styles.sectionTitle}>Notifications</Text>
-        {unreadCount > 0 && (
-          <Button compact mode="text" onPress={markAllRead} textColor={Colors.primary}>
-            Mark all read
+        {telegramLinked ? (
+          <Button
+            mode="outlined"
+            icon="link-off"
+            onPress={handleUnlinkTelegram}
+            loading={unlinkingTelegram}
+            disabled={unlinkingTelegram}
+            textColor={Colors.error}
+            style={[styles.telegramBtn, { borderColor: Colors.error }]}
+          >
+            Unlink Telegram
+          </Button>
+        ) : (
+          <Button
+            mode="contained-tonal"
+            icon="send"
+            onPress={handleLinkTelegram}
+            loading={linkingTelegram}
+            disabled={linkingTelegram}
+            style={styles.telegramBtn}
+          >
+            Link Telegram
           </Button>
         )}
       </View>
 
-      {notifications.length === 0 ? (
-        <Text variant="bodySmall" style={styles.emptyNotif}>No notifications yet.</Text>
-      ) : (
-        <View style={styles.notifList}>
-          {notifications.slice(0, 10).map((n) => (
-            <View
-              key={n.id}
-              style={[styles.notifRow, !n.is_read && styles.notifUnread]}
-            >
-              <View style={styles.notifContent}>
-                <Text variant="bodyMedium" style={[styles.notifTitle, !n.is_read && styles.notifTitleUnread]}>
-                  {n.title}
-                </Text>
-                <Text variant="bodySmall" style={styles.notifBody}>{n.body}</Text>
-                <Text variant="bodySmall" style={styles.notifTime}>{formatDate(n.created_at)}</Text>
-              </View>
-              {!n.is_read && (
-                <Button compact mode="text" onPress={() => markRead(n.id)} textColor={Colors.textSecondary}>
-                  ✓
-                </Button>
-              )}
-            </View>
-          ))}
+      {/* Notifications section */}
+      <View style={styles.sectionCard}>
+        <View style={styles.notifHeader}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          {unreadCount > 0 && (
+            <Button compact mode="text" onPress={markAllRead} textColor={Colors.primary}>
+              Mark all read
+            </Button>
+          )}
         </View>
-      )}
 
-      <Divider style={styles.divider} />
+        {notifications.length === 0 ? (
+          <Text variant="bodySmall" style={styles.emptyNotif}>No notifications yet.</Text>
+        ) : (
+          <View style={styles.notifList}>
+            {notifications.slice(0, 10).map((n) => (
+              <View
+                key={n.id}
+                style={[styles.notifRow, !n.is_read && styles.notifUnread]}
+              >
+                <View style={styles.notifContent}>
+                  <Text variant="bodyMedium" style={[styles.notifTitle, !n.is_read && styles.notifTitleUnread]}>
+                    {n.title}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.notifBody}>{n.body}</Text>
+                  <Text variant="bodySmall" style={styles.notifTime}>{formatDate(n.created_at)}</Text>
+                </View>
+                {!n.is_read && (
+                  <Button compact mode="text" onPress={() => markRead(n.id)} textColor={Colors.textSecondary}>
+                    ✓
+                  </Button>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
 
-      {/* Security */}
-      <Text variant="titleSmall" style={styles.sectionTitle}>Security</Text>
-
-      <Button
-        mode="outlined"
-        icon="lock-outline"
-        onPress={handleSetupPin}
-        style={styles.pinBtn}
-      >
-        {pinReady ? 'Change PIN' : 'Set Up PIN'}
-      </Button>
-
-      {pinReady && (
+      {/* Security section */}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Security</Text>
         <Button
-          mode="text"
-          icon="lock-open-outline"
-          onPress={handleRemovePin}
-          textColor={Colors.error}
+          mode="outlined"
+          icon="lock-outline"
+          onPress={handleSetupPin}
+          style={styles.pinBtn}
         >
-          Remove PIN
+          {pinReady ? 'Change PIN' : 'Set Up PIN'}
         </Button>
-      )}
-
-      <Divider style={styles.divider} />
+        {pinReady && (
+          <Button
+            mode="text"
+            icon="lock-open-outline"
+            onPress={handleRemovePin}
+            textColor={Colors.error}
+          >
+            Remove PIN
+          </Button>
+        )}
+      </View>
 
       <Button
         mode="outlined"
@@ -323,50 +320,57 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    padding: 24,
-    gap: 12,
+    paddingBottom: 32,
+    gap: 0,
   },
-  avatarRow: {
+  avatarGradient: {
     alignItems: 'center',
-    marginBottom: 8,
+    paddingTop: 40,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
     gap: 8,
+    marginBottom: 16,
   },
   avatar: {
-    backgroundColor: Colors.primary,
+    backgroundColor: 'rgba(255,255,255,0.25)',
   },
   name: {
+    fontSize: 20,
     fontWeight: '700',
-    color: Colors.textPrimary,
+    color: Colors.textOnGradient,
   },
   email: {
-    color: Colors.textSecondary,
+    fontSize: 14,
+    color: Colors.textOnGradientMuted,
   },
-  divider: {
-    marginVertical: 8,
+  sectionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    marginHorizontal: 16,
+    gap: 10,
+    ...Shadows.sm,
   },
   sectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
     color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   input: {
     backgroundColor: Colors.surface,
   },
   saveButton: {
-    marginTop: 8,
+    marginTop: 4,
   },
   logoutButton: {
     borderColor: Colors.error,
-    marginTop: 8,
-  },
-  telegramCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 14,
-    gap: 8,
+    marginTop: 4,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   telegramRow: {
     flexDirection: 'row',
@@ -374,8 +378,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   telegramLabel: { color: Colors.textPrimary },
-  telegramHint: { color: Colors.textSecondary },
-  chipLinked: { backgroundColor: Colors.statusConfirmed + '22' },
+  telegramHint: { color: Colors.textSecondary, fontSize: 13 },
+  chipLinked: { backgroundColor: Colors.statusConfirmedSoft },
   chipUnlinked: { backgroundColor: Colors.border },
   telegramBtn: { marginTop: 4 },
   pinBtn: { marginTop: 4 },
@@ -383,15 +387,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
   },
   emptyNotif: { color: Colors.textSecondary },
   notifList: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderRadius: 14,
     overflow: 'hidden',
+    ...Shadows.sm,
   },
   notifRow: {
     flexDirection: 'row',
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   notifUnread: {
-    backgroundColor: Colors.primary + '08',
+    backgroundColor: Colors.primarySoft,
   },
   notifContent: { flex: 1 },
   notifTitle: { color: Colors.textPrimary },

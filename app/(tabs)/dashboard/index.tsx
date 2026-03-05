@@ -11,25 +11,51 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
 import { PaymentStatus } from '@/lib/types';
 
 const SCREEN_W = Dimensions.get('window').width;
-// outer padding 32, block padding 24, 5 gaps of 4px between 6 chips
-const CHIP_W = Math.floor((SCREEN_W - 32 - 24 - 20) / 6);
+// 4-col grid: outer padding 32, block padding 24, 3 gaps of 4px
+const CHIP_W = Math.floor((SCREEN_W - 32 - 24 - 12) / 4);
+const CHIP_H = 52;
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+const STATUS_ICON: Record<PaymentStatus, string> = {
+  pending: 'clock-outline',
+  partial: 'clock-alert-outline',
+  paid: 'check-circle-outline',
+  confirmed: 'check-decagram',
+  overdue: 'alert-circle-outline',
+};
+
+const STAT_ICONS: Record<string, string> = {
+  'Total Receivable': 'bank-outline',
+  'Received': 'check-circle-outline',
+  'Yet to Receive': 'clock-outline',
+  'Overdue': 'alert-circle-outline',
+};
+
+interface StatCardProps { label: string; value: number; color: string }
+
+function StatCard({ label, value, color }: StatCardProps) {
   return (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
+    <View style={[styles.statCard, Shadows.md]}>
+      <View style={[styles.statAccent, { backgroundColor: color }]} />
+      <MaterialCommunityIcons
+        name={STAT_ICONS[label] as any}
+        size={18}
+        color={color}
+        style={styles.statIcon}
+      />
       <Text style={[styles.statValue, { color }]}>{formatCurrency(value)}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -99,14 +125,42 @@ export default function DashboardScreen() {
     );
   }
 
+  const overdueCount = Object.values(stats).length > 0 ? (stats as any).overdueCount ?? 0 : 0;
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Section 1 — Payment Status with selectors */}
-      <Text style={styles.sectionTitle}>Payment Status — {currentYear}</Text>
+      {/* Hero gradient header */}
+      <LinearGradient
+        colors={Colors.gradientHero as [string, string]}
+        style={[styles.heroCard, Shadows.hero]}
+      >
+        <Text style={styles.heroTitle}>Payment Status {currentYear}</Text>
+        <View style={styles.heroPills}>
+          <View style={styles.heroPill}>
+            <Text style={styles.heroPillText}>{tenantRows.length} Tenant{tenantRows.length !== 1 ? 's' : ''}</Text>
+          </View>
+          <View style={styles.heroPill}>
+            <Text style={styles.heroPillText}>
+              Received {formatCurrency(stats.totalReceived)}
+            </Text>
+          </View>
+          {stats.totalOverdue > 0 ? (
+            <View style={[styles.heroPill, styles.heroPillAlert]}>
+              <Text style={styles.heroPillText}>
+                {formatCurrency(stats.totalOverdue)} Overdue
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.heroPill}>
+              <Text style={styles.heroPillText}>All Clear</Text>
+            </View>
+          )}
+        </View>
+      </LinearGradient>
 
       {/* Property selector */}
       <ScrollView
@@ -172,15 +226,15 @@ export default function DashboardScreen() {
 
       {/* Payment grid for selected tenant */}
       {selectedRow ? (
-        <View style={styles.tenantBlock}>
+        <View style={[styles.tenantBlock, Shadows.sm]}>
           <View style={styles.monthGrid}>
             {MONTHS.map((m) => {
               const payment = selectedRow.paymentsByMonth[m];
               const status: PaymentStatus | null = payment?.status ?? null;
               const isCurrentMonth = m === currentMonth;
 
-              const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPending + '22';
-              const textColor = status ? getStatusColor(status) : Colors.statusPending;
+              const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPendingSoft;
+              const iconColor = status ? getStatusColor(status) : Colors.statusPending;
               const canNavigate = !!payment?.id;
 
               return (
@@ -196,16 +250,24 @@ export default function DashboardScreen() {
                   }}
                   style={[
                     styles.monthChip,
-                    { backgroundColor: bgColor },
+                    { backgroundColor: bgColor, height: CHIP_H },
                     isCurrentMonth && styles.monthChipCurrent,
                   ]}
                 >
-                  <Text style={[styles.monthChipLabel, { color: textColor }]}>
+                  {isCurrentMonth && <View style={styles.currentDot} />}
+                  <Text style={[styles.monthChipLabel, { color: iconColor }]}>
                     {MONTH_SHORT[m - 1]}
                   </Text>
-                  <Text style={[styles.monthChipSub, { color: textColor }]}>
-                    {status ? status.slice(0, 3) : '—'}
-                  </Text>
+                  {status ? (
+                    <MaterialCommunityIcons
+                      name={STATUS_ICON[status] as any}
+                      size={12}
+                      color={iconColor}
+                      style={{ marginTop: 2 }}
+                    />
+                  ) : (
+                    <Text style={[styles.monthChipSub, { color: iconColor }]}>—</Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -216,7 +278,7 @@ export default function DashboardScreen() {
       {/* Log Payment shortcut */}
       {selectedRow && (
         <TouchableOpacity
-          style={styles.logPaymentBtn}
+          style={[styles.logPaymentBtn, Shadows.sm]}
           onPress={() =>
             router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`)
           }
@@ -233,11 +295,11 @@ export default function DashboardScreen() {
         onPress={() => router.push('/reminders')}
         activeOpacity={0.8}
       >
-        <MaterialCommunityIcons name="bell-ring-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+        <MaterialCommunityIcons name="bell-ring-outline" size={16} color={Colors.primary} style={{ marginRight: 6 }} />
         <Text style={styles.remindersBtnText}>Send Reminders</Text>
       </TouchableOpacity>
 
-      {/* Section 2 — Stats (global, all tenants) */}
+      {/* Section 2 — Stats */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
         {getMonthName(currentMonth)} {currentYear}
       </Text>
@@ -255,14 +317,15 @@ export default function DashboardScreen() {
           {recentTransactions.map((tx) => (
             <TouchableOpacity
               key={tx.paymentId}
-              style={styles.txCard}
+              style={[styles.txCard, Shadows.sm]}
               onPress={() =>
                 router.push(
                   `/property/${tx.propertyId}/tenant/${tx.tenantId}/payment/${tx.paymentId}`,
                 )
               }
             >
-              <View style={styles.txRow}>
+              <View style={[styles.txAccent, { backgroundColor: getStatusColor(tx.status) }]} />
+              <View style={[styles.txRow, { paddingLeft: 17 }]}>
                 <View style={styles.txLeft}>
                   <Text style={styles.txTenant}>
                     {tx.tenantName} · Flat {tx.flatNo}
@@ -300,6 +363,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.background,
   },
+  // Hero
+  heroCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+  },
+  heroTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  heroPills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  heroPill: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  heroPillAlert: {
+    backgroundColor: 'rgba(239,68,68,0.3)',
+  },
+  heroPillText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -325,8 +419,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   selectorChipActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '12',
+    borderColor: Colors.primaryMid,
+    backgroundColor: Colors.primarySoft,
   },
   selectorChipText: {
     fontSize: 13,
@@ -350,14 +444,9 @@ const styles = StyleSheet.create({
   // Tenant payment block
   tenantBlock: {
     backgroundColor: Colors.surface,
-    borderRadius: 10,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    elevation: 1,
   },
   monthGrid: {
     flexDirection: 'row',
@@ -369,10 +458,21 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     width: CHIP_W,
     alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
   },
   monthChipCurrent: {
     borderWidth: 1.5,
     borderColor: Colors.primary,
+  },
+  currentDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primary,
   },
   monthChipLabel: {
     fontSize: 11,
@@ -383,12 +483,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textTransform: 'uppercase',
   },
+  // Buttons
   logPaymentBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primary,
-    borderRadius: 10,
+    borderRadius: 14,
     paddingVertical: 12,
     marginTop: 10,
     marginBottom: 4,
@@ -402,14 +503,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
     paddingVertical: 12,
-    marginTop: 16,
+    marginTop: 8,
     marginBottom: 4,
   },
   remindersBtnText: {
-    color: '#fff',
+    color: Colors.primary,
     fontWeight: '700',
     fontSize: 14,
   },
@@ -424,40 +526,56 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: Colors.surface,
-    borderRadius: 10,
+    borderRadius: 16,
     padding: 14,
-    borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  statAccent: {
+    position: 'absolute',
+    width: 3,
+    left: 0,
+    top: 8,
+    bottom: 8,
+    borderRadius: 2,
+  },
+  statIcon: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    opacity: 0.4,
   },
   statValue: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     marginBottom: 4,
+    paddingLeft: 12,
   },
   statLabel: {
     fontSize: 12,
     color: Colors.textSecondary,
+    paddingLeft: 12,
   },
   // Transactions
   txCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 10,
-    padding: 14,
+    borderRadius: 14,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    elevation: 1,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  txAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
   },
   txRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    padding: 14,
   },
   txLeft: {
     flex: 1,

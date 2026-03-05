@@ -8,13 +8,14 @@ import {
   Alert,
 } from 'react-native';
 import { Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/lib/store';
 import { useBotConversations } from '@/hooks/useBotConversations';
 import { sendBotMessage } from '@/lib/bot';
 import { ChatBubble } from '@/components/ChatBubble';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { BotConversation } from '@/lib/types';
 
 export default function BotScreen() {
@@ -66,15 +67,18 @@ export default function BotScreen() {
       keyboardVerticalOffset={90}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={Colors.gradientHeroSubtle as [string, string]}
+        style={styles.header}
+      >
         <View>
-          <Text variant="titleMedium" style={styles.headerTitle}>Dwella Assistant</Text>
-          <Text variant="bodySmall" style={styles.headerSub}>Ask about your properties &amp; payments</Text>
+          <Text style={styles.headerTitle}>Dwella Assistant</Text>
+          <Text style={styles.headerSub}>Ask about your properties &amp; payments</Text>
         </View>
         {messages.length > 0 && (
           <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={Colors.textSecondary} />
         )}
-      </View>
+      </LinearGradient>
 
       {/* Messages */}
       {loading ? (
@@ -147,12 +151,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
-  headerTitle: { fontWeight: '700', color: Colors.textPrimary },
-  headerSub: { color: Colors.textSecondary, marginTop: 2 },
+  headerTitle: { fontWeight: '700', color: Colors.textPrimary, fontSize: 15 },
+  headerSub: { color: Colors.textSecondary, marginTop: 2, fontSize: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyWrap: { flex: 1, justifyContent: 'center' },
   list: { paddingTop: 12 },
@@ -169,9 +170,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
     gap: 4,
+    ...Shadows.sm,
+    shadowOffset: { width: 0, height: -2 },
   },
   input: { flex: 1, backgroundColor: Colors.surface, maxHeight: 120 },
   inputOutline: { borderRadius: 24 },
