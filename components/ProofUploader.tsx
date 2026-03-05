@@ -43,9 +43,19 @@ export function ProofUploader({ storagePath, onUploaded, existingUrl }: ProofUpl
       const response = await fetch(uri);
       const blob = await response.blob();
 
-      const { error } = await supabase.storage
+      // Try upload; if file already exists (from a previous attempt) remove it first then re-upload
+      const { error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKET)
-        .upload(storagePath, blob, { contentType: 'image/jpeg', upsert: true });
+        .upload(storagePath, blob, { contentType: 'image/jpeg' });
+
+      let error = uploadError;
+      if (uploadError?.message?.includes('already exists')) {
+        await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+        const { error: retryError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .upload(storagePath, blob, { contentType: 'image/jpeg' });
+        error = retryError;
+      }
 
       if (error) {
         Alert.alert('Upload failed', error.message);
