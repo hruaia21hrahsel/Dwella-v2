@@ -4,6 +4,7 @@ import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { getBiometricType, isBiometricEnabled, saveBiometricSession } from '@/lib/biometric-auth';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -22,10 +23,25 @@ export default function LoginScreen() {
     setLoading(true);
     setError('');
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
 
     if (authError) {
       setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    // Offer biometric setup if available and not yet enrolled
+    if (data.session?.refresh_token) {
+      const [biometricType, alreadyEnabled] = await Promise.all([
+        getBiometricType(),
+        isBiometricEnabled(),
+      ]);
+      if (!alreadyEnabled && biometricType !== 'none') {
+        await saveBiometricSession(data.session.refresh_token);
+        router.replace('/(auth)/pin-setup');
+        return;
+      }
     }
 
     setLoading(false);

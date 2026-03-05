@@ -4,6 +4,7 @@ import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { isBiometricEnabled } from '@/lib/biometric-auth';
 
 const theme = {
   ...MD3LightTheme,
@@ -57,7 +58,10 @@ function AuthGuard() {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!session && !inAuthGroup) {
-      router.replace('/(auth)/login');
+      // Check if biometric is set up — if so, show lock screen instead of login
+      isBiometricEnabled().then((enabled) => {
+        router.replace(enabled ? '/(auth)/lock' : '/(auth)/login');
+      });
     } else if (session && inAuthGroup) {
       router.replace('/(tabs)/dashboard');
     } else if (session && !inAuthGroup && !initialRedirectDone.current) {

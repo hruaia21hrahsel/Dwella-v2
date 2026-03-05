@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { getBiometricType, isBiometricEnabled, saveBiometricSession } from '@/lib/biometric-auth';
 
 export default function SignupScreen() {
+  const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -40,14 +42,25 @@ export default function SignupScreen() {
     }
 
     // Auto-sign in immediately — email is auto-confirmed via DB trigger
-    const { error: loginError } = await supabase.auth.signInWithPassword({
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
     if (loginError) {
-      // Signed up but can't auto-login (e.g. confirmation still required)
       setError('Account created! Please sign in.');
+      setLoading(false);
+      return;
+    }
+
+    // Offer biometric setup if available
+    if (data.session?.refresh_token) {
+      const biometricType = await getBiometricType();
+      if (biometricType !== 'none') {
+        await saveBiometricSession(data.session.refresh_token);
+        router.replace('/(auth)/pin-setup');
+        return;
+      }
     }
 
     setLoading(false);
