@@ -34,6 +34,15 @@ function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="dashboard/index"
+        options={{
+          title: 'Dashboard',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="view-dashboard" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="payments/index"
         options={{
           title: 'Payments',
