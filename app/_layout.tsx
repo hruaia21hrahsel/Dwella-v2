@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { Colors } from '@/constants/colors';
@@ -18,6 +18,7 @@ function AuthGuard() {
   const { session, isLoading, setSession, setUser, setLoading } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+  const initialRedirectDone = useRef(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
@@ -58,6 +59,9 @@ function AuthGuard() {
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (session && inAuthGroup) {
+      router.replace('/(tabs)/dashboard');
+    } else if (session && !inAuthGroup && !initialRedirectDone.current) {
+      initialRedirectDone.current = true;
       router.replace('/(tabs)/dashboard');
     }
   }, [session, isLoading, segments]);

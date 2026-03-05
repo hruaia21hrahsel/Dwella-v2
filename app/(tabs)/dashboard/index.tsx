@@ -7,7 +7,12 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
+
+const SCREEN_W = Dimensions.get('window').width;
+// outer padding 32, block padding 24, 5 gaps of 4px between 6 chips
+const CHIP_W = Math.floor((SCREEN_W - 32 - 24 - 20) / 6);
 import { useRouter } from 'expo-router';
 import { Menu } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -109,18 +114,7 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Section 1 — Stats */}
-      <Text style={styles.sectionTitle}>
-        {getMonthName(currentMonth)} {currentYear}
-      </Text>
-      <View style={styles.statsGrid}>
-        <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
-        <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
-        <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
-        <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
-      </View>
-
-      {/* Section 2 — Payment Grid */}
+      {/* Section 1 — Payment Grid (hero) */}
       <View style={styles.gridHeader}>
         <Text style={styles.sectionTitle}>Payment Status — {currentYear}</Text>
         <Menu
@@ -159,7 +153,7 @@ export default function DashboardScreen() {
               Flat {row.flatNo} · {row.propertyName}
             </Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.monthRow}>
+          <View style={styles.monthGrid}>
             {MONTHS.map((m) => {
               const payment = row.paymentsByMonth[m];
               const status: PaymentStatus | null = payment?.status ?? null;
@@ -201,9 +195,20 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </View>
         </View>
       ))}
+
+      {/* Section 2 — Stats */}
+      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+        {getMonthName(currentMonth)} {currentYear}
+      </Text>
+      <View style={styles.statsGrid}>
+        <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
+        <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
+        <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
+        <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
+      </View>
 
       {/* Section 3 — Recent Transactions */}
       {recentTransactions.length > 0 && (
@@ -337,15 +342,15 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 2,
   },
-  monthRow: {
+  monthGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   monthChip: {
     borderRadius: 8,
-    paddingHorizontal: 8,
     paddingVertical: 6,
-    marginRight: 6,
-    minWidth: 44,
+    width: CHIP_W,
     alignItems: 'center',
   },
   monthChipCurrent: {
