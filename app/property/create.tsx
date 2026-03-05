@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, HelperText } from 'react-native-paper';
+import { TextInput, Button, HelperText, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -110,7 +110,14 @@ export default function PropertyCreateScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: isEditing ? 'Edit Property' : 'New Property' }} />
+      <Stack.Screen
+        options={{
+          title: isEditing ? 'Edit Property' : 'New Property',
+          headerLeft: () => (
+            <IconButton icon="close" size={22} onPress={() => router.back()} />
+          ),
+        }}
+      />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

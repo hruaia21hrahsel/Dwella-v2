@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Share } from 'react-native';
-import { TextInput, Button, HelperText, Text } from 'react-native-paper';
+import { TextInput, Button, HelperText, Text, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
@@ -120,6 +120,9 @@ export default function TenantCreateScreen() {
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.textPrimary,
           headerShown: true,
+          headerLeft: () => (
+            <IconButton icon="close" size={22} onPress={() => router.back()} />
+          ),
         }}
       />
       <KeyboardAvoidingView

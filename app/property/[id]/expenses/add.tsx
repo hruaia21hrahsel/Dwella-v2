@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
-import { Text, TextInput, Button, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, ActivityIndicator, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
@@ -66,6 +66,9 @@ export default function AddExpenseScreen() {
           title: 'Add Expense',
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.textPrimary,
+          headerLeft: () => (
+            <IconButton icon="close" size={22} onPress={() => router.back()} />
+          ),
         }}
       />
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
