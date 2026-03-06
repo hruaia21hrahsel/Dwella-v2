@@ -13,7 +13,7 @@ function TabsLayout() {
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopWidth: 0,
-          shadowColor: '#1E1B4B',
+          shadowColor: '#134E4A',
           shadowOpacity: 0.08,
           shadowOffset: { width: 0, height: -4 },
           shadowRadius: 12,

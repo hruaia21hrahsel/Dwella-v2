@@ -17,7 +17,7 @@ function buildReceiptHtml(
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 32px; color: #1e293b; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-    .brand { font-size: 28px; font-weight: 700; color: #4F46E5; }
+    .brand { font-size: 28px; font-weight: 700; color: #0D9488; }
     .title { font-size: 14px; color: #64748b; margin-top: 4px; }
     .meta { text-align: right; font-size: 13px; color: #64748b; }
     .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
@@ -139,7 +139,7 @@ function buildAnnualSummaryHtml(
   <meta charset="utf-8"/>
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 32px; color: #1e293b; }
-    .brand { font-size: 28px; font-weight: 700; color: #4F46E5; }
+    .brand { font-size: 28px; font-weight: 700; color: #0D9488; }
     h2 { margin: 4px 0 24px; font-size: 18px; color: #475569; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { background: #f1f5f9; text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
