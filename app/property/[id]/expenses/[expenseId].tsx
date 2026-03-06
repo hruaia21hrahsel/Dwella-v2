@@ -107,6 +107,7 @@ export default function EditExpenseScreen() {
     <>
       <Stack.Screen
         options={{
+          headerShown: true,
           title: 'Edit Expense',
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.textPrimary,

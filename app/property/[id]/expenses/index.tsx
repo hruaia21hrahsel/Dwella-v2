@@ -122,6 +122,7 @@ export default function ExpensesScreen() {
     <>
       <Stack.Screen
         options={{
+          headerShown: true,
           title: 'Expenses',
           headerStyle: { backgroundColor: Colors.surface },
           headerTintColor: Colors.textPrimary,
