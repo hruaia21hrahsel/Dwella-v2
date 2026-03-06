@@ -4,7 +4,7 @@ import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { isBiometricEnabled, savePinSession } from '@/lib/biometric-auth';
+import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
@@ -18,17 +18,17 @@ const theme = {
 };
 
 function AuthGuard() {
-  const { session, isLoading, setSession, setUser, setLoading, onboardingCompleted } = useAuthStore();
+  const { session, isLoading, isLocked, setSession, setUser, setLoading, onboardingCompleted } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const initialRedirectDone = useRef(false);
 
+  // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
 
       if (newSession?.user) {
-        // Upsert ensures a profile row exists even if the DB trigger missed it
         await supabase.from('users').upsert(
           {
             id: newSession.user.id,
@@ -44,14 +44,6 @@ function AuthGuard() {
           .eq('id', newSession.user.id)
           .single();
         setUser(data);
-
-        // Keep SecureStore in sync whenever Supabase rotates the refresh token.
-        // Without this, the lock screen would send a stale token after auto-refresh
-        // and always fall through to email/password login.
-        if (newSession.refresh_token && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          const enabled = await isBiometricEnabled();
-          if (enabled) await savePinSession(newSession.refresh_token);
-        }
       } else {
         setUser(null);
       }
@@ -62,31 +54,45 @@ function AuthGuard() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // ── Routing logic ──────────────────────────────────────────────────
+  //
+  // Correct model:
+  //   if (!session)              → /login          (must authenticate)
+  //   else if (pinEnabled && isLocked) → /lock     (session exists, UI locked)
+  //   else                       → /dashboard      (session + unlocked)
+  //
+  // isLocked is a pure in-memory flag. It has nothing to do with the backend.
+  // PIN only sets isLocked = false. It never touches Supabase.
   useEffect(() => {
     if (isLoading) return;
 
-    function routeAfterAuth() {
-      if (!onboardingCompleted) {
-        router.replace('/onboarding');
-      } else {
-        router.replace('/(tabs)/dashboard');
-      }
-    }
-
     const inAuthGroup = segments[0] === '(auth)';
+    const inOnboarding = segments[0] === 'onboarding';
 
-    if (!session && !inAuthGroup) {
-      // Check if biometric is set up — if so, show lock screen instead of login
-      isBiometricEnabled().then((enabled) => {
-        router.replace(enabled ? '/(auth)/lock' : '/(auth)/login');
-      });
-    } else if (session && inAuthGroup) {
-      routeAfterAuth();
-    } else if (session && !inAuthGroup && !initialRedirectDone.current) {
-      initialRedirectDone.current = true;
-      routeAfterAuth();
+    if (!session) {
+      // No Supabase session — user must log in with email/password.
+      if (!inAuthGroup) router.replace('/(auth)/login');
+      return;
     }
-  }, [session, isLoading, segments]);
+
+    // Session exists. Check if the UI is locally locked.
+    isBiometricEnabled().then((pinEnabled) => {
+      if (pinEnabled && isLocked) {
+        // App is locked — show PIN screen. PIN will call setLocked(false).
+        // Only navigate if not already on the lock screen.
+        const alreadyOnLock = inAuthGroup && segments[1] === 'lock';
+        if (!alreadyOnLock) router.replace('/(auth)/lock');
+        return;
+      }
+
+      // Unlocked — go to the app. Only redirect if coming from auth screens
+      // or on the very first load.
+      if (inAuthGroup || inOnboarding || !initialRedirectDone.current) {
+        initialRedirectDone.current = true;
+        router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
+      }
+    });
+  }, [session, isLoading, segments, isLocked]);
 
   return null;
 }

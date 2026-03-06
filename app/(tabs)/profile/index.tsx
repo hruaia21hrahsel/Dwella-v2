@@ -10,12 +10,7 @@ import { Colors, Shadows } from '@/constants/colors';
 import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDate } from '@/lib/utils';
-import {
-  savePinSession,
-  clearBiometricSession,
-  clearPin,
-  isPinSet,
-} from '@/lib/biometric-auth';
+import { isPinSet, disablePin } from '@/lib/biometric-auth';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -35,8 +30,6 @@ export default function ProfileScreen() {
   }, []);
 
   async function handleSetupPin() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.refresh_token) await savePinSession(session.refresh_token);
     router.push('/pin-setup');
   }
 
@@ -50,8 +43,7 @@ export default function ProfileScreen() {
           text: 'Remove',
           style: 'destructive',
           onPress: async () => {
-            await clearBiometricSession();
-            await clearPin();
+            await disablePin();
             setPinReady(false);
           },
         },
@@ -82,10 +74,10 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     setLoggingOut(true);
-    // scope: 'local' clears the local session only — the server-side refresh
-    // token stays alive so the PIN lock screen can restore the session on the
-    // next launch without needing email/password again.
-    await supabase.auth.signOut({ scope: 'local' });
+    // Full sign-out — clears the Supabase session. AuthGuard will see
+    // session = null and route to /login. The PIN screen is NOT shown
+    // after logout because there is no session to unlock.
+    await supabase.auth.signOut();
     setLoggingOut(false);
   }
 

@@ -6,10 +6,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
-import { savePinSession, isPinSet } from '@/lib/biometric-auth';
+import { isPinSet } from '@/lib/biometric-auth';
+import { useAuthStore } from '@/lib/store';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const setLocked = useAuthStore((s) => s.setLocked);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,22 +35,19 @@ export default function LoginScreen() {
       return;
     }
 
-    if (data.session?.refresh_token) {
-      const pinSet = await isPinSet();
-      if (pinSet) {
-        // PIN already configured — re-save the new session token (the old one
-        // may have been invalidated by a previous signOut) and let AuthGuard
-        // handle the redirect to dashboard.
-        await savePinSession(data.session.refresh_token);
-      } else {
-        // No PIN yet — save session and take user through first-time setup.
-        await savePinSession(data.session.refresh_token);
-        router.replace('/pin-setup');
-        return;
-      }
+    // The user authenticated with email/password — the app is now unlocked.
+    // setLocked(false) prevents AuthGuard from routing back to the PIN screen.
+    setLocked(false);
+
+    // If the user has never set up a PIN, send them to the setup screen.
+    const pinSet = await isPinSet();
+    if (!pinSet && data.session) {
+      router.replace('/pin-setup');
+      return;
     }
 
     setLoading(false);
+    // AuthGuard handles the final redirect to dashboard/onboarding.
   }
 
   return (
@@ -56,7 +55,6 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Hero gradient top */}
       <LinearGradient
         colors={Colors.gradientHero as [string, string]}
         style={styles.hero}
@@ -66,7 +64,6 @@ export default function LoginScreen() {
         <Text style={styles.heroSubtitle}>Manage your rentals with ease</Text>
       </LinearGradient>
 
-      {/* White card overlapping gradient */}
       <ScrollView
         style={styles.cardScroll}
         contentContainerStyle={styles.cardContent}

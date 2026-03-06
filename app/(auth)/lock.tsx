@@ -1,24 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
-import {
-  getBiometricRefreshToken,
-  savePinSession,
-  verifyPin,
-  isPinSet,
-  isBiometricEnabled,
-} from '@/lib/biometric-auth';
+import { verifyPin, isPinSet, isBiometricEnabled } from '@/lib/biometric-auth';
+import { useAuthStore } from '@/lib/store';
 
 const DIGITS = [['1','2','3'],['4','5','6'],['7','8','9'],['','0','⌫']];
 
 export default function LockScreen() {
   const router = useRouter();
+  const setLocked = useAuthStore((s) => s.setLocked);
   const [ready, setReady] = useState(false);
-  const [restoring, setRestoring] = useState(false);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [attempts, setAttempts] = useState(0);
@@ -27,38 +22,13 @@ export default function LockScreen() {
     (async () => {
       const [enabled, pinReady] = await Promise.all([isBiometricEnabled(), isPinSet()]);
       if (!enabled || !pinReady) {
-        goToLogin();
+        // PIN not configured — shouldn't be here, go to login
+        router.replace('/(auth)/login');
         return;
       }
       setReady(true);
     })();
   }, []);
-
-  const restoreSession = useCallback(async () => {
-    setRestoring(true);
-    const refreshToken = await getBiometricRefreshToken();
-    if (!refreshToken) { goToLogin(); return; }
-    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
-    if (error) {
-      // Refresh token is invalid (expired or invalidated by sign-out).
-      // Do NOT clear the PIN or biometric session — after the user logs in
-      // with email/password, a new token is saved and the lock screen works
-      // again on the next launch.
-      goToLogin();
-    } else {
-      // Supabase rotates refresh tokens — persist the new one so the next
-      // cold launch doesn't fail with a stale token.
-      if (data.session?.refresh_token) {
-        await savePinSession(data.session.refresh_token);
-      }
-      router.replace('/(tabs)/dashboard');
-    }
-    setRestoring(false);
-  }, []);
-
-  function goToLogin() {
-    router.replace('/(auth)/login');
-  }
 
   async function handlePinDigit(digit: string) {
     const newPin = pin + digit;
@@ -67,24 +37,32 @@ export default function LockScreen() {
 
     if (newPin.length === 6) {
       const correct = await verifyPin(newPin);
+      setPin('');
+
       if (correct) {
-        setPin('');
-        await restoreSession();
+        // Unlock the UI. The Supabase session is already active — AuthGuard
+        // will route to dashboard as soon as isLocked becomes false.
+        setLocked(false);
       } else {
         const newAttempts = attempts + 1;
         setAttempts(newAttempts);
-        setPin('');
         if (newAttempts >= 5) {
           Alert.alert(
             'Too many attempts',
             'Please sign in with your email and password.',
-            [{ text: 'OK', onPress: goToLogin }],
+            [{ text: 'OK', onPress: signOutAndGoToLogin }],
           );
         } else {
           setPinError(`Incorrect PIN. ${5 - newAttempts} attempt${5 - newAttempts === 1 ? '' : 's'} remaining.`);
         }
       }
     }
+  }
+
+  async function signOutAndGoToLogin() {
+    // Full sign-out so the user can re-authenticate with email/password.
+    // AuthGuard will redirect to /login once the session is cleared.
+    await supabase.auth.signOut();
   }
 
   function handleDelete() {
@@ -96,12 +74,8 @@ export default function LockScreen() {
     if (pin.length < 6) handlePinDigit(d);
   }
 
-  if (!ready || restoring) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-      </View>
-    );
+  if (!ready) {
+    return <View style={styles.center} />;
   }
 
   return (
@@ -139,7 +113,7 @@ export default function LockScreen() {
         ))}
       </View>
 
-      <TouchableOpacity onPress={goToLogin}>
+      <TouchableOpacity onPress={signOutAndGoToLogin}>
         <Text style={styles.altLink}>Use email & password</Text>
       </TouchableOpacity>
     </View>
@@ -155,7 +129,7 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
     paddingHorizontal: 32,
   },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
+  center: { flex: 1, backgroundColor: Colors.background },
   logoArea: { alignItems: 'center', gap: 8 },
   appName: { fontSize: 36, fontWeight: '800', color: Colors.primary, letterSpacing: -1 },
   tagline: { fontSize: 16, color: Colors.textSecondary },
