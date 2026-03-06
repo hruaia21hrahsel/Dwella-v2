@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
-import { isBiometricEnabled, savePinSession, isPinSet } from '@/lib/biometric-auth';
+import { savePinSession, isPinSet } from '@/lib/biometric-auth';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -34,13 +34,14 @@ export default function LoginScreen() {
     }
 
     if (data.session?.refresh_token) {
-      const [alreadyEnabled, pinSet] = await Promise.all([isBiometricEnabled(), isPinSet()]);
-      if (alreadyEnabled && pinSet) {
-        // PIN already configured — just refresh the stored token and let
-        // AuthGuard handle the redirect.
+      const pinSet = await isPinSet();
+      if (pinSet) {
+        // PIN already configured — re-save the new session token (the old one
+        // may have been invalidated by a previous signOut) and let AuthGuard
+        // handle the redirect to dashboard.
         await savePinSession(data.session.refresh_token);
       } else {
-        // First login or PIN was never set up — take user through setup.
+        // No PIN yet — save session and take user through first-time setup.
         await savePinSession(data.session.refresh_token);
         router.replace('/pin-setup');
         return;

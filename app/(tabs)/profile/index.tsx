@@ -82,6 +82,10 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     setLoggingOut(true);
+    // Clear the stored refresh token before signOut so the lock screen is
+    // not shown on next cold launch (signOut invalidates the token server-side,
+    // which would cause the lock screen restore to always fail).
+    await clearBiometricSession();
     await supabase.auth.signOut();
     setLoggingOut(false);
   }
