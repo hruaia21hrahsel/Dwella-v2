@@ -7,7 +7,7 @@ export default function Index() {
   if (isLoading) return null;
 
   if (session) {
-    return <Redirect href="/(tabs)/properties" />;
+    return <Redirect href="/(tabs)/dashboard" />;
   }
 
   return <Redirect href="/(auth)/login" />;
