@@ -24,8 +24,10 @@ import { supabase } from '@/lib/supabase';
 
 const SCREEN_W = Dimensions.get('window').width;
 // 4-col grid: outer padding 32, block padding 24, 3 gaps of 4px
-const CHIP_W = Math.floor((SCREEN_W - 32 - 24 - 12) / 4);
-const CHIP_H = 52;
+// 6 circles per row, 2 rows = 12 months
+// Total horizontal space used: 6 * CHIP_SIZE + 5 gaps
+// Available: SCREEN_W - screen padding (32) - tenantBlock padding (24) - 5 gaps (20)
+const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 20) / 6);
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -268,7 +270,7 @@ export default function DashboardScreen() {
                   }}
                   style={[
                     styles.monthChip,
-                    { backgroundColor: bgColor, height: CHIP_H },
+                    { backgroundColor: bgColor },
                     isCurrentMonth && styles.monthChipCurrent,
                   ]}
                 >
@@ -506,9 +508,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   monthChip: {
-    borderRadius: 8,
-    paddingVertical: 6,
-    width: CHIP_W,
+    width: CHIP_SIZE,
+    height: CHIP_SIZE,
+    borderRadius: CHIP_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
