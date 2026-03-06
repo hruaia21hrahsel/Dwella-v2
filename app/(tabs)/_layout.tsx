@@ -23,9 +23,10 @@ function TabsLayout() {
           paddingTop: 6,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
+          fontSize: 10,
+          fontWeight: '500',
         },
+        tabBarAllowFontScaling: false,
         headerStyle: {
           backgroundColor: Colors.surface,
         },
@@ -46,7 +47,7 @@ function TabsLayout() {
       <Tabs.Screen
         name="properties"
         options={{
-          title: 'Properties',
+          title: 'Property',
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home-city" size={size} color={color} />
