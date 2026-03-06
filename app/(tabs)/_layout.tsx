@@ -48,6 +48,7 @@ function TabsLayout() {
         name="properties"
         options={{
           title: 'Property',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home-city" size={size} color={color} />
           ),
