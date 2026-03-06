@@ -18,7 +18,7 @@ const theme = {
 };
 
 function AuthGuard() {
-  const { session, isLoading, setSession, setUser, setLoading } = useAuthStore();
+  const { session, isLoading, setSession, setUser, setLoading, onboardingCompleted } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const initialRedirectDone = useRef(false);
@@ -57,6 +57,14 @@ function AuthGuard() {
   useEffect(() => {
     if (isLoading) return;
 
+    function routeAfterAuth() {
+      if (!onboardingCompleted) {
+        router.replace('/onboarding');
+      } else {
+        router.replace('/(tabs)/dashboard');
+      }
+    }
+
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!session && !inAuthGroup) {
@@ -65,10 +73,10 @@ function AuthGuard() {
         router.replace(enabled ? '/(auth)/lock' : '/(auth)/login');
       });
     } else if (session && inAuthGroup) {
-      router.replace('/(tabs)/dashboard');
+      routeAfterAuth();
     } else if (session && !inAuthGroup && !initialRedirectDone.current) {
       initialRedirectDone.current = true;
-      router.replace('/(tabs)/dashboard');
+      routeAfterAuth();
     }
   }, [session, isLoading, segments]);
 
@@ -82,6 +90,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="invite/[token]" />
