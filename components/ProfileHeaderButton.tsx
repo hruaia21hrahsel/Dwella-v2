@@ -1,4 +1,4 @@
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -6,7 +6,7 @@ import { Colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
 
-export function ProfileHeaderButton() {
+export function ProfileHeaderButton({ style }: { style?: ViewStyle }) {
   const router = useRouter();
   const { user } = useAuthStore();
   const { unreadCount } = useNotifications(user?.id);
@@ -14,7 +14,7 @@ export function ProfileHeaderButton() {
   return (
     <TouchableOpacity
       onPress={() => router.push('/(tabs)/profile')}
-      style={styles.btn}
+      style={[styles.btn, style]}
       activeOpacity={0.7}
     >
       <MaterialCommunityIcons name="account-circle-outline" size={26} color={Colors.textPrimary} />

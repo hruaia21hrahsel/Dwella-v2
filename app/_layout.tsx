@@ -82,8 +82,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerRight: () => <ProfileHeaderButton /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerRight: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
@@ -92,7 +92,7 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: Colors.surface },
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
-            headerRight: () => <ProfileHeaderButton />,
+            headerLeft: () => <ProfileHeaderButton />,
           }}
         />
         <Stack.Screen
@@ -103,7 +103,7 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: Colors.surface },
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
-            headerRight: () => <ProfileHeaderButton />,
+            headerLeft: () => <ProfileHeaderButton />,
           }}
         />
         <Stack.Screen name="+not-found" />
