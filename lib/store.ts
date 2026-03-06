@@ -23,6 +23,7 @@ interface AuthState {
   clearAuth: () => void;
   bumpPropertyRefresh: () => void;
   setOnboardingCompleted: () => void;
+  resetOnboarding: () => void;
   setLocked: (locked: boolean) => void;
 }
 
@@ -41,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => set({ session: null, user: null, isLoading: false }),
       bumpPropertyRefresh: () => set((s) => ({ propertyRefreshAt: s.propertyRefreshAt + 1 })),
       setOnboardingCompleted: () => set({ onboardingCompleted: true }),
+      resetOnboarding: () => set({ onboardingCompleted: false }),
       setLocked: (isLocked) => set({ isLocked }),
     }),
     {

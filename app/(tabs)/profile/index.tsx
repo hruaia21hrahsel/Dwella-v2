@@ -14,7 +14,7 @@ import { isPinSet, disablePin } from '@/lib/biometric-auth';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, setUser } = useAuthStore();
+  const { user, setUser, resetOnboarding } = useAuthStore();
   const { notifications, unreadCount, markAllRead, markRead } = useNotifications(user?.id);
   const [fullName, setFullName] = useState(user?.full_name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -293,6 +293,22 @@ export default function ProfileScreen() {
             Remove PIN
           </Button>
         )}
+      </View>
+
+      {/* App Tour */}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Help</Text>
+        <Button
+          mode="outlined"
+          icon="play-circle-outline"
+          onPress={() => {
+            resetOnboarding();
+            router.push('/onboarding');
+          }}
+          style={styles.pinBtn}
+        >
+          Replay App Tour
+        </Button>
       </View>
 
       <Button
