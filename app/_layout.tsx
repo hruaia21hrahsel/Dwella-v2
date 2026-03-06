@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
+import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 
 const theme = {
   ...MD3LightTheme,
@@ -80,8 +81,8 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="property/create" options={{ headerShown: true, title: 'Property', presentation: 'modal' }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', title: 'Log Payment', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, title: 'Property', presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary, headerRight: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', title: 'Log Payment', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary, headerRight: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
@@ -90,6 +91,7 @@ export default function RootLayout() {
             title: 'Set Up PIN',
             headerStyle: { backgroundColor: Colors.surface },
             headerTintColor: Colors.textPrimary,
+            headerRight: () => <ProfileHeaderButton />,
           }}
         />
         <Stack.Screen
@@ -100,6 +102,7 @@ export default function RootLayout() {
             presentation: 'modal',
             headerStyle: { backgroundColor: Colors.surface },
             headerTintColor: Colors.textPrimary,
+            headerRight: () => <ProfileHeaderButton />,
           }}
         />
         <Stack.Screen name="+not-found" />

@@ -1,60 +1,10 @@
-import { Platform, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import { Platform } from 'react-native';
+import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Text } from 'react-native-paper';
 import { Colors } from '@/constants/colors';
-import { useAuthStore } from '@/lib/store';
-import { useNotifications } from '@/hooks/useNotifications';
-
-function ProfileHeaderButton({ unreadCount }: { unreadCount: number }) {
-  const router = useRouter();
-  return (
-    <TouchableOpacity
-      onPress={() => router.push('/(tabs)/profile')}
-      style={styles.profileBtn}
-      activeOpacity={0.7}
-    >
-      <MaterialCommunityIcons name="account-circle-outline" size={26} color={Colors.textPrimary} />
-      {unreadCount > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
-  profileBtn: {
-    marginRight: 12,
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: Colors.error,
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
-    lineHeight: 12,
-  },
-});
+import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 
 function TabsLayout() {
-  const { user } = useAuthStore();
-  const { unreadCount } = useNotifications(user?.id);
-
-  const profileButton = <ProfileHeaderButton unreadCount={unreadCount} />;
-
   return (
     <Tabs
       screenOptions={{
@@ -68,20 +18,20 @@ function TabsLayout() {
           shadowOffset: { width: 0, height: -4 },
           shadowRadius: 12,
           elevation: 8,
-          height: Platform.OS === 'ios' ? 88 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          height: Platform.OS === 'ios' ? 72 : 56,
+          paddingBottom: Platform.OS === 'ios' ? 16 : 6,
+          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: -2,
         },
         headerStyle: {
           backgroundColor: Colors.surface,
         },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
-        headerRight: () => profileButton,
+        headerLeft: () => <ProfileHeaderButton />,
       }}
     >
       <Tabs.Screen
@@ -136,7 +86,7 @@ function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarButton: () => null,
-          headerRight: () => null,
+          headerLeft: () => null,
         }}
       />
     </Tabs>
