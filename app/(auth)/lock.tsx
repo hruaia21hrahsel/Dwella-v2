@@ -11,7 +11,6 @@ import {
   verifyPin,
   isPinSet,
   isBiometricEnabled,
-  clearBiometricSession,
 } from '@/lib/biometric-auth';
 
 const DIGITS = [['1','2','3'],['4','5','6'],['7','8','9'],['','0','⌫']];
@@ -41,9 +40,10 @@ export default function LockScreen() {
     if (!refreshToken) { goToLogin(); return; }
     const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
     if (error) {
-      // Only clear the session token — do NOT clear the PIN.
-      // The PIN is a separate secret and should survive session expiry.
-      await clearBiometricSession();
+      // Refresh token is invalid (expired or invalidated by sign-out).
+      // Do NOT clear the PIN or biometric session — after the user logs in
+      // with email/password, a new token is saved and the lock screen works
+      // again on the next launch.
       goToLogin();
     } else {
       // Supabase rotates refresh tokens — persist the new one so the next
