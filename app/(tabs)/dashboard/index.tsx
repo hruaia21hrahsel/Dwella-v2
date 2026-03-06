@@ -289,7 +289,7 @@ export default function DashboardScreen() {
           if (selectedRow) {
             router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`);
           } else {
-            router.push('/(tabs)/property');
+            router.push('/property/create');
           }
         }}
         activeOpacity={0.8}
