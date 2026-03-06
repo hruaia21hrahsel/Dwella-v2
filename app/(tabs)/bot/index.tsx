@@ -70,7 +70,7 @@ export default function BotScreen() {
       {/* Header */}
       <LinearGradient
         colors={Colors.gradientHeroSubtle as [string, string]}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 12 }]}
       >
         <ProfileHeaderButton />
         <View style={styles.headerCenter}>
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  headerCenter: { flex: 1 },
+  headerCenter: { flex: 1, marginLeft: 8 },
   headerTitle: { fontWeight: '700', color: Colors.textPrimary, fontSize: 15 },
   headerSub: { color: Colors.textSecondary, marginTop: 2, fontSize: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
