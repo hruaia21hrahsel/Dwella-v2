@@ -4,7 +4,7 @@ import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { isBiometricEnabled } from '@/lib/biometric-auth';
+import { isBiometricEnabled, savePinSession } from '@/lib/biometric-auth';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
@@ -24,7 +24,7 @@ function AuthGuard() {
   const initialRedirectDone = useRef(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setSession(newSession);
 
       if (newSession?.user) {
@@ -44,6 +44,14 @@ function AuthGuard() {
           .eq('id', newSession.user.id)
           .single();
         setUser(data);
+
+        // Keep SecureStore in sync whenever Supabase rotates the refresh token.
+        // Without this, the lock screen would send a stale token after auto-refresh
+        // and always fall through to email/password login.
+        if (newSession.refresh_token && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          const enabled = await isBiometricEnabled();
+          if (enabled) await savePinSession(newSession.refresh_token);
+        }
       } else {
         setUser(null);
       }
