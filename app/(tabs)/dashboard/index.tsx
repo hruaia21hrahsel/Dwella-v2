@@ -15,7 +15,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
-import { EmptyState } from '@/components/EmptyState';
 import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
@@ -137,16 +136,6 @@ export default function DashboardScreen() {
     );
   }
 
-  if (tenantRows.length === 0) {
-    return (
-      <EmptyState
-        icon="view-dashboard-outline"
-        title="No tenants yet"
-        subtitle="Add properties and tenants to see your dashboard."
-      />
-    );
-  }
-
   return (
     <ScrollView
       style={styles.container}
@@ -244,70 +233,70 @@ export default function DashboardScreen() {
         </ScrollView>
       )}
 
-      {/* Payment grid for selected tenant */}
-      {selectedRow ? (
-        <View style={[styles.tenantBlock, Shadows.sm]}>
-          <View style={styles.monthGrid}>
-            {MONTHS.map((m) => {
-              const payment = selectedRow.paymentsByMonth[m];
-              const status: PaymentStatus | null = payment?.status ?? null;
-              const isCurrentMonth = m === currentMonth;
+      {/* Payment grid — always shown */}
+      <View style={[styles.tenantBlock, Shadows.sm]}>
+        <View style={styles.monthGrid}>
+          {MONTHS.map((m) => {
+            const payment = selectedRow?.paymentsByMonth[m];
+            const status: PaymentStatus | null = payment?.status ?? null;
+            const isCurrentMonth = m === currentMonth;
 
-              const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPendingSoft;
-              const iconColor = status ? getStatusColor(status) : Colors.statusPending;
-              const canNavigate = !!payment?.id;
+            const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPendingSoft;
+            const iconColor = status ? getStatusColor(status) : Colors.statusPending;
+            const canNavigate = !!payment?.id;
 
-              return (
-                <TouchableOpacity
-                  key={m}
-                  disabled={!canNavigate}
-                  onPress={() => {
-                    if (canNavigate) {
-                      router.push(
-                        `/property/${selectedRow.propertyId}/tenant/${selectedRow.tenantId}/payment/${payment!.id}`,
-                      );
-                    }
-                  }}
-                  style={[
-                    styles.monthChip,
-                    { backgroundColor: bgColor },
-                    isCurrentMonth && styles.monthChipCurrent,
-                  ]}
-                >
-                  {isCurrentMonth && <View style={styles.currentDot} />}
-                  <Text style={[styles.monthChipLabel, { color: iconColor }]}>
-                    {MONTH_SHORT[m - 1]}
-                  </Text>
-                  {status ? (
-                    <MaterialCommunityIcons
-                      name={STATUS_ICON[status] as any}
-                      size={12}
-                      color={iconColor}
-                      style={{ marginTop: 2 }}
-                    />
-                  ) : (
-                    <Text style={[styles.monthChipSub, { color: iconColor }]}>—</Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+            return (
+              <TouchableOpacity
+                key={m}
+                disabled={!canNavigate}
+                onPress={() => {
+                  if (canNavigate && selectedRow) {
+                    router.push(
+                      `/property/${selectedRow.propertyId}/tenant/${selectedRow.tenantId}/payment/${payment!.id}`,
+                    );
+                  }
+                }}
+                style={[
+                  styles.monthChip,
+                  { backgroundColor: bgColor },
+                  isCurrentMonth && styles.monthChipCurrent,
+                ]}
+              >
+                {isCurrentMonth && <View style={styles.currentDot} />}
+                <Text style={[styles.monthChipLabel, { color: iconColor }]}>
+                  {MONTH_SHORT[m - 1]}
+                </Text>
+                {status ? (
+                  <MaterialCommunityIcons
+                    name={STATUS_ICON[status] as any}
+                    size={12}
+                    color={iconColor}
+                    style={{ marginTop: 2 }}
+                  />
+                ) : (
+                  <Text style={[styles.monthChipSub, { color: iconColor }]}>—</Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      ) : null}
+      </View>
 
-      {/* Log Payment shortcut */}
-      {selectedRow && (
-        <TouchableOpacity
-          style={[styles.logPaymentBtn, Shadows.sm]}
-          onPress={() =>
-            router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`)
+      {/* Log Payment shortcut — always shown */}
+      <TouchableOpacity
+        style={[styles.logPaymentBtn, Shadows.sm]}
+        onPress={() => {
+          if (selectedRow) {
+            router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`);
+          } else {
+            router.push('/(tabs)/property');
           }
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-          <Text style={styles.logPaymentBtnText}>Log Payment</Text>
-        </TouchableOpacity>
-      )}
+        }}
+        activeOpacity={0.8}
+      >
+        <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
+        <Text style={styles.logPaymentBtnText}>{selectedRow ? 'Log Payment' : 'Add a Property to Start'}</Text>
+      </TouchableOpacity>
 
       {/* Send Reminders shortcut */}
       <TouchableOpacity
