@@ -90,7 +90,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
         <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="invite/[token]" />
