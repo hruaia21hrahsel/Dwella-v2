@@ -55,7 +55,6 @@ export default function TenantCreateScreen() {
     if (isNaN(rent) || rent <= 0) errs.monthlyRent = 'Enter a valid rent amount.';
     const day = parseInt(dueDay, 10);
     if (isNaN(day) || day < 1 || day > 28) errs.dueDay = 'Due day must be between 1 and 28.';
-    if (!leaseStart) errs.leaseStart = 'Lease start date is required (YYYY-MM-DD).';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -70,7 +69,7 @@ export default function TenantCreateScreen() {
       monthly_rent: parseFloat(monthlyRent),
       security_deposit: parseFloat(securityDeposit) || 0,
       due_day: parseInt(dueDay, 10),
-      lease_start: leaseStart,
+      lease_start: leaseStart || null,
       lease_end: leaseEnd || null,
     };
 
@@ -182,15 +181,13 @@ export default function TenantCreateScreen() {
           {errors.dueDay && <HelperText type="error">{errors.dueDay}</HelperText>}
 
           <TextInput
-            label="Lease Start (YYYY-MM-DD)"
+            label="Lease Start (YYYY-MM-DD, optional)"
             value={leaseStart}
             onChangeText={setLeaseStart}
             mode="outlined"
             style={styles.input}
             placeholder="2024-01-01"
-            error={!!errors.leaseStart}
           />
-          {errors.leaseStart && <HelperText type="error">{errors.leaseStart}</HelperText>}
 
           <TextInput
             label="Lease End (YYYY-MM-DD, optional)"
