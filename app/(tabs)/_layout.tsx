@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
@@ -34,6 +35,7 @@ function TabsLayout() {
         headerTitleAlign: 'center',
         headerTitle: () => <DwellaHeaderTitle />,
         headerLeft: () => <ProfileHeaderButton />,
+        headerRight: () => <View style={{ width: 50 }} />,
       }}
     >
       <Tabs.Screen

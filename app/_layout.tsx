@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { Colors } from '@/constants/colors';
@@ -105,8 +106,8 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton />, headerRight: () => <View style={{ width: 50 }} /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
@@ -116,6 +117,7 @@ export default function RootLayout() {
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
+            headerRight: () => <View style={{ width: 50 }} />,
           }}
         />
         <Stack.Screen
@@ -127,6 +129,7 @@ export default function RootLayout() {
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
+            headerRight: () => <View style={{ width: 50 }} />,
           }}
         />
         <Stack.Screen name="+not-found" />
