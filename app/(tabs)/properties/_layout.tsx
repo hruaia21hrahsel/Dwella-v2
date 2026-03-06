@@ -7,7 +7,7 @@ export default function PropertiesLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.surface },
+        headerStyle: { backgroundColor: Colors.surface, height: 64 },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
         headerTitleAlign: 'center',

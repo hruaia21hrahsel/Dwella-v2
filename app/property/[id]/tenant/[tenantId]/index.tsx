@@ -163,8 +163,9 @@ export default function TenantDetailScreen() {
       <Stack.Screen
         options={{
           title: tenant.tenant_name,
+          headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 },
           headerTintColor: Colors.textPrimary,
           headerRight: () => (
             <View style={styles.headerActions}>

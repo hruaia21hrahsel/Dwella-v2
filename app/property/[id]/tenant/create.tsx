@@ -116,7 +116,8 @@ export default function TenantCreateScreen() {
       <Stack.Screen
         options={{
           title: isEditing ? 'Edit Tenant' : 'Add Tenant',
-          headerStyle: { backgroundColor: Colors.surface },
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: Colors.surface, height: 64 },
           headerTintColor: Colors.textPrimary,
           headerShown: true,
           headerLeft: () => (

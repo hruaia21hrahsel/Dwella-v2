@@ -65,7 +65,8 @@ export default function AddExpenseScreen() {
         options={{
           headerShown: true,
           title: 'Add Expense',
-          headerStyle: { backgroundColor: Colors.surface },
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: Colors.surface, height: 64 },
           headerTintColor: Colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />

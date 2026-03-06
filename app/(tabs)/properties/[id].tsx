@@ -74,6 +74,8 @@ export default function PropertyDetailScreen() {
       <Stack.Screen
         options={{
           title: property.name,
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: Colors.surface, height: 64 },
           headerRight: isOwner
             ? () => (
                 <View style={styles.headerActions}>

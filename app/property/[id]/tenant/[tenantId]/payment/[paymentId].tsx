@@ -114,8 +114,9 @@ export default function PaymentDetailScreen() {
       <Stack.Screen
         options={{
           title: `${getMonthName(payment.month)} ${payment.year}`,
+          headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 },
           headerTintColor: Colors.textPrimary,
         }}
       />

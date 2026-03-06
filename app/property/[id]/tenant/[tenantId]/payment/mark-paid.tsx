@@ -97,8 +97,9 @@ export default function MarkPaidScreen() {
       <Stack.Screen
         options={{
           title: 'Mark as Paid',
+          headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 },
           headerTintColor: Colors.textPrimary,
           presentation: 'modal',
         }}
