@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
+import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
 const theme = {
   ...MD3LightTheme,
@@ -81,16 +82,16 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="property/create" options={{ headerShown: true, title: 'Property', presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary, headerRight: () => <ProfileHeaderButton /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', title: 'Log Payment', headerStyle: { backgroundColor: Colors.surface }, headerTintColor: Colors.textPrimary, headerRight: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerRight: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerRight: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
           options={{
             headerShown: true,
-            title: 'Set Up PIN',
             headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
+            headerTitleAlign: 'center',
+            headerTitle: () => <DwellaHeaderTitle />,
             headerRight: () => <ProfileHeaderButton />,
           }}
         />
@@ -98,10 +99,10 @@ export default function RootLayout() {
           name="reminders/index"
           options={{
             headerShown: true,
-            title: 'Send Reminders',
             presentation: 'modal',
             headerStyle: { backgroundColor: Colors.surface },
-            headerTintColor: Colors.textPrimary,
+            headerTitleAlign: 'center',
+            headerTitle: () => <DwellaHeaderTitle />,
             headerRight: () => <ProfileHeaderButton />,
           }}
         />

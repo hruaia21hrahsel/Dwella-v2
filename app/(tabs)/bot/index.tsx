@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { Colors, Shadows } from '@/constants/colors';
 import { BotConversation } from '@/lib/types';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
+import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
 export default function BotScreen() {
   const { user } = useAuthStore();
@@ -74,11 +75,12 @@ export default function BotScreen() {
       >
         <ProfileHeaderButton />
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Dwella Assistant</Text>
-          <Text style={styles.headerSub}>Ask about your properties & payments</Text>
+          <DwellaHeaderTitle />
         </View>
-        {messages.length > 0 && (
+        {messages.length > 0 ? (
           <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={Colors.textSecondary} />
+        ) : (
+          <View style={styles.headerSpacer} />
         )}
       </LinearGradient>
 
@@ -154,9 +156,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
-  headerCenter: { flex: 1, marginLeft: 8 },
-  headerTitle: { fontWeight: '700', color: Colors.textPrimary, fontSize: 15 },
-  headerSub: { color: Colors.textSecondary, marginTop: 2, fontSize: 12 },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerSpacer: { width: 40 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyWrap: { flex: 1, justifyContent: 'center' },
   list: { paddingTop: 12 },

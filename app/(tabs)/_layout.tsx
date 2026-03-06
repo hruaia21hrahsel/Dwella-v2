@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
+import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
 function TabsLayout() {
   return (
@@ -29,6 +30,8 @@ function TabsLayout() {
         },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
+        headerTitleAlign: 'center',
+        headerTitle: () => <DwellaHeaderTitle />,
         headerLeft: () => <ProfileHeaderButton />,
       }}
     >
