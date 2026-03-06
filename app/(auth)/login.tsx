@@ -65,7 +65,6 @@ export default function LoginScreen() {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.heroTitle}>Dwella</Text>
         <Text style={styles.heroSubtitle}>Manage your rentals with ease</Text>
       </LinearGradient>
 
@@ -151,12 +150,6 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     paddingHorizontal: 32,
   },
-  heroTitle: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: '#fff',
-    marginBottom: 4,
-  },
   heroSubtitle: {
     fontSize: 15,
     color: Colors.textOnGradientMuted,
@@ -201,16 +194,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   logo: {
-    width: 56,
-    height: 56,
+    width: 140,
+    height: 40,
   },
 });
