@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
@@ -59,7 +58,13 @@ export default function LoginScreen() {
         colors={Colors.gradientHero as [string, string]}
         style={styles.hero}
       >
-        <MaterialCommunityIcons name="home-city" size={40} color="#fff" style={{ marginBottom: 12 }} />
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <Text style={styles.heroTitle}>Dwella</Text>
         <Text style={styles.heroSubtitle}>Manage your rentals with ease</Text>
       </LinearGradient>
@@ -194,5 +199,18 @@ const styles = StyleSheet.create({
   link: {
     color: Colors.primary,
     fontWeight: '600',
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  logo: {
+    width: 56,
+    height: 56,
   },
 });
