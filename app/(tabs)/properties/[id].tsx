@@ -15,7 +15,7 @@ import { formatCurrency } from '@/lib/utils';
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, bumpPropertyRefresh } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
@@ -49,6 +49,7 @@ export default function PropertyDetailScreen() {
 
     setDeleting(false);
     setDeleteDialogVisible(false);
+    bumpPropertyRefresh();
     router.back();
   }
 
