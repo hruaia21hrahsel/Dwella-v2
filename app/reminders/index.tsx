@@ -64,7 +64,7 @@ export default function RemindersScreen() {
       .select(`
         id, status, amount_due, amount_paid, due_date, month, year,
         tenants (
-          id, tenant_name, flat_no, due_day, user_id, is_archived,
+          id, tenant_name, flat_no, due_day, user_id, is_archived, invite_status,
           properties ( id, name, owner_id )
         )
       `)
@@ -79,15 +79,16 @@ export default function RemindersScreen() {
       return;
     }
 
-    // Filter: only this landlord's tenants, not archived
+    // Filter: only this landlord's tenants, not archived, invite accepted
     const items = (data ?? []).filter((item: any) => {
       const t = item.tenants;
       if (!t) return false;
       if (t.is_archived) return false;
+      if (t.invite_status !== 'accepted') return false;
       if (!t.properties) return false;
       if (t.properties.owner_id !== user.id) return false;
       return true;
-    }) as ReminderItem[];
+    }) as unknown as ReminderItem[];
 
     setEligible(items.filter((i) => i.tenants.user_id !== null));
     setUnlinked(items.filter((i) => i.tenants.user_id === null));

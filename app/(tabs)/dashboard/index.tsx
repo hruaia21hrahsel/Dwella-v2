@@ -125,8 +125,6 @@ export default function DashboardScreen() {
     );
   }
 
-  const overdueCount = Object.values(stats).length > 0 ? (stats as any).overdueCount ?? 0 : 0;
-
   return (
     <ScrollView
       style={styles.container}

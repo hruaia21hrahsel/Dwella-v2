@@ -251,11 +251,11 @@ export default function PaymentsScreen() {
             {/* Current month summary */}
             {currentMonthPayment && (
               <View style={styles.summaryRow}>
-                <View style={styles.summaryCard}>
+                <View style={[styles.summaryCard, { borderTopColor: Colors.statusConfirmed }]}>
                   <Text style={styles.summaryValue}>{formatCurrency(currentMonthPayment.amount_paid)}</Text>
                   <Text style={styles.summaryLabel}>Collected this month</Text>
                 </View>
-                <View style={styles.summaryCard}>
+                <View style={[styles.summaryCard, { borderTopColor: Colors.statusOverdue }]}>
                   <Text style={[styles.summaryValue, { color: Colors.statusOverdue }]}>
                     {formatCurrency(currentMonthPayment.amount_due - currentMonthPayment.amount_paid)}
                   </Text>
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     backgroundColor: Colors.surface,
   },
-  chipActive: { borderColor: Colors.primary, backgroundColor: Colors.primary + '12' },
+  chipActive: { borderColor: Colors.primary, backgroundColor: Colors.primarySoft },
   chipText: { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
   chipTextActive: { color: Colors.primary, fontWeight: '700' },
   chipSub: { fontSize: 12, color: Colors.textSecondary },
@@ -431,7 +431,6 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     borderTopWidth: 3,
-    borderTopColor: Colors.primary,
     ...Shadows.sm,
   },
   summaryValue: { fontSize: 18, fontWeight: '700', color: Colors.primary },

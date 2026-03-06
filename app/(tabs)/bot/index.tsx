@@ -73,7 +73,7 @@ export default function BotScreen() {
       >
         <View>
           <Text style={styles.headerTitle}>Dwella Assistant</Text>
-          <Text style={styles.headerSub}>Ask about your properties &amp; payments</Text>
+          <Text style={styles.headerSub}>Ask about your properties & payments</Text>
         </View>
         {messages.length > 0 && (
           <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={Colors.textSecondary} />
