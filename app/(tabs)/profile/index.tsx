@@ -82,7 +82,10 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     setLoggingOut(true);
-    await supabase.auth.signOut();
+    // scope: 'local' clears the local session only — the server-side refresh
+    // token stays alive so the PIN lock screen can restore the session on the
+    // next launch without needing email/password again.
+    await supabase.auth.signOut({ scope: 'local' });
     setLoggingOut(false);
   }
 
