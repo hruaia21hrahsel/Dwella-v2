@@ -66,6 +66,15 @@ function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="expenses/index"
+        options={{
+          title: 'Expenses',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="cash-minus" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="bot/index"
         options={{
           title: 'Assistant',

@@ -20,6 +20,7 @@ import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
 import { PaymentStatus } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
 
 const SCREEN_W = Dimensions.get('window').width;
 // 4-col grid: outer padding 32, block padding 24, 3 gaps of 4px
@@ -68,7 +69,26 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
+  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
+
+  useEffect(() => {
+    async function fetchMonthlyExpenses() {
+      const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+      const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+      const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+
+      const { data } = await supabase
+        .from('expenses')
+        .select('amount')
+        .gte('expense_date', startDate)
+        .lt('expense_date', endDate);
+      const total = (data ?? []).reduce((s: number, e: any) => s + (e.amount ?? 0), 0);
+      setMonthlyExpenses(total);
+    }
+    fetchMonthlyExpenses();
+  }, [currentMonth, currentYear]);
 
   // Derive unique properties from tenant rows
   const properties = [
@@ -306,6 +326,40 @@ export default function DashboardScreen() {
         <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
         <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
         <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
+      </View>
+
+      {/* P&L card */}
+      <View style={[styles.plCard, Shadows.sm]}>
+        <Text style={styles.plTitle}>
+          P&L — {getMonthName(currentMonth)} {currentYear}
+        </Text>
+        <View style={styles.plRow}>
+          <View style={styles.plItem}>
+            <Text style={[styles.plValue, { color: Colors.statusConfirmed }]}>
+              {formatCurrency(stats.totalReceived)}
+            </Text>
+            <Text style={styles.plLabel}>Income</Text>
+          </View>
+          <View style={styles.plDivider} />
+          <View style={styles.plItem}>
+            <Text style={[styles.plValue, { color: Colors.error }]}>
+              {formatCurrency(monthlyExpenses)}
+            </Text>
+            <Text style={styles.plLabel}>Expenses</Text>
+          </View>
+          <View style={styles.plDivider} />
+          <View style={styles.plItem}>
+            <Text
+              style={[
+                styles.plValue,
+                { color: stats.totalReceived - monthlyExpenses >= 0 ? Colors.statusConfirmed : Colors.error },
+              ]}
+            >
+              {formatCurrency(stats.totalReceived - monthlyExpenses)}
+            </Text>
+            <Text style={styles.plLabel}>Net</Text>
+          </View>
+        </View>
       </View>
 
       {/* Section 3 — Recent Transactions */}
@@ -553,6 +607,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     paddingLeft: 12,
+  },
+  // P&L
+  plCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  plTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  plRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  plItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  plValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  plLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  plDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: Colors.border,
   },
   // Transactions
   txCard: {
