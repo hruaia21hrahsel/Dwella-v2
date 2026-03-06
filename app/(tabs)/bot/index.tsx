@@ -17,6 +17,7 @@ import { ChatBubble } from '@/components/ChatBubble';
 import { EmptyState } from '@/components/EmptyState';
 import { Colors, Shadows } from '@/constants/colors';
 import { BotConversation } from '@/lib/types';
+import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 
 export default function BotScreen() {
   const { user } = useAuthStore();
@@ -71,7 +72,8 @@ export default function BotScreen() {
         colors={Colors.gradientHeroSubtle as [string, string]}
         style={styles.header}
       >
-        <View>
+        <ProfileHeaderButton />
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Dwella Assistant</Text>
           <Text style={styles.headerSub}>Ask about your properties & payments</Text>
         </View>
@@ -152,6 +154,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
   },
+  headerCenter: { flex: 1 },
   headerTitle: { fontWeight: '700', color: Colors.textPrimary, fontSize: 15 },
   headerSub: { color: Colors.textSecondary, marginTop: 2, fontSize: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
