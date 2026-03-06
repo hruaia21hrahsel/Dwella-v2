@@ -33,10 +33,14 @@ export default function LoginScreen() {
       return;
     }
 
-    // Offer PIN setup on first login
     if (data.session?.refresh_token) {
       const [alreadyEnabled, pinSet] = await Promise.all([isBiometricEnabled(), isPinSet()]);
-      if (!alreadyEnabled || !pinSet) {
+      if (alreadyEnabled && pinSet) {
+        // PIN already configured — just refresh the stored token and let
+        // AuthGuard handle the redirect.
+        await savePinSession(data.session.refresh_token);
+      } else {
+        // First login or PIN was never set up — take user through setup.
         await savePinSession(data.session.refresh_token);
         router.replace('/pin-setup');
         return;

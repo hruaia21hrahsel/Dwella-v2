@@ -7,11 +7,11 @@ import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
 import {
   getBiometricRefreshToken,
+  savePinSession,
   verifyPin,
   isPinSet,
   isBiometricEnabled,
   clearBiometricSession,
-  clearPin,
 } from '@/lib/biometric-auth';
 
 const DIGITS = [['1','2','3'],['4','5','6'],['7','8','9'],['','0','⌫']];
@@ -39,12 +39,18 @@ export default function LockScreen() {
     setRestoring(true);
     const refreshToken = await getBiometricRefreshToken();
     if (!refreshToken) { goToLogin(); return; }
-    const { error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
     if (error) {
+      // Only clear the session token — do NOT clear the PIN.
+      // The PIN is a separate secret and should survive session expiry.
       await clearBiometricSession();
-      await clearPin();
       goToLogin();
     } else {
+      // Supabase rotates refresh tokens — persist the new one so the next
+      // cold launch doesn't fail with a stale token.
+      if (data.session?.refresh_token) {
+        await savePinSession(data.session.refresh_token);
+      }
       router.replace('/(tabs)/dashboard');
     }
     setRestoring(false);
