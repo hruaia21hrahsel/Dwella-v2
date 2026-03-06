@@ -73,7 +73,7 @@ export default function BotScreen() {
         colors={Colors.gradientHeroSubtle as [string, string]}
         style={[styles.header, { paddingTop: insets.top + 12 }]}
       >
-        <ProfileHeaderButton style={{ marginLeft: 0 }} />
+        <ProfileHeaderButton />
         <View style={styles.headerCenter}>
           <DwellaHeaderTitle />
         </View>
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingRight: 16,
     paddingTop: 16,
     paddingBottom: 12,
   },
