@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
@@ -18,15 +17,13 @@ function TabsLayout() {
           shadowOffset: { width: 0, height: -4 },
           shadowRadius: 12,
           elevation: 8,
-          height: Platform.OS === 'ios' ? 72 : 56,
-          paddingBottom: Platform.OS === 'ios' ? 16 : 6,
-          paddingTop: 6,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '500',
         },
         tabBarAllowFontScaling: false,
+        tabBarIconStyle: { marginBottom: -2 },
         headerStyle: {
           backgroundColor: Colors.surface,
         },
@@ -86,7 +83,7 @@ function TabsLayout() {
         name="profile/index"
         options={{
           title: 'Profile',
-          tabBarButton: () => null,
+          href: null,
           headerLeft: () => null,
         }}
       />
