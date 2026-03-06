@@ -58,13 +58,11 @@ export default function LoginScreen() {
         colors={Colors.gradientHero as [string, string]}
         style={styles.hero}
       >
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('@/assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+        <Image
+          source={require('@/assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.heroSubtitle}>Manage your rentals with ease</Text>
       </LinearGradient>
 
@@ -193,17 +191,9 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: '600',
   },
-  logoContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
   logo: {
-    width: 140,
-    height: 40,
+    width: 200,
+    height: 58,
+    marginBottom: 12,
   },
 });

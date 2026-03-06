@@ -105,14 +105,14 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle />, headerLeft: () => <ProfileHeaderButton /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: Colors.surface },
+            headerStyle: { backgroundColor: Colors.surface, height: 64 },
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
@@ -123,7 +123,7 @@ export default function RootLayout() {
           options={{
             headerShown: true,
             presentation: 'modal',
-            headerStyle: { backgroundColor: Colors.surface },
+            headerStyle: { backgroundColor: Colors.surface, height: 64 },
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,

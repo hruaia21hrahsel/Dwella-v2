@@ -27,6 +27,7 @@ function TabsLayout() {
         tabBarIconStyle: { marginBottom: -2 },
         headerStyle: {
           backgroundColor: Colors.surface,
+          height: 64,
         },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
