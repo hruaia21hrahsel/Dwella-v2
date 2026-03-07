@@ -2,11 +2,12 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
 const TAB_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })!;
+const CIRCLE_RADIUS = 30;
 
-// Display config for each real tab, keyed by Expo Router screen name
 const TAB_CONFIG: Record<string, { label: string; icon: string }> = {
   'dashboard/index': { label: 'Dashboard', icon: 'view-dashboard' },
   properties:        { label: 'Property',  icon: 'home-city' },
@@ -16,8 +17,8 @@ const TAB_CONFIG: Record<string, { label: string; icon: string }> = {
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
-  // Only the 4 navigable tabs (skip log-payment, bot, profile)
   const visibleRoutes = state.routes.filter((r) => TAB_CONFIG[r.name]);
 
   function TabButton({ route }: { route: typeof state.routes[0] }) {
@@ -48,19 +49,43 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const right = visibleRoutes.slice(2);    // Payments, Expenses
 
   return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom, height: TAB_HEIGHT + insets.bottom }]}>
-      {left.map((r) => <TabButton key={r.key} route={r} />)}
+    // overflow:visible so the FAB circle can protrude above the bar
+    <View style={[styles.container, { height: TAB_HEIGHT + insets.bottom }]}>
+      <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
+        {left.map((r) => <TabButton key={r.key} route={r} />)}
 
-      {/* Center slot — empty space for the LogPaymentFab Portal */}
-      <View style={styles.tab} />
+        {/* Center slot — empty space aligned with the FAB */}
+        <View style={styles.tab} />
 
-      {right.map((r) => <TabButton key={r.key} route={r} />)}
+        {right.map((r) => <TabButton key={r.key} route={r} />)}
+      </View>
+
+      {/* FAB — absolutely positioned in normal view hierarchy, no Portal */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push('/log-payment' as any)}
+        activeOpacity={0.85}
+      >
+        <View style={styles.circle}>
+          <MaterialCommunityIcons name="plus" size={30} color="#fff" />
+        </View>
+        <Text style={styles.fabLabel}>Log Payment</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    // overflow visible so the circle can protrude above the bar
+    overflow: 'visible',
+  },
   bar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: TAB_HEIGHT,
     flexDirection: 'row',
     backgroundColor: Colors.surface,
     shadowColor: '#134E4A',
@@ -68,6 +93,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -4 },
     shadowRadius: 12,
     elevation: 8,
+    // Must also be visible so the FAB shadow renders above it on Android
+    overflow: 'visible',
   },
   tab: {
     flex: 1,
@@ -78,5 +105,32 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: '500',
+  },
+  fab: {
+    position: 'absolute',
+    // Center of circle sits on the top edge of the bar
+    bottom: TAB_HEIGHT - CIRCLE_RADIUS,
+    alignSelf: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  circle: {
+    width: CIRCLE_RADIUS * 2,
+    height: CIRCLE_RADIUS * 2,
+    borderRadius: CIRCLE_RADIUS,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  fabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginTop: 3,
   },
 });
