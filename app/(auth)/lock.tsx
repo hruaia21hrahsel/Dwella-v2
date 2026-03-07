@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 20,
   },
-  logo: { width: 260, height: 72 },
+  logo: { width: 390, height: 108 },
   tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: -4 },
   dotsRow: { flexDirection: 'row', gap: 16 },
   dot: {
