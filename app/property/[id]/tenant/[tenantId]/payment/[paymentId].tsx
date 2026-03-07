@@ -3,8 +3,9 @@ import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal } f
 import { Text, Button, Divider, ActivityIndicator } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { Payment } from '@/lib/types';
+import { Payment, Tenant, Property } from '@/lib/types';
 import { Colors } from '@/constants/colors';
+import { sharePaymentReceipt } from '@/lib/pdf';
 import { formatCurrency, formatDate, getMonthName } from '@/lib/utils';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { canConfirm, getProofSignedUrl } from '@/lib/payments';
@@ -21,10 +22,14 @@ export default function PaymentDetailScreen() {
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
 
   const [payment, setPayment] = useState<Payment | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [property, setProperty] = useState<Property | null>(null);
+  const [landlordName, setLandlordName] = useState('');
   const [loading, setLoading] = useState(true);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [proofFullscreen, setProofFullscreen] = useState(false);
 
   useEffect(() => {
@@ -33,16 +38,27 @@ export default function PaymentDetailScreen() {
 
   async function fetchPayment() {
     setLoading(true);
-    const { data } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('id', paymentId)
-      .single<Payment>();
-    setPayment(data);
+    const [{ data: paymentData }, { data: tenantData }, { data: propertyData }] = await Promise.all([
+      supabase.from('payments').select('*').eq('id', paymentId).single<Payment>(),
+      supabase.from('tenants').select('*').eq('id', tenantId).single<Tenant>(),
+      supabase.from('properties').select('*').eq('id', propertyId).single<Property>(),
+    ]);
+    setPayment(paymentData);
+    setTenant(tenantData);
+    setProperty(propertyData);
 
-    if (data?.proof_url) {
-      const url = await getProofSignedUrl(data.proof_url);
+    if (paymentData?.proof_url) {
+      const url = await getProofSignedUrl(paymentData.proof_url);
       setProofUrl(url);
+    }
+
+    if (propertyData?.owner_id) {
+      const { data: ownerData } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', propertyData.owner_id)
+        .single();
+      setLandlordName(ownerData?.full_name ?? 'Landlord');
     }
 
     setLoading(false);
@@ -62,6 +78,18 @@ export default function PaymentDetailScreen() {
     if (error) Alert.alert('Error', error.message);
     else fetchPayment();
     setConfirming(false);
+  }
+
+  async function handleShareReceipt() {
+    if (!payment || !tenant || !property) return;
+    setSharing(true);
+    try {
+      await sharePaymentReceipt(payment, tenant, property, landlordName);
+    } catch (err) {
+      Alert.alert('Export Failed', String(err));
+    } finally {
+      setSharing(false);
+    }
   }
 
   async function handleReset() {
@@ -204,6 +232,19 @@ export default function PaymentDetailScreen() {
         ) : null}
 
         {/* Actions */}
+        {payment.amount_paid > 0 && tenant && property && (
+          <Button
+            mode="outlined"
+            icon="share-variant"
+            onPress={handleShareReceipt}
+            loading={sharing}
+            disabled={sharing}
+            style={styles.actionBtn}
+          >
+            Share Receipt
+          </Button>
+        )}
+
         {isOwner && canConfirm(payment.status) && (
           <Button
             mode="contained"
