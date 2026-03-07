@@ -8,6 +8,7 @@ import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
+import { TourGuideCard } from '@/components/TourGuideCard';
 
 const theme = {
   ...MD3LightTheme,
@@ -102,6 +103,7 @@ export default function RootLayout() {
   return (
     <PaperProvider theme={theme}>
       <AuthGuard />
+      <TourGuideCard />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />

@@ -17,6 +17,8 @@ interface AuthState {
    * the app is locked, and this flag never touches the backend.
    */
   isLocked: boolean;
+  /** In-memory only (not persisted). Index into TOUR_STEPS, or null when tour is inactive. */
+  tourStep: number | null;
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
@@ -25,6 +27,7 @@ interface AuthState {
   setOnboardingCompleted: () => void;
   resetOnboarding: () => void;
   setLocked: (locked: boolean) => void;
+  setTourStep: (step: number | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -36,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
       propertyRefreshAt: 0,
       onboardingCompleted: false,
       isLocked: true,
+      tourStep: null,
       setSession: (session) => set({ session }),
       setUser: (user) => set({ user }),
       setLoading: (isLoading) => set({ isLoading }),
@@ -44,6 +48,7 @@ export const useAuthStore = create<AuthState>()(
       setOnboardingCompleted: () => set({ onboardingCompleted: true }),
       resetOnboarding: () => set({ onboardingCompleted: false }),
       setLocked: (isLocked) => set({ isLocked }),
+      setTourStep: (tourStep) => set({ tourStep }),
     }),
     {
       name: 'dwella-store',
