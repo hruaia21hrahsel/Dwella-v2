@@ -80,10 +80,7 @@ export default function LockScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Spacer — pushes the pin section down */}
-      <View style={{ flex: 1 }} />
-
-      {/* Logo + subtitle + dots + numpad all grouped together */}
+      {/* Logo + subtitle + dots + numpad all grouped together, centred */}
       <View style={styles.pinSection}>
         <Image
           source={require('@/assets/images/logo.png')}
@@ -121,6 +118,7 @@ export default function LockScreen() {
         </View>
       </View>
 
+      {/* Anchored at the bottom, independent of the centred pin section */}
       <TouchableOpacity style={styles.altLinkWrap} onPress={signOutAndGoToLogin}>
         <Text style={styles.altLink}>Use email & password</Text>
       </TouchableOpacity>
@@ -133,7 +131,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     alignItems: 'center',
-    paddingBottom: 48,
+    justifyContent: 'center',
     paddingHorizontal: 32,
   },
   center: { flex: 1, backgroundColor: Colors.background },
@@ -142,7 +140,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 20,
   },
-  logo: { width: 180, height: 52 },
+  logo: { width: 260, height: 72 },
   tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: -4 },
   dotsRow: { flexDirection: 'row', gap: 16 },
   dot: {
@@ -159,6 +157,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.border,
   },
   numpadDigit: { fontSize: 28, fontWeight: '400', color: Colors.textPrimary },
-  altLinkWrap: { marginTop: 32 },
+  altLinkWrap: { position: 'absolute', bottom: 52 },
   altLink: { fontSize: 14, color: Colors.primary, fontWeight: '500' },
 });
