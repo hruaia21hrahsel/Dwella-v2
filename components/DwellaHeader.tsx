@@ -16,7 +16,7 @@ export function DwellaHeader({ right }: Props) {
       style={{
         backgroundColor: Colors.surface,
         paddingTop: insets.top,
-        height: 96 + insets.top,
+        height: 60 + insets.top,
         flexDirection: 'row',
         alignItems: 'center',
       }}
