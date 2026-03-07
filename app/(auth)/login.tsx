@@ -63,7 +63,7 @@ export default function LoginScreen() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.heroSubtitle}>Manage your rentals with ease</Text>
+        <Text style={styles.heroSubtitle}>The AI that runs your rentals.</Text>
       </LinearGradient>
 
       <ScrollView

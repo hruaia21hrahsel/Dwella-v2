@@ -52,6 +52,7 @@ export default function OnboardingScreen() {
         </View>
 
         <Text style={styles.title}>Welcome to Dwella</Text>
+        <Text style={styles.tagline}>The AI that runs your rentals.</Text>
         <Text style={styles.subtitle}>
           Your all-in-one rental management platform. Track rent, manage tenants, and get
           AI-powered insights — all in one place.
@@ -106,6 +107,13 @@ const styles = StyleSheet.create({
     color: Colors.textOnGradient,
     textAlign: 'center',
     lineHeight: 38,
+  },
+  tagline: {
+    fontSize: 17,
+    fontStyle: 'italic',
+    color: Colors.textOnGradient,
+    textAlign: 'center',
+    opacity: 0.9,
   },
   subtitle: {
     fontSize: 16,
