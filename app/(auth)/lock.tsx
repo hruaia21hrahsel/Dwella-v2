@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -80,40 +80,48 @@ export default function LockScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoArea}>
-        <Text style={styles.appName}>Dwella</Text>
+      {/* Spacer — pushes the pin section down */}
+      <View style={{ flex: 1 }} />
+
+      {/* Logo + subtitle + dots + numpad all grouped together */}
+      <View style={styles.pinSection}>
+        <Image
+          source={require('@/assets/images/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.tagline}>Enter your PIN</Text>
+
+        <View style={styles.dotsRow}>
+          {[0,1,2,3,4,5].map((i) => (
+            <View key={i} style={[styles.dot, pin.length > i && styles.dotFilled]} />
+          ))}
+        </View>
+
+        {!!pinError && <Text style={styles.pinError}>{pinError}</Text>}
+
+        <View style={styles.numpad}>
+          {DIGITS.map((row, ri) => (
+            <View key={ri} style={styles.numpadRow}>
+              {row.map((d, di) => {
+                if (d === '') return <View key={di} style={styles.numpadKey} />;
+                if (d === '⌫') return (
+                  <TouchableOpacity key={di} style={styles.numpadKey} onPress={handleDelete} activeOpacity={0.6}>
+                    <MaterialCommunityIcons name="backspace-outline" size={26} color={Colors.textSecondary} />
+                  </TouchableOpacity>
+                );
+                return (
+                  <TouchableOpacity key={di} style={styles.numpadKey} onPress={() => handleDigit(d)} activeOpacity={0.6}>
+                    <Text style={styles.numpadDigit}>{d}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
+        </View>
       </View>
 
-      <View style={styles.dotsRow}>
-        {[0,1,2,3,4,5].map((i) => (
-          <View key={i} style={[styles.dot, pin.length > i && styles.dotFilled]} />
-        ))}
-      </View>
-
-      {!!pinError && <Text style={styles.pinError}>{pinError}</Text>}
-
-      <View style={styles.numpad}>
-        {DIGITS.map((row, ri) => (
-          <View key={ri} style={styles.numpadRow}>
-            {row.map((d, di) => {
-              if (d === '') return <View key={di} style={styles.numpadKey} />;
-              if (d === '⌫') return (
-                <TouchableOpacity key={di} style={styles.numpadKey} onPress={handleDelete} activeOpacity={0.6}>
-                  <MaterialCommunityIcons name="backspace-outline" size={26} color={Colors.textSecondary} />
-                </TouchableOpacity>
-              );
-              return (
-                <TouchableOpacity key={di} style={styles.numpadKey} onPress={() => handleDigit(d)} activeOpacity={0.6}>
-                  <Text style={styles.numpadDigit}>{d}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-
-      <TouchableOpacity onPress={signOutAndGoToLogin}>
+      <TouchableOpacity style={styles.altLinkWrap} onPress={signOutAndGoToLogin}>
         <Text style={styles.altLink}>Use email & password</Text>
       </TouchableOpacity>
     </View>
@@ -125,14 +133,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 60,
+    paddingBottom: 48,
     paddingHorizontal: 32,
   },
   center: { flex: 1, backgroundColor: Colors.background },
-  logoArea: { alignItems: 'center', gap: 8 },
-  appName: { fontSize: 36, fontWeight: '800', color: Colors.primary, letterSpacing: -1 },
-  tagline: { fontSize: 16, color: Colors.textSecondary },
+  pinSection: {
+    alignItems: 'center',
+    width: '100%',
+    gap: 20,
+  },
+  logo: { width: 180, height: 52 },
+  tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: -4 },
   dotsRow: { flexDirection: 'row', gap: 16 },
   dot: {
     width: 16, height: 16, borderRadius: 8,
@@ -148,5 +159,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.border,
   },
   numpadDigit: { fontSize: 28, fontWeight: '400', color: Colors.textPrimary },
+  altLinkWrap: { marginTop: 32 },
   altLink: { fontSize: 14, color: Colors.primary, fontWeight: '500' },
 });
