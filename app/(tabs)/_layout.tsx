@@ -20,7 +20,7 @@ function TabsLayout() {
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
         headerTitleAlign: 'center',
-        headerTitleContainerStyle: { left: 56, right: 56 },
+        headerTitleContainerStyle: { left: 0, right: 0 },
         headerTitle: () => <DwellaHeaderTitle />,
         headerLeft: () => <ProfileHeaderButton />,
         headerRight: () => <AssistantHeaderButton />,
