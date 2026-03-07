@@ -1,9 +1,10 @@
-import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
+import { AssistantHeaderButton } from '@/components/AssistantHeaderButton';
+import { LogPaymentTabButton } from '@/components/LogPaymentTabButton';
 
 function TabsLayout() {
   return (
@@ -34,7 +35,7 @@ function TabsLayout() {
         headerTitleAlign: 'center',
         headerTitle: () => <DwellaHeaderTitle />,
         headerLeft: () => <ProfileHeaderButton />,
-        headerRight: () => <View style={{ width: 50 }} />,
+        headerRight: () => <AssistantHeaderButton />,
       }}
     >
       <Tabs.Screen
@@ -53,6 +54,13 @@ function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home-city" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="log-payment/index"
+        options={{
+          title: 'Log Payment',
+          tabBarButton: () => <LogPaymentTabButton />,
         }}
       />
       <Tabs.Screen
@@ -77,9 +85,7 @@ function TabsLayout() {
         name="bot/index"
         options={{
           title: 'Assistant',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="robot" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
