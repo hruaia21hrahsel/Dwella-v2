@@ -10,7 +10,7 @@ import {
 import { Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { Colors, Shadows } from '@/constants/colors';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
@@ -19,7 +19,6 @@ const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })!;
 
 export function TourGuideCard() {
   const { tourStep, setTourStep, setOnboardingCompleted } = useAuthStore();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(300)).current;
 

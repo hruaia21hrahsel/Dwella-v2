@@ -1,14 +1,24 @@
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, router, useRouter, useSegments } from 'expo-router';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import * as Notifications from 'expo-notifications';
 import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
+import { registerPushToken } from '@/lib/notifications';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { TourGuideCard } from '@/components/TourGuideCard';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const theme = {
   ...MD3LightTheme,
@@ -46,6 +56,7 @@ function AuthGuard() {
           .eq('id', newSession.user.id)
           .single();
         setUser(data);
+        registerPushToken(newSession.user.id);
       } else {
         setUser(null);
       }
@@ -95,6 +106,14 @@ function AuthGuard() {
       }
     });
   }, [session, isLoading, segments, isLocked]);
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const screen = (response.notification.request.content.data as any)?.screen;
+      if (screen) router.push(screen);
+    });
+    return () => sub.remove();
+  }, []);
 
   return null;
 }

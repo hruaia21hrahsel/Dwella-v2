@@ -82,6 +82,31 @@ Deno.serve(async (_req) => {
 
   if (notifications.length > 0) {
     await supabase.from('notifications').insert(notifications);
+
+    // Send push notifications
+    const userIds = [...new Set(notifications.map((n) => n.user_id))];
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, push_token')
+      .in('id', userIds);
+    const tokenMap: Record<string, string | null> = Object.fromEntries(
+      (users ?? []).map((u: any) => [u.id, u.push_token]),
+    );
+
+    const pushMessages = notifications
+      .filter((n) => tokenMap[n.user_id])
+      .map((n) => ({
+        token: tokenMap[n.user_id],
+        title: n.title,
+        body: n.body,
+        data: { screen: '/(tabs)/payments' },
+      }));
+
+    if (pushMessages.length > 0) {
+      await supabase.functions.invoke('send-push', {
+        body: { messages: pushMessages },
+      });
+    }
   }
 
   console.log(`Sent ${notifications.length} reminder(s).`);
