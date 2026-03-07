@@ -22,8 +22,10 @@ function TabsLayout() {
         headerShadowVisible: false,
         headerTitle: () => null,
         headerBackground: () => (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 12 }} pointerEvents="none">
-            <DwellaHeaderTitle />
+          <View style={{ flex: 1 }} pointerEvents="none">
+            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 96, alignItems: 'center', justifyContent: 'center' }}>
+              <DwellaHeaderTitle />
+            </View>
           </View>
         ),
         headerLeft: () => <ProfileHeaderButton />,
