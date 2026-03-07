@@ -220,6 +220,10 @@ Deno.serve(async (req: Request) => {
 
   return new Response(html, {
     status: 200,
-    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Disposition': 'inline',
+      'X-Content-Type-Options': 'nosniff',
+    },
   });
 });
