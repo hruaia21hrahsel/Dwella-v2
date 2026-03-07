@@ -11,9 +11,12 @@ export default function PropertiesLayout() {
         headerStyle: { backgroundColor: Colors.surface, height: 96 },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
-        headerTitleAlign: 'center',
-        headerTitleContainerStyle: { left: 0, right: 0 },
-        headerTitle: () => <DwellaHeaderTitle />,
+        headerTitle: () => null,
+        headerBackground: () => (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+            <DwellaHeaderTitle />
+          </View>
+        ),
         headerLeft: () => <ProfileHeaderButton />,
         headerRight: () => <View style={{ width: 56 }} />,
       }}

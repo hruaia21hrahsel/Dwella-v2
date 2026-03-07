@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
@@ -19,9 +20,12 @@ function TabsLayout() {
         },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
-        headerTitleAlign: 'center',
-        headerTitleContainerStyle: { left: 0, right: 0 },
-        headerTitle: () => <DwellaHeaderTitle />,
+        headerTitle: () => null,
+        headerBackground: () => (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+            <DwellaHeaderTitle />
+          </View>
+        ),
         headerLeft: () => <ProfileHeaderButton />,
         headerRight: () => <AssistantHeaderButton />,
       }}
