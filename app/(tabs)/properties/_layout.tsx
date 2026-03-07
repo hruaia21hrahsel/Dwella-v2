@@ -17,7 +17,7 @@ export default function PropertiesLayout() {
         headerRight: () => <View style={{ width: 50 }} />,
       }}
     >
-      <Stack.Screen name="index" />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
     </Stack>
   );
 }
