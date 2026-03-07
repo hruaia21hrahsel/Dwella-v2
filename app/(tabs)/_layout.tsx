@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
@@ -58,7 +59,9 @@ function TabsLayout() {
       <Tabs.Screen
         name="log-payment/index"
         options={{
-          href: null,
+          // Invisible spacer — keeps the center slot so all 5 positions are
+          // evenly distributed (20% each). The FAB Portal floats on top.
+          tabBarButton: () => <View style={{ flex: 1 }} />,
         }}
       />
       <Tabs.Screen
