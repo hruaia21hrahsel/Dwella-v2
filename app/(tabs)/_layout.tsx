@@ -22,7 +22,7 @@ function TabsLayout() {
         headerShadowVisible: false,
         headerTitle: () => null,
         headerBackground: () => (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 12 }} pointerEvents="none">
             <DwellaHeaderTitle />
           </View>
         ),
