@@ -6,16 +6,13 @@ import { useRouter } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
-import { Colors, Shadows } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
-import { useNotifications } from '@/hooks/useNotifications';
-import { formatDate } from '@/lib/utils';
 import { isPinSet, disablePin } from '@/lib/biometric-auth';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, setUser, resetOnboarding } = useAuthStore();
-  const { notifications, unreadCount, markAllRead, markRead } = useNotifications(user?.id);
   const [fullName, setFullName] = useState(user?.full_name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [saving, setSaving] = useState(false);
@@ -234,44 +231,6 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* Notifications section */}
-      <View style={styles.sectionCard}>
-        <View style={styles.notifHeader}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
-          {unreadCount > 0 && (
-            <Button compact mode="text" onPress={markAllRead} textColor={Colors.primary}>
-              Mark all read
-            </Button>
-          )}
-        </View>
-
-        {notifications.length === 0 ? (
-          <Text variant="bodySmall" style={styles.emptyNotif}>No notifications yet.</Text>
-        ) : (
-          <View style={styles.notifList}>
-            {notifications.slice(0, 10).map((n) => (
-              <View
-                key={n.id}
-                style={[styles.notifRow, !n.is_read && styles.notifUnread]}
-              >
-                <View style={styles.notifContent}>
-                  <Text variant="bodyMedium" style={[styles.notifTitle, !n.is_read && styles.notifTitleUnread]}>
-                    {n.title}
-                  </Text>
-                  <Text variant="bodySmall" style={styles.notifBody}>{n.body}</Text>
-                  <Text variant="bodySmall" style={styles.notifTime}>{formatDate(n.created_at)}</Text>
-                </View>
-                {!n.is_read && (
-                  <Button compact mode="text" onPress={() => markRead(n.id)} textColor={Colors.textSecondary}>
-                    ✓
-                  </Button>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-
       {/* Security section */}
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Security</Text>
@@ -394,30 +353,4 @@ const styles = StyleSheet.create({
   chipUnlinked: { backgroundColor: Colors.border },
   telegramBtn: { marginTop: 4 },
   pinBtn: { marginTop: 4 },
-  notifHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  emptyNotif: { color: Colors.textSecondary },
-  notifList: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    ...Shadows.sm,
-  },
-  notifRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  notifUnread: {
-    backgroundColor: Colors.primarySoft,
-  },
-  notifContent: { flex: 1 },
-  notifTitle: { color: Colors.textPrimary },
-  notifTitleUnread: { fontWeight: '600' },
-  notifBody: { color: Colors.textSecondary, marginTop: 2 },
-  notifTime: { color: Colors.textDisabled, marginTop: 4, fontSize: 11 },
 });

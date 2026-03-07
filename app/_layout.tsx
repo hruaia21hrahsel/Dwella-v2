@@ -153,6 +153,10 @@ export default function RootLayout() {
             headerRight: () => <View style={{ width: 50 }} />,
           }}
         />
+        <Stack.Screen
+          name="notifications/index"
+          options={{ headerShown: false, presentation: 'modal' }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     </PaperProvider>
