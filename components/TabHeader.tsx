@@ -4,7 +4,7 @@ import { Colors } from '@/constants/colors';
 import { DwellaHeaderTitle } from './DwellaHeaderTitle';
 import { ProfileHeaderButton } from './ProfileHeaderButton';
 
-const CONTENT_HEIGHT = 80;
+const CONTENT_HEIGHT = 96;
 
 export function TabHeader() {
   const insets = useSafeAreaInsets();

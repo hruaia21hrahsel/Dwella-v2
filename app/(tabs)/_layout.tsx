@@ -15,6 +15,7 @@ function TabsLayout() {
         tabBarAllowFontScaling: false,
         headerStyle: {
           backgroundColor: Colors.surface,
+          height: 96,
         },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
