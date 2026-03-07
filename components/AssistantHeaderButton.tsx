@@ -18,6 +18,8 @@ export function AssistantHeaderButton() {
 
 const styles = StyleSheet.create({
   btn: {
-    marginRight: 12,
+    width: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

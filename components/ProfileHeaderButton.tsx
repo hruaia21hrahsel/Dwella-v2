@@ -29,8 +29,9 @@ export function ProfileHeaderButton({ style }: { style?: ViewStyle }) {
 
 const styles = StyleSheet.create({
   btn: {
-    marginLeft: 12,
-    position: 'relative',
+    width: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   badge: {
     position: 'absolute',

@@ -14,7 +14,7 @@ export default function PropertiesLayout() {
         headerTitleAlign: 'center',
         headerTitle: () => <DwellaHeaderTitle />,
         headerLeft: () => <ProfileHeaderButton />,
-        headerRight: () => <View style={{ width: 50 }} />,
+        headerRight: () => <View style={{ width: 56 }} />,
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
