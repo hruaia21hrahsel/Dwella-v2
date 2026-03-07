@@ -1,12 +1,30 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Platform, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useSegments } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
-// Must match the actual rendered tab bar height
-const TAB_BAR_HEIGHT = 60;
+// React Navigation default tab bar heights per platform
+const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })!;
+
+// Circle geometry
+const CIRCLE_RADIUS = 30; // circle is 60×60
+const LABEL_HEIGHT = 13;  // ~fontSize 10 with lineHeight
+const LABEL_MARGIN = 3;   // marginTop between circle and label
+
+// For "half outside the tab bar":
+//   circle center must sit at the tab bar TOP EDGE.
+//   circle center from device bottom = insets.bottom + TAB_BAR_HEIGHT
+//   circle bottom from device bottom = insets.bottom + TAB_BAR_HEIGHT - CIRCLE_RADIUS
+//
+// `bottom` on the container is its BOTTOM EDGE (children flow top → bottom inside it):
+//   container holds [circle (60px), label (marginTop 3 + ~13px)]
+//   label is the last child so container bottom = label bottom
+//   container bottom = circle bottom − LABEL_MARGIN − LABEL_HEIGHT
+//                    = insets.bottom + TAB_BAR_HEIGHT − CIRCLE_RADIUS − LABEL_MARGIN − LABEL_HEIGHT
+//
+// Simplifies to: insets.bottom + TAB_BAR_HEIGHT − 46
 
 export function LogPaymentFab() {
   const router = useRouter();
@@ -16,16 +34,13 @@ export function LogPaymentFab() {
   // Only show inside the tabs group
   if (segments[0] !== '(tabs)') return null;
 
-  // Position the circle so it straddles the top edge of the tab bar.
-  // Circle radius = 30, tab bar top is (insets.bottom + TAB_BAR_HEIGHT) from device bottom.
-  // Circle bottom = insets.bottom + TAB_BAR_HEIGHT - 30 = insets.bottom + 30
-  const circleBottom = insets.bottom + TAB_BAR_HEIGHT - 30;
+  const fabBottom = insets.bottom + TAB_BAR_HEIGHT - CIRCLE_RADIUS - LABEL_MARGIN - LABEL_HEIGHT;
 
   return (
     <Portal>
       <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
         <TouchableOpacity
-          style={[styles.fab, { bottom: circleBottom }]}
+          style={[styles.fab, { bottom: fabBottom }]}
           onPress={() => router.push('/log-payment' as any)}
           activeOpacity={0.85}
         >
@@ -46,9 +61,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   circle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: CIRCLE_RADIUS * 2,
+    height: CIRCLE_RADIUS * 2,
+    borderRadius: CIRCLE_RADIUS,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -62,6 +77,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     color: Colors.primary,
-    marginTop: 3,
+    marginTop: LABEL_MARGIN,
+    lineHeight: LABEL_HEIGHT,
   },
 });

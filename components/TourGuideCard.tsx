@@ -15,7 +15,7 @@ import { Colors, Shadows } from '@/constants/colors';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
 
-const TAB_BAR_HEIGHT = 60;
+const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })!;
 
 export function TourGuideCard() {
   const { tourStep, setTourStep, setOnboardingCompleted } = useAuthStore();
