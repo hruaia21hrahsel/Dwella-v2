@@ -11,5 +11,5 @@ export function DwellaHeaderTitle() {
 }
 
 const styles = StyleSheet.create({
-  logo: { width: 140, height: 32 },
+  logo: { width: 200, height: 52 },
 });
