@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
-const TAB_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })!;
+const TAB_HEIGHT = Platform.select({ ios: 64, android: 72, default: 72 })!;
 const CIRCLE_RADIUS = 30;
+const ASSISTANT_RADIUS = 26;
 
 const TAB_CONFIG: Record<string, { label: string; icon: string }> = {
   'dashboard/index': { label: 'Dashboard', icon: 'view-dashboard' },
@@ -39,7 +40,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
     return (
       <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.7}>
-        <MaterialCommunityIcons name={cfg.icon as any} size={24} color={color} />
+        <MaterialCommunityIcons name={cfg.icon as any} size={26} color={color} />
         <Text style={[styles.label, { color }]}>{cfg.label}</Text>
       </TouchableOpacity>
     );
@@ -59,6 +60,17 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
         {right.map((r) => <TabButton key={r.key} route={r} />)}
       </View>
+
+      {/* AI Assistant FAB — bottom-right, floating above bar */}
+      <TouchableOpacity
+        style={styles.assistantFab}
+        onPress={() => router.push('/(tabs)/bot' as any)}
+        activeOpacity={0.85}
+      >
+        <View style={styles.assistantCircle}>
+          <MaterialCommunityIcons name="robot" size={26} color="#fff" />
+        </View>
+      </TouchableOpacity>
 
       {/* FAB — absolutely positioned in normal view hierarchy, no Portal */}
       <TouchableOpacity
@@ -103,7 +115,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   label: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
   },
   fab: {
@@ -132,5 +144,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.primary,
     marginTop: 3,
+  },
+  assistantFab: {
+    position: 'absolute',
+    bottom: TAB_HEIGHT + 12,
+    right: 16,
+    zIndex: 10,
+  },
+  assistantCircle: {
+    width: ASSISTANT_RADIUS * 2,
+    height: ASSISTANT_RADIUS * 2,
+    borderRadius: ASSISTANT_RADIUS,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 10,
   },
 });

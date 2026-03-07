@@ -1,8 +1,6 @@
-import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { DwellaHeader } from '@/components/DwellaHeader';
-import { AssistantHeaderButton } from '@/components/AssistantHeaderButton';
 import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
 import { CustomTabBar } from '@/components/CustomTabBar';
 
@@ -16,12 +14,7 @@ function TabsLayout() {
         tabBarAllowFontScaling: false,
         header: () => (
           <DwellaHeader
-            right={
-              <View style={{ flexDirection: 'row' }}>
-                <NotificationsHeaderButton />
-                <AssistantHeaderButton />
-              </View>
-            }
+            right={<NotificationsHeaderButton />}
           />
         ),
       }}
