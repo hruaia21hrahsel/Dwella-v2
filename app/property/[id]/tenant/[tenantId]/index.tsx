@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/store';
 import { usePayments } from '@/hooks/usePayments';
 import { useProperties } from '@/hooks/useProperties';
 import { sharePaymentReceipt, shareAnnualSummary } from '@/lib/pdf';
+import { getInviteLink } from '@/lib/invite';
 
 export default function TenantDetailScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId: string }>();
@@ -97,7 +98,7 @@ export default function TenantDetailScreen() {
 
   async function handleShareInvite() {
     if (!tenant) return;
-    const inviteLink = `dwella://invite/${tenant.invite_token}`;
+    const inviteLink = getInviteLink(tenant.invite_token);
     await Share.share({
       message: `You've been added as a tenant on Dwella! Open this link to accept your invitation:\n\n${inviteLink}`,
       title: 'Tenant Invite',

@@ -1,7 +1,10 @@
 import { supabase } from './supabase';
 
 export function getInviteLink(token: string): string {
-  return `dwella://invite/${token}`;
+  // HTTPS link → Edge Function smart redirect page.
+  // Opens the app directly if installed; shows App Store / Play Store otherwise.
+  const base = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  return `${base}/functions/v1/invite-redirect?token=${token}`;
 }
 
 export async function getInviteDetails(token: string) {

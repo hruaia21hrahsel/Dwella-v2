@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
 import { Tenant } from '@/lib/types';
+import { getInviteLink } from '@/lib/invite';
 
 export default function TenantCreateScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId?: string }>();
@@ -95,7 +96,7 @@ export default function TenantCreateScreen() {
         Alert.alert('Error', error.message);
       } else if (data) {
         // Show invite link share modal
-        const inviteLink = `dwella://invite/${data.invite_token}`;
+        const inviteLink = getInviteLink(data.invite_token);
         await Share.share({
           message: `You've been added as a tenant on Dwella! Open this link to accept your invitation:\n\n${inviteLink}`,
           title: 'Tenant Invite',
