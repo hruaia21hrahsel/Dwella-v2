@@ -20,6 +20,7 @@ function TabsLayout() {
           shadowOffset: { width: 0, height: -4 },
           shadowRadius: 12,
           elevation: 8,
+          overflow: 'visible',
         },
         tabBarLabelStyle: {
           fontSize: 10,

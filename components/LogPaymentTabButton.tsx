@@ -25,17 +25,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: 4,
+    overflow: 'visible',
   },
   circle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
-    // Elevated above the bar
-    marginTop: -20,
+    // Elevated above the tab bar
+    marginTop: -24,
     shadowColor: Colors.primary,
     shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 4 },
