@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,8 +8,8 @@ import {
   Alert,
 } from 'react-native';
 import { Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from 'expo-router';
 import { useAuthStore } from '@/lib/store';
 import { useBotConversations } from '@/hooks/useBotConversations';
 import { sendBotMessage } from '@/lib/bot';
@@ -17,8 +17,6 @@ import { ChatBubble } from '@/components/ChatBubble';
 import { EmptyState } from '@/components/EmptyState';
 import { Colors, Shadows } from '@/constants/colors';
 import { BotConversation } from '@/lib/types';
-import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
-import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
 export default function BotScreen() {
   const { user } = useAuthStore();
@@ -27,6 +25,26 @@ export default function BotScreen() {
   const [sending, setSending] = useState(false);
   const listRef = useRef<FlatList<BotConversation>>(null);
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+
+  function handleClear() {
+    Alert.alert(
+      'Clear History',
+      'Delete all conversation history? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: clearHistory },
+      ]
+    );
+  }
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: messages.length > 0
+        ? () => <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={Colors.textSecondary} />
+        : () => <View style={{ width: 50 }} />,
+    });
+  }, [messages.length, navigation]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -46,17 +64,6 @@ export default function BotScreen() {
     }
   }, [input, user, sending]);
 
-  function handleClear() {
-    Alert.alert(
-      'Clear History',
-      'Delete all conversation history? This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Clear', style: 'destructive', onPress: clearHistory },
-      ]
-    );
-  }
-
   const renderItem = useCallback(
     ({ item }: { item: BotConversation }) => <ChatBubble message={item} />,
     []
@@ -68,22 +75,6 @@ export default function BotScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
-      {/* Header */}
-      <LinearGradient
-        colors={Colors.gradientHeroSubtle as [string, string]}
-        style={[styles.header, { paddingTop: insets.top + 12 }]}
-      >
-        <ProfileHeaderButton />
-        <View style={styles.headerCenter}>
-          <DwellaHeaderTitle />
-        </View>
-        {messages.length > 0 ? (
-          <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={Colors.textSecondary} />
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
-      </LinearGradient>
-
       {/* Messages */}
       {loading ? (
         <View style={styles.centered}>
@@ -148,16 +139,6 @@ export default function BotScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  headerSpacer: { width: 40 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyWrap: { flex: 1, justifyContent: 'center' },
   list: { paddingTop: 12 },

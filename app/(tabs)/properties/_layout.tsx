@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
@@ -7,12 +8,13 @@ export default function PropertiesLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.surface, height: 64 },
+        headerStyle: { backgroundColor: Colors.surface },
         headerTintColor: Colors.textPrimary,
         headerShadowVisible: false,
         headerTitleAlign: 'center',
         headerTitle: () => <DwellaHeaderTitle />,
         headerLeft: () => <ProfileHeaderButton />,
+        headerRight: () => <View style={{ width: 50 }} />,
       }}
     >
       <Stack.Screen name="index" />

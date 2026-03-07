@@ -78,7 +78,6 @@ function TabsLayout() {
         name="bot/index"
         options={{
           title: 'Assistant',
-          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="robot" size={size} color={color} />
           ),
