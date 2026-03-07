@@ -320,7 +320,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginHorizontal: 16,
     gap: 10,
-    ...Shadows.sm,
+    shadowColor: '#134E4A',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 11,
