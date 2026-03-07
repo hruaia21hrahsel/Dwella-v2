@@ -4,7 +4,6 @@ import { Colors } from '@/constants/colors';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { AssistantHeaderButton } from '@/components/AssistantHeaderButton';
-import { LogPaymentTabButton } from '@/components/LogPaymentTabButton';
 
 function TabsLayout() {
   return (
@@ -20,7 +19,6 @@ function TabsLayout() {
           shadowOffset: { width: 0, height: -4 },
           shadowRadius: 12,
           elevation: 8,
-          overflow: 'visible',
         },
         tabBarLabelStyle: {
           fontSize: 10,
@@ -60,8 +58,7 @@ function TabsLayout() {
       <Tabs.Screen
         name="log-payment/index"
         options={{
-          title: 'Log Payment',
-          tabBarButton: () => <LogPaymentTabButton />,
+          href: null,
         }}
       />
       <Tabs.Screen
