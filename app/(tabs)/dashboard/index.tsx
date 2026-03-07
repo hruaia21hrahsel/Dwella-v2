@@ -66,12 +66,14 @@ function StatCard({ label, value, color }: StatCardProps) {
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { tenantRows, stats, recentTransactions, isLoading, refresh } = useDashboard();
+  const { tenantRows, stats, recentTransactions, isLoading, refresh } = useDashboard(selectedYear);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
 
   useEffect(() => {
     async function fetchMonthlyExpenses() {
@@ -147,7 +149,26 @@ export default function DashboardScreen() {
         colors={Colors.gradientHero as [string, string]}
         style={[styles.heroCard, Shadows.hero]}
       >
-        <Text style={styles.heroTitle}>Payment Status {currentYear}</Text>
+        <View style={styles.heroTitleRow}>
+          <Text style={styles.heroTitle}>Overview</Text>
+          <View style={styles.yearPicker}>
+            <TouchableOpacity
+              onPress={() => setSelectedYear((y) => Math.max(2000, y - 1))}
+              disabled={selectedYear <= 2000}
+              style={styles.yearArrow}
+            >
+              <MaterialCommunityIcons name="chevron-left" size={20} color="rgba(255,255,255,0.9)" />
+            </TouchableOpacity>
+            <Text style={styles.yearText}>{selectedYear}</Text>
+            <TouchableOpacity
+              onPress={() => setSelectedYear((y) => Math.min(currentYear, y + 1))}
+              disabled={selectedYear >= currentYear}
+              style={styles.yearArrow}
+            >
+              <MaterialCommunityIcons name="chevron-right" size={20} color="rgba(255,255,255,0.9)" />
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={styles.heroPills}>
           <View style={styles.heroPill}>
             <Text style={styles.heroPillText}>{tenantRows.length} Tenant{tenantRows.length !== 1 ? 's' : ''}</Text>
@@ -310,7 +331,7 @@ export default function DashboardScreen() {
 
       {/* Section 2 — Stats */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-        {getMonthName(currentMonth)} {currentYear}
+        {getMonthName(currentMonth)} {selectedYear}
       </Text>
       <View style={styles.statsGrid}>
         <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
@@ -322,7 +343,7 @@ export default function DashboardScreen() {
       {/* P&L card */}
       <View style={[styles.plCard, Shadows.sm]}>
         <Text style={styles.plTitle}>
-          P&L — {getMonthName(currentMonth)} {currentYear}
+          P&L — {getMonthName(currentMonth)} {selectedYear}
         </Text>
         <View style={styles.plRow}>
           <View style={styles.plItem}>
@@ -412,11 +433,33 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
   },
+  heroTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   heroTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: '#fff',
-    marginBottom: 12,
+  },
+  yearPicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  yearArrow: {
+    padding: 4,
+  },
+  yearText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+    marginHorizontal: 2,
   },
   heroPills: {
     flexDirection: 'row',

@@ -44,7 +44,7 @@ export interface DashboardData {
   refresh: () => void;
 }
 
-export function useDashboard(): DashboardData {
+export function useDashboard(year: number): DashboardData {
   const { user } = useAuthStore();
   const [tenantRows, setTenantRows] = useState<TenantRow[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -56,7 +56,7 @@ export function useDashboard(): DashboardData {
   const [recentTransactions, setRecentTransactions] = useState<RecentTx[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { year: currentYear, month: currentMonth } = getCurrentMonthYear();
+  const { month: currentMonth } = getCurrentMonthYear();
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -79,7 +79,7 @@ export function useDashboard(): DashboardData {
         allTenantIds.push(tenant.id);
 
         const payments: Payment[] = (tenant.payments ?? []).filter(
-          (p: Payment) => p.year === currentYear,
+          (p: Payment) => p.year === year,
         );
 
         const paymentsByMonth: Record<number, Payment | undefined> = {};
@@ -153,7 +153,7 @@ export function useDashboard(): DashboardData {
     }
 
     setIsLoading(false);
-  }, [user?.id, currentYear, currentMonth]);
+  }, [user?.id, year, currentMonth]);
 
   useFocusEffect(
     useCallback(() => {
