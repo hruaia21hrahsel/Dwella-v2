@@ -37,34 +37,40 @@ function AuthGuard() {
 
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
+    // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
+    const fallback = setTimeout(() => setLoading(false), 8000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
+      clearTimeout(fallback);
+      try {
+        setSession(newSession);
 
-      if (newSession?.user) {
-        await supabase.from('users').upsert(
-          {
-            id: newSession.user.id,
-            email: newSession.user.email!,
-            full_name: newSession.user.user_metadata?.full_name ?? null,
-            phone: newSession.user.user_metadata?.phone ?? null,
-          },
-          { onConflict: 'id', ignoreDuplicates: true }
-        );
-        const { data } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', newSession.user.id)
-          .single();
-        setUser(data);
-        registerPushToken(newSession.user.id);
-      } else {
-        setUser(null);
+        if (newSession?.user) {
+          await supabase.from('users').upsert(
+            {
+              id: newSession.user.id,
+              email: newSession.user.email!,
+              full_name: newSession.user.user_metadata?.full_name ?? null,
+              phone: newSession.user.user_metadata?.phone ?? null,
+            },
+            { onConflict: 'id', ignoreDuplicates: true }
+          );
+          const { data } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', newSession.user.id)
+            .single();
+          setUser(data);
+          registerPushToken(newSession.user.id);
+        } else {
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); clearTimeout(fallback); };
   }, []);
 
   // ── Routing logic ──────────────────────────────────────────────────
