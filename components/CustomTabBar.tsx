@@ -2,7 +2,6 @@ import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
 const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
@@ -63,7 +62,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         {/* Log Payment — inside the bar so it always receives touches */}
         <Pressable
           style={styles.fab}
-          onPress={() => router.push('/log-payment')}
+          onPress={() => navigation.getParent()?.navigate('log-payment')}
         >
           <View style={styles.fabCircle}>
             <MaterialCommunityIcons name="plus" size={22} color="#fff" />
