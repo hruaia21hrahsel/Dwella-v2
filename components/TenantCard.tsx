@@ -1,5 +1,5 @@
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Chip, IconButton } from 'react-native-paper';
+import { Text, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Share } from 'react-native';
 import { Tenant } from '@/lib/types';
@@ -13,6 +13,7 @@ interface TenantCardProps {
 
 export function TenantCard({ tenant, onPress }: TenantCardProps) {
   const isPending = tenant.invite_status === 'pending';
+  const isAccepted = tenant.invite_status === 'accepted';
 
   async function handleShareInvite() {
     const inviteLink = `dwella://invite/${tenant.invite_token}`;
@@ -22,55 +23,39 @@ export function TenantCard({ tenant, onPress }: TenantCardProps) {
     });
   }
 
-  const statusColor = {
-    pending: Colors.statusPending,
-    accepted: Colors.statusConfirmed,
-    expired: Colors.statusOverdue,
-  }[tenant.invite_status];
-
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.iconContainer}>
+      <View style={[styles.iconContainer, isPending ? styles.iconPending : styles.iconAccepted]}>
         <MaterialCommunityIcons
-          name={isPending ? 'account-clock' : 'account-check'}
-          size={24}
-          color={isPending ? Colors.textSecondary : Colors.primary}
+          name={isPending ? 'account-clock-outline' : 'account-check-outline'}
+          size={20}
+          color={isPending ? Colors.statusPartial : Colors.statusConfirmed}
         />
       </View>
 
       <View style={styles.info}>
-        <View style={styles.topRow}>
-          <Text variant="titleSmall" style={styles.name}>
-            {tenant.tenant_name}
-          </Text>
-          <Chip
-            compact
-            style={[styles.statusChip, { backgroundColor: statusColor + '22' }]}
-            textStyle={[styles.statusText, { color: statusColor }]}
-          >
-            {isPending ? 'Invite Pending' : tenant.invite_status}
-          </Chip>
-        </View>
-
-        <View style={styles.bottomRow}>
-          <Text variant="bodySmall" style={styles.flatNo}>
-            Flat {tenant.flat_no}
-          </Text>
-          <Text variant="bodySmall" style={styles.rent}>
-            {formatCurrency(tenant.monthly_rent)}/mo
-          </Text>
+        <Text style={styles.name} numberOfLines={1}>{tenant.tenant_name}</Text>
+        <View style={styles.metaRow}>
+          <Text style={styles.meta}>Flat {tenant.flat_no}</Text>
+          <Text style={styles.dot}> · </Text>
+          <Text style={styles.meta}>{formatCurrency(tenant.monthly_rent)}/mo</Text>
         </View>
       </View>
 
+      {/* Status badge */}
+      <View style={[styles.statusBadge, isPending ? styles.statusPending : styles.statusAccepted]}>
+        <View style={[styles.statusDot, { backgroundColor: isPending ? Colors.statusPartial : Colors.statusConfirmed }]} />
+        <Text style={[styles.statusText, { color: isPending ? '#92400E' : '#166534' }]}>
+          {isPending ? 'Pending' : 'Accepted'}
+        </Text>
+      </View>
+
       {isPending ? (
-        <IconButton
-          icon="share-variant"
-          size={20}
-          iconColor={Colors.primary}
-          onPress={handleShareInvite}
-        />
+        <TouchableOpacity onPress={handleShareInvite} style={styles.shareBtn} hitSlop={6}>
+          <MaterialCommunityIcons name="share-variant-outline" size={18} color={Colors.primary} />
+        </TouchableOpacity>
       ) : (
-        <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textSecondary} />
+        <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.textDisabled} />
       )}
     </TouchableOpacity>
   );
@@ -86,46 +71,71 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 12,
+    gap: 10,
   },
   iconContainer: {
-    width: 42,
-    height: 42,
+    width: 36,
+    height: 36,
     borderRadius: 10,
-    backgroundColor: Colors.divider,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconPending: {
+    backgroundColor: Colors.statusPartialSoft,
+  },
+  iconAccepted: {
+    backgroundColor: Colors.statusConfirmedSoft,
+  },
   info: {
     flex: 1,
-    gap: 4,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    gap: 2,
   },
   name: {
+    fontSize: 14,
+    fontWeight: '700',
     color: Colors.textPrimary,
-    fontWeight: '600',
-    flex: 1,
   },
-  statusChip: {
-    height: 22,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  meta: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  dot: {
+    fontSize: 12,
+    color: Colors.textDisabled,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statusPending: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusAccepted: {
+    backgroundColor: '#DCFCE7',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusText: {
     fontSize: 11,
+    fontWeight: '700',
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  flatNo: {
-    color: Colors.textSecondary,
-  },
-  rent: {
-    color: Colors.textSecondary,
-    fontWeight: '500',
+  shareBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

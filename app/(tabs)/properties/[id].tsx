@@ -102,43 +102,47 @@ export default function PropertyDetailScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
       >
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text variant="headlineSmall" style={styles.statValue}>{property.total_units}</Text>
-            <Text variant="bodySmall" style={styles.statLabel}>Total Units</Text>
+        {/* Stats + Address row */}
+        <View style={styles.infoCard}>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{property.total_units}</Text>
+              <Text style={styles.statLabel}>Units</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{occupiedCount}</Text>
+              <Text style={styles.statLabel}>Occupied</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { fontSize: 15 }]}>
+                {tenants.length > 0
+                  ? formatCurrency(tenants.reduce((sum, t) => sum + t.monthly_rent, 0))
+                  : '₹0'}
+              </Text>
+              <Text style={styles.statLabel}>Rent/mo</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text variant="headlineSmall" style={styles.statValue}>{occupiedCount}</Text>
-            <Text variant="bodySmall" style={styles.statLabel}>Occupied</Text>
+          <View style={styles.addressRow}>
+            <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.textSecondary} />
+            <Text style={styles.addressText} numberOfLines={1}>{property.address}, {property.city}</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text variant="headlineSmall" style={styles.statValue}>
-              {tenants.length > 0
-                ? formatCurrency(tenants.reduce((sum, t) => sum + t.monthly_rent, 0))
-                : '₹0'}
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>Monthly Rent</Text>
-          </View>
-        </View>
-
-        {/* Address */}
-        <View style={styles.addressCard}>
-          <Text variant="bodyMedium" style={styles.addressText}>{property.address}</Text>
-          <Chip compact style={styles.cityChip}>{property.city}</Chip>
         </View>
 
         {/* Tenants */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>Tenants</Text>
+            <Text style={styles.sectionTitle}>Tenants</Text>
             {isOwner && (
-              <IconButton
-                icon="account-plus"
-                size={22}
-                iconColor={Colors.primary}
+              <TouchableOpacity
+                style={styles.addTenantBtn}
                 onPress={() => router.push(`/property/${id}/tenant/create`)}
-              />
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="account-plus-outline" size={16} color="#fff" />
+                <Text style={styles.addTenantBtnText}>Add Tenant</Text>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -237,41 +241,49 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
   },
+  infoCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 14,
+    gap: 12,
+  },
   statsRow: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: Colors.border,
   },
   statValue: {
+    fontSize: 17,
+    fontWeight: '800',
     color: Colors.primary,
-    fontWeight: '700',
   },
   statLabel: {
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginTop: 4,
+    marginTop: 2,
   },
-  addressCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 8,
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: 10,
   },
   addressText: {
+    flex: 1,
+    fontSize: 13,
     color: Colors.textSecondary,
-  },
-  cityChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.primaryLight + '22',
   },
   section: {
     gap: 8,
@@ -282,8 +294,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  addTenantBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  addTenantBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   notesCard: {
     backgroundColor: Colors.surface,
