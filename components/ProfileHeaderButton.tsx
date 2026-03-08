@@ -6,7 +6,12 @@ import { Colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
 
-export function ProfileHeaderButton({ style }: { style?: ViewStyle }) {
+interface Props {
+  style?: ViewStyle;
+  dark?: boolean;
+}
+
+export function ProfileHeaderButton({ style, dark = false }: Props) {
   const router = useRouter();
   const { user } = useAuthStore();
   const { unreadCount } = useNotifications(user?.id);
@@ -17,7 +22,11 @@ export function ProfileHeaderButton({ style }: { style?: ViewStyle }) {
       style={[styles.btn, style]}
       activeOpacity={0.7}
     >
-      <MaterialCommunityIcons name="account-circle-outline" size={26} color="#fff" />
+      <MaterialCommunityIcons
+        name="account-circle-outline"
+        size={26}
+        color={dark ? Colors.textPrimary : '#fff'}
+      />
       {unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>

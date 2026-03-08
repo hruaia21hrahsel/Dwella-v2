@@ -5,7 +5,11 @@ import { Colors } from '@/constants/colors';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
 
-export function NotificationsHeaderButton() {
+interface Props {
+  dark?: boolean;
+}
+
+export function NotificationsHeaderButton({ dark = false }: Props) {
   const { user } = useAuthStore();
   const { unreadCount } = useNotifications(user?.id);
   const router = useRouter();
@@ -19,7 +23,7 @@ export function NotificationsHeaderButton() {
       <MaterialCommunityIcons
         name={unreadCount > 0 ? 'bell-badge' : 'bell-outline'}
         size={26}
-        color="#fff"
+        color={dark ? Colors.textPrimary : '#fff'}
       />
       {unreadCount > 0 && (
         <View style={styles.badge}>

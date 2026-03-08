@@ -14,7 +14,7 @@ function TabsLayout() {
         tabBarAllowFontScaling: false,
         header: () => (
           <DwellaHeader
-            right={<NotificationsHeaderButton />}
+            right={<NotificationsHeaderButton dark />}
           />
         ),
       }}
@@ -23,7 +23,7 @@ function TabsLayout() {
       <Tabs.Screen name="properties"      options={{ title: 'Property' }} />
       <Tabs.Screen name="payments/index"  options={{ title: 'Payments' }} />
       <Tabs.Screen name="expenses/index"  options={{ title: 'Expenses' }} />
-      <Tabs.Screen name="bot/index"       options={{ title: 'Assistant', href: null }} />
+      <Tabs.Screen name="bot/index"       options={{ title: 'Assistant' }} />
       <Tabs.Screen name="profile/index"   options={{ title: 'Profile', href: null, headerShown: false }} />
     </Tabs>
   );
