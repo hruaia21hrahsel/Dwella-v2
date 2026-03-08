@@ -36,65 +36,6 @@ export function getDueDate(year: number, month: number, dueDay: number): string 
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export async function ensurePaymentRows(
-  tenantId: string,
-  propertyId: string,
-  monthlyRent: number,
-  dueDay: number,
-  leaseStart: string,
-): Promise<void> {
-  const startDate = new Date(leaseStart);
-  const now = new Date();
-
-  const { data: existing } = await supabase
-    .from('payments')
-    .select('month, year')
-    .eq('tenant_id', tenantId);
-
-  const existingSet = new Set(
-    (existing ?? []).map((p) => `${p.year}-${p.month}`)
-  );
-
-  const rows: {
-    tenant_id: string;
-    property_id: string;
-    month: number;
-    year: number;
-    amount_due: number;
-    amount_paid: number;
-    status: PaymentStatus;
-    due_date: string;
-  }[] = [];
-
-  // Iterate from lease start to current month
-  const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  while (cursor <= end) {
-    const month = cursor.getMonth() + 1;
-    const year = cursor.getFullYear();
-
-    if (!existingSet.has(`${year}-${month}`)) {
-      rows.push({
-        tenant_id: tenantId,
-        property_id: propertyId,
-        month,
-        year,
-        amount_due: monthlyRent,
-        amount_paid: 0,
-        status: 'pending',
-        due_date: getDueDate(year, month, dueDay),
-      });
-    }
-
-    cursor.setMonth(cursor.getMonth() + 1);
-  }
-
-  if (rows.length > 0) {
-    await supabase.from('payments').insert(rows);
-  }
-}
-
 export function getProofStoragePath(
   propertyId: string,
   tenantId: string,

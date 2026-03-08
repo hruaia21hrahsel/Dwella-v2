@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Payment, Tenant } from '@/lib/types';
-import { ensurePaymentRows } from '@/lib/payments';
 
 interface UsePaymentsResult {
   payments: Payment[];
@@ -25,15 +24,6 @@ export function usePayments(tenant: Tenant | null): UsePaymentsResult {
     setError(null);
 
     try {
-      // Ensure payment rows exist for all months since lease start
-      await ensurePaymentRows(
-        tenant.id,
-        tenant.property_id,
-        tenant.monthly_rent,
-        tenant.due_day,
-        tenant.lease_start,
-      );
-
       const { data, error: fetchError } = await supabase
         .from('payments')
         .select('*')
