@@ -2,10 +2,17 @@ import { supabase } from './supabase';
 
 const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/process-bot-message`;
 
+export interface PendingAction {
+  action: string;
+  entities: Record<string, unknown>;
+  description: string;
+}
+
 export interface BotResponse {
   reply: string;
   intent?: string;
   action_taken?: string;
+  pending_action?: PendingAction | null;
 }
 
 export async function sendBotMessage(userId: string, message: string): Promise<BotResponse> {

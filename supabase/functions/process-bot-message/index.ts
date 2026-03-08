@@ -19,6 +19,7 @@ interface BotResponse {
   reply: string;
   intent?: string;
   action_taken?: string;
+  pending_action?: PendingAction | null;
 }
 
 interface ClaudeIntent {
@@ -28,6 +29,280 @@ interface ClaudeIntent {
   needs_confirmation: boolean;
   reply: string;
 }
+
+interface PendingAction {
+  action: string;
+  entities: Record<string, unknown>;
+  description: string;
+}
+
+type ActionHandler = (
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  entities: Record<string, unknown>,
+) => Promise<string>;
+
+// ----------------------------------------------------------------
+// Action Handlers
+// ----------------------------------------------------------------
+
+async function verifyOwnership(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  propertyId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from('properties')
+    .select('id')
+    .eq('id', propertyId)
+    .eq('owner_id', userId)
+    .eq('is_archived', false)
+    .single();
+  return !!data;
+}
+
+async function findTenantByName(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  tenantName: string,
+): Promise<{ tenant: any; property: any } | null> {
+  // Find all properties owned by user, then find tenant by name
+  const { data: properties } = await supabase
+    .from('properties')
+    .select('id')
+    .eq('owner_id', userId)
+    .eq('is_archived', false);
+
+  if (!properties || properties.length === 0) return null;
+
+  const propertyIds = properties.map((p: any) => p.id);
+  const { data: tenants } = await supabase
+    .from('tenants')
+    .select('*, properties(*)')
+    .in('property_id', propertyIds)
+    .eq('is_archived', false)
+    .ilike('tenant_name', `%${tenantName}%`);
+
+  if (!tenants || tenants.length === 0) return null;
+  return { tenant: tenants[0], property: tenants[0].properties };
+}
+
+const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
+  const { tenant_name, month, year, amount, status } = entities as {
+    tenant_name?: string;
+    month?: number;
+    year?: number;
+    amount?: number;
+    status?: string;
+  };
+
+  if (!tenant_name) return 'I need the tenant name to log a payment.';
+
+  const result = await findTenantByName(supabase, userId, tenant_name);
+  if (!result) return `Could not find a tenant matching "${tenant_name}" in your properties.`;
+
+  const { tenant, property } = result;
+  if (!(await verifyOwnership(supabase, userId, property.id))) {
+    return 'You do not own this property.';
+  }
+
+  const now = new Date();
+  const payMonth = month ?? (now.getMonth() + 1);
+  const payYear = year ?? now.getFullYear();
+  const payAmount = amount ?? tenant.monthly_rent;
+
+  // Find existing payment row
+  const { data: payment } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('tenant_id', tenant.id)
+    .eq('month', payMonth)
+    .eq('year', payYear)
+    .single();
+
+  if (!payment) {
+    return `No payment record found for ${tenant.tenant_name} for ${payMonth}/${payYear}. The payment row may not exist yet — open the tenant in the app first.`;
+  }
+
+  if (payment.status === 'confirmed') {
+    return `Payment for ${tenant.tenant_name} (${payMonth}/${payYear}) is already confirmed.`;
+  }
+
+  const newAmountPaid = payAmount;
+  const newStatus = status === 'paid' || newAmountPaid >= payment.amount_due ? 'paid' : 'partial';
+
+  const { error } = await supabase
+    .from('payments')
+    .update({
+      amount_paid: newAmountPaid,
+      status: newStatus,
+      paid_at: new Date().toISOString(),
+      notes: 'Logged via AI assistant',
+    })
+    .eq('id', payment.id);
+
+  if (error) return `Failed to update payment: ${error.message}`;
+  return `Done! Marked ${tenant.tenant_name}'s ${payMonth}/${payYear} payment as ${newStatus} (₹${newAmountPaid}).`;
+};
+
+const handleConfirmPayment: ActionHandler = async (supabase, userId, entities) => {
+  const { tenant_name, month, year } = entities as {
+    tenant_name?: string;
+    month?: number;
+    year?: number;
+  };
+
+  if (!tenant_name) return 'I need the tenant name to confirm a payment.';
+
+  const result = await findTenantByName(supabase, userId, tenant_name);
+  if (!result) return `Could not find a tenant matching "${tenant_name}".`;
+
+  const { tenant, property } = result;
+  if (!(await verifyOwnership(supabase, userId, property.id))) {
+    return 'You do not own this property.';
+  }
+
+  const now = new Date();
+  const payMonth = month ?? (now.getMonth() + 1);
+  const payYear = year ?? now.getFullYear();
+
+  const { data: payment } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('tenant_id', tenant.id)
+    .eq('month', payMonth)
+    .eq('year', payYear)
+    .single();
+
+  if (!payment) return `No payment record found for ${tenant.tenant_name} (${payMonth}/${payYear}).`;
+  if (payment.status !== 'paid') return `Payment is currently "${payment.status}" — only "paid" payments can be confirmed.`;
+
+  const { error } = await supabase
+    .from('payments')
+    .update({
+      status: 'confirmed',
+      confirmed_at: new Date().toISOString(),
+      auto_confirmed: false,
+    })
+    .eq('id', payment.id);
+
+  if (error) return `Failed to confirm: ${error.message}`;
+  return `Confirmed ${tenant.tenant_name}'s payment for ${payMonth}/${payYear}.`;
+};
+
+const handleAddProperty: ActionHandler = async (supabase, userId, entities) => {
+  const { name, address, city, total_units } = entities as {
+    name?: string;
+    address?: string;
+    city?: string;
+    total_units?: number;
+  };
+
+  if (!name) return 'I need at least a property name to add it.';
+
+  const { data, error } = await supabase
+    .from('properties')
+    .insert({
+      owner_id: userId,
+      name,
+      address: address ?? '',
+      city: city ?? '',
+      total_units: total_units ?? 1,
+    })
+    .select()
+    .single();
+
+  if (error) return `Failed to add property: ${error.message}`;
+  return `Property "${name}" has been added! You can now add tenants to it in the app.`;
+};
+
+const handleAddTenant: ActionHandler = async (supabase, userId, entities) => {
+  const { property_name, tenant_name, flat_no, monthly_rent, due_day } = entities as {
+    property_name?: string;
+    tenant_name?: string;
+    flat_no?: string;
+    monthly_rent?: number;
+    due_day?: number;
+  };
+
+  if (!tenant_name) return 'I need the tenant name to add them.';
+  if (!property_name) return 'Which property should I add this tenant to?';
+
+  // Find property by name
+  const { data: properties } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('owner_id', userId)
+    .eq('is_archived', false)
+    .ilike('name', `%${property_name}%`);
+
+  if (!properties || properties.length === 0) return `No property found matching "${property_name}".`;
+  const property = properties[0];
+
+  // Generate invite token
+  const inviteToken = crypto.randomUUID();
+
+  const { error } = await supabase.from('tenants').insert({
+    property_id: property.id,
+    tenant_name,
+    flat_no: flat_no ?? '—',
+    monthly_rent: monthly_rent ?? 0,
+    security_deposit: 0,
+    due_day: due_day ?? 1,
+    lease_start: new Date().toISOString().split('T')[0],
+    invite_token: inviteToken,
+    invite_status: 'pending',
+  });
+
+  if (error) return `Failed to add tenant: ${error.message}`;
+  return `Added ${tenant_name} to "${property.name}" (Flat ${flat_no ?? '—'}). They can accept their invite in the app.`;
+};
+
+const handleSendReminder: ActionHandler = async (supabase, userId, entities) => {
+  const { tenant_name } = entities as { tenant_name?: string };
+
+  if (!tenant_name) return 'Which tenant should I send a reminder to?';
+
+  const result = await findTenantByName(supabase, userId, tenant_name);
+  if (!result) return `Could not find a tenant matching "${tenant_name}".`;
+
+  const { tenant, property } = result;
+  if (!(await verifyOwnership(supabase, userId, property.id))) {
+    return 'You do not own this property.';
+  }
+
+  if (!tenant.user_id) {
+    return `${tenant.tenant_name} hasn't accepted their invite yet, so I can't send them a notification.`;
+  }
+
+  // Create a notification for the tenant
+  const { error } = await supabase.from('notifications').insert({
+    user_id: tenant.user_id,
+    tenant_id: tenant.id,
+    type: 'reminder',
+    title: 'Rent Reminder',
+    body: `Hi ${tenant.tenant_name}, this is a friendly reminder about your rent payment for ${property.name} (Flat ${tenant.flat_no}). Your monthly rent is ₹${tenant.monthly_rent}.`,
+  });
+
+  if (error) return `Failed to send reminder: ${error.message}`;
+  return `Reminder sent to ${tenant.tenant_name}!`;
+};
+
+const ACTION_HANDLERS: Record<string, ActionHandler> = {
+  log_payment: handleLogPayment,
+  add_property: handleAddProperty,
+  add_tenant: handleAddTenant,
+  send_reminder: handleSendReminder,
+  confirm_payment: handleConfirmPayment,
+};
+
+// Intents that require confirmation before execution
+const CONFIRM_REQUIRED_INTENTS = new Set([
+  'log_payment',
+  'confirm_payment',
+  'add_property',
+  'add_tenant',
+]);
 
 // ----------------------------------------------------------------
 // Build context string from user's properties/tenants/payments
@@ -103,12 +378,25 @@ async function buildContext(supabase: ReturnType<typeof createClient>, userId: s
 async function getHistory(supabase: ReturnType<typeof createClient>, userId: string, limit = 10) {
   const { data } = await supabase
     .from('bot_conversations')
-    .select('role, content')
+    .select('role, content, metadata')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  return (data ?? []).reverse() as { role: 'user' | 'assistant'; content: string }[];
+  return (data ?? []).reverse() as { role: 'user' | 'assistant'; content: string; metadata?: any }[];
+}
+
+// ----------------------------------------------------------------
+// Check if user is confirming/canceling a pending action
+// ----------------------------------------------------------------
+function isConfirmation(message: string): boolean {
+  const normalized = message.toLowerCase().trim();
+  return ['yes', 'confirm', 'do it', 'go ahead', 'sure', 'yep', 'yeah', 'ok', 'okay', 'proceed'].includes(normalized);
+}
+
+function isCancellation(message: string): boolean {
+  const normalized = message.toLowerCase().trim();
+  return ['no', 'cancel', 'nope', 'stop', 'nevermind', 'never mind', 'nah', 'dont', "don't"].includes(normalized);
 }
 
 // ----------------------------------------------------------------
@@ -117,22 +405,38 @@ async function getHistory(supabase: ReturnType<typeof createClient>, userId: str
 async function callClaude(context: string, history: { role: string; content: string }[], userMessage: string): Promise<ClaudeIntent> {
   const systemPrompt = `You are Dwella Assistant, an AI helper for a rental property management app called Dwella.
 
-You help landlords and tenants with: checking payment status, viewing tenant info, understanding rent history, and general property questions.
+You help landlords and tenants with: checking payment status, viewing tenant info, understanding rent history, general property questions, AND executing actions like logging payments, adding properties/tenants, confirming payments, and sending reminders.
 
 PROPERTY/TENANT CONTEXT (refreshed for this request):
 ${context}
 
+AVAILABLE ACTIONS — You can perform these for the user:
+- log_payment: Log a tenant's rent payment. Entities: { tenant_name, month?, year?, amount?, status? }
+- confirm_payment: Confirm a paid payment. Entities: { tenant_name, month?, year? }
+- add_property: Add a new property. Entities: { name, address?, city?, total_units? }
+- add_tenant: Add a tenant to a property. Entities: { property_name, tenant_name, flat_no?, monthly_rent?, due_day? }
+- send_reminder: Send a rent reminder to a tenant. Entities: { tenant_name }
+
+QUERY INTENTS (no action needed):
+- query_status, query_summary, query_overdue, query_tenant, general_chat
+
 RESPONSE FORMAT: Always respond with valid JSON matching this schema:
 {
-  "intent": "<one of: query_status|query_summary|query_overdue|query_tenant|general_chat>",
-  "entities": {},
-  "action_description": "<what you understood>",
-  "needs_confirmation": false,
-  "reply": "<friendly natural language reply to the user>"
+  "intent": "<one of the action or query intents above>",
+  "entities": { <relevant key-value pairs for the action> },
+  "action_description": "<what you understood the user wants>",
+  "needs_confirmation": <true for financial/destructive actions (log_payment, confirm_payment, add_property, add_tenant), false for queries and send_reminder>,
+  "reply": "<friendly natural language reply — for actions needing confirmation, summarize what you'll do and ask 'Should I go ahead?'>"
 }
 
-Keep replies concise and conversational. Use ₹ for Indian Rupees. Format dates as DD MMM YYYY.
-Note: Payment actions (mark_paid, confirm_payment) must be done through the app UI for security.`;
+RULES:
+- For action intents, extract as many entities as possible from the message and context.
+- If the user says a tenant name, match it to the tenant list in context. Use the exact name from context.
+- If month/year is not specified for payment actions, default to the current month/year.
+- If amount is not specified for log_payment, default to the tenant's monthly_rent.
+- Set needs_confirmation: true for log_payment, confirm_payment, add_property, add_tenant.
+- Set needs_confirmation: false for queries and send_reminder.
+- Keep replies concise and conversational. Use ₹ for Indian Rupees. Format dates as DD MMM YYYY.`;
 
   const messages = [
     ...history.map((h) => ({ role: h.role, content: h.content })),
@@ -169,7 +473,6 @@ Note: Payment actions (mark_paid, confirm_payment) must be done through the app 
   try {
     return JSON.parse(jsonStr.trim()) as ClaudeIntent;
   } catch {
-    // Fallback if Claude returns non-JSON
     return {
       intent: 'general_chat',
       entities: {},
@@ -187,11 +490,12 @@ async function saveMessages(
   supabase: ReturnType<typeof createClient>,
   userId: string,
   userMessage: string,
-  assistantReply: string
+  assistantReply: string,
+  metadata?: Record<string, unknown> | null,
 ) {
   await supabase.from('bot_conversations').insert([
     { user_id: userId, role: 'user', content: userMessage },
-    { user_id: userId, role: 'assistant', content: assistantReply },
+    { user_id: userId, role: 'assistant', content: assistantReply, metadata: metadata ?? null },
   ]);
 }
 
@@ -210,7 +514,7 @@ serve(async (req) => {
 
   try {
     const body: BotRequest = await req.json();
-    const { user_id, message, source } = body;
+    const { user_id, message } = body;
 
     if (!user_id || !message) {
       return new Response(JSON.stringify({ error: 'user_id and message required' }), {
@@ -227,24 +531,60 @@ serve(async (req) => {
       getHistory(supabase, user_id),
     ]);
 
+    // Check if last assistant message has a pending action
+    const lastAssistantMsg = [...history].reverse().find((m) => m.role === 'assistant');
+    const pendingAction: PendingAction | null = lastAssistantMsg?.metadata?.pending_action ?? null;
+
+    // Handle confirmation/cancellation of pending action
+    if (pendingAction) {
+      if (isConfirmation(message)) {
+        const handler = ACTION_HANDLERS[pendingAction.action];
+        if (handler) {
+          const actionResult = await handler(supabase, user_id, pendingAction.entities);
+          await saveMessages(supabase, user_id, message, actionResult);
+          return jsonResponse({ reply: actionResult, intent: pendingAction.action, action_taken: pendingAction.description });
+        }
+      } else if (isCancellation(message)) {
+        const cancelReply = 'No problem, I\'ve cancelled that action.';
+        await saveMessages(supabase, user_id, message, cancelReply);
+        return jsonResponse({ reply: cancelReply, intent: 'cancelled' });
+      }
+      // If neither confirm nor cancel, treat as a new message (fall through to Claude)
+    }
+
     // Call Claude
     const result = await callClaude(context, history, message);
 
-    // Persist conversation
-    await saveMessages(supabase, user_id, message, result.reply);
+    const handler = ACTION_HANDLERS[result.intent];
 
-    const botResponse: BotResponse = {
-      reply: result.reply,
-      intent: result.intent,
-      action_taken: result.action_description,
-    };
-
-    return new Response(JSON.stringify(botResponse), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+    if (handler) {
+      // Action intent
+      if (result.needs_confirmation || CONFIRM_REQUIRED_INTENTS.has(result.intent)) {
+        // Save with pending action metadata, ask for confirmation
+        const actionMetadata = {
+          pending_action: {
+            action: result.intent,
+            entities: result.entities,
+            description: result.action_description,
+          },
+        };
+        await saveMessages(supabase, user_id, message, result.reply, actionMetadata);
+        return jsonResponse({
+          reply: result.reply,
+          intent: result.intent,
+          pending_action: actionMetadata.pending_action,
+        });
+      } else {
+        // Execute immediately (e.g. send_reminder)
+        const actionResult = await handler(supabase, user_id, result.entities);
+        await saveMessages(supabase, user_id, message, actionResult);
+        return jsonResponse({ reply: actionResult, intent: result.intent, action_taken: result.action_description });
+      }
+    } else {
+      // Query intent — return reply as-is
+      await saveMessages(supabase, user_id, message, result.reply);
+      return jsonResponse({ reply: result.reply, intent: result.intent, action_taken: result.action_description });
+    }
   } catch (err) {
     console.error('process-bot-message error:', err);
     return new Response(JSON.stringify({ error: 'Internal server error', details: String(err) }), {
@@ -253,3 +593,12 @@ serve(async (req) => {
     });
   }
 });
+
+function jsonResponse(body: BotResponse): Response {
+  return new Response(JSON.stringify(body), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+}

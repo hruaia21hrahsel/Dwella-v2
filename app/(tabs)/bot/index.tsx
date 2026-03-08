@@ -47,27 +47,49 @@ export default function BotScreen() {
     });
   }, [messages.length, navigation]);
 
-  const handleSend = useCallback(async () => {
-    const text = input.trim();
-    if (!text || !user || sending) return;
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || !user || sending) return;
 
     setInput('');
     setSending(true);
 
     try {
-      await sendBotMessage(user.id, text);
-      // Messages arrive via Realtime subscription in useBotConversations
+      await sendBotMessage(user.id, text.trim());
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 200);
     } catch (err) {
       useToastStore.getState().showToast(String(err), 'error');
     } finally {
       setSending(false);
     }
-  }, [input, user, sending]);
+  }, [user, sending]);
+
+  const handleSend = useCallback(() => {
+    sendMessage(input);
+  }, [input, sendMessage]);
+
+  const handleConfirm = useCallback(() => {
+    sendMessage('yes');
+  }, [sendMessage]);
+
+  const handleCancel = useCallback(() => {
+    sendMessage('cancel');
+  }, [sendMessage]);
+
+  // Find the last assistant message index for showing action buttons
+  const lastAssistantIndex = messages.length > 0
+    ? messages.reduce((lastIdx, msg, idx) => msg.role === 'assistant' ? idx : lastIdx, -1)
+    : -1;
 
   const renderItem = useCallback(
-    ({ item }: { item: BotConversation }) => <ChatBubble message={item} />,
-    []
+    ({ item, index }: { item: BotConversation; index: number }) => (
+      <ChatBubble
+        message={item}
+        isLatestAssistant={index === lastAssistantIndex}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    ),
+    [lastAssistantIndex, handleConfirm, handleCancel]
   );
 
   return (
@@ -86,7 +108,7 @@ export default function BotScreen() {
           <EmptyState
             icon="robot"
             title="Hi! I'm your Dwella Assistant"
-            subtitle={"Ask me anything about your properties, tenants, or payments.\n\nExamples:\n• \"Who hasn't paid this month?\"\n• \"What's my total rent collection for March?\"\n• \"Show me overdue payments\""}
+            subtitle={"Ask me anything or tell me what to do!\n\nExamples:\n• \"Log Rahul's March rent as paid\"\n• \"Add a new property called Sunrise Apartments\"\n• \"Who hasn't paid this month?\"\n• \"Send a reminder to all overdue tenants\""}
           />
         </View>
       ) : (
@@ -113,7 +135,7 @@ export default function BotScreen() {
         <TextInput
           value={input}
           onChangeText={setInput}
-          placeholder="Ask anything…"
+          placeholder="Ask anything or give a command…"
           mode="outlined"
           style={styles.input}
           outlineStyle={styles.inputOutline}
