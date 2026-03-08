@@ -425,102 +425,104 @@ export default function DashboardScreen() {
       <AiInsightCard nudge={aiNudge} loading={aiNudgeLoading} />
 
       {/* Section 2 — Monthly Summary (expandable) */}
-      <TouchableOpacity
-        style={[styles.summaryToggle, Shadows.sm, { marginTop: 24 }]}
-        onPress={() => setSummaryExpanded((v) => !v)}
-        activeOpacity={0.8}
-      >
-        <View style={styles.summaryToggleLeft}>
-          <MaterialCommunityIcons name="chart-bar" size={18} color={Colors.primary} style={{ marginRight: 8 }} />
-          <Text style={styles.summaryToggleText}>Monthly Summary</Text>
-        </View>
-        <View style={styles.summaryToggleRight}>
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              if (summaryMonth <= 1) {
-                setSummaryMonth(12);
-                setSelectedYear((y) => Math.max(2000, y - 1));
-              } else {
-                setSummaryMonth((m) => m - 1);
-              }
-            }}
-            hitSlop={8}
-          >
-            <MaterialCommunityIcons name="chevron-left" size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-          <Text style={styles.summaryMonthText}>
-            {MONTH_SHORT[summaryMonth - 1]} {selectedYear}
-          </Text>
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              if (summaryMonth >= 12) {
-                setSummaryMonth(1);
-                setSelectedYear((y) => Math.min(currentYear, y + 1));
-              } else {
-                setSummaryMonth((m) => m + 1);
-              }
-            }}
-            hitSlop={8}
-          >
-            <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-          <MaterialCommunityIcons
-            name={summaryExpanded ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color={Colors.textSecondary}
-            style={{ marginLeft: 8 }}
-          />
-        </View>
-      </TouchableOpacity>
-
-      {summaryExpanded && (
-        <>
-          <AnimatedCard index={0}>
-            <View style={styles.statsGrid}>
-              <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
-              <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
-              <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
-              <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
-            </View>
-          </AnimatedCard>
-
-          {/* P&L card */}
-          <View style={[styles.plCard, Shadows.sm]}>
-            <Text style={styles.plTitle}>
-              P&L — {getMonthName(summaryMonth)} {selectedYear}
-            </Text>
-            <View style={styles.plRow}>
-              <View style={styles.plItem}>
-                <Text style={[styles.plValue, { color: Colors.statusConfirmed }]}>
-                  {formatCurrency(stats.totalReceived)}
-                </Text>
-                <Text style={styles.plLabel}>Income</Text>
-              </View>
-              <View style={styles.plDivider} />
-              <View style={styles.plItem}>
-                <Text style={[styles.plValue, { color: Colors.error }]}>
-                  {formatCurrency(monthlyExpenses)}
-                </Text>
-                <Text style={styles.plLabel}>Expenses</Text>
-              </View>
-              <View style={styles.plDivider} />
-              <View style={styles.plItem}>
-                <Text
-                  style={[
-                    styles.plValue,
-                    { color: stats.totalReceived - monthlyExpenses >= 0 ? Colors.statusConfirmed : Colors.error },
-                  ]}
-                >
-                  {formatCurrency(stats.totalReceived - monthlyExpenses)}
-                </Text>
-                <Text style={styles.plLabel}>Net</Text>
-              </View>
-            </View>
+      <View style={[styles.summarySection, { marginTop: 24 }]}>
+        <TouchableOpacity
+          style={styles.summaryToggle}
+          onPress={() => setSummaryExpanded((v) => !v)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.summaryToggleLeft}>
+            <MaterialCommunityIcons name="chart-bar" size={18} color={Colors.primary} style={{ marginRight: 8 }} />
+            <Text style={styles.summaryToggleText}>Monthly Summary</Text>
           </View>
-        </>
-      )}
+          <View style={styles.summaryToggleRight}>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                if (summaryMonth <= 1) {
+                  setSummaryMonth(12);
+                  setSelectedYear((y) => Math.max(2000, y - 1));
+                } else {
+                  setSummaryMonth((m) => m - 1);
+                }
+              }}
+              hitSlop={8}
+            >
+              <MaterialCommunityIcons name="chevron-left" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            <Text style={styles.summaryMonthText}>
+              {MONTH_SHORT[summaryMonth - 1]} {selectedYear}
+            </Text>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                if (summaryMonth >= 12) {
+                  setSummaryMonth(1);
+                  setSelectedYear((y) => Math.min(currentYear, y + 1));
+                } else {
+                  setSummaryMonth((m) => m + 1);
+                }
+              }}
+              hitSlop={8}
+            >
+              <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            <MaterialCommunityIcons
+              name={summaryExpanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color={Colors.textSecondary}
+              style={{ marginLeft: 8 }}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {summaryExpanded && (
+          <>
+            <AnimatedCard index={0}>
+              <View style={styles.statsGrid}>
+                <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
+                <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
+                <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
+                <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
+              </View>
+            </AnimatedCard>
+
+            {/* P&L card */}
+            <View style={styles.plCard}>
+              <Text style={styles.plTitle}>
+                P&L — {getMonthName(summaryMonth)} {selectedYear}
+              </Text>
+              <View style={styles.plRow}>
+                <View style={styles.plItem}>
+                  <Text style={[styles.plValue, { color: Colors.statusConfirmed }]}>
+                    {formatCurrency(stats.totalReceived)}
+                  </Text>
+                  <Text style={styles.plLabel}>Income</Text>
+                </View>
+                <View style={styles.plDivider} />
+                <View style={styles.plItem}>
+                  <Text style={[styles.plValue, { color: Colors.error }]}>
+                    {formatCurrency(monthlyExpenses)}
+                  </Text>
+                  <Text style={styles.plLabel}>Expenses</Text>
+                </View>
+                <View style={styles.plDivider} />
+                <View style={styles.plItem}>
+                  <Text
+                    style={[
+                      styles.plValue,
+                      { color: stats.totalReceived - monthlyExpenses >= 0 ? Colors.statusConfirmed : Colors.error },
+                    ]}
+                  >
+                    {formatCurrency(stats.totalReceived - monthlyExpenses)}
+                  </Text>
+                  <Text style={styles.plLabel}>Net</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+      </View>
 
       {/* Section 3 — Recent Transactions */}
       {recentTransactions.length > 0 && (
@@ -788,16 +790,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
+  // Summary section wrapper
+  summarySection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 12,
+    gap: 12,
+  },
   // Summary toggle
   summaryToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
   },
   summaryToggleLeft: {
     flexDirection: 'row',
@@ -825,7 +831,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 24,
   },
   statCard: {
     flex: 1,
@@ -863,10 +868,9 @@ const styles = StyleSheet.create({
   },
   // P&L
   plCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
+    backgroundColor: Colors.primarySoft,
+    borderRadius: 14,
     padding: 16,
-    marginBottom: 24,
   },
   plTitle: {
     fontSize: 13,
