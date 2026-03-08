@@ -92,7 +92,10 @@ export default function DashboardScreen() {
     const sub = AppState.addEventListener('change', async (nextState) => {
       if (appState.current.match(/inactive|background/) && nextState === 'active' && user && !user.telegram_chat_id) {
         const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
-        if (data?.telegram_chat_id) setUser(data);
+        if (data?.telegram_chat_id) {
+          setUser(data);
+          useToastStore.getState().showToast('Telegram linked successfully!', 'success');
+        }
       }
       appState.current = nextState;
     });
