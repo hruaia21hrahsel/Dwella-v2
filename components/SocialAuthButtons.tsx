@@ -3,7 +3,9 @@ import { View, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
+import { useRouter } from 'expo-router';
 import { signInWithGoogle, signInWithApple, isAppleSignInAvailable } from '@/lib/social-auth';
+import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 
 interface SocialAuthButtonsProps {
@@ -14,6 +16,8 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthButtonsProps) {
   const { colors, isDark } = useTheme();
+  const router = useRouter();
+  const { onboardingCompleted, setLocked } = useAuthStore();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(true);
@@ -24,14 +28,22 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
 
   const isLoading = googleLoading || appleLoading;
 
+  /** After successful OAuth, navigate immediately — don't wait for AuthGuard. */
+  function navigateAfterAuth() {
+    setLocked(false);
+    router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
+  }
+
   async function handleGoogle() {
     try {
       setGoogleLoading(true);
       onLoading?.(true);
       const result = await signInWithGoogle();
-      if (!result.success) {
-        // User cancelled — not an error
+      if (result.success) {
+        navigateAfterAuth();
+        return;
       }
+      // User cancelled — not an error
     } catch (err: any) {
       onError(err.message || 'Google sign-in failed');
     } finally {
@@ -45,8 +57,9 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
       setAppleLoading(true);
       onLoading?.(true);
       const result = await signInWithApple();
-      if (!result.success) {
-        // User cancelled
+      if (result.success) {
+        navigateAfterAuth();
+        return;
       }
     } catch (err: any) {
       // Error code 1001 = user cancelled on iOS

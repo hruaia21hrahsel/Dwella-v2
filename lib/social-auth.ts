@@ -1,18 +1,18 @@
 import { Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from './supabase';
 
-// Complete any dangling auth sessions (important when the app resumes
-// after the in-app browser redirect).
+// Complete any dangling auth sessions when the app resumes.
 WebBrowser.maybeCompleteAuthSession();
 
-// Must match app.json scheme + Supabase allowed redirect URLs.
-const REDIRECT_URI = 'dwella://auth/callback';
+// makeRedirectUri generates the correct callback URL for the current
+// environment: custom scheme for standalone builds, proxy URL for Expo Go.
+const REDIRECT_URI = makeRedirectUri({ scheme: 'dwella', path: 'auth/callback' });
 
 /**
  * Sign in with Google via Supabase OAuth (implicit flow).
- * Supabase redirects back to dwella://auth/callback#access_token=...
  */
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -26,24 +26,18 @@ export async function signInWithGoogle() {
   if (error) throw error;
   if (!data.url) throw new Error('No OAuth URL returned');
 
-  // Warm up the browser on Android for faster launch
-  if (Platform.OS === 'android') {
-    await WebBrowser.warmUpAsync();
-  }
+  if (Platform.OS === 'android') await WebBrowser.warmUpAsync().catch(() => {});
 
   try {
     const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
 
     if (result.type === 'success' && result.url) {
-      return handleOAuthRedirect(result.url);
+      await setSessionFromRedirect(result.url);
+      return { success: true };
     }
-
-    // type === 'cancel' or 'dismiss' — user closed the browser
     return { success: false };
   } finally {
-    if (Platform.OS === 'android') {
-      await WebBrowser.coolDownAsync();
-    }
+    if (Platform.OS === 'android') await WebBrowser.coolDownAsync().catch(() => {});
   }
 }
 
@@ -57,10 +51,6 @@ export async function signInWithApple() {
   return signInWithAppleWeb();
 }
 
-/**
- * Native Apple Sign-In (iOS only).
- * Passes the identity token directly to Supabase — no browser needed.
- */
 async function signInWithAppleNative() {
   const credential = await AppleAuthentication.signInAsync({
     requestedScopes: [
@@ -77,10 +67,8 @@ async function signInWithAppleNative() {
     provider: 'apple',
     token: credential.identityToken,
   });
-
   if (error) throw error;
 
-  // Apple only returns the name on first sign-in — update profile if present
   if (credential.fullName?.givenName || credential.fullName?.familyName) {
     const fullName = [credential.fullName.givenName, credential.fullName.familyName]
       .filter(Boolean)
@@ -93,9 +81,6 @@ async function signInWithAppleNative() {
   return { success: true };
 }
 
-/**
- * Apple Sign-In via web OAuth (Android fallback).
- */
 async function signInWithAppleWeb() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
@@ -108,31 +93,25 @@ async function signInWithAppleWeb() {
   if (error) throw error;
   if (!data.url) throw new Error('No OAuth URL returned');
 
-  if (Platform.OS === 'android') {
-    await WebBrowser.warmUpAsync();
-  }
+  if (Platform.OS === 'android') await WebBrowser.warmUpAsync().catch(() => {});
 
   try {
     const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
 
     if (result.type === 'success' && result.url) {
-      return handleOAuthRedirect(result.url);
+      await setSessionFromRedirect(result.url);
+      return { success: true };
     }
-
     return { success: false };
   } finally {
-    if (Platform.OS === 'android') {
-      await WebBrowser.coolDownAsync();
-    }
+    if (Platform.OS === 'android') await WebBrowser.coolDownAsync().catch(() => {});
   }
 }
 
 /**
- * Parses tokens from the OAuth redirect URL (implicit flow returns them
- * in the hash fragment: dwella://auth/callback#access_token=...&refresh_token=...)
- * then sets the Supabase session.
+ * Extract tokens from the redirect URL hash fragment and set the Supabase session.
  */
-async function handleOAuthRedirect(url: string) {
+async function setSessionFromRedirect(url: string) {
   const hash = url.split('#')[1] ?? '';
   const params: Record<string, string> = {};
   for (const pair of hash.split('&')) {
@@ -149,13 +128,8 @@ async function handleOAuthRedirect(url: string) {
 
   const { error } = await supabase.auth.setSession({ access_token, refresh_token });
   if (error) throw error;
-
-  return { success: true };
 }
 
-/**
- * Check if native Apple Sign-In is available (iOS 13+).
- */
 export async function isAppleSignInAvailable(): Promise<boolean> {
   if (Platform.OS !== 'ios') return true;
   return AppleAuthentication.isAvailableAsync();
