@@ -100,7 +100,7 @@ export default function MarkPaidScreen() {
           title: 'Mark as Paid',
           headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
           presentation: 'modal',
         }}

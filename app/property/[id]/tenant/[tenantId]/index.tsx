@@ -167,7 +167,7 @@ export default function TenantDetailScreen() {
           title: tenant.tenant_name,
           headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
           headerRight: () => (
             <View style={styles.headerActions}>

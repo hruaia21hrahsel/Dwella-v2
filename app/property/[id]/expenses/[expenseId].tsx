@@ -111,7 +111,7 @@ export default function EditExpenseScreen() {
           headerShown: true,
           title: 'Edit Expense',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />

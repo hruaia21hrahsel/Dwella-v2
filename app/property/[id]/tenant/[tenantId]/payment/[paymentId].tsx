@@ -145,7 +145,7 @@ export default function PaymentDetailScreen() {
           title: `${getMonthName(payment.month)} ${payment.year}`,
           headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
         }}
       />

@@ -125,7 +125,7 @@ export default function ExpensesScreen() {
           headerShown: true,
           title: 'Expenses',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
         }}
       />

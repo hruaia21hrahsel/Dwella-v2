@@ -119,7 +119,7 @@ export default function TenantCreateScreen() {
         options={{
           title: isEditing ? 'Edit Tenant' : 'Add Tenant',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
           headerShown: true,
           headerLeft: () => (

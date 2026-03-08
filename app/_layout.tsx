@@ -18,6 +18,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -135,14 +137,14 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark />, headerLeft: () => <ProfileHeaderButton dark />, headerRight: () => <View style={{ width: 50 }} /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 }, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark />, headerLeft: () => <ProfileHeaderButton dark />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark />, headerLeft: () => <ProfileHeaderButton dark />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark />, headerLeft: () => <ProfileHeaderButton dark />, headerRight: () => <View style={{ width: 50 }} /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: Colors.surface, height: 64 },
+            headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
@@ -154,7 +156,7 @@ export default function RootLayout() {
           options={{
             headerShown: true,
             presentation: 'modal',
-            headerStyle: { backgroundColor: Colors.surface, height: 64 },
+            headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,

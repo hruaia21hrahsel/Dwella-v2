@@ -75,7 +75,7 @@ export default function PropertyDetailScreen() {
         options={{
           title: property.name,
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 },
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerRight: isOwner
             ? () => (
                 <View style={styles.headerActions}>
