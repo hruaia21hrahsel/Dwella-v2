@@ -30,11 +30,12 @@ export default function PropertyDetailScreen() {
 
   const occupiedCount = tenants.filter((t) => t.invite_status === 'accepted').length;
 
-  // Re-fetch expenses when screen regains focus (e.g. after adding an expense)
+  // Re-fetch tenants and expenses when screen regains focus
   useFocusEffect(
     useCallback(() => {
+      refreshTenants();
       refreshExpenses();
-    }, [refreshExpenses])
+    }, [refreshTenants, refreshExpenses])
   );
 
   function handleRefresh() {
