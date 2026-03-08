@@ -286,7 +286,7 @@ export default function DashboardScreen() {
             const status: PaymentStatus | null = payment?.status ?? null;
             const isCurrentMonth = m === currentMonth;
 
-            const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPendingSoft;
+            const bgColor = status ? getStatusColor(status) + '22' : Colors.primarySoft;
             const iconColor = status ? getStatusColor(status) : Colors.statusPending;
             const canNavigate = !!payment?.id;
 
