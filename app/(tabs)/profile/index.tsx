@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
+import { useToastStore } from '@/lib/toast';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
 import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
@@ -60,10 +61,10 @@ export default function ProfileScreen() {
       .single();
 
     if (error) {
-      Alert.alert('Error', error.message);
+      useToastStore.getState().showToast(error.message, 'error');
     } else if (data) {
       setUser(data);
-      Alert.alert('Saved', 'Profile updated successfully.');
+      useToastStore.getState().showToast('Profile updated successfully.', 'success');
     }
 
     setSaving(false);
@@ -92,10 +93,10 @@ export default function ProfileScreen() {
       if (canOpen) {
         await Linking.openURL(deepLink);
       } else {
-        Alert.alert('Telegram not found', 'Please install Telegram, then try again.');
+        useToastStore.getState().showToast('Please install Telegram, then try again.', 'error');
       }
     } catch (err) {
-      Alert.alert('Error', String(err));
+      useToastStore.getState().showToast(String(err), 'error');
     } finally {
       setLinkingTelegram(false);
     }
@@ -118,7 +119,7 @@ export default function ProfileScreen() {
               const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
               if (data) setUser(data);
             } catch (err) {
-              Alert.alert('Error', String(err));
+              useToastStore.getState().showToast(String(err), 'error');
             } finally {
               setUnlinkingTelegram(false);
             }

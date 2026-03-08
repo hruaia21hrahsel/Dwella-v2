@@ -11,6 +11,7 @@ import { Text, TextInput, IconButton, ActivityIndicator } from 'react-native-pap
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { useAuthStore } from '@/lib/store';
+import { useToastStore } from '@/lib/toast';
 import { useBotConversations } from '@/hooks/useBotConversations';
 import { sendBotMessage } from '@/lib/bot';
 import { ChatBubble } from '@/components/ChatBubble';
@@ -58,7 +59,7 @@ export default function BotScreen() {
       // Messages arrive via Realtime subscription in useBotConversations
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 200);
     } catch (err) {
-      Alert.alert('Error', String(err));
+      useToastStore.getState().showToast(String(err), 'error');
     } finally {
       setSending(false);
     }
