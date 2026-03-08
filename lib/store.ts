@@ -4,12 +4,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session } from '@supabase/supabase-js';
 import { User } from './types';
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 interface AuthState {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
   propertyRefreshAt: number;
   onboardingCompleted: boolean;
+  themeMode: ThemeMode;
   /**
    * Whether the app UI is locally locked. Starts true on every cold launch.
    * Set to false when the user enters a correct PIN or logs in with email/password.
@@ -28,6 +31,7 @@ interface AuthState {
   resetOnboarding: () => void;
   setLocked: (locked: boolean) => void;
   setTourStep: (step: number | null) => void;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -38,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: true,
       propertyRefreshAt: 0,
       onboardingCompleted: false,
+      themeMode: 'light' as ThemeMode,
       isLocked: true,
       tourStep: null,
       setSession: (session) => set({ session }),
@@ -49,13 +54,14 @@ export const useAuthStore = create<AuthState>()(
       resetOnboarding: () => set({ onboardingCompleted: false }),
       setLocked: (isLocked) => set({ isLocked }),
       setTourStep: (tourStep) => set({ tourStep }),
+      setThemeMode: (themeMode) => set({ themeMode }),
     }),
     {
       name: 'dwella-store',
       storage: createJSONStorage(() => AsyncStorage),
       // Only persist onboardingCompleted. isLocked must reset to true on every
       // cold launch so the PIN screen is always shown when the app restarts.
-      partialize: (state) => ({ onboardingCompleted: state.onboardingCompleted }),
+      partialize: (state) => ({ onboardingCompleted: state.onboardingCompleted, themeMode: state.themeMode }),
     }
   )
 );

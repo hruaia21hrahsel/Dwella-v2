@@ -1,72 +1,54 @@
+import { LightTheme } from './theme';
+
+// Backward compatibility — static light-theme colors for files that haven't migrated yet.
+// New code should use `useTheme()` from `@/lib/theme-context` instead.
 export const Colors = {
   // Brand — NoBroker Teal
-  primary: '#009688',
-  primaryLight: '#B2DFDB',
-  primaryDark: '#00796B',
-  primarySoft: '#E0F2F1',
-  primaryMid: '#4DB6AC',
+  primary: LightTheme.colors.primary,
+  primaryLight: LightTheme.colors.primaryLight,
+  primaryDark: LightTheme.colors.primaryDark,
+  primarySoft: LightTheme.colors.primarySoft,
+  primaryMid: LightTheme.colors.primaryMid,
 
   // Status
-  statusPending: '#94A3B8',
-  statusPartial: '#F59E0B',
-  statusPaid: '#3B82F6',
-  statusConfirmed: '#22C55E',
-  statusOverdue: '#EF4444',
+  statusPending: LightTheme.colors.statusPending,
+  statusPartial: LightTheme.colors.statusPartial,
+  statusPaid: LightTheme.colors.statusPaid,
+  statusConfirmed: LightTheme.colors.statusConfirmed,
+  statusOverdue: LightTheme.colors.statusOverdue,
 
   // Status soft backgrounds
-  statusPendingSoft: '#F1F5F9',
-  statusPartialSoft: '#FEF3C7',
-  statusPaidSoft: '#DBEAFE',
-  statusConfirmedSoft: '#DCFCE7',
-  statusOverdueSoft: '#FEE2E2',
+  statusPendingSoft: LightTheme.colors.statusPendingSoft,
+  statusPartialSoft: LightTheme.colors.statusPartialSoft,
+  statusPaidSoft: LightTheme.colors.statusPaidSoft,
+  statusConfirmedSoft: LightTheme.colors.statusConfirmedSoft,
+  statusOverdueSoft: LightTheme.colors.statusOverdueSoft,
 
   // Neutral
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  border: '#E2E8F0',
-  divider: '#F1F5F9',
+  background: LightTheme.colors.background,
+  surface: LightTheme.colors.surface,
+  border: LightTheme.colors.border,
+  divider: LightTheme.colors.divider,
 
   // Text
-  textPrimary: '#0F172A',
-  textSecondary: '#64748B',
-  textDisabled: '#CBD5E1',
-  textOnPrimary: '#FFFFFF',
-  textOnGradient: '#FFFFFF',
-  textOnGradientMuted: 'rgba(255,255,255,0.75)',
+  textPrimary: LightTheme.colors.textPrimary,
+  textSecondary: LightTheme.colors.textSecondary,
+  textDisabled: LightTheme.colors.textDisabled,
+  textOnPrimary: LightTheme.colors.textOnPrimary,
+  textOnGradient: LightTheme.colors.textOnGradient,
+  textOnGradientMuted: LightTheme.colors.textOnGradientMuted,
 
   // Gradient pairs
-  gradientHero: ['#009688', '#009688'] as string[],
-  gradientHeroSubtle: ['#E0F2F1', '#B2DFDB'] as string[],
+  gradientHero: LightTheme.gradients.hero as string[],
+  gradientHeroSubtle: LightTheme.gradients.heroSubtle as string[],
 
   // Functional
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
+  success: LightTheme.colors.success,
+  warning: LightTheme.colors.warning,
+  error: LightTheme.colors.error,
+  info: LightTheme.colors.info,
 } as const;
 
 export type ColorKey = keyof typeof Colors;
 
-export const Shadows = {
-  sm: {
-    shadowColor: '#00796B',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  md: {
-    shadowColor: '#00796B',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
-    elevation: 6,
-  },
-  hero: {
-    shadowColor: '#009688',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 24,
-    elevation: 12,
-  },
-};
+export const Shadows = LightTheme.shadows;
