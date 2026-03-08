@@ -218,6 +218,9 @@ export default function DashboardScreen() {
 
       <ErrorBanner error={error} onRetry={refresh} />
 
+      {/* Overview section */}
+      <View style={styles.overviewSection}>
+
       {/* Hero gradient header */}
       <LinearGradient
         colors={Colors.gradientHero as [string, string]}
@@ -415,6 +418,9 @@ export default function DashboardScreen() {
         <Text style={styles.remindersBtnText}>Send Reminders</Text>
       </TouchableOpacity>
 
+      </View>
+      {/* End overview section */}
+
       {/* AI Nudge */}
       <AiInsightCard nudge={aiNudge} loading={aiNudgeLoading} />
 
@@ -574,6 +580,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  // Overview section wrapper
+  overviewSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 12,
+    marginBottom: 4,
+  },
   // Hero
   heroCard: {
     borderRadius: 16,
