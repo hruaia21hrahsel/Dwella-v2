@@ -86,7 +86,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       {/* FAB — absolutely positioned in normal view hierarchy, no Portal */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => router.push('/log-payment' as any)}
+        onPress={() => navigation.navigate('payments/index')}
         activeOpacity={0.85}
       >
         {/* Glowing pulse ring */}
