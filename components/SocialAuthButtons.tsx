@@ -76,7 +76,7 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
           <ActivityIndicator size="small" color={colors.textSecondary} />
         ) : (
           <>
-            <GoogleIcon />
+            <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
             <Text style={[styles.socialText, { color: colors.textPrimary }]}>Continue with Google</Text>
           </>
         )}
@@ -112,15 +112,6 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
   );
 }
 
-/** Inline Google "G" icon using the official brand colors */
-function GoogleIcon() {
-  return (
-    <View style={styles.googleIcon}>
-      <Text style={styles.googleG}>G</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     gap: 12,
@@ -138,19 +129,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     letterSpacing: 0.2,
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#4285F4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleG: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '800',
-    marginTop: -1,
   },
 });
