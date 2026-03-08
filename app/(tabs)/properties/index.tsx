@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
 import { Text, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -7,17 +7,42 @@ import { PropertyCard } from '@/components/PropertyCard';
 import { EmptyState } from '@/components/EmptyState';
 import { ListSkeleton } from '@/components/ListSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { Colors } from '@/constants/colors';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/lib/store';
+import { Property } from '@/lib/types';
 
 export default function PropertiesScreen() {
   const router = useRouter();
+  const { bumpPropertyRefresh } = useAuthStore();
   const { ownedProperties, tenantProperties, isLoading, error, refresh } = useProperties();
+  const [archiveTarget, setArchiveTarget] = useState<Property | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleAddProperty = useCallback(() => {
     router.push('/property/create');
   }, [router]);
+
+  async function handleArchiveProperty() {
+    if (!archiveTarget) return;
+    setDeleting(true);
+
+    await supabase
+      .from('tenants')
+      .update({ is_archived: true, archived_at: new Date().toISOString() })
+      .eq('property_id', archiveTarget.id);
+
+    await supabase
+      .from('properties')
+      .update({ is_archived: true, archived_at: new Date().toISOString() })
+      .eq('id', archiveTarget.id);
+
+    setDeleting(false);
+    setArchiveTarget(null);
+    bumpPropertyRefresh();
+  }
 
   if (isLoading) {
     return <ListSkeleton count={3} />;
@@ -51,6 +76,8 @@ export default function PropertiesScreen() {
                 <PropertyCard
                   property={property}
                   onPress={() => router.push(`/(tabs)/properties/${property.id}`)}
+                  onEdit={() => router.push({ pathname: '/property/create', params: { id: property.id } })}
+                  onDelete={() => setArchiveTarget(property)}
                 />
               </AnimatedCard>
             ))
@@ -85,6 +112,17 @@ export default function PropertiesScreen() {
           style={styles.fab}
           onPress={handleAddProperty}
           color={Colors.textOnPrimary}
+        />
+
+        <ConfirmDialog
+          visible={!!archiveTarget}
+          title="Archive Property"
+          message={`Archive "${archiveTarget?.name}"? This will also archive all its tenants. This cannot be undone.`}
+          confirmLabel="Archive"
+          confirmColor={Colors.error}
+          loading={deleting}
+          onConfirm={handleArchiveProperty}
+          onCancel={() => setArchiveTarget(null)}
         />
       </View>
   );

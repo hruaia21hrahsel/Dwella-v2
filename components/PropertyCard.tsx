@@ -1,7 +1,6 @@
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Property } from '@/lib/types';
 import { Colors, Shadows } from '@/constants/colors';
 
@@ -10,51 +9,31 @@ interface PropertyCardProps {
   isTenantView?: boolean;
   paidCount?: number;
   onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function PropertyCard({ property, isTenantView = false, paidCount, onPress }: PropertyCardProps) {
-  const iconGradient: [string, string] = isTenantView
-    ? ['#F0FDF4', '#DCFCE7']
-    : [Colors.primarySoft, '#DDD6FE'];
+export function PropertyCard({ property, isTenantView = false, paidCount, onPress, onEdit, onDelete }: PropertyCardProps) {
   const iconColor = isTenantView ? Colors.statusConfirmed : Colors.primary;
   const iconName = isTenantView ? 'home-account' : 'home-city';
 
-  const progressFraction = paidCount !== undefined && property.total_units > 0
-    ? paidCount / property.total_units
-    : 0;
-
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
-      <LinearGradient colors={iconGradient} style={styles.iconContainer}>
-        <MaterialCommunityIcons name={iconName as any} size={28} color={iconColor} />
-      </LinearGradient>
+      <View style={[styles.iconContainer, { backgroundColor: isTenantView ? '#DCFCE7' : Colors.primarySoft }]}>
+        <MaterialCommunityIcons name={iconName as any} size={22} color={iconColor} />
+      </View>
 
       <View style={styles.info}>
-        <Text variant="titleMedium" style={styles.name} numberOfLines={1}>
-          {property.name}
-        </Text>
-        <Text variant="bodySmall" style={styles.address} numberOfLines={1}>
+        <Text style={styles.name} numberOfLines={1}>{property.name}</Text>
+        <Text style={styles.address} numberOfLines={1}>
           {property.address}, {property.city}
         </Text>
-
         {!isTenantView && (
-          <>
-            <View style={styles.metaRow}>
-              <Text variant="bodySmall" style={styles.meta}>
-                {property.total_units} unit{property.total_units !== 1 ? 's' : ''}
-              </Text>
-              {paidCount !== undefined && (
-                <Text variant="bodySmall" style={styles.meta}>
-                  · {paidCount}/{property.total_units} paid
-                </Text>
-              )}
-            </View>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${progressFraction * 100}%` }]} />
-            </View>
-          </>
+          <Text style={styles.meta}>
+            {property.total_units} unit{property.total_units !== 1 ? 's' : ''}
+            {paidCount !== undefined ? ` · ${paidCount}/${property.total_units} paid` : ''}
+          </Text>
         )}
-
         {isTenantView && (
           <View style={styles.tenantBadge}>
             <Text style={styles.tenantBadgeText}>TENANT</Text>
@@ -62,7 +41,23 @@ export function PropertyCard({ property, isTenantView = false, paidCount, onPres
         )}
       </View>
 
-      <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textSecondary} />
+      {/* Edit / Delete actions (owner only) */}
+      {(onEdit || onDelete) && (
+        <View style={styles.actions}>
+          {onEdit && (
+            <TouchableOpacity onPress={onEdit} hitSlop={6} style={styles.actionBtn}>
+              <MaterialCommunityIcons name="pencil-outline" size={18} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity onPress={onDelete} hitSlop={6} style={styles.actionBtn}>
+              <MaterialCommunityIcons name="delete-outline" size={18} color={Colors.error} />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.textDisabled} />
     </TouchableOpacity>
   );
 }
@@ -72,61 +67,61 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 10,
-    gap: 12,
-    ...Shadows.sm,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   info: {
     flex: 1,
-    gap: 8,
+    gap: 2,
   },
   name: {
+    fontSize: 14,
+    fontWeight: '700',
     color: Colors.textPrimary,
-    fontWeight: '600',
   },
   address: {
+    fontSize: 12,
     color: Colors.textSecondary,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    marginTop: 2,
   },
   meta: {
+    fontSize: 11,
     color: Colors.textSecondary,
-  },
-  progressTrack: {
-    height: 3,
-    backgroundColor: Colors.border,
-    borderRadius: 2,
-    marginTop: 6,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.statusConfirmed,
-    borderRadius: 2,
   },
   tenantBadge: {
     alignSelf: 'flex-start',
     backgroundColor: Colors.statusConfirmedSoft,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginTop: 4,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    marginTop: 2,
   },
   tenantBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
     color: Colors.statusConfirmed,
     letterSpacing: 0.5,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  actionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
