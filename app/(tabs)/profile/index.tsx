@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
-import { Text, TextInput, Button, Avatar, Chip } from 'react-native-paper';
+import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
@@ -142,12 +142,9 @@ export default function ProfileScreen() {
         colors={Colors.gradientHero as [string, string]}
         style={styles.avatarGradient}
       >
-        <Avatar.Text
-          size={72}
-          label={initials}
-          style={styles.avatar}
-          labelStyle={{ color: Colors.primary, fontWeight: '700' }}
-        />
+        <View style={styles.avatar}>
+          <Text style={styles.avatarLabel}>{initials}</Text>
+        </View>
         <Text style={styles.name}>{user?.full_name ?? 'User'}</Text>
         <Text style={styles.email}>{user?.email}</Text>
       </LinearGradient>
@@ -303,7 +300,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarLabel: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   name: {
     fontSize: 20,
