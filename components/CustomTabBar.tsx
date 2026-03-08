@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +20,16 @@ const TAB_CONFIG: Record<string, { label: string; icon: string }> = {
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const ring = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(ring, { toValue: 1, duration: 1400, useNativeDriver: true }),
+        Animated.timing(ring, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
 
   const visibleRoutes = state.routes.filter((r) => TAB_CONFIG[r.name]);
 
@@ -78,6 +89,16 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         onPress={() => router.push('/log-payment' as any)}
         activeOpacity={0.85}
       >
+        {/* Glowing pulse ring */}
+        <Animated.View
+          style={[
+            styles.glowRing,
+            {
+              opacity: ring.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0.7, 0.3, 0] }),
+              transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }],
+            },
+          ]}
+        />
         <View style={styles.circle}>
           <MaterialCommunityIcons name="plus" size={30} color={Colors.primary} />
         </View>
@@ -125,6 +146,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     zIndex: 10,
+  },
+  glowRing: {
+    position: 'absolute',
+    width: CIRCLE_RADIUS * 2,
+    height: CIRCLE_RADIUS * 2,
+    borderRadius: CIRCLE_RADIUS,
+    borderWidth: 2.5,
+    borderColor: '#fff',
   },
   circle: {
     width: CIRCLE_RADIUS * 2,
