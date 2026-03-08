@@ -16,11 +16,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
+import { useAiNudge } from '@/hooks/useAiNudge';
 import { DwellaLogo } from '@/components/DwellaLogo';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { AnimatedCard } from '@/components/AnimatedCard';
+import { AiInsightCard } from '@/components/AiInsightCard';
 import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
@@ -81,6 +83,7 @@ export default function DashboardScreen() {
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [summaryMonth, setSummaryMonth] = useState(currentMonth);
   const { tenantRows, stats, recentTransactions, isLoading, error, refresh } = useDashboard(selectedYear, summaryMonth);
+  const { nudge: aiNudge, loading: aiNudgeLoading } = useAiNudge(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
@@ -411,6 +414,9 @@ export default function DashboardScreen() {
         <MaterialCommunityIcons name="bell-ring-outline" size={16} color={Colors.primary} style={{ marginRight: 6 }} />
         <Text style={styles.remindersBtnText}>Send Reminders</Text>
       </TouchableOpacity>
+
+      {/* AI Nudge */}
+      <AiInsightCard nudge={aiNudge} loading={aiNudgeLoading} />
 
       {/* Section 2 — Monthly Summary (expandable) */}
       <TouchableOpacity

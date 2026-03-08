@@ -151,7 +151,7 @@ export default function AiSearchScreen() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder='Try "overdue payments this month" or "Rahul\'s rent history"'
+            placeholder={'Try "overdue payments this month" or "Rahul\'s rent history"'}
             mode="outlined"
             style={styles.searchInput}
             outlineStyle={styles.searchOutline}
@@ -209,7 +209,7 @@ export default function AiSearchScreen() {
               <MaterialCommunityIcons name="text-search" size={40} color={Colors.textDisabled} />
               <Text style={styles.emptyTitle}>Search your data with AI</Text>
               <Text style={styles.emptyText}>
-                Ask in plain English — "show overdue payments", "find tenants in Whitefield", "Rahul's payment history"
+                {'Ask in plain English \u2014 "show overdue payments", "find tenants in Whitefield", "Rahul\'s payment history"'}
               </Text>
             </View>
           )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal } from 'react-native';
 import { Text, Button, Divider, ActivityIndicator } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Payment, Tenant, Property } from '@/lib/types';
 import { Colors } from '@/constants/colors';
@@ -232,6 +233,32 @@ export default function PaymentDetailScreen() {
           </View>
         ) : null}
 
+        {/* AI Suggestions */}
+        {isOwner && payment.status === 'paid' && (
+          <View style={styles.suggestionCard}>
+            <MaterialCommunityIcons name="lightbulb-outline" size={16} color="#8B5CF6" />
+            <Text style={styles.suggestionText}>
+              Payment marked as paid. Consider confirming promptly to keep records clean.
+            </Text>
+          </View>
+        )}
+        {isOwner && payment.status === 'overdue' && (
+          <View style={[styles.suggestionCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
+            <MaterialCommunityIcons name="alert-outline" size={16} color={Colors.statusOverdue} />
+            <Text style={[styles.suggestionText, { color: '#991B1B' }]}>
+              {Math.max(1, Math.floor((Date.now() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)))} days overdue. Consider sending a reminder to {tenant?.tenant_name ?? 'the tenant'}.
+            </Text>
+          </View>
+        )}
+        {isOwner && payment.status === 'partial' && (
+          <View style={[styles.suggestionCard, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+            <MaterialCommunityIcons name="information-outline" size={16} color={Colors.statusPartial} />
+            <Text style={[styles.suggestionText, { color: '#92400E' }]}>
+              {formatCurrency(payment.amount_due - payment.amount_paid)} remaining. Follow up with {tenant?.tenant_name ?? 'the tenant'} for the balance.
+            </Text>
+          </View>
+        )}
+
         {/* Actions */}
         {payment.amount_paid > 0 && tenant && property && (
           <Button
@@ -337,6 +364,22 @@ const styles = StyleSheet.create({
   actionBtn: { marginTop: 4 },
   actionBtnContent: { paddingVertical: 6 },
   resetBtn: { borderColor: Colors.error },
+  suggestionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#F5F3FF',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E9E5FF',
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#4C1D95',
+  },
   fullscreenOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',
