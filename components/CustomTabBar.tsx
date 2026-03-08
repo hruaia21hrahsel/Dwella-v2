@@ -1,9 +1,10 @@
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
 
@@ -21,6 +22,7 @@ const RIGHT_TABS = ['tools/index', 'bot/index'];
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, gradients } = useTheme();
 
   const routeMap = new Map(state.routes.map((r) => [r.name, r]));
 
@@ -44,12 +46,12 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         <MaterialCommunityIcons
           name={(isFocused ? cfg.icon : cfg.iconOutline) as any}
           size={22}
-          color={isFocused ? Colors.primary : Colors.textSecondary}
+          color={isFocused ? colors.primary : colors.textSecondary}
         />
         <Text
           style={[
             styles.label,
-            { color: isFocused ? Colors.primary : Colors.textSecondary },
+            { color: isFocused ? colors.primary : colors.textSecondary },
             isFocused && styles.labelActive,
           ]}
         >
@@ -60,7 +62,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   }
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom, backgroundColor: colors.surface, borderTopColor: colors.border }]}>
       <View style={styles.bar}>
         {LEFT_TABS.map((name) => {
           const route = routeMap.get(name);
@@ -72,10 +74,15 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           style={styles.tab}
           onPress={() => router.push('/log-payment')}
         >
-          <View style={styles.fabCircle}>
+          <LinearGradient
+            colors={gradients.button}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.fabCircle}
+          >
             <MaterialCommunityIcons name="plus" size={22} color="#fff" />
-          </View>
-          <Text style={styles.fabLabel}>Log</Text>
+          </LinearGradient>
+          <Text style={[styles.fabLabel, { color: colors.primary }]}>Log</Text>
         </Pressable>
 
         {RIGHT_TABS.map((name) => {
@@ -89,9 +96,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
   },
   bar: {
     height: TAB_HEIGHT,
@@ -117,14 +122,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fabLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.primary,
     letterSpacing: 0.1,
   },
 });

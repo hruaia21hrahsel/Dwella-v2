@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { Stack, router, useRouter, useSegments } from 'expo-router';
-import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
@@ -12,6 +12,7 @@ import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
+import { ThemeProvider, useTheme } from '@/lib/theme-context';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -23,14 +24,26 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: Colors.primary,
-    secondary: Colors.primaryLight,
-  },
-};
+function usePaperTheme() {
+  const { colors, isDark } = useTheme();
+  const base = isDark ? MD3DarkTheme : MD3LightTheme;
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: colors.primary,
+      secondary: colors.primaryLight,
+      background: colors.background,
+      surface: colors.surface,
+      surfaceVariant: colors.surfaceElevated,
+      error: colors.error,
+      onPrimary: colors.textOnPrimary,
+      onBackground: colors.textPrimary,
+      onSurface: colors.textPrimary,
+      outline: colors.border,
+    },
+  };
+}
 
 function AuthGuard() {
   const { session, isLoading, isLocked, setSession, setUser, setLoading, onboardingCompleted } = useAuthStore();
@@ -127,24 +140,30 @@ function AuthGuard() {
   return null;
 }
 
-export default function RootLayout() {
+function InnerLayout() {
+  const { colors, isDark } = useTheme();
+  const paperTheme = usePaperTheme();
+
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider theme={paperTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <AuthGuard />
       <TourGuideCard />
       <ToastProvider />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark />, headerLeft: () => <ProfileHeaderButton dark />, headerRight: () => <View style={{ width: 50 }} /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: Colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark />, headerLeft: () => <ProfileHeaderButton dark />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="payments/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="expenses/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
+            headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
@@ -156,7 +175,7 @@ export default function RootLayout() {
           options={{
             headerShown: true,
             presentation: 'modal',
-            headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
+            headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
@@ -170,5 +189,13 @@ export default function RootLayout() {
         <Stack.Screen name="+not-found" />
       </Stack>
     </PaperProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <InnerLayout />
+    </ThemeProvider>
   );
 }

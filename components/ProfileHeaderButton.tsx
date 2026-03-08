@@ -2,7 +2,7 @@ import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
 
@@ -15,6 +15,7 @@ export function ProfileHeaderButton({ style, dark = false }: Props) {
   const router = useRouter();
   const { user } = useAuthStore();
   const { unreadCount } = useNotifications(user?.id);
+  const { colors } = useTheme();
 
   return (
     <TouchableOpacity
@@ -25,10 +26,10 @@ export function ProfileHeaderButton({ style, dark = false }: Props) {
       <MaterialCommunityIcons
         name="account-circle-outline"
         size={26}
-        color={dark ? Colors.textPrimary : '#fff'}
+        color={dark ? colors.textPrimary : '#fff'}
       />
       {unreadCount > 0 && (
-        <View style={styles.badge}>
+        <View style={[styles.badge, { backgroundColor: colors.error }]}>
           <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
         </View>
       )}
@@ -46,7 +47,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: Colors.error,
     borderRadius: 8,
     minWidth: 16,
     height: 16,

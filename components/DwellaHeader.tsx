@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 
@@ -11,16 +11,17 @@ interface Props {
 
 export function DwellaHeader({ right }: Props) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   return (
     <View
       style={{
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface,
         paddingTop: insets.top,
         height: 56 + insets.top,
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: Colors.border,
+        borderBottomColor: colors.border,
       }}
     >
       <ProfileHeaderButton dark />

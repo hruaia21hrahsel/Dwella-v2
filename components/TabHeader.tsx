@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { DwellaHeaderTitle } from './DwellaHeaderTitle';
 import { ProfileHeaderButton } from './ProfileHeaderButton';
 
@@ -8,8 +8,9 @@ const CONTENT_HEIGHT = 96;
 
 export function TabHeader() {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   return (
-    <View style={[styles.header, { paddingTop: insets.top, height: insets.top + CONTENT_HEIGHT }]}>
+    <View style={[styles.header, { paddingTop: insets.top, height: insets.top + CONTENT_HEIGHT, backgroundColor: colors.surface }]}>
       <ProfileHeaderButton />
       <View style={styles.title}>
         <DwellaHeaderTitle />
@@ -21,7 +22,6 @@ export function TabHeader() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: Colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,

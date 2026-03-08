@@ -1,17 +1,18 @@
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 export function AssistantHeaderButton() {
   const router = useRouter();
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={() => router.push('/(tabs)/bot')}
       style={styles.btn}
       activeOpacity={0.7}
     >
-      <MaterialCommunityIcons name="robot-outline" size={26} color={Colors.textPrimary} />
+      <MaterialCommunityIcons name="robot-outline" size={26} color={colors.textPrimary} />
     </TouchableOpacity>
   );
 }
