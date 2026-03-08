@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -48,12 +48,6 @@ export interface DashboardData {
 export function useDashboard(year: number, month: number): DashboardData {
   const { user } = useAuthStore();
   const [tenantRows, setTenantRows] = useState<TenantRow[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalReceivable: 0,
-    totalReceived: 0,
-    totalPending: 0,
-    totalOverdue: 0,
-  });
   const [recentTransactions, setRecentTransactions] = useState<RecentTx[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,27 +99,6 @@ export function useDashboard(year: number, month: number): DashboardData {
 
     setTenantRows(rows);
 
-    // Compute stats from current month payments
-    let totalReceivable = 0;
-    let totalReceived = 0;
-    let totalOverdue = 0;
-
-    for (const row of rows) {
-      const p = row.paymentsByMonth[month];
-      if (p) {
-        totalReceivable += p.amount_due;
-        totalReceived += p.amount_paid;
-        if (p.status === 'overdue') totalOverdue += p.amount_due - p.amount_paid;
-      }
-    }
-
-    setStats({
-      totalReceivable,
-      totalReceived,
-      totalPending: totalReceivable - totalReceived,
-      totalOverdue,
-    });
-
     // Query 2: last 5 paid/confirmed payments across all owned tenants
     if (allTenantIds.length > 0) {
       const { data: recentData } = await supabase
@@ -161,7 +134,7 @@ export function useDashboard(year: number, month: number): DashboardData {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, year, month]);
+  }, [user?.id, year]);
 
   useFocusEffect(
     useCallback(() => {
@@ -184,6 +157,29 @@ export function useDashboard(year: number, month: number): DashboardData {
       supabase.removeChannel(channel);
     };
   }, [user?.id, load]);
+
+  // Derive stats from already-loaded tenantRows — no re-fetch needed on month change
+  const stats = useMemo<DashboardStats>(() => {
+    let totalReceivable = 0;
+    let totalReceived = 0;
+    let totalOverdue = 0;
+
+    for (const row of tenantRows) {
+      const p = row.paymentsByMonth[month];
+      if (p) {
+        totalReceivable += p.amount_due;
+        totalReceived += p.amount_paid;
+        if (p.status === 'overdue') totalOverdue += p.amount_due - p.amount_paid;
+      }
+    }
+
+    return {
+      totalReceivable,
+      totalReceived,
+      totalPending: totalReceivable - totalReceived,
+      totalOverdue,
+    };
+  }, [tenantRows, month]);
 
   return { tenantRows, stats, recentTransactions, isLoading, error, refresh: load };
 }

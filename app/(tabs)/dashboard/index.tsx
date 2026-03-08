@@ -426,7 +426,12 @@ export default function DashboardScreen() {
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
-              setSummaryMonth((m) => (m <= 1 ? 12 : m - 1));
+              if (summaryMonth <= 1) {
+                setSummaryMonth(12);
+                setSelectedYear((y) => Math.max(2000, y - 1));
+              } else {
+                setSummaryMonth((m) => m - 1);
+              }
             }}
             hitSlop={8}
           >
@@ -438,7 +443,12 @@ export default function DashboardScreen() {
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
-              setSummaryMonth((m) => (m >= 12 ? 1 : m + 1));
+              if (summaryMonth >= 12) {
+                setSummaryMonth(1);
+                setSelectedYear((y) => Math.min(currentYear, y + 1));
+              } else {
+                setSummaryMonth((m) => m + 1);
+              }
             }}
             hitSlop={8}
           >
