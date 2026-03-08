@@ -25,16 +25,22 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
-  const iconColor = isTenantView ? Colors.statusConfirmed : Colors.primary;
+  const propColor = property.color ?? Colors.primary;
+  const iconColor = isTenantView ? Colors.statusConfirmed : propColor;
+  const iconBg = isTenantView ? '#DCFCE7' : propColor + '18';
   const iconName = isTenantView ? 'home-account' : 'home-city';
   const totalRent = tenants?.reduce((sum, t) => sum + t.monthly_rent, 0) ?? 0;
   const occupiedCount = tenants?.length ?? 0;
 
   return (
     <View style={[styles.card, isTenantView && styles.cardTenant]}>
+      {/* Color accent bar */}
+      {!isTenantView && (
+        <View style={[styles.colorBar, { backgroundColor: propColor }]} />
+      )}
       {/* Header row */}
       <TouchableOpacity style={styles.headerRow} onPress={onPress} activeOpacity={0.7}>
-        <View style={[styles.iconContainer, { backgroundColor: isTenantView ? '#DCFCE7' : Colors.primarySoft }]}>
+        <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
           <MaterialCommunityIcons name={iconName as any} size={22} color={iconColor} />
         </View>
 
@@ -76,7 +82,7 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
       {!isTenantView && tenants && (
         <View style={styles.statsStrip}>
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="door-open" size={14} color={Colors.primary} />
+            <MaterialCommunityIcons name="door-open" size={14} color={propColor} />
             <Text style={styles.statText}>
               <Text style={styles.statBold}>{occupiedCount}</Text>/{property.total_units} occupied
             </Text>
@@ -161,6 +167,11 @@ const styles = StyleSheet.create({
   cardTenant: {
     borderColor: Colors.statusConfirmedSoft,
     marginBottom: 8,
+  },
+  colorBar: {
+    height: 4,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   headerRow: {
     flexDirection: 'row',

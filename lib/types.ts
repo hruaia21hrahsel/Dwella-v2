@@ -21,6 +21,7 @@ export interface Property {
   address: string;
   city: string;
   total_units: number;
+  color: string | null;
   notes: string | null;
   is_archived: boolean;
   archived_at: string | null;

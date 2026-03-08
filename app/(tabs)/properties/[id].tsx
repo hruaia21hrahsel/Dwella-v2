@@ -25,6 +25,9 @@ export default function PropertyDetailScreen() {
   const occupiedCount = tenants.length;
   const totalRent = tenants.reduce((sum, t) => sum + t.monthly_rent, 0);
   const vacantCount = (property?.total_units ?? 0) - occupiedCount;
+  const propColor = property?.color ?? Colors.primary;
+  const propColorSoft = propColor + '18';
+  const propColorLight = propColor + '30';
 
   // Re-fetch tenants when screen regains focus
   useFocusEffect(
@@ -68,8 +71,8 @@ export default function PropertyDetailScreen() {
       >
         {/* Property header */}
         <View style={styles.propertyHeader}>
-          <View style={styles.propertyIconWrap}>
-            <MaterialCommunityIcons name="home-city" size={28} color={Colors.primary} />
+          <View style={[styles.propertyIconWrap, { backgroundColor: propColorSoft }]}>
+            <MaterialCommunityIcons name="home-city" size={28} color={propColor} />
           </View>
           <Text style={styles.propertyName}>{property.name}</Text>
           <View style={styles.addressChip}>
@@ -81,7 +84,7 @@ export default function PropertyDetailScreen() {
         {/* Stats row */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <MaterialCommunityIcons name="door-open" size={18} color={Colors.primary} style={{ marginBottom: 4 }} />
+            <MaterialCommunityIcons name="door-open" size={18} color={propColor} style={{ marginBottom: 4 }} />
             <Text style={styles.statValue}>{property.total_units}</Text>
             <Text style={styles.statLabel}>Total Units</Text>
           </View>
@@ -98,13 +101,13 @@ export default function PropertyDetailScreen() {
         </View>
 
         {/* Revenue card */}
-        <View style={styles.revenueCard}>
+        <View style={[styles.revenueCard, { backgroundColor: propColorSoft, borderColor: propColorLight }]}>
           <View style={styles.revenueLeft}>
-            <Text style={styles.revenueLabel}>Monthly Revenue</Text>
-            <Text style={styles.revenueValue}>{formatCurrency(totalRent)}</Text>
+            <Text style={[styles.revenueLabel, { color: propColor }]}>Monthly Revenue</Text>
+            <Text style={[styles.revenueValue, { color: propColor }]}>{formatCurrency(totalRent)}</Text>
           </View>
-          <View style={styles.revenueIconWrap}>
-            <MaterialCommunityIcons name="trending-up" size={22} color={Colors.primaryDark} />
+          <View style={[styles.revenueIconWrap, { backgroundColor: propColorLight }]}>
+            <MaterialCommunityIcons name="trending-up" size={22} color={propColor} />
           </View>
         </View>
 
@@ -114,13 +117,13 @@ export default function PropertyDetailScreen() {
             <View style={styles.sectionTitleRow}>
               <MaterialCommunityIcons name="account-multiple-outline" size={18} color={Colors.textPrimary} />
               <Text style={styles.sectionTitle}>Tenants</Text>
-              <View style={styles.tenantCountBadge}>
-                <Text style={styles.tenantCountText}>{tenants.length}</Text>
+              <View style={[styles.tenantCountBadge, { backgroundColor: propColorSoft }]}>
+                <Text style={[styles.tenantCountText, { color: propColor }]}>{tenants.length}</Text>
               </View>
             </View>
             {isOwner && (
               <TouchableOpacity
-                style={styles.addTenantBtn}
+                style={[styles.addTenantBtn, { backgroundColor: propColor }]}
                 onPress={() => router.push(`/property/${id}/tenant/create`)}
                 activeOpacity={0.8}
               >
