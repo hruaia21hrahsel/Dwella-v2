@@ -275,27 +275,6 @@ export default function TenantDetailScreen() {
           />
         </View>
 
-        {/* Bottom actions */}
-        {isOwner && (
-          <View style={styles.bottomActions}>
-            <TouchableOpacity
-              style={styles.editBtn}
-              onPress={() => router.push(`/property/${propertyId}/tenant/${tenantId}/edit`)}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="pencil-outline" size={18} color={Colors.primary} />
-              <Text style={styles.editBtnText}>Edit Tenant</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.archiveBtn}
-              onPress={() => setArchiveDialogVisible(true)}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="archive-outline" size={18} color={Colors.error} />
-              <Text style={styles.archiveBtnText}>Remove</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </ScrollView>
 
       <ConfirmDialog
@@ -587,45 +566,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: Colors.primary,
-  },
-
-  // Bottom actions
-  bottomActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
-  },
-  editBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-    paddingVertical: 12,
-  },
-  editBtnText: {
-    color: Colors.primary,
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  archiveBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.error,
-    paddingVertical: 12,
-  },
-  archiveBtnText: {
-    color: Colors.error,
-    fontWeight: '700',
-    fontSize: 13,
   },
 
   // Modal
