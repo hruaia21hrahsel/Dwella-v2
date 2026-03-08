@@ -9,13 +9,16 @@ import {
   Dimensions,
 } from 'react-native';
 
-// outer padding 32, 5 gaps of 6px between 6 chips
-const MONTH_CHIP_W = Math.floor((Dimensions.get('window').width - 32 - 30) / 6);
+const SCREEN_W = Dimensions.get('window').width;
+// 6 columns, card padding 16*2, section card padding 16*2, gaps 5*8
+const MONTH_CHIP_W = Math.floor((SCREEN_W - 32 - 32 - 40) / 6);
+
 import { Text, TextInput, Button, ActivityIndicator, HelperText, IconButton } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { useToastStore } from '@/lib/toast';
 import { getDueDate, getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
@@ -23,6 +26,15 @@ import { formatCurrency, getCurrentMonthYear } from '@/lib/utils';
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <MaterialCommunityIcons name={icon as any} size={18} color={Colors.primary} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
+}
 
 interface PropertyOption {
   id: string;
@@ -225,126 +237,171 @@ export default function LogPaymentScreen() {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-          {/* Property selector */}
-          <Text style={styles.fieldLabel}>Property</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-            {properties.map((p, i) => {
-              const active = p.id === selectedPropertyId;
-              return (
-                <TouchableOpacity
-                  key={p.id}
-                  style={[styles.chip, active && styles.chipActive, i < properties.length - 1 && styles.chipMargin]}
-                  onPress={() => selectProperty(p.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{p.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {/* Page title */}
+          <View style={styles.pageHeader}>
+            <Text style={styles.pageTitle}>Log Payment</Text>
+            <Text style={styles.pageSubtitle}>Record a rent payment for a tenant</Text>
+          </View>
 
-          {/* Tenant selector */}
-          {tenantsForProperty.length > 0 ? (
-            <>
-              <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>Tenant</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-                {tenantsForProperty.map((t, i) => {
-                  const active = t.id === selectedTenantId;
-                  return (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[styles.chip, active && styles.chipActive, i < tenantsForProperty.length - 1 && styles.chipMargin]}
-                      onPress={() => selectTenant(t)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                        {t.tenant_name}
-                      </Text>
-                      <Text style={[styles.chipSub, active && { color: Colors.primary }]}>
-                        {' · '}{t.flat_no}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </>
-          ) : (
-            <Text style={styles.hint}>No tenants in this property.</Text>
+          {/* Property & Tenant selector */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="home-city-outline" title="Property & Tenant" />
+
+            <Text style={styles.fieldLabel}>Property</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+              {properties.map((p, i) => {
+                const active = p.id === selectedPropertyId;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    style={[styles.chip, active && styles.chipActive, i < properties.length - 1 && styles.chipMargin]}
+                    onPress={() => selectProperty(p.id)}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialCommunityIcons
+                      name={active ? 'home-city' : 'home-city-outline'}
+                      size={15}
+                      color={active ? Colors.primary : Colors.textSecondary}
+                      style={{ marginRight: 5 }}
+                    />
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{p.name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {tenantsForProperty.length > 0 ? (
+              <>
+                <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Tenant</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
+                  {tenantsForProperty.map((t, i) => {
+                    const active = t.id === selectedTenantId;
+                    return (
+                      <TouchableOpacity
+                        key={t.id}
+                        style={[styles.chip, active && styles.chipActive, i < tenantsForProperty.length - 1 && styles.chipMargin]}
+                        onPress={() => selectTenant(t)}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialCommunityIcons
+                          name={active ? 'account' : 'account-outline'}
+                          size={15}
+                          color={active ? Colors.primary : Colors.textSecondary}
+                          style={{ marginRight: 5 }}
+                        />
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                          {t.tenant_name}
+                        </Text>
+                        <Text style={[styles.chipSub, active && { color: Colors.primary }]}>
+                          {' · '}{t.flat_no}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </>
+            ) : (
+              <View style={styles.noTenantRow}>
+                <MaterialCommunityIcons name="account-alert-outline" size={16} color={Colors.textDisabled} />
+                <Text style={styles.noTenantText}>No tenants in this property.</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Rent context summary — only when tenant selected */}
+          {selectedTenant && (
+            <View style={styles.contextCard}>
+              <View style={styles.contextRow}>
+                <View style={styles.contextItem}>
+                  <Text style={styles.contextLabel}>Monthly Rent</Text>
+                  <Text style={styles.contextValue}>{formatCurrency(selectedTenant.monthly_rent)}</Text>
+                </View>
+                <View style={styles.contextDivider} />
+                <View style={styles.contextItem}>
+                  <Text style={styles.contextLabel}>Due Day</Text>
+                  <Text style={styles.contextValue}>{selectedTenant.due_day}<Text style={styles.contextSuffix}>{getOrdinalSuffix(selectedTenant.due_day)}</Text></Text>
+                </View>
+                <View style={styles.contextDivider} />
+                <View style={styles.contextItem}>
+                  <Text style={styles.contextLabel}>Flat</Text>
+                  <Text style={styles.contextValue}>{selectedTenant.flat_no}</Text>
+                </View>
+              </View>
+            </View>
           )}
 
           {/* Month selector */}
-          <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>Month ({currentYear})</Text>
-          <View style={styles.monthGrid}>
-            {MONTHS.map((m) => {
-              const active = m === selectedMonth;
-              const isFuture = m > currentMonth;
-              return (
-                <TouchableOpacity
-                  key={m}
-                  style={[
-                    styles.monthChip,
-                    active && styles.monthChipActive,
-                    isFuture && styles.monthChipDisabled,
-                  ]}
-                  onPress={() => !isFuture && setSelectedMonth(m)}
-                  disabled={isFuture}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[
-                    styles.monthChipText,
-                    active && styles.monthChipTextActive,
-                    isFuture && styles.monthChipTextDisabled,
-                  ]}>
-                    {MONTH_SHORT[m - 1]}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="calendar-month-outline" title={`Month (${currentYear})`} />
+            <View style={styles.monthGrid}>
+              {MONTHS.map((m) => {
+                const active = m === selectedMonth;
+                const isFuture = m > currentMonth;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[
+                      styles.monthChip,
+                      active && styles.monthChipActive,
+                      isFuture && styles.monthChipDisabled,
+                    ]}
+                    onPress={() => !isFuture && setSelectedMonth(m)}
+                    disabled={isFuture}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[
+                      styles.monthChipText,
+                      active && styles.monthChipTextActive,
+                      isFuture && styles.monthChipTextDisabled,
+                    ]}>
+                      {MONTH_SHORT[m - 1]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
-          {/* Amount */}
-          <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>Amount</Text>
-          {selectedTenant && (
-            <Text style={styles.hint}>
-              Monthly rent: {formatCurrency(selectedTenant.monthly_rent)}
-            </Text>
-          )}
-          <TextInput
-            mode="outlined"
-            keyboardType="decimal-pad"
-            placeholder="0.00"
-            value={amount}
-            onChangeText={(v) => { setAmount(v); setAmountError(''); }}
-            left={<TextInput.Affix text="₹" />}
-            outlineColor={Colors.border}
-            activeOutlineColor={Colors.primary}
-            error={!!amountError}
-            style={styles.input}
-          />
-          {amountError ? <HelperText type="error">{amountError}</HelperText> : null}
+          {/* Payment Details */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="currency-inr" title="Payment Details" />
 
-          {/* Notes */}
-          <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-            Notes <Text style={styles.optional}>(optional)</Text>
-          </Text>
-          <TextInput
-            mode="outlined"
-            placeholder="e.g. Paid via UPI, ref #12345"
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={2}
-            outlineColor={Colors.border}
-            activeOutlineColor={Colors.primary}
-            style={styles.input}
-          />
+            <TextInput
+              label="Amount"
+              mode="outlined"
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              value={amount}
+              onChangeText={(v) => { setAmount(v); setAmountError(''); }}
+              left={<TextInput.Affix text="₹" />}
+              error={!!amountError}
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+            />
+            {amountError ? <HelperText type="error">{amountError}</HelperText> : null}
+
+            <TextInput
+              label="Notes (optional)"
+              mode="outlined"
+              placeholder="e.g. Paid via UPI, ref #12345"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={2}
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+            />
+          </View>
 
           {/* Proof upload */}
           {storagePath && (
-            <ProofUploader
-              storagePath={storagePath}
-              onUploaded={(path) => setProofPath(path)}
-            />
+            <View style={styles.sectionCard}>
+              <SectionHeader icon="camera-outline" title="Payment Proof" />
+              <ProofUploader
+                storagePath={storagePath}
+                onUploaded={(path) => setProofPath(path)}
+              />
+            </View>
           )}
 
           <Button
@@ -355,6 +412,7 @@ export default function LogPaymentScreen() {
             style={styles.submitBtn}
             buttonColor={Colors.primary}
             contentStyle={styles.submitBtnContent}
+            icon="check-circle-outline"
           >
             Log Payment
           </Button>
@@ -364,71 +422,181 @@ export default function LogPaymentScreen() {
   );
 }
 
+function getOrdinalSuffix(n: number): string {
+  if (n >= 11 && n <= 13) return 'th';
+  switch (n % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: 16, paddingBottom: 40, gap: 8 },
+  content: { padding: 16, paddingBottom: 40, gap: 16 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
   emptyText: { color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 },
+
+  // Page header
+  pageHeader: {
+    gap: 4,
+    paddingBottom: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+
+  // Section cards
+  sectionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 16,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  // Field labels
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 8,
   },
-  fieldLabelSpaced: { marginTop: 20 },
-  optional: { color: Colors.textDisabled, textTransform: 'none', fontWeight: '400' },
-  hint: { fontSize: 12, color: Colors.textSecondary, marginBottom: 6 },
-  chipRow: { flexDirection: 'row', marginBottom: 4 },
+
+  // Chips
+  chipRow: { flexDirection: 'row' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 9,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
   },
   chipMargin: {
     marginRight: 8,
   },
   chipActive: {
     borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '12',
+    backgroundColor: Colors.primarySoft,
   },
   chipText: { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
   chipTextActive: { color: Colors.primary, fontWeight: '700' },
   chipSub: { fontSize: 12, color: Colors.textSecondary },
+
+  // No tenant hint
+  noTenantRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  noTenantText: {
+    fontSize: 13,
+    color: Colors.textDisabled,
+  },
+
+  // Context summary card
+  contextCard: {
+    backgroundColor: Colors.primarySoft,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+    padding: 14,
+  },
+  contextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contextItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  contextDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: Colors.primaryLight,
+  },
+  contextLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 3,
+  },
+  contextValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.primaryDark,
+  },
+  contextSuffix: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  // Month grid
   monthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 4,
   },
   monthChip: {
     width: MONTH_CHIP_W,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     alignItems: 'center',
   },
   monthChipActive: {
     borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '18',
+    backgroundColor: Colors.primarySoft,
   },
   monthChipDisabled: {
     backgroundColor: Colors.background,
     borderColor: Colors.border,
-    opacity: 0.4,
+    opacity: 0.35,
   },
   monthChipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
-  monthChipTextActive: { color: Colors.primary },
+  monthChipTextActive: { color: Colors.primary, fontWeight: '700' },
   monthChipTextDisabled: { color: Colors.textDisabled },
+
+  // Inputs
   input: { backgroundColor: Colors.surface },
-  submitBtn: { marginTop: 24, borderRadius: 8 },
-  submitBtnContent: { paddingVertical: 6 },
+  inputOutline: { borderRadius: 12 },
+
+  // Submit
+  submitBtn: {
+    marginTop: 4,
+    borderRadius: 14,
+    ...Shadows.sm,
+  },
+  submitBtnContent: { paddingVertical: 10 },
 });
