@@ -304,10 +304,13 @@ max_frequency = "5s"
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
 [auth.external.google]
 enabled = true
-client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+# Client ID is not a secret — safe to commit
+client_id = "112003223904-c8185a1jvosme5h4161p4rfbmt9lqbos.apps.googleusercontent.com"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
-redirect_uri = "dwella://auth/callback"
+# Leave redirect_uri empty — Supabase uses its own https callback URL by default.
+# The dwella:// deep link is set client-side via signInWithOAuth({ options: { redirectTo } })
+redirect_uri = ""
 url = ""
 skip_nonce_check = false
 email_optional = false
@@ -317,7 +320,7 @@ enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
-redirect_uri = "dwella://auth/callback"
+redirect_uri = ""
 url = ""
 # Skip nonce check for native Apple Sign-In (identity token flow)
 skip_nonce_check = true
