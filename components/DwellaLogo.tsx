@@ -15,7 +15,7 @@ interface Props {
  */
 export function DwellaLogo({ size = 40, width, height, color = '#1E293B' }: Props) {
   return (
-    <Svg viewBox="0 0 200 200" width={width ?? size} height={height ?? size}>
+    <Svg viewBox="10 30 180 115" width={width ?? size} height={height ?? size}>
       <SvgText
         x={18}
         y={125}
