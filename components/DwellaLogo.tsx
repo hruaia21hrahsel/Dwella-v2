@@ -1,17 +1,20 @@
 import Svg, { Text as SvgText, Rect, Path, Line } from 'react-native-svg';
 
 interface Props {
-  size: number;
+  size?: number;
+  width?: number;
+  height?: number;
   color?: string;
 }
 
 /**
  * Pillar-mark logo rendered as SVG.
- * viewBox is 200×200; pass `size` to scale uniformly.
+ * viewBox is cropped to the content area (10 58 180 88).
+ * Pass `size` for square rendering, or `width`/`height` for custom dimensions.
  */
-export function DwellaLogo({ size, color = '#1E293B' }: Props) {
+export function DwellaLogo({ size = 40, width, height, color = '#1E293B' }: Props) {
   return (
-    <Svg viewBox="0 0 200 200" width={size} height={size}>
+    <Svg viewBox="10 58 180 88" width={width ?? size} height={height ?? size}>
       <SvgText
         x="20"
         y="125"
