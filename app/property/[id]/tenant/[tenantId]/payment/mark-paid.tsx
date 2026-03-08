@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -9,6 +9,7 @@ import { formatCurrency, getMonthName } from '@/lib/utils';
 import { getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
 import { useAuthStore } from '@/lib/store';
+import { useToastStore } from '@/lib/toast';
 
 export default function MarkPaidScreen() {
   const { id: propertyId, tenantId, paymentId } = useLocalSearchParams<{
@@ -77,7 +78,7 @@ export default function MarkPaidScreen() {
       .eq('id', payment.id);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      useToastStore.getState().showToast(error.message, 'error');
     } else {
       router.back();
     }

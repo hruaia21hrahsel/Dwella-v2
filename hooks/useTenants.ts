@@ -5,12 +5,14 @@ import { Tenant } from '@/lib/types';
 interface UseTenantResult {
   tenants: Tenant[];
   isLoading: boolean;
+  error: string | null;
   refresh: () => void;
 }
 
 export function useTenants(propertyId: string | undefined): UseTenantResult {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     if (!propertyId) {
@@ -18,16 +20,23 @@ export function useTenants(propertyId: string | undefined): UseTenantResult {
       return;
     }
     setIsLoading(true);
+    setError(null);
 
-    const { data } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('property_id', propertyId)
-      .eq('is_archived', false)
-      .order('flat_no', { ascending: true });
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('property_id', propertyId)
+        .eq('is_archived', false)
+        .order('flat_no', { ascending: true });
 
-    setTenants((data as Tenant[]) ?? []);
-    setIsLoading(false);
+      if (fetchError) throw fetchError;
+      setTenants((data as Tenant[]) ?? []);
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to load tenants');
+    } finally {
+      setIsLoading(false);
+    }
   }, [propertyId]);
 
   useEffect(() => {
@@ -56,5 +65,5 @@ export function useTenants(propertyId: string | undefined): UseTenantResult {
     };
   }, [propertyId, fetch]);
 
-  return { tenants, isLoading, refresh: fetch };
+  return { tenants, isLoading, error, refresh: fetch };
 }

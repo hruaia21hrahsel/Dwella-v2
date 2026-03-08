@@ -5,18 +5,26 @@ import { BotConversation } from '@/lib/types';
 export function useBotConversations(userId: string | undefined) {
   const [messages, setMessages] = useState<BotConversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('bot_conversations')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true })
-      .limit(100);
-    setMessages(data ?? []);
-    setLoading(false);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('bot_conversations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (fetchError) throw fetchError;
+      setMessages(data ?? []);
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to load conversations');
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -46,5 +54,5 @@ export function useBotConversations(userId: string | undefined) {
     setMessages([]);
   }, [userId]);
 
-  return { messages, loading, refetch: fetch, clearHistory };
+  return { messages, loading, error, refetch: fetch, clearHistory };
 }

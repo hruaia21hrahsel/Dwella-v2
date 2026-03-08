@@ -41,6 +41,7 @@ export interface DashboardData {
   stats: DashboardStats;
   recentTransactions: RecentTx[];
   isLoading: boolean;
+  error: string | null;
   refresh: () => void;
 }
 
@@ -55,19 +56,24 @@ export function useDashboard(year: number): DashboardData {
   });
   const [recentTransactions, setRecentTransactions] = useState<RecentTx[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { month: currentMonth } = getCurrentMonthYear();
 
   const load = useCallback(async () => {
     if (!user?.id) return;
     setIsLoading(true);
+    setError(null);
 
+    try {
     // Query 1: properties + tenants + payments for current year
-    const { data: propertiesData } = await supabase
+    const { data: propertiesData, error: propError } = await supabase
       .from('properties')
       .select('id, name, tenants(id, tenant_name, flat_no, monthly_rent, is_archived, payments(*))')
       .eq('owner_id', user.id)
       .eq('is_archived', false);
+
+    if (propError) throw propError;
 
     const rows: TenantRow[] = [];
     const allTenantIds: string[] = [];
@@ -152,7 +158,11 @@ export function useDashboard(year: number): DashboardData {
       setRecentTransactions([]);
     }
 
-    setIsLoading(false);
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to load dashboard');
+    } finally {
+      setIsLoading(false);
+    }
   }, [user?.id, year, currentMonth]);
 
   useFocusEffect(
@@ -177,5 +187,5 @@ export function useDashboard(year: number): DashboardData {
     };
   }, [user?.id, load]);
 
-  return { tenantRows, stats, recentTransactions, isLoading, refresh: load };
+  return { tenantRows, stats, recentTransactions, isLoading, error, refresh: load };
 }

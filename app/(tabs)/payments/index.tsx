@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity } from 'react-native';
 import { Text, ActivityIndicator, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +12,9 @@ import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { shareAnnualSummary } from '@/lib/pdf';
 import { getStatusColor } from '@/lib/payments';
+import { ListSkeleton } from '@/components/ListSkeleton';
+import { AnimatedCard } from '@/components/AnimatedCard';
+import { useToastStore } from '@/lib/toast';
 
 interface TenantOption {
   id: string;
@@ -157,14 +160,14 @@ export default function PaymentsScreen() {
       .filter((p) => p.year === selectedYear && p.tenantId === tp.id)
       .map((p) => p as Payment);
     if (yearPayments.length === 0) {
-      Alert.alert('No Data', `No payments found for ${selectedYear}.`);
+      useToastStore.getState().showToast(`No payments found for ${selectedYear}.`, 'info');
       return;
     }
     setExportingPdf(true);
     try {
       await shareAnnualSummary(yearPayments, tp, property, selectedYear);
     } catch (err) {
-      Alert.alert('Export Failed', String(err));
+      useToastStore.getState().showToast('Export failed: ' + String(err), 'error');
     } finally {
       setExportingPdf(false);
     }
@@ -270,9 +273,9 @@ export default function PaymentsScreen() {
             ) : landlordPayments.length === 0 && selectedTenantId ? (
               <Text style={styles.hint}>No payment records yet for this tenant.</Text>
             ) : (
-              landlordPayments.map((p) => (
+              landlordPayments.map((p, index) => (
+                <AnimatedCard key={p.id} index={index}>
                 <TouchableOpacity
-                  key={p.id}
                   style={styles.paymentRow}
                   onPress={() =>
                     router.push(`/property/${p.property_id}/tenant/${p.tenant_id}/payment/${p.id}`)
@@ -298,6 +301,7 @@ export default function PaymentsScreen() {
                     <PaymentStatusBadge status={p.status} />
                   </View>
                 </TouchableOpacity>
+                </AnimatedCard>
               ))
             )}
           </>
@@ -321,9 +325,9 @@ export default function PaymentsScreen() {
                 )}
               </TouchableOpacity>
             </View>
-            {tenantPayments.map((p) => (
+            {tenantPayments.map((p, index) => (
+              <AnimatedCard key={p.id} index={index}>
               <TouchableOpacity
-                key={p.id}
                 style={styles.paymentRow}
                 onPress={() =>
                   router.push(`/property/${p.property_id}/tenant/${p.tenantId}/payment/${p.id}`)
@@ -344,6 +348,7 @@ export default function PaymentsScreen() {
                   <PaymentStatusBadge status={p.status} />
                 </View>
               </TouchableOpacity>
+              </AnimatedCard>
             ))}
           </>
         )}

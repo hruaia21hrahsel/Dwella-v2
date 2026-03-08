@@ -6,12 +6,14 @@ import { ensurePaymentRows } from '@/lib/payments';
 interface UsePaymentsResult {
   payments: Payment[];
   isLoading: boolean;
+  error: string | null;
   refresh: () => void;
 }
 
 export function usePayments(tenant: Tenant | null): UsePaymentsResult {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     if (!tenant) {
@@ -20,25 +22,32 @@ export function usePayments(tenant: Tenant | null): UsePaymentsResult {
     }
 
     setIsLoading(true);
+    setError(null);
 
-    // Ensure payment rows exist for all months since lease start
-    await ensurePaymentRows(
-      tenant.id,
-      tenant.property_id,
-      tenant.monthly_rent,
-      tenant.due_day,
-      tenant.lease_start,
-    );
+    try {
+      // Ensure payment rows exist for all months since lease start
+      await ensurePaymentRows(
+        tenant.id,
+        tenant.property_id,
+        tenant.monthly_rent,
+        tenant.due_day,
+        tenant.lease_start,
+      );
 
-    const { data } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('tenant_id', tenant.id)
-      .order('year', { ascending: false })
-      .order('month', { ascending: false });
+      const { data, error: fetchError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('year', { ascending: false })
+        .order('month', { ascending: false });
 
-    setPayments((data as Payment[]) ?? []);
-    setIsLoading(false);
+      if (fetchError) throw fetchError;
+      setPayments((data as Payment[]) ?? []);
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to load payments');
+    } finally {
+      setIsLoading(false);
+    }
   }, [tenant?.id]);
 
   useEffect(() => {
@@ -65,5 +74,5 @@ export function usePayments(tenant: Tenant | null): UsePaymentsResult {
     return () => { supabase.removeChannel(channel); };
   }, [tenant?.id, fetch]);
 
-  return { payments, isLoading, refresh: fetch };
+  return { payments, isLoading, error, refresh: fetch };
 }

@@ -6,6 +6,7 @@ import { Expense } from '@/lib/types';
 interface UseAllExpensesResult {
   expenses: Expense[];
   isLoading: boolean;
+  error: string | null;
   refresh: () => void;
 }
 
@@ -13,6 +14,7 @@ export function useAllExpenses(): UseAllExpensesResult {
   const { user } = useAuthStore();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     if (!user) {
@@ -21,14 +23,22 @@ export function useAllExpenses(): UseAllExpensesResult {
     }
 
     setIsLoading(true);
-    const { data } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('expense_date', { ascending: false });
+    setError(null);
 
-    setExpenses((data as Expense[]) ?? []);
-    setIsLoading(false);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('expense_date', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setExpenses((data as Expense[]) ?? []);
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to load expenses');
+    } finally {
+      setIsLoading(false);
+    }
   }, [user?.id]);
 
   useEffect(() => {
@@ -50,5 +60,5 @@ export function useAllExpenses(): UseAllExpensesResult {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, fetch]);
 
-  return { expenses, isLoading, refresh: fetch };
+  return { expenses, isLoading, error, refresh: fetch };
 }

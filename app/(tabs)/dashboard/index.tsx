@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -15,6 +14,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
+import { DashboardSkeleton } from '@/components/DashboardSkeleton';
+import { ErrorBanner } from '@/components/ErrorBanner';
+import { AnimatedCard } from '@/components/AnimatedCard';
 import { Colors, Shadows } from '@/constants/colors';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
@@ -66,13 +68,13 @@ function StatCard({ label, value, color }: StatCardProps) {
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { tenantRows, stats, recentTransactions, isLoading, refresh } = useDashboard(selectedYear);
+  const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const { tenantRows, stats, recentTransactions, isLoading, error, refresh } = useDashboard(selectedYear);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
-  const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
 
 
   useEffect(() => {
@@ -131,11 +133,7 @@ export default function DashboardScreen() {
   }, [refresh]);
 
   if (isLoading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={Colors.primary} size="large" />
-      </View>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -144,6 +142,8 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      <ErrorBanner error={error} onRetry={refresh} />
+
       {/* Hero gradient header */}
       <LinearGradient
         colors={Colors.gradientHero as [string, string]}
@@ -313,10 +313,18 @@ export default function DashboardScreen() {
         {getMonthName(currentMonth)} {selectedYear}
       </Text>
       <View style={styles.statsGrid}>
-        <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
-        <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
-        <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
-        <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
+        <AnimatedCard index={0} style={{ flex: 1, minWidth: '45%' }}>
+          <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
+        </AnimatedCard>
+        <AnimatedCard index={1} style={{ flex: 1, minWidth: '45%' }}>
+          <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
+        </AnimatedCard>
+        <AnimatedCard index={2} style={{ flex: 1, minWidth: '45%' }}>
+          <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
+        </AnimatedCard>
+        <AnimatedCard index={3} style={{ flex: 1, minWidth: '45%' }}>
+          <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
+        </AnimatedCard>
       </View>
 
       {/* P&L card */}
@@ -357,9 +365,9 @@ export default function DashboardScreen() {
       {recentTransactions.length > 0 && (
         <>
           <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Recent Transactions</Text>
-          {recentTransactions.map((tx) => (
+          {recentTransactions.map((tx, index) => (
+            <AnimatedCard key={tx.paymentId} index={index + 4}>
             <TouchableOpacity
-              key={tx.paymentId}
               style={[styles.txCard, Shadows.sm]}
               onPress={() =>
                 router.push(
@@ -384,6 +392,7 @@ export default function DashboardScreen() {
                 </View>
               </View>
             </TouchableOpacity>
+            </AnimatedCard>
           ))}
         </>
       )}
@@ -400,12 +409,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
+
   // Hero
   heroCard: {
     borderRadius: 16,

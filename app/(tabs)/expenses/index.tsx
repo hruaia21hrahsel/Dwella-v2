@@ -18,6 +18,9 @@ import { Colors } from '@/constants/colors';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getCategoryLabel, getCategoryIcon, getCategoryColor } from '@/lib/expenses';
 import { EmptyState } from '@/components/EmptyState';
+import { ListSkeleton } from '@/components/ListSkeleton';
+import { AnimatedCard } from '@/components/AnimatedCard';
+import { useToastStore } from '@/lib/toast';
 
 function groupByMonth(expenses: Expense[]): { title: string; key: string; data: Expense[] }[] {
   const map: Record<string, Expense[]> = {};
@@ -94,7 +97,7 @@ export default function GlobalExpensesScreen() {
     }
   }
 
-  function renderItem({ item }: { item: ListItem }) {
+  function renderItem({ item, index }: { item: ListItem; index: number }) {
     if (item.type === 'header') {
       return (
         <Text variant="labelMedium" style={styles.sectionHeader}>
@@ -113,6 +116,7 @@ export default function GlobalExpensesScreen() {
     const propName = propNameMap[e.property_id];
 
     return (
+      <AnimatedCard index={index}>
       <TouchableOpacity
         style={styles.expenseRow}
         onPress={() => router.push(`/property/${e.property_id}/expenses/${e.id}`)}
@@ -134,12 +138,13 @@ export default function GlobalExpensesScreen() {
         <Text variant="titleSmall" style={styles.amount}>{formatCurrency(e.amount)}</Text>
         <Icon source="chevron-right" size={18} color={Colors.textDisabled} />
       </TouchableOpacity>
+      </AnimatedCard>
     );
   }
 
   function handleFAB() {
     if (ownedProperties.length === 0) {
-      Alert.alert('No Properties', 'Add a property first before logging an expense.');
+      useToastStore.getState().showToast('Add a property first before logging an expense.', 'info');
       return;
     }
     if (ownedProperties.length === 1) {
@@ -158,11 +163,7 @@ export default function GlobalExpensesScreen() {
   }
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+    return <ListSkeleton count={4} />;
   }
 
   return (
@@ -269,7 +270,6 @@ export default function GlobalExpensesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
   listContent: { padding: 16, gap: 8, paddingBottom: 88 },
   plCard: {
     backgroundColor: Colors.surface,

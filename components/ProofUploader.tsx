@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Image, StyleSheet, Alert } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { Button, Text, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { STORAGE_BUCKET } from '@/constants/config';
 import { Colors } from '@/constants/colors';
+import { useToastStore } from '@/lib/toast';
 
 interface ProofUploaderProps {
   storagePath: string;
@@ -22,7 +23,7 @@ export function ProofUploader({ storagePath, onUploaded, existingUrl }: ProofUpl
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert('Permission required', `Please allow ${source} access to upload proof.`);
+      useToastStore.getState().showToast(`Please allow ${source} access to upload proof.`, 'error');
       return;
     }
 
@@ -58,13 +59,13 @@ export function ProofUploader({ storagePath, onUploaded, existingUrl }: ProofUpl
       }
 
       if (error) {
-        Alert.alert('Upload failed', error.message);
+        useToastStore.getState().showToast('Upload failed: ' + error.message, 'error');
         setPreviewUri(null);
       } else {
         onUploaded(storagePath);
       }
     } catch (e) {
-      Alert.alert('Upload failed', 'Something went wrong. Please try again.');
+      useToastStore.getState().showToast('Upload failed. Please try again.', 'error');
       setPreviewUri(null);
     }
     setUploading(false);

@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Payment, Tenant, Property } from '@/lib/types';
 import { Colors } from '@/constants/colors';
 import { sharePaymentReceipt } from '@/lib/pdf';
+import { useToastStore } from '@/lib/toast';
 import { formatCurrency, formatDate, getMonthName } from '@/lib/utils';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { canConfirm, getProofSignedUrl } from '@/lib/payments';
@@ -75,7 +76,7 @@ export default function PaymentDetailScreen() {
         auto_confirmed: false,
       })
       .eq('id', payment.id);
-    if (error) Alert.alert('Error', error.message);
+    if (error) useToastStore.getState().showToast(error.message, 'error');
     else fetchPayment();
     setConfirming(false);
   }
@@ -86,7 +87,7 @@ export default function PaymentDetailScreen() {
     try {
       await sharePaymentReceipt(payment, tenant, property, landlordName);
     } catch (err) {
-      Alert.alert('Export Failed', String(err));
+      useToastStore.getState().showToast('Export failed: ' + String(err), 'error');
     } finally {
       setSharing(false);
     }
@@ -116,7 +117,7 @@ export default function PaymentDetailScreen() {
                 auto_confirmed: false,
               })
               .eq('id', payment.id);
-            if (error) Alert.alert('Error', error.message);
+            if (error) useToastStore.getState().showToast(error.message, 'error');
             else fetchPayment();
             setResetting(false);
           },

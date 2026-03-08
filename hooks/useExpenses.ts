@@ -5,12 +5,14 @@ import { Expense } from '@/lib/types';
 interface UseExpensesResult {
   expenses: Expense[];
   isLoading: boolean;
+  error: string | null;
   refresh: () => void;
 }
 
 export function useExpenses(propertyId: string | null): UseExpensesResult {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
     if (!propertyId) {
@@ -19,14 +21,22 @@ export function useExpenses(propertyId: string | null): UseExpensesResult {
     }
 
     setIsLoading(true);
-    const { data } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('property_id', propertyId)
-      .order('expense_date', { ascending: false });
+    setError(null);
 
-    setExpenses((data as Expense[]) ?? []);
-    setIsLoading(false);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('property_id', propertyId)
+        .order('expense_date', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setExpenses((data as Expense[]) ?? []);
+    } catch (err: any) {
+      setError(err.message ?? 'Failed to load expenses');
+    } finally {
+      setIsLoading(false);
+    }
   }, [propertyId]);
 
   useEffect(() => {
@@ -53,5 +63,5 @@ export function useExpenses(propertyId: string | null): UseExpensesResult {
     return () => { supabase.removeChannel(channel); };
   }, [propertyId, fetch]);
 
-  return { expenses, isLoading, refresh: fetch };
+  return { expenses, isLoading, error, refresh: fetch };
 }

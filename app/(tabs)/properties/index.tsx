@@ -1,27 +1,26 @@
 import { useCallback } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
-import { Text, FAB, ActivityIndicator } from 'react-native-paper';
+import { Text, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
 import { PropertyCard } from '@/components/PropertyCard';
 import { EmptyState } from '@/components/EmptyState';
+import { ListSkeleton } from '@/components/ListSkeleton';
+import { ErrorBanner } from '@/components/ErrorBanner';
+import { AnimatedCard } from '@/components/AnimatedCard';
 import { Colors } from '@/constants/colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function PropertiesScreen() {
   const router = useRouter();
-  const { ownedProperties, tenantProperties, isLoading, refresh } = useProperties();
+  const { ownedProperties, tenantProperties, isLoading, error, refresh } = useProperties();
 
   const handleAddProperty = useCallback(() => {
     router.push('/property/create');
   }, [router]);
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
+    return <ListSkeleton count={3} />;
   }
 
   return (
@@ -33,6 +32,7 @@ export default function PropertiesScreen() {
             <RefreshControl refreshing={isLoading} onRefresh={refresh} />
           }
         >
+          <ErrorBanner error={error} onRetry={refresh} />
           {/* My Properties Section */}
           <View style={styles.sectionDivider}>
             <View style={styles.dividerLine} />
@@ -46,12 +46,13 @@ export default function PropertiesScreen() {
               subtitle="Tap the + button to add your first property"
             />
           ) : (
-            ownedProperties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onPress={() => router.push(`/(tabs)/properties/${property.id}`)}
-              />
+            ownedProperties.map((property, index) => (
+              <AnimatedCard key={property.id} index={index}>
+                <PropertyCard
+                  property={property}
+                  onPress={() => router.push(`/(tabs)/properties/${property.id}`)}
+                />
+              </AnimatedCard>
             ))
           )}
 
@@ -101,13 +102,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 80,
   },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-  },
-  sectionDivider: {
+sectionDivider: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,

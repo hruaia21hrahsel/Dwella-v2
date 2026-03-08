@@ -11,6 +11,7 @@ import { registerPushToken } from '@/lib/notifications';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { TourGuideCard } from '@/components/TourGuideCard';
+import { ToastProvider } from '@/components/ToastProvider';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -129,6 +130,7 @@ export default function RootLayout() {
     <PaperProvider theme={theme}>
       <AuthGuard />
       <TourGuideCard />
+      <ToastProvider />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
