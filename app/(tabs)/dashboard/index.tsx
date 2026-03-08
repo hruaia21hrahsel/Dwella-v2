@@ -338,12 +338,12 @@ export default function DashboardScreen() {
           style={{ marginTop: 10 }}
         >
           <LinearGradient
-            colors={[Colors.primary, Colors.primaryDark]}
+            colors={['#0088CC', '#006699']}
             style={styles.telegramCta}
           >
             <View style={styles.telegramCtaTop}>
               <View style={styles.telegramCtaIcon}>
-                <MaterialCommunityIcons name="robot-happy-outline" size={20} color={Colors.primary} />
+                <MaterialCommunityIcons name="robot-happy-outline" size={20} color="#0088CC" />
               </View>
               <View style={styles.telegramCtaTextWrap}>
                 <Text style={styles.telegramCtaTitle}>
