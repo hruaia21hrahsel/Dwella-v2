@@ -4,13 +4,34 @@ import { TextInput, Button, HelperText, Text, IconButton, ActivityIndicator } fr
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
 import { getInviteLink } from '@/lib/invite';
 
 const PHOTO_BUCKET = 'tenant-photos';
+
+function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <MaterialCommunityIcons name={icon as any} size={18} color={Colors.primary} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
+}
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 export default function TenantCreateScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId?: string }>();
@@ -22,8 +43,8 @@ export default function TenantCreateScreen() {
   const [monthlyRent, setMonthlyRent] = useState('');
   const [securityDeposit, setSecurityDeposit] = useState('0');
   const [dueDay, setDueDay] = useState('1');
-  const [leaseStart, setLeaseStart] = useState('');
-  const [leaseEnd, setLeaseEnd] = useState('');
+  const [leaseStart, setLeaseStart] = useState<Date | null>(null);
+  const [leaseEnd, setLeaseEnd] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoPath, setPhotoPath] = useState<string | null>(null);
@@ -31,6 +52,9 @@ export default function TenantCreateScreen() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
   useEffect(() => {
     if (!isEditing) return;
@@ -48,12 +72,11 @@ export default function TenantCreateScreen() {
         setMonthlyRent(String(data.monthly_rent));
         setSecurityDeposit(String(data.security_deposit));
         setDueDay(String(data.due_day));
-        setLeaseStart(data.lease_start);
-        setLeaseEnd(data.lease_end ?? '');
+        if (data.lease_start) setLeaseStart(new Date(data.lease_start + 'T00:00:00'));
+        if (data.lease_end) setLeaseEnd(new Date(data.lease_end + 'T00:00:00'));
         setNotes(data.notes ?? '');
         if (data.photo_url) {
           setPhotoPath(data.photo_url);
-          // Get signed URL for preview
           const { data: urlData } = await supabase.storage
             .from(PHOTO_BUCKET)
             .createSignedUrl(data.photo_url, 3600);
@@ -84,7 +107,6 @@ export default function TenantCreateScreen() {
 
     const uri = result.assets[0].uri;
     setPhotoUri(uri);
-    // We'll upload on submit to get the tenant ID for the path
   }
 
   function removePhoto() {
@@ -94,7 +116,6 @@ export default function TenantCreateScreen() {
 
   async function uploadPhoto(tid: string): Promise<string | null> {
     if (!photoUri || photoUri.startsWith('http')) {
-      // No new photo selected or using existing signed URL
       return photoPath;
     }
 
@@ -105,7 +126,6 @@ export default function TenantCreateScreen() {
       const response = await fetch(photoUri);
       const blob = await response.blob();
 
-      // Remove old photo if exists
       await supabase.storage.from(PHOTO_BUCKET).remove([path]);
 
       const { error } = await supabase.storage
@@ -137,6 +157,16 @@ export default function TenantCreateScreen() {
     return Object.keys(errs).length === 0;
   }
 
+  function onStartDateChange(_event: DateTimePickerEvent, selectedDate?: Date) {
+    setShowStartPicker(Platform.OS === 'ios');
+    if (selectedDate) setLeaseStart(selectedDate);
+  }
+
+  function onEndDateChange(_event: DateTimePickerEvent, selectedDate?: Date) {
+    setShowEndPicker(Platform.OS === 'ios');
+    if (selectedDate) setLeaseEnd(selectedDate);
+  }
+
   async function handleSubmit() {
     if (!validate()) return;
     setLoading(true);
@@ -147,8 +177,8 @@ export default function TenantCreateScreen() {
       monthly_rent: parseFloat(monthlyRent),
       security_deposit: parseFloat(securityDeposit) || 0,
       due_day: parseInt(dueDay, 10),
-      lease_start: leaseStart || new Date().toISOString().split('T')[0],
-      lease_end: leaseEnd || null,
+      lease_start: leaseStart ? toISODate(leaseStart) : new Date().toISOString().split('T')[0],
+      lease_end: leaseEnd ? toISODate(leaseEnd) : null,
       notes: notes.trim() || null,
     };
 
@@ -177,7 +207,6 @@ export default function TenantCreateScreen() {
       if (error) {
         useToastStore.getState().showToast(error.message, 'error');
       } else if (data) {
-        // Upload photo if selected
         if (photoUri) {
           const uploadedPath = await uploadPhoto(data.id);
           if (uploadedPath) {
@@ -254,85 +283,147 @@ export default function TenantCreateScreen() {
             </View>
           </View>
 
-          <TextInput
-            label="Tenant Name"
-            value={tenantName}
-            onChangeText={setTenantName}
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.tenantName}
-          />
-          {errors.tenantName && <HelperText type="error">{errors.tenantName}</HelperText>}
+          {/* Tenant Info */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="account-outline" title="Tenant Info" />
+            <TextInput
+              label="Tenant Name"
+              value={tenantName}
+              onChangeText={setTenantName}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.tenantName}
+            />
+            {errors.tenantName && <HelperText type="error">{errors.tenantName}</HelperText>}
 
-          <TextInput
-            label="Flat / Unit Number"
-            value={flatNo}
-            onChangeText={setFlatNo}
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.flatNo}
-          />
-          {errors.flatNo && <HelperText type="error">{errors.flatNo}</HelperText>}
+            <TextInput
+              label="Flat / Unit Number"
+              value={flatNo}
+              onChangeText={setFlatNo}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.flatNo}
+            />
+            {errors.flatNo && <HelperText type="error">{errors.flatNo}</HelperText>}
+          </View>
 
-          <TextInput
-            label="Monthly Rent (₹)"
-            value={monthlyRent}
-            onChangeText={setMonthlyRent}
-            keyboardType="decimal-pad"
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.monthlyRent}
-          />
-          {errors.monthlyRent && <HelperText type="error">{errors.monthlyRent}</HelperText>}
+          {/* Financials */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="currency-inr" title="Financials" />
+            <TextInput
+              label="Monthly Rent (₹)"
+              value={monthlyRent}
+              onChangeText={setMonthlyRent}
+              keyboardType="decimal-pad"
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.monthlyRent}
+            />
+            {errors.monthlyRent && <HelperText type="error">{errors.monthlyRent}</HelperText>}
 
-          <TextInput
-            label="Security Deposit (₹)"
-            value={securityDeposit}
-            onChangeText={setSecurityDeposit}
-            keyboardType="decimal-pad"
-            mode="outlined"
-            style={styles.input}
-          />
+            <TextInput
+              label="Security Deposit (₹)"
+              value={securityDeposit}
+              onChangeText={setSecurityDeposit}
+              keyboardType="decimal-pad"
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+            />
 
-          <TextInput
-            label="Due Day (1–28)"
-            value={dueDay}
-            onChangeText={setDueDay}
-            keyboardType="number-pad"
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.dueDay}
-          />
-          {errors.dueDay && <HelperText type="error">{errors.dueDay}</HelperText>}
+            <TextInput
+              label="Due Day (1–28)"
+              value={dueDay}
+              onChangeText={setDueDay}
+              keyboardType="number-pad"
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.dueDay}
+            />
+            {errors.dueDay && <HelperText type="error">{errors.dueDay}</HelperText>}
+          </View>
 
-          <TextInput
-            label="Lease Start (YYYY-MM-DD, optional)"
-            value={leaseStart}
-            onChangeText={setLeaseStart}
-            mode="outlined"
-            style={styles.input}
-            placeholder="2024-01-01"
-          />
+          {/* Lease Period */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="calendar-range" title="Lease Period" />
 
-          <TextInput
-            label="Lease End (YYYY-MM-DD, optional)"
-            value={leaseEnd}
-            onChangeText={setLeaseEnd}
-            mode="outlined"
-            style={styles.input}
-            placeholder="2025-01-01"
-          />
+            <TouchableOpacity
+              style={styles.dateField}
+              onPress={() => setShowStartPicker(true)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="calendar" size={20} color={Colors.primary} />
+              <View style={styles.dateFieldText}>
+                <Text style={styles.dateLabel}>Lease Start</Text>
+                <Text style={leaseStart ? styles.dateValue : styles.datePlaceholder}>
+                  {leaseStart ? formatDate(leaseStart) : 'Select date (optional)'}
+                </Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textDisabled} />
+            </TouchableOpacity>
 
-          <TextInput
-            label="Notes (optional)"
-            value={notes}
-            onChangeText={setNotes}
-            mode="outlined"
-            style={styles.input}
-            multiline
-            numberOfLines={3}
-            placeholder="e.g. Contact number, ID proof details, special terms..."
-          />
+            {showStartPicker && (
+              <DateTimePicker
+                value={leaseStart || new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onStartDateChange}
+              />
+            )}
+
+            <TouchableOpacity
+              style={styles.dateField}
+              onPress={() => setShowEndPicker(true)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="calendar" size={20} color={Colors.primary} />
+              <View style={styles.dateFieldText}>
+                <Text style={styles.dateLabel}>Lease End</Text>
+                <Text style={leaseEnd ? styles.dateValue : styles.datePlaceholder}>
+                  {leaseEnd ? formatDate(leaseEnd) : 'Select date (optional)'}
+                </Text>
+              </View>
+              {leaseEnd && (
+                <TouchableOpacity
+                  onPress={() => { setLeaseEnd(null); }}
+                  hitSlop={8}
+                  style={styles.dateClearBtn}
+                >
+                  <MaterialCommunityIcons name="close-circle-outline" size={18} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+              <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textDisabled} />
+            </TouchableOpacity>
+
+            {showEndPicker && (
+              <DateTimePicker
+                value={leaseEnd || new Date()}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={onEndDateChange}
+              />
+            )}
+          </View>
+
+          {/* Additional Info */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="note-text-outline" title="Additional Info" />
+            <TextInput
+              label="Notes (optional)"
+              value={notes}
+              onChangeText={setNotes}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              multiline
+              numberOfLines={3}
+              placeholder="e.g. Contact number, ID proof details, special terms..."
+            />
+          </View>
 
           {!isEditing && (
             <Text variant="bodySmall" style={styles.inviteNote}>
@@ -345,8 +436,8 @@ export default function TenantCreateScreen() {
             onPress={handleSubmit}
             loading={loading || uploading}
             disabled={loading || uploading}
-            style={styles.button}
-            contentStyle={styles.buttonContent}
+            style={styles.submitBtn}
+            contentStyle={styles.submitBtnContent}
           >
             {isEditing ? 'Save Changes' : 'Add Tenant & Share Invite'}
           </Button>
@@ -363,28 +454,90 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    gap: 16,
+  },
+  sectionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 16,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   input: {
     backgroundColor: Colors.surface,
   },
+  inputOutline: {
+    borderRadius: 12,
+  },
+
+  // Date picker fields
+  dateField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  dateFieldText: {
+    flex: 1,
+  },
+  dateLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 2,
+  },
+  dateValue: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+  },
+  datePlaceholder: {
+    fontSize: 15,
+    color: Colors.textDisabled,
+  },
+  dateClearBtn: {
+    padding: 2,
+  },
+
   inviteNote: {
     color: Colors.textSecondary,
-    marginTop: 8,
     paddingHorizontal: 4,
   },
-  button: {
-    marginTop: 16,
+  submitBtn: {
+    marginTop: 4,
+    borderRadius: 14,
+    ...Shadows.sm,
   },
-  buttonContent: {
-    paddingVertical: 6,
+  submitBtnContent: {
+    paddingVertical: 10,
   },
 
   // Photo section
   photoSection: {
     alignItems: 'center',
     gap: 12,
-    marginBottom: 8,
+    marginBottom: 0,
   },
   photoPlaceholder: {
     width: 80,

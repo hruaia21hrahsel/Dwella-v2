@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, HelperText, IconButton } from 'react-native-paper';
+import { TextInput, Button, HelperText, Text, IconButton } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { useToastStore } from '@/lib/toast';
 import { Property } from '@/lib/types';
+
+function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  return (
+    <View style={styles.sectionHeader}>
+      <MaterialCommunityIcons name={icon as any} size={18} color={Colors.primary} />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
+}
 
 export default function PropertyCreateScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -114,6 +124,9 @@ export default function PropertyCreateScreen() {
       <Stack.Screen
         options={{
           title: isEditing ? 'Edit Property' : 'New Property',
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
+          headerTintColor: Colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />
           ),
@@ -124,66 +137,83 @@ export default function PropertyCreateScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <TextInput
-            label="Property Name"
-            value={name}
-            onChangeText={setName}
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.name}
-          />
-          {errors.name && <HelperText type="error">{errors.name}</HelperText>}
+          {/* Property Details */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="office-building-outline" title="Property Details" />
+            <TextInput
+              label="Property Name"
+              value={name}
+              onChangeText={setName}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.name}
+            />
+            {errors.name && <HelperText type="error">{errors.name}</HelperText>}
 
-          <TextInput
-            label="Address"
-            value={address}
-            onChangeText={setAddress}
-            mode="outlined"
-            style={styles.input}
-            multiline
-            numberOfLines={2}
-            error={!!errors.address}
-          />
-          {errors.address && <HelperText type="error">{errors.address}</HelperText>}
+            <TextInput
+              label="Total Units"
+              value={totalUnits}
+              onChangeText={setTotalUnits}
+              keyboardType="number-pad"
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.totalUnits}
+            />
+            {errors.totalUnits && <HelperText type="error">{errors.totalUnits}</HelperText>}
+          </View>
 
-          <TextInput
-            label="City"
-            value={city}
-            onChangeText={setCity}
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.city}
-          />
-          {errors.city && <HelperText type="error">{errors.city}</HelperText>}
+          {/* Location */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="map-marker-outline" title="Location" />
+            <TextInput
+              label="Address"
+              value={address}
+              onChangeText={setAddress}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              multiline
+              numberOfLines={2}
+              error={!!errors.address}
+            />
+            {errors.address && <HelperText type="error">{errors.address}</HelperText>}
 
-          <TextInput
-            label="Total Units"
-            value={totalUnits}
-            onChangeText={setTotalUnits}
-            keyboardType="number-pad"
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.totalUnits}
-          />
-          {errors.totalUnits && <HelperText type="error">{errors.totalUnits}</HelperText>}
+            <TextInput
+              label="City"
+              value={city}
+              onChangeText={setCity}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              error={!!errors.city}
+            />
+            {errors.city && <HelperText type="error">{errors.city}</HelperText>}
+          </View>
 
-          <TextInput
-            label="Notes (optional)"
-            value={notes}
-            onChangeText={setNotes}
-            mode="outlined"
-            style={styles.input}
-            multiline
-            numberOfLines={3}
-          />
+          {/* Additional Info */}
+          <View style={styles.sectionCard}>
+            <SectionHeader icon="note-text-outline" title="Additional Info" />
+            <TextInput
+              label="Notes (optional)"
+              value={notes}
+              onChangeText={setNotes}
+              mode="outlined"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
 
           <Button
             mode="contained"
             onPress={handleSubmit}
             loading={loading}
             disabled={loading}
-            style={styles.button}
-            contentStyle={styles.buttonContent}
+            style={styles.submitBtn}
+            contentStyle={styles.submitBtnContent}
           >
             {isEditing ? 'Save Changes' : 'Create Property'}
           </Button>
@@ -200,15 +230,41 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    gap: 16,
+  },
+  sectionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 16,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   input: {
     backgroundColor: Colors.surface,
   },
-  button: {
-    marginTop: 16,
+  inputOutline: {
+    borderRadius: 12,
   },
-  buttonContent: {
-    paddingVertical: 6,
+  submitBtn: {
+    marginTop: 4,
+    borderRadius: 14,
+    ...Shadows.sm,
+  },
+  submitBtnContent: {
+    paddingVertical: 10,
   },
 });
