@@ -4,16 +4,17 @@ import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
 import { DwellaLogo } from '@/components/DwellaLogo';
 import { verifyPin, isPinSet, isBiometricEnabled } from '@/lib/biometric-auth';
 import { useAuthStore } from '@/lib/store';
+import { useTheme } from '@/lib/theme-context';
 
 const DIGITS = [['1','2','3'],['4','5','6'],['7','8','9'],['','0','⌫']];
 
 export default function LockScreen() {
   const router = useRouter();
   const setLocked = useAuthStore((s) => s.setLocked);
+  const { colors } = useTheme();
   const [ready, setReady] = useState(false);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
@@ -23,7 +24,6 @@ export default function LockScreen() {
     (async () => {
       const [enabled, pinReady] = await Promise.all([isBiometricEnabled(), isPinSet()]);
       if (!enabled || !pinReady) {
-        // PIN not configured — shouldn't be here, go to login
         router.replace('/(auth)/login');
         return;
       }
@@ -41,8 +41,6 @@ export default function LockScreen() {
       setPin('');
 
       if (correct) {
-        // Unlock the UI. The Supabase session is already active — AuthGuard
-        // will route to dashboard as soon as isLocked becomes false.
         setLocked(false);
       } else {
         const newAttempts = attempts + 1;
@@ -61,8 +59,6 @@ export default function LockScreen() {
   }
 
   async function signOutAndGoToLogin() {
-    // Full sign-out so the user can re-authenticate with email/password.
-    // AuthGuard will redirect to /login once the session is cleared.
     await supabase.auth.signOut();
   }
 
@@ -76,23 +72,22 @@ export default function LockScreen() {
   }
 
   if (!ready) {
-    return <View style={styles.center} />;
+    return <View style={[styles.center, { backgroundColor: colors.background }]} />;
   }
 
   return (
-    <View style={styles.container}>
-      {/* Logo + subtitle + dots + numpad all grouped together, centred */}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.pinSection}>
-        <DwellaLogo size={120} color={Colors.textPrimary} />
-        <Text style={styles.tagline}>Enter your PIN</Text>
+        <DwellaLogo size={120} color={colors.textPrimary} />
+        <Text style={[styles.tagline, { color: colors.textSecondary }]}>Enter your PIN</Text>
 
         <View style={styles.dotsRow}>
           {[0,1,2,3,4,5].map((i) => (
-            <View key={i} style={[styles.dot, pin.length > i && styles.dotFilled]} />
+            <View key={i} style={[styles.dot, { borderColor: colors.primary }, pin.length > i && { backgroundColor: colors.primary }]} />
           ))}
         </View>
 
-        {!!pinError && <Text style={styles.pinError}>{pinError}</Text>}
+        {!!pinError && <Text style={[styles.pinError, { color: colors.error }]}>{pinError}</Text>}
 
         <View style={styles.numpad}>
           {DIGITS.map((row, ri) => (
@@ -100,13 +95,13 @@ export default function LockScreen() {
               {row.map((d, di) => {
                 if (d === '') return <View key={di} style={styles.numpadKey} />;
                 if (d === '⌫') return (
-                  <TouchableOpacity key={di} style={styles.numpadKey} onPress={handleDelete} activeOpacity={0.6}>
-                    <MaterialCommunityIcons name="backspace-outline" size={26} color={Colors.textSecondary} />
+                  <TouchableOpacity key={di} style={[styles.numpadKey, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleDelete} activeOpacity={0.6}>
+                    <MaterialCommunityIcons name="backspace-outline" size={26} color={colors.textSecondary} />
                   </TouchableOpacity>
                 );
                 return (
-                  <TouchableOpacity key={di} style={styles.numpadKey} onPress={() => handleDigit(d)} activeOpacity={0.6}>
-                    <Text style={styles.numpadDigit}>{d}</Text>
+                  <TouchableOpacity key={di} style={[styles.numpadKey, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleDigit(d)} activeOpacity={0.6}>
+                    <Text style={[styles.numpadDigit, { color: colors.textPrimary }]}>{d}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -115,9 +110,8 @@ export default function LockScreen() {
         </View>
       </View>
 
-      {/* Anchored at the bottom, independent of the centred pin section */}
       <TouchableOpacity style={styles.altLinkWrap} onPress={signOutAndGoToLogin}>
-        <Text style={styles.altLink}>Use email & password</Text>
+        <Text style={[styles.altLink, { color: colors.primary }]}>Use email & password</Text>
       </TouchableOpacity>
     </View>
   );
@@ -126,34 +120,31 @@ export default function LockScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
   },
-  center: { flex: 1, backgroundColor: Colors.background },
+  center: { flex: 1 },
   pinSection: {
     alignItems: 'center',
     width: '100%',
     gap: 24,
   },
-  logo: {},
-  tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: -4 },
+  tagline: { fontSize: 16, marginTop: -4 },
   dotsRow: { flexDirection: 'row', gap: 16 },
   dot: {
     width: 16, height: 16, borderRadius: 8,
-    borderWidth: 2, borderColor: Colors.primary, backgroundColor: 'transparent',
+    borderWidth: 2, backgroundColor: 'transparent',
   },
-  dotFilled: { backgroundColor: Colors.primary },
-  pinError: { fontSize: 13, color: Colors.statusOverdue, textAlign: 'center' },
+  pinError: { fontSize: 13, textAlign: 'center' },
   numpad: { width: '100%', gap: 8 },
   numpadRow: { flexDirection: 'row', justifyContent: 'space-around' },
   numpadKey: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
   },
-  numpadDigit: { fontSize: 28, fontWeight: '400', color: Colors.textPrimary },
+  numpadDigit: { fontSize: 28, fontWeight: '400' },
   altLinkWrap: { position: 'absolute', bottom: 52 },
-  altLink: { fontSize: 14, color: Colors.primary, fontWeight: '500' },
+  altLink: { fontSize: 14, fontWeight: '500' },
 });

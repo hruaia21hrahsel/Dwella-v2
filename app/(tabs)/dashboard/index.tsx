@@ -23,7 +23,9 @@ import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { AiInsightCard } from '@/components/AiInsightCard';
-import { Colors, Shadows } from '@/constants/colors';
+import { GlassCard } from '@/components/GlassCard';
+import { GradientButton } from '@/components/GradientButton';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
 import { PaymentStatus } from '@/lib/types';
@@ -34,8 +36,6 @@ import { generateTelegramLinkToken } from '@/lib/bot';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 
 const SCREEN_W = Dimensions.get('window').width;
-// 6 circles per row, 2 rows = 12 months
-// Available: SCREEN_W - screen padding (32) - overviewSection padding (24) - overviewSection border (2) - tenantBlock padding (24) - 5 gaps of 8px (40)
 const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 2 - 24 - 40) / 6);
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -56,11 +56,11 @@ const STAT_ICONS: Record<string, string> = {
   'Overdue': 'alert-circle-outline',
 };
 
-interface StatCardProps { label: string; value: number; color: string }
+interface StatCardProps { label: string; value: number; color: string; surfaceBg: string; secondaryText: string }
 
-function StatCard({ label, value, color }: StatCardProps) {
+function StatCard({ label, value, color, surfaceBg, secondaryText }: StatCardProps) {
   return (
-    <View style={[styles.statCard, Shadows.md]}>
+    <View style={[styles.statCard, { backgroundColor: surfaceBg }]}>
       <View style={[styles.statAccent, { backgroundColor: color }]} />
       <MaterialCommunityIcons
         name={STAT_ICONS[label] as any}
@@ -69,7 +69,7 @@ function StatCard({ label, value, color }: StatCardProps) {
         style={styles.statIcon}
       />
       <Text style={[styles.statValue, { color }]}>{formatCurrency(value)}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statLabel, { color: secondaryText }]}>{label}</Text>
     </View>
   );
 }
@@ -77,6 +77,7 @@ function StatCard({ label, value, color }: StatCardProps) {
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, gradients, shadows, isDark } = useTheme();
   const { user, setUser } = useAuthStore();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -92,7 +93,6 @@ export default function DashboardScreen() {
 
   const telegramLinked = !!user?.telegram_chat_id;
 
-  // Re-fetch user when app returns to foreground (e.g. after linking Telegram)
   const appState = useRef(AppState.currentState);
   useEffect(() => {
     const sub = AppState.addEventListener('change', async (nextState) => {
@@ -148,17 +148,14 @@ export default function DashboardScreen() {
     fetchMonthlyExpenses();
   }, [summaryMonth, selectedYear]);
 
-  // Derive unique properties from tenant rows
   const properties = [
     ...new Map(
       tenantRows.map((r) => [r.propertyId, { id: r.propertyId, name: r.propertyName }])
     ).values(),
   ];
 
-  // Tenants for the selected property
   const tenantsForProperty = tenantRows.filter((r) => r.propertyId === selectedPropertyId);
 
-  // Auto-select first property and first tenant when data loads
   useEffect(() => {
     if (tenantRows.length === 0) return;
     if (!selectedPropertyId) {
@@ -168,7 +165,6 @@ export default function DashboardScreen() {
     }
   }, [tenantRows]);
 
-  // When property changes, auto-select first tenant of that property
   function selectProperty(propId: string) {
     setSelectedPropertyId(propId);
     const firstTenant = tenantRows.find((r) => r.propertyId === propId);
@@ -191,40 +187,42 @@ export default function DashboardScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       {/* Scrollable header */}
-      <View style={[styles.inlineHeader, { paddingTop: insets.top }]}>
+      <View style={[styles.inlineHeader, { paddingTop: insets.top, backgroundColor: colors.background }]}>
         <TouchableOpacity
           onPress={() => router.push('/(tabs)/profile')}
           style={{ width: 56, alignItems: 'center', justifyContent: 'center' }}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="account-circle-outline" size={26} color={Colors.textPrimary} />
+          <MaterialCommunityIcons name="account-circle-outline" size={26} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <DwellaLogo width={180} height={44} />
+          <DwellaLogo width={180} height={44} color={colors.textPrimary} />
         </View>
         <TouchableOpacity
           onPress={() => router.push('/notifications')}
           style={{ width: 40, alignItems: 'center', justifyContent: 'center' }}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="bell-outline" size={26} color={Colors.textPrimary} />
+          <MaterialCommunityIcons name="bell-outline" size={26} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       <ErrorBanner error={error} onRetry={refresh} />
 
       {/* Overview section */}
-      <View style={styles.overviewSection}>
+      <GlassCard variant="elevated" style={{ padding: 12, gap: 8 }}>
 
       {/* Hero gradient header */}
       <LinearGradient
-        colors={Colors.gradientHero as [string, string]}
-        style={[styles.heroCard, Shadows.hero]}
+        colors={gradients.hero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.heroCard, shadows.hero]}
       >
         <View style={styles.heroTitleRow}>
           <Text style={styles.heroTitle}>Overview</Text>
@@ -260,17 +258,25 @@ export default function DashboardScreen() {
           return (
             <TouchableOpacity
               key={p.id}
-              style={[styles.selectorChip, active && styles.selectorChipActive]}
+              style={[
+                styles.selectorChip,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+                active && { borderColor: colors.primaryMid, backgroundColor: colors.primarySoft },
+              ]}
               onPress={() => selectProperty(p.id)}
               activeOpacity={0.7}
             >
               <MaterialCommunityIcons
                 name="home-city"
                 size={13}
-                color={active ? Colors.primary : Colors.textSecondary}
+                color={active ? colors.primary : colors.textSecondary}
                 style={{ marginRight: 4 }}
               />
-              <Text style={[styles.selectorChipText, active && styles.selectorChipTextActive]}>
+              <Text style={[
+                styles.selectorChipText,
+                { color: colors.textSecondary },
+                active && { color: colors.primary, fontWeight: '700' },
+              ]}>
                 {p.name}
               </Text>
             </TouchableOpacity>
@@ -289,19 +295,27 @@ export default function DashboardScreen() {
           {tenantsForProperty.map((t) => {
             const active = t.tenantId === selectedTenantId;
             const monthStatus = t.paymentsByMonth[currentMonth]?.status ?? null;
-            const dotColor = monthStatus ? getStatusColor(monthStatus) : Colors.textDisabled;
+            const dotColor = monthStatus ? getStatusColor(monthStatus) : colors.textDisabled;
             return (
               <TouchableOpacity
                 key={t.tenantId}
-                style={[styles.selectorChip, active && styles.selectorChipActive]}
+                style={[
+                  styles.selectorChip,
+                  { borderColor: colors.border, backgroundColor: colors.surface },
+                  active && { borderColor: colors.primaryMid, backgroundColor: colors.primarySoft },
+                ]}
                 onPress={() => setSelectedTenantId(t.tenantId)}
                 activeOpacity={0.7}
               >
                 <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
-                <Text style={[styles.selectorChipText, active && styles.selectorChipTextActive]}>
+                <Text style={[
+                  styles.selectorChipText,
+                  { color: colors.textSecondary },
+                  active && { color: colors.primary, fontWeight: '700' },
+                ]}>
                   {t.tenantName}
                 </Text>
-                <Text style={[styles.selectorChipSub, active && { color: Colors.primary }]}>
+                <Text style={[styles.selectorChipSub, { color: colors.textSecondary }, active && { color: colors.primary }]}>
                   {' '}· {t.flatNo}
                 </Text>
               </TouchableOpacity>
@@ -310,16 +324,16 @@ export default function DashboardScreen() {
         </ScrollView>
       )}
 
-      {/* Payment grid — always shown */}
-      <View style={styles.tenantBlock}>
+      {/* Payment grid */}
+      <View style={[styles.tenantBlock, { backgroundColor: colors.primarySoft }]}>
         <View style={styles.monthGrid}>
           {MONTHS.map((m) => {
             const payment = selectedRow?.paymentsByMonth[m];
             const status: PaymentStatus | null = payment?.status ?? null;
             const isCurrentMonth = m === currentMonth;
 
-            const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPendingSoft;
-            const iconColor = status ? getStatusColor(status) : Colors.statusPending;
+            const bgColor = status ? getStatusColor(status) + '22' : colors.statusPendingSoft;
+            const iconColor = status ? getStatusColor(status) : colors.statusPending;
             const canNavigate = !!payment?.id;
 
             return (
@@ -336,10 +350,10 @@ export default function DashboardScreen() {
                 style={[
                   styles.monthChip,
                   { backgroundColor: bgColor },
-                  isCurrentMonth && styles.monthChipCurrent,
+                  isCurrentMonth && { borderWidth: 1.5, borderColor: colors.primary },
                 ]}
               >
-                {isCurrentMonth && <View style={styles.currentDot} />}
+                {isCurrentMonth && <View style={[styles.currentDot, { backgroundColor: colors.primary }]} />}
                 <Text style={[styles.monthChipLabel, { color: iconColor }]}>
                   {MONTH_SHORT[m - 1]}
                 </Text>
@@ -359,10 +373,10 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      </View>
+      </GlassCard>
       {/* End overview section */}
 
-      {/* Telegram CTA — only when not linked */}
+      {/* Telegram CTA */}
       {!telegramLinked && (
         <TouchableOpacity
           onPress={handleLinkTelegram}
@@ -380,7 +394,7 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.telegramCtaTextWrap}>
                 <Text style={styles.telegramCtaTitle}>
-                  {linkingTelegram ? 'Opening Telegram…' : 'Link Telegram to meet your AI assistant! ✨'}
+                  {linkingTelegram ? 'Opening Telegram…' : 'Link Telegram to meet your AI assistant!'}
                 </Text>
                 <Text style={styles.telegramCtaSub}>You command, the AI executes</Text>
               </View>
@@ -395,9 +409,10 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Log Payment shortcut — always shown */}
-      <TouchableOpacity
-        style={[styles.logPaymentBtn, Shadows.sm]}
+      {/* Log Payment shortcut */}
+      <GradientButton
+        title="Log Payment"
+        icon="plus-circle-outline"
         onPress={() => {
           if (selectedRow) {
             router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`);
@@ -405,35 +420,31 @@ export default function DashboardScreen() {
             router.push('/log-payment');
           }
         }}
-        activeOpacity={0.8}
-      >
-        <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-        <Text style={styles.logPaymentBtnText}>Log Payment</Text>
-      </TouchableOpacity>
+        style={{ marginTop: 10 }}
+      />
 
       {/* Send Reminders shortcut */}
-      <TouchableOpacity
-        style={styles.remindersBtn}
+      <GradientButton
+        title="Send Reminders"
+        icon="bell-ring-outline"
+        variant="secondary"
         onPress={() => router.push('/reminders')}
-        activeOpacity={0.8}
-      >
-        <MaterialCommunityIcons name="bell-ring-outline" size={16} color={Colors.primary} style={{ marginRight: 6 }} />
-        <Text style={styles.remindersBtnText}>Send Reminders</Text>
-      </TouchableOpacity>
+        style={{ marginTop: 8 }}
+      />
 
       {/* AI Nudge */}
       <AiInsightCard nudge={aiNudge} loading={aiNudgeLoading} />
 
       {/* Section 2 — Monthly Summary (expandable) */}
-      <View style={[styles.summarySection, { marginTop: 24 }]}>
+      <GlassCard variant="default" style={{ padding: 12, gap: 12, marginTop: 24 }}>
         <TouchableOpacity
           style={styles.summaryToggle}
           onPress={() => setSummaryExpanded((v) => !v)}
           activeOpacity={0.8}
         >
           <View style={styles.summaryToggleLeft}>
-            <MaterialCommunityIcons name="chart-bar" size={18} color={Colors.primary} style={{ marginRight: 8 }} />
-            <Text style={styles.summaryToggleText}>Monthly Summary</Text>
+            <MaterialCommunityIcons name="chart-bar" size={18} color={colors.primary} style={{ marginRight: 8 }} />
+            <Text style={[styles.summaryToggleText, { color: colors.textPrimary }]}>Monthly Summary</Text>
           </View>
           <View style={styles.summaryToggleRight}>
             <TouchableOpacity
@@ -448,9 +459,9 @@ export default function DashboardScreen() {
               }}
               hitSlop={8}
             >
-              <MaterialCommunityIcons name="chevron-left" size={20} color={Colors.textSecondary} />
+              <MaterialCommunityIcons name="chevron-left" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
-            <Text style={styles.summaryMonthText}>
+            <Text style={[styles.summaryMonthText, { color: colors.textSecondary }]}>
               {MONTH_SHORT[summaryMonth - 1]} {selectedYear}
             </Text>
             <TouchableOpacity
@@ -465,12 +476,12 @@ export default function DashboardScreen() {
               }}
               hitSlop={8}
             >
-              <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textSecondary} />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
             <MaterialCommunityIcons
               name={summaryExpanded ? 'chevron-up' : 'chevron-down'}
               size={20}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
               style={{ marginLeft: 8 }}
             />
           </View>
@@ -480,58 +491,58 @@ export default function DashboardScreen() {
           <>
             <AnimatedCard index={0}>
               <View style={styles.statsGrid}>
-                <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
-                <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
-                <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
-                <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
+                <StatCard label="Total Receivable" value={stats.totalReceivable} color={colors.primary} surfaceBg={colors.surfaceElevated} secondaryText={colors.textSecondary} />
+                <StatCard label="Received" value={stats.totalReceived} color={colors.statusConfirmed} surfaceBg={colors.surfaceElevated} secondaryText={colors.textSecondary} />
+                <StatCard label="Yet to Receive" value={stats.totalPending} color={colors.statusPartial} surfaceBg={colors.surfaceElevated} secondaryText={colors.textSecondary} />
+                <StatCard label="Overdue" value={stats.totalOverdue} color={colors.statusOverdue} surfaceBg={colors.surfaceElevated} secondaryText={colors.textSecondary} />
               </View>
             </AnimatedCard>
 
             {/* P&L card */}
-            <View style={styles.plCard}>
-              <Text style={styles.plTitle}>
+            <View style={[styles.plCard, { backgroundColor: colors.primarySoft }]}>
+              <Text style={[styles.plTitle, { color: colors.textSecondary }]}>
                 P&L — {getMonthName(summaryMonth)} {selectedYear}
               </Text>
               <View style={styles.plRow}>
                 <View style={styles.plItem}>
-                  <Text style={[styles.plValue, { color: Colors.statusConfirmed }]}>
+                  <Text style={[styles.plValue, { color: colors.statusConfirmed }]}>
                     {formatCurrency(stats.totalReceived)}
                   </Text>
-                  <Text style={styles.plLabel}>Income</Text>
+                  <Text style={[styles.plLabel, { color: colors.textSecondary }]}>Income</Text>
                 </View>
-                <View style={styles.plDivider} />
+                <View style={[styles.plDivider, { backgroundColor: colors.border }]} />
                 <View style={styles.plItem}>
-                  <Text style={[styles.plValue, { color: Colors.error }]}>
+                  <Text style={[styles.plValue, { color: colors.error }]}>
                     {formatCurrency(monthlyExpenses)}
                   </Text>
-                  <Text style={styles.plLabel}>Expenses</Text>
+                  <Text style={[styles.plLabel, { color: colors.textSecondary }]}>Expenses</Text>
                 </View>
-                <View style={styles.plDivider} />
+                <View style={[styles.plDivider, { backgroundColor: colors.border }]} />
                 <View style={styles.plItem}>
                   <Text
                     style={[
                       styles.plValue,
-                      { color: stats.totalReceived - monthlyExpenses >= 0 ? Colors.statusConfirmed : Colors.error },
+                      { color: stats.totalReceived - monthlyExpenses >= 0 ? colors.statusConfirmed : colors.error },
                     ]}
                   >
                     {formatCurrency(stats.totalReceived - monthlyExpenses)}
                   </Text>
-                  <Text style={styles.plLabel}>Net</Text>
+                  <Text style={[styles.plLabel, { color: colors.textSecondary }]}>Net</Text>
                 </View>
               </View>
             </View>
           </>
         )}
-      </View>
+      </GlassCard>
 
       {/* Section 3 — Recent Transactions */}
       {recentTransactions.length > 0 && (
         <>
-          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Recent Transactions</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 24, color: colors.textPrimary }]}>Recent Transactions</Text>
           {recentTransactions.map((tx, index) => (
             <AnimatedCard key={tx.paymentId} index={index + 4}>
             <TouchableOpacity
-              style={[styles.txCard, Shadows.sm]}
+              style={[styles.txCard, shadows.sm, { backgroundColor: colors.surface }]}
               onPress={() =>
                 router.push(
                   `/property/${tx.propertyId}/tenant/${tx.tenantId}/payment/${tx.paymentId}`,
@@ -541,16 +552,16 @@ export default function DashboardScreen() {
               <View style={[styles.txAccent, { backgroundColor: getStatusColor(tx.status) }]} />
               <View style={[styles.txRow, { paddingLeft: 17 }]}>
                 <View style={styles.txLeft}>
-                  <Text style={styles.txTenant}>
+                  <Text style={[styles.txTenant, { color: colors.textPrimary }]}>
                     {tx.tenantName} · Flat {tx.flatNo}
                   </Text>
-                  <Text style={styles.txSub}>
+                  <Text style={[styles.txSub, { color: colors.textSecondary }]}>
                     {tx.propertyName} · {getMonthName(tx.month)} {tx.year}
                   </Text>
-                  <Text style={styles.txDate}>Paid: {formatDate(tx.paidAt)}</Text>
+                  <Text style={[styles.txDate, { color: colors.textDisabled }]}>Paid: {formatDate(tx.paidAt)}</Text>
                 </View>
                 <View style={styles.txRight}>
-                  <Text style={styles.txAmount}>{formatCurrency(tx.amountPaid)}</Text>
+                  <Text style={[styles.txAmount, { color: colors.textPrimary }]}>{formatCurrency(tx.amountPaid)}</Text>
                   <PaymentStatusBadge status={tx.status} />
                 </View>
               </View>
@@ -566,7 +577,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 16,
@@ -574,22 +584,11 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   inlineHeader: {
-    backgroundColor: Colors.background,
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 60,
     marginHorizontal: -16,
     marginBottom: 16,
-  },
-
-  // Overview section wrapper
-  overviewSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 12,
-    gap: 8,
   },
   // Hero
   heroCard: {
@@ -627,12 +626,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
     marginBottom: 10,
   },
   // Selector rows
-  selectorRow: {
-  },
+  selectorRow: {},
   selectorContent: {
     gap: 8,
     paddingRight: 4,
@@ -644,25 +641,13 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  selectorChipActive: {
-    borderColor: Colors.primaryMid,
-    backgroundColor: Colors.primarySoft,
   },
   selectorChipText: {
     fontSize: 13,
     fontWeight: '500',
-    color: Colors.textSecondary,
-  },
-  selectorChipTextActive: {
-    color: Colors.primary,
-    fontWeight: '700',
   },
   selectorChipSub: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   statusDot: {
     width: 7,
@@ -672,7 +657,6 @@ const styles = StyleSheet.create({
   },
   // Tenant payment block
   tenantBlock: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 12,
     padding: 12,
   },
@@ -689,10 +673,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  monthChipCurrent: {
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-  },
   currentDot: {
     position: 'absolute',
     top: 4,
@@ -700,7 +680,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.primary,
   },
   monthChipLabel: {
     fontSize: 11,
@@ -710,38 +689,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginTop: 2,
     textTransform: 'uppercase',
-  },
-  // Buttons
-  logPaymentBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 12,
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  logPaymentBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  remindersBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-    paddingVertical: 12,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  remindersBtnText: {
-    color: Colors.primary,
-    fontWeight: '700',
-    fontSize: 14,
   },
   // Telegram CTA
   telegramCta: {
@@ -790,15 +737,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
-  // Summary section wrapper
-  summarySection: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 12,
-    gap: 12,
-  },
   // Summary toggle
   summaryToggle: {
     flexDirection: 'row',
@@ -816,12 +754,10 @@ const styles = StyleSheet.create({
   summaryToggleText: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   summaryMonthText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textSecondary,
     marginHorizontal: 4,
     minWidth: 70,
     textAlign: 'center',
@@ -835,7 +771,6 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 14,
     overflow: 'hidden',
@@ -863,19 +798,16 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
     paddingLeft: 12,
   },
   // P&L
   plCard: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 14,
     padding: 16,
   },
   plTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
@@ -895,16 +827,13 @@ const styles = StyleSheet.create({
   },
   plLabel: {
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   plDivider: {
     width: 1,
     height: 32,
-    backgroundColor: Colors.border,
   },
   // Transactions
   txCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     marginBottom: 8,
     overflow: 'hidden',
@@ -934,21 +863,17 @@ const styles = StyleSheet.create({
   txTenant: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   txSub: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   txDate: {
     fontSize: 11,
-    color: Colors.textDisabled,
     marginTop: 4,
   },
   txAmount: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
 });

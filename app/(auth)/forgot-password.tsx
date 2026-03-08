@@ -3,10 +3,12 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
+import { GradientButton } from '@/components/GradientButton';
+import { useTheme } from '@/lib/theme-context';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,22 +34,19 @@ export default function ForgotPasswordScreen() {
 
   if (sent) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.sentBox}>
           <Text style={styles.sentIcon}>📬</Text>
-          <Text style={styles.sentTitle}>Check your inbox</Text>
-          <Text style={styles.sentBody}>
+          <Text style={[styles.sentTitle, { color: colors.textPrimary }]}>Check your inbox</Text>
+          <Text style={[styles.sentBody, { color: colors.textSecondary }]}>
             A password reset link has been sent to{'\n'}
-            <Text style={styles.sentEmail}>{email}</Text>
+            <Text style={{ color: colors.primary, fontWeight: '600' }}>{email}</Text>
           </Text>
-          <Button
-            mode="contained"
+          <GradientButton
+            title="Back to Sign In"
             onPress={() => router.back()}
-            style={styles.button}
-            buttonColor={Colors.primary}
-          >
-            Back to Sign In
-          </Button>
+            style={{ marginTop: 4, alignSelf: 'stretch' }}
+          />
         </View>
       </View>
     );
@@ -55,12 +54,12 @@ export default function ForgotPasswordScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.inner}>
-        <Text style={styles.title}>Forgot Password?</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Forgot Password?</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Enter your email and we'll send you a link to reset your password.
         </Text>
 
@@ -72,29 +71,25 @@ export default function ForgotPasswordScreen() {
           autoCapitalize="none"
           autoComplete="email"
           mode="outlined"
-          style={styles.input}
-          outlineColor={Colors.border}
-          activeOutlineColor={Colors.primary}
+          style={{ backgroundColor: colors.surface }}
+          outlineColor={colors.border}
+          activeOutlineColor={colors.primary}
         />
 
         {!!error && <HelperText type="error" visible>{error}</HelperText>}
 
-        <Button
-          mode="contained"
+        <GradientButton
+          title="Send Reset Link"
           onPress={handleReset}
           loading={loading}
           disabled={loading}
-          style={styles.button}
-          buttonColor={Colors.primary}
-          contentStyle={styles.buttonContent}
-        >
-          Send Reset Link
-        </Button>
+          style={{ marginTop: 4 }}
+        />
 
         <Button
           mode="text"
           onPress={() => router.back()}
-          textColor={Colors.textSecondary}
+          textColor={colors.textSecondary}
           style={{ marginTop: 4 }}
         >
           Back to Sign In
@@ -105,7 +100,7 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   inner: {
     flex: 1,
     justifyContent: 'center',
@@ -115,19 +110,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
   },
-  input: { backgroundColor: Colors.surface },
-  button: { marginTop: 4 },
-  buttonContent: { paddingVertical: 6 },
-  // Sent state
   sentBox: {
     flex: 1,
     justifyContent: 'center',
@@ -139,15 +128,12 @@ const styles = StyleSheet.create({
   sentTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
   sentBody: {
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 8,
   },
-  sentEmail: { color: Colors.primary, fontWeight: '600' },
 });

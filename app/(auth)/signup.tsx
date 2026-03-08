@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Text, TextInput, Button, HelperText } from 'react-native-paper';
+import { Text, TextInput, HelperText } from 'react-native-paper';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
 import { savePinSession } from '@/lib/biometric-auth';
+import { GradientButton } from '@/components/GradientButton';
+import { useTheme } from '@/lib/theme-context';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -41,7 +43,6 @@ export default function SignupScreen() {
       return;
     }
 
-    // Auto-sign in immediately — email is auto-confirmed via DB trigger
     const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -53,7 +54,6 @@ export default function SignupScreen() {
       return;
     }
 
-    // Offer PIN setup after signup
     if (data.session?.refresh_token) {
       await savePinSession(data.session.refresh_token);
       router.replace('/pin-setup');
@@ -65,13 +65,13 @@ export default function SignupScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.title}>Create Account</Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>Start managing your properties</Text>
+          <Text variant="headlineMedium" style={[styles.title, { color: colors.primary }]}>Create Account</Text>
+          <Text variant="bodyLarge" style={{ color: colors.textSecondary, marginTop: 8 }}>Start managing your properties</Text>
         </View>
 
         <View style={styles.form}>
@@ -81,7 +81,7 @@ export default function SignupScreen() {
             onChangeText={setFullName}
             autoComplete="name"
             mode="outlined"
-            style={styles.input}
+            style={{ backgroundColor: colors.surface }}
           />
 
           <TextInput
@@ -92,7 +92,7 @@ export default function SignupScreen() {
             autoCapitalize="none"
             autoComplete="email"
             mode="outlined"
-            style={styles.input}
+            style={{ backgroundColor: colors.surface }}
           />
 
           <TextInput
@@ -102,7 +102,7 @@ export default function SignupScreen() {
             keyboardType="phone-pad"
             autoComplete="tel"
             mode="outlined"
-            style={styles.input}
+            style={{ backgroundColor: colors.surface }}
           />
 
           <TextInput
@@ -117,7 +117,7 @@ export default function SignupScreen() {
               />
             }
             mode="outlined"
-            style={styles.input}
+            style={{ backgroundColor: colors.surface }}
           />
 
           {!!error && (
@@ -126,23 +126,20 @@ export default function SignupScreen() {
             </HelperText>
           )}
 
-          <Button
-            mode="contained"
+          <GradientButton
+            title="Create Account"
             onPress={handleSignup}
             loading={loading}
             disabled={loading}
-            style={styles.button}
-            contentStyle={styles.buttonContent}
-          >
-            Create Account
-          </Button>
+            style={{ marginTop: 8 }}
+          />
 
           <View style={styles.footer}>
-            <Text variant="bodyMedium" style={styles.footerText}>
+            <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
               Already have an account?{' '}
             </Text>
             <Link href="/(auth)/login" asChild>
-              <Text variant="bodyMedium" style={styles.link}>Sign In</Text>
+              <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: '600' }}>Sign In</Text>
             </Link>
           </View>
         </View>
@@ -154,7 +151,6 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scroll: {
     flexGrow: 1,
@@ -166,35 +162,14 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   title: {
-    color: Colors.primary,
     fontWeight: '700',
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    marginTop: 8,
   },
   form: {
     gap: 12,
-  },
-  input: {
-    backgroundColor: Colors.surface,
-  },
-  button: {
-    marginTop: 8,
-  },
-  buttonContent: {
-    paddingVertical: 6,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 16,
-  },
-  footerText: {
-    color: Colors.textSecondary,
-  },
-  link: {
-    color: Colors.primary,
-    fontWeight: '600',
   },
 });

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Linking, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -7,12 +7,23 @@ import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
 import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
 import { isPinSet, disablePin } from '@/lib/biometric-auth';
+import { useTheme, useThemeToggle } from '@/lib/theme-context';
+import { GlassCard } from '@/components/GlassCard';
+import { GradientButton } from '@/components/GradientButton';
+import type { ThemeMode } from '@/lib/store';
+
+const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
+  { label: 'Light', value: 'light' },
+  { label: 'Dark', value: 'dark' },
+  { label: 'System', value: 'system' },
+];
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { colors, gradients, shadows, isDark } = useTheme();
+  const { mode: themeMode, setMode: setThemeMode } = useThemeToggle();
   const { user, setUser, resetOnboarding } = useAuthStore();
   const [fullName, setFullName] = useState(user?.full_name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -72,9 +83,6 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     setLoggingOut(true);
-    // Full sign-out — clears the Supabase session. AuthGuard will see
-    // session = null and route to /login. The PIN screen is NOT shown
-    // after logout because there is no session to unlock.
     await supabase.auth.signOut();
     setLoggingOut(false);
   }
@@ -84,7 +92,6 @@ export default function ProfileScreen() {
     setLinkingTelegram(true);
     try {
       const token = await generateTelegramLinkToken(user.id);
-      // Refresh user to persist the token state locally
       const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
       if (data) setUser(data);
 
@@ -136,28 +143,30 @@ export default function ProfileScreen() {
   const telegramLinked = !!user?.telegram_chat_id;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       {/* Avatar gradient header */}
       <LinearGradient
-        colors={Colors.gradientHero as [string, string]}
+        colors={gradients.hero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.avatarGradient}
       >
         <View style={styles.avatar}>
-          <Text style={styles.avatarLabel}>{initials}</Text>
+          <Text style={[styles.avatarLabel, { color: colors.primary }]}>{initials}</Text>
         </View>
         <Text style={styles.name}>{user?.full_name ?? 'User'}</Text>
         <Text style={styles.email}>{user?.email}</Text>
       </LinearGradient>
 
       {/* Edit Profile section */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Edit Profile</Text>
+      <GlassCard style={[styles.sectionCard, { marginTop: 0 }]}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Edit Profile</Text>
         <TextInput
           label="Full Name"
           value={fullName}
           onChangeText={setFullName}
           mode="outlined"
-          style={styles.input}
+          style={{ backgroundColor: colors.surface }}
         />
         <TextInput
           label="Phone"
@@ -165,40 +174,38 @@ export default function ProfileScreen() {
           onChangeText={setPhone}
           keyboardType="phone-pad"
           mode="outlined"
-          style={styles.input}
+          style={{ backgroundColor: colors.surface }}
         />
         <TextInput
           label="Email"
           value={user?.email ?? ''}
           mode="outlined"
-          style={styles.input}
+          style={{ backgroundColor: colors.surface }}
           disabled
         />
-        <Button
-          mode="contained"
+        <GradientButton
+          title="Save Changes"
           onPress={handleSave}
           loading={saving}
           disabled={saving}
-          style={styles.saveButton}
-        >
-          Save Changes
-        </Button>
-      </View>
+          style={{ marginTop: 4 }}
+        />
+      </GlassCard>
 
       {/* Telegram Bot section */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Telegram Bot</Text>
+      <GlassCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Telegram Bot</Text>
         <View style={styles.telegramRow}>
-          <Text variant="bodyMedium" style={styles.telegramLabel}>Status</Text>
+          <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>Status</Text>
           <Chip
             compact
-            style={telegramLinked ? styles.chipLinked : styles.chipUnlinked}
-            textStyle={{ color: telegramLinked ? Colors.statusConfirmed : Colors.textSecondary, fontSize: 12 }}
+            style={{ backgroundColor: telegramLinked ? colors.statusConfirmedSoft : colors.border }}
+            textStyle={{ color: telegramLinked ? colors.statusConfirmed : colors.textSecondary, fontSize: 12 }}
           >
             {telegramLinked ? 'Linked' : 'Not linked'}
           </Chip>
         </View>
-        <Text variant="bodySmall" style={styles.telegramHint}>
+        <Text variant="bodySmall" style={{ color: colors.textSecondary, fontSize: 13 }}>
           {telegramLinked
             ? 'You can chat with Dwella Assistant directly on Telegram.'
             : 'Link your Telegram to chat with Dwella Assistant and receive rent reminders on Telegram.'}
@@ -210,8 +217,8 @@ export default function ProfileScreen() {
             onPress={handleUnlinkTelegram}
             loading={unlinkingTelegram}
             disabled={unlinkingTelegram}
-            textColor={Colors.error}
-            style={[styles.telegramBtn, { borderColor: Colors.error }]}
+            textColor={colors.error}
+            style={{ marginTop: 4, borderColor: colors.error }}
           >
             Unlink Telegram
           </Button>
@@ -222,21 +229,21 @@ export default function ProfileScreen() {
             onPress={handleLinkTelegram}
             loading={linkingTelegram}
             disabled={linkingTelegram}
-            style={styles.telegramBtn}
+            style={{ marginTop: 4 }}
           >
             Link Telegram
           </Button>
         )}
-      </View>
+      </GlassCard>
 
       {/* Security section */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Security</Text>
+      <GlassCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Security</Text>
         <Button
           mode="outlined"
           icon="lock-outline"
           onPress={handleSetupPin}
-          style={styles.pinBtn}
+          style={{ marginTop: 4 }}
         >
           {pinReady ? 'Change PIN' : 'Set Up PIN'}
         </Button>
@@ -245,16 +252,46 @@ export default function ProfileScreen() {
             mode="text"
             icon="lock-open-outline"
             onPress={handleRemovePin}
-            textColor={Colors.error}
+            textColor={colors.error}
           >
             Remove PIN
           </Button>
         )}
-      </View>
+      </GlassCard>
 
-      {/* App Tour */}
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Help</Text>
+      {/* Appearance section */}
+      <GlassCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Appearance</Text>
+        <View style={styles.themePills}>
+          {THEME_OPTIONS.map((opt) => {
+            const active = themeMode === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                style={[
+                  styles.themePill,
+                  { borderColor: colors.border, backgroundColor: colors.surface },
+                  active && { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+                ]}
+                onPress={() => setThemeMode(opt.value)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.themePillText,
+                  { color: colors.textSecondary },
+                  active && { color: colors.primary, fontWeight: '700' },
+                ]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </GlassCard>
+
+      {/* Help section */}
+      <GlassCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Help</Text>
         <Button
           mode="outlined"
           icon="play-circle-outline"
@@ -262,19 +299,19 @@ export default function ProfileScreen() {
             resetOnboarding();
             router.push('/onboarding');
           }}
-          style={styles.pinBtn}
+          style={{ marginTop: 4 }}
         >
           Replay App Tour
         </Button>
-      </View>
+      </GlassCard>
 
       <Button
         mode="outlined"
         onPress={handleLogout}
         loading={loggingOut}
         disabled={loggingOut}
-        textColor={Colors.error}
-        style={styles.logoutButton}
+        textColor={colors.error}
+        style={[styles.logoutButton, { borderColor: colors.error }]}
       >
         Sign Out
       </Button>
@@ -285,7 +322,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     paddingBottom: 32,
@@ -310,46 +346,30 @@ const styles = StyleSheet.create({
   avatarLabel: {
     fontSize: 28,
     fontWeight: '700',
-    color: Colors.primary,
   },
   name: {
     fontSize: 20,
     fontWeight: '700',
-    color: Colors.textOnGradient,
+    color: '#fff',
   },
   email: {
     fontSize: 14,
-    color: Colors.textOnGradientMuted,
+    color: 'rgba(255,255,255,0.75)',
   },
   sectionCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     marginHorizontal: 16,
     gap: 12,
-    shadowColor: '#00796B',
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 3,
   },
   sectionTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 2,
   },
-  input: {
-    backgroundColor: Colors.surface,
-  },
-  saveButton: {
-    marginTop: 4,
-  },
   logoutButton: {
-    borderColor: Colors.error,
     marginTop: 4,
     marginHorizontal: 16,
     marginBottom: 8,
@@ -359,10 +379,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  telegramLabel: { color: Colors.textPrimary },
-  telegramHint: { color: Colors.textSecondary, fontSize: 13 },
-  chipLinked: { backgroundColor: Colors.statusConfirmedSoft },
-  chipUnlinked: { backgroundColor: Colors.border },
-  telegramBtn: { marginTop: 4 },
-  pinBtn: { marginTop: 4 },
+  // Theme pills
+  themePills: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  themePill: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  themePillText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });
