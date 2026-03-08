@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
-const TAB_HEIGHT = Platform.select({ ios: 64, android: 72, default: 72 })!;
+const TAB_HEIGHT = Platform.select({ ios: 80, android: 88, default: 88 })!;
 const CIRCLE_RADIUS = 30;
 const ASSISTANT_RADIUS = 26;
 
