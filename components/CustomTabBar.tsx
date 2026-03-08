@@ -9,8 +9,7 @@ const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
 const TAB_CONFIG: Record<string, { label: string; icon: string; iconOutline: string }> = {
   'dashboard/index': { label: 'Home',       icon: 'view-dashboard',  iconOutline: 'view-dashboard-outline' },
   properties:        { label: 'Properties',  icon: 'home-city',       iconOutline: 'home-city-outline' },
-  'payments/index':  { label: 'Payments',    icon: 'receipt',         iconOutline: 'text-box-outline' },
-  'expenses/index':  { label: 'Expenses',    icon: 'cash-minus',      iconOutline: 'cash-minus' },
+  'tools/index':     { label: 'Tools',       icon: 'toolbox',         iconOutline: 'toolbox-outline' },
   'bot/index':       { label: 'Assistant',   icon: 'robot',           iconOutline: 'robot-outline' },
 };
 
