@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
 const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
@@ -19,6 +20,7 @@ const RIGHT_TABS = ['tools/index', 'bot/index'];
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   const routeMap = new Map(state.routes.map((r) => [r.name, r]));
 
@@ -68,7 +70,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         {/* Log Payment — center slot */}
         <Pressable
           style={styles.tab}
-          onPress={() => navigation.getParent()?.navigate('log-payment')}
+          onPress={() => router.push('/log-payment')}
         >
           <View style={styles.fabCircle}>
             <MaterialCommunityIcons name="plus" size={22} color="#fff" />
