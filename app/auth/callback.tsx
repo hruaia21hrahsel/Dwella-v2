@@ -1,21 +1,48 @@
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme-context';
 
 /**
- * This screen handles the OAuth deep-link redirect: dwella://auth/callback
+ * Handles dwella://auth/callback deep links from Supabase OAuth.
  *
- * After Google/Apple sign-in, Supabase redirects to dwella://auth/callback#access_token=...
- * Expo Router routes that deep link here. Calling maybeCompleteAuthSession() signals
- * expo-web-browser to close the in-app browser and hand the tokens back to
- * the openAuthSessionAsync() caller in lib/social-auth.ts.
+ * Two scenarios:
+ * 1. App is in foreground — openAuthSessionAsync catches the redirect
+ *    before it reaches this screen. This screen is a safety fallback.
+ * 2. App was cold-launched via the deep link — this screen receives
+ *    the full URL and exchanges the code for a session.
  */
 export default function AuthCallbackScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
+  // Expo Router passes the full URL params here
+  const params = useLocalSearchParams<{ code?: string; error?: string }>();
 
   useEffect(() => {
-    WebBrowser.maybeCompleteAuthSession();
+    async function handleCallback() {
+      if (params.error) {
+        router.replace('/(auth)/login');
+        return;
+      }
+
+      if (params.code) {
+        // Build the full callback URL so Supabase can verify the PKCE code
+        const url = `dwella://auth/callback?code=${params.code}`;
+        const { error } = await supabase.auth.exchangeCodeForSession(url);
+        if (error) {
+          console.warn('OAuth callback error:', error.message);
+          router.replace('/(auth)/login');
+        }
+        // onAuthStateChange in _layout.tsx handles routing after session is set
+        return;
+      }
+
+      // No code — back to login
+      router.replace('/(auth)/login');
+    }
+
+    handleCallback();
   }, []);
 
   return (
