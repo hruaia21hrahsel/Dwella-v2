@@ -78,6 +78,9 @@ export default function PaymentsScreen() {
   const [sortKey, setSortKey] = useState<SortKey>('date_desc');
   const [sortModalVisible, setSortModalVisible] = useState(false);
 
+  // Period picker
+  const [periodPickerVisible, setPeriodPickerVisible] = useState(false);
+
   const isLandlord = ownedProperties.length > 0;
 
   // Build property list
@@ -225,49 +228,20 @@ export default function PaymentsScreen() {
       >
         {/* ── Filters ── */}
         <View style={styles.filterSection}>
-          {/* Year selector */}
-          <View style={styles.yearRow}>
+          {/* Title + period dropdown */}
+          <View style={styles.titleRow}>
             <Text style={styles.pageTitle}>Payment History</Text>
-            <View style={styles.yearPicker}>
-              <TouchableOpacity onPress={() => setFilterYear((y) => y - 1)} hitSlop={8}>
-                <MaterialCommunityIcons name="chevron-left" size={20} color={Colors.textSecondary} />
-              </TouchableOpacity>
-              <Text style={styles.yearText}>{filterYear}</Text>
-              <TouchableOpacity
-                onPress={() => setFilterYear((y) => Math.min(currentYear, y + 1))}
-                disabled={filterYear >= currentYear}
-                hitSlop={8}
-              >
-                <MaterialCommunityIcons
-                  name="chevron-right"
-                  size={20}
-                  color={filterYear >= currentYear ? Colors.textDisabled : Colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Month filter */}
-          <View style={styles.monthRow}>
             <TouchableOpacity
-              style={[styles.monthChip, filterMonth === null && styles.monthChipActive]}
-              onPress={() => selectMonth(null)}
+              style={styles.periodBtn}
+              onPress={() => setPeriodPickerVisible(true)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.monthChipText, filterMonth === null && styles.monthChipTextActive]}>All</Text>
+              <MaterialCommunityIcons name="calendar-month-outline" size={16} color={Colors.primary} />
+              <Text style={styles.periodBtnText}>
+                {filterMonth !== null ? `${MONTH_SHORT[filterMonth - 1]} ${filterYear}` : `All ${filterYear}`}
+              </Text>
+              <MaterialCommunityIcons name="chevron-down" size={16} color={Colors.primary} />
             </TouchableOpacity>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => (
-              <TouchableOpacity
-                key={m}
-                style={[styles.monthChip, filterMonth === m && styles.monthChipActive]}
-                onPress={() => selectMonth(m)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.monthChipText, filterMonth === m && styles.monthChipTextActive]}>
-                  {MONTH_SHORT[m - 1]}
-                </Text>
-              </TouchableOpacity>
-            ))}
           </View>
 
           {/* Property filter */}
@@ -455,6 +429,75 @@ export default function PaymentsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+      {/* ── Period Picker Modal ── */}
+      <Modal
+        visible={periodPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPeriodPickerVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setPeriodPickerVisible(false)}
+        >
+          <View style={styles.periodSheet}>
+            {/* Year selector */}
+            <View style={styles.periodYearRow}>
+              <TouchableOpacity onPress={() => setFilterYear((y) => y - 1)} hitSlop={8}>
+                <MaterialCommunityIcons name="chevron-left" size={24} color={Colors.textSecondary} />
+              </TouchableOpacity>
+              <Text style={styles.periodYearText}>{filterYear}</Text>
+              <TouchableOpacity
+                onPress={() => setFilterYear((y) => Math.min(currentYear, y + 1))}
+                disabled={filterYear >= currentYear}
+                hitSlop={8}
+              >
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={filterYear >= currentYear ? Colors.textDisabled : Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Month grid */}
+            <View style={styles.periodMonthGrid}>
+              <TouchableOpacity
+                style={[styles.periodMonthChip, filterMonth === null && styles.periodMonthChipActive]}
+                onPress={() => { setFilterMonth(null); setPeriodPickerVisible(false); }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.periodMonthText, filterMonth === null && styles.periodMonthTextActive]}>
+                  All
+                </Text>
+              </TouchableOpacity>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => {
+                const active = filterMonth === m;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[styles.periodMonthChip, active && styles.periodMonthChipActive]}
+                    onPress={() => { setFilterMonth(m); setPeriodPickerVisible(false); }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.periodMonthText, active && styles.periodMonthTextActive]}>
+                      {MONTH_SHORT[m - 1]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={styles.periodCancel}
+              onPress={() => setPeriodPickerVisible(false)}
+            >
+              <Text style={styles.periodCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </>
   );
 }
@@ -468,7 +511,7 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 14,
   },
-  yearRow: {
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -478,47 +521,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.textPrimary,
   },
-  yearPicker: {
+  periodBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-  },
-  yearText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginHorizontal: 6,
-  },
-  monthRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 6,
-  },
-  monthChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  monthChipActive: {
     borderColor: Colors.primary,
-    backgroundColor: Colors.primary + '14',
+    backgroundColor: Colors.primarySoft,
   },
-  monthChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  monthChipTextActive: {
-    color: Colors.primary,
+  periodBtnText: {
+    fontSize: 13,
     fontWeight: '700',
+    color: Colors.primary,
   },
   filterRow: {
     flexDirection: 'row',
@@ -694,6 +711,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sortCancelText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+
+  // Period picker modal
+  periodSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    paddingBottom: 36,
+  },
+  periodYearRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 16,
+  },
+  periodYearText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    minWidth: 60,
+    textAlign: 'center',
+  },
+  periodMonthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  periodMonthChip: {
+    width: 70,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+  },
+  periodMonthChipActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '14',
+  },
+  periodMonthText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  periodMonthTextActive: {
+    color: Colors.primary,
+    fontWeight: '700',
+  },
+  periodCancel: {
+    paddingVertical: 14,
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    alignItems: 'center',
+  },
+  periodCancelText: {
     fontSize: 14,
     color: Colors.textSecondary,
   },
