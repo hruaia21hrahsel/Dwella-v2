@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
 import { Text, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
-import { PropertyCard } from '@/components/PropertyCard';
+import { PropertyCard, TenantSummary } from '@/components/PropertyCard';
 import { EmptyState } from '@/components/EmptyState';
 import { ListSkeleton } from '@/components/ListSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -20,6 +21,42 @@ export default function PropertiesScreen() {
   const { ownedProperties, tenantProperties, isLoading, error, refresh } = useProperties();
   const [archiveTarget, setArchiveTarget] = useState<Property | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Tenants grouped by property
+  const [tenantsByProperty, setTenantsByProperty] = useState<Record<string, TenantSummary[]>>({});
+
+  const fetchTenants = useCallback(async () => {
+    if (ownedProperties.length === 0) return;
+    const { data } = await supabase
+      .from('tenants')
+      .select('id, tenant_name, flat_no, monthly_rent, invite_status, property_id')
+      .in('property_id', ownedProperties.map((p) => p.id))
+      .eq('is_archived', false)
+      .order('tenant_name');
+
+    const grouped: Record<string, TenantSummary[]> = {};
+    for (const t of data ?? []) {
+      if (!grouped[t.property_id]) grouped[t.property_id] = [];
+      grouped[t.property_id].push({
+        id: t.id,
+        tenant_name: t.tenant_name,
+        flat_no: t.flat_no,
+        monthly_rent: t.monthly_rent,
+        invite_status: t.invite_status as 'pending' | 'accepted',
+      });
+    }
+    // Ensure empty arrays for properties with no tenants
+    for (const p of ownedProperties) {
+      if (!grouped[p.id]) grouped[p.id] = [];
+    }
+    setTenantsByProperty(grouped);
+  }, [ownedProperties]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchTenants();
+    }, [fetchTenants])
+  );
 
   const handleAddProperty = useCallback(() => {
     router.push('/property/create');
@@ -54,7 +91,7 @@ export default function PropertiesScreen() {
           style={styles.scroll}
           contentContainerStyle={styles.content}
           refreshControl={
-            <RefreshControl refreshing={isLoading} onRefresh={refresh} />
+            <RefreshControl refreshing={isLoading} onRefresh={() => { refresh(); fetchTenants(); }} />
           }
         >
           <ErrorBanner error={error} onRetry={refresh} />
@@ -75,9 +112,11 @@ export default function PropertiesScreen() {
               <AnimatedCard key={property.id} index={index}>
                 <PropertyCard
                   property={property}
+                  tenants={tenantsByProperty[property.id]}
                   onPress={() => router.push(`/(tabs)/properties/${property.id}`)}
                   onEdit={() => router.push({ pathname: '/property/create', params: { id: property.id } })}
                   onDelete={() => setArchiveTarget(property)}
+                  onTenantPress={(tenantId) => router.push(`/property/${property.id}/tenant/${tenantId}`)}
                 />
               </AnimatedCard>
             ))
