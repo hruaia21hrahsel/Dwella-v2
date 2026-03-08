@@ -2,11 +2,10 @@ import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
 const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
-const FAB_SIZE = 48;
 
 const TAB_CONFIG: Record<string, { label: string; icon: string; iconOutline: string }> = {
   'dashboard/index': { label: 'Home',       icon: 'view-dashboard',  iconOutline: 'view-dashboard-outline' },
@@ -18,7 +17,6 @@ const TAB_CONFIG: Record<string, { label: string; icon: string; iconOutline: str
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
 
   const visibleRoutes = state.routes.filter((r) => TAB_CONFIG[r.name]);
 
@@ -59,20 +57,20 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      {/* Tab bar row */}
       <View style={styles.bar}>
         {visibleRoutes.map((r) => <TabButton key={r.key} route={r} />)}
-      </View>
 
-      {/* Floating FAB — Log Payment */}
-      <Pressable
-        style={styles.fab}
-        onPress={() => router.push('/log-payment' as any)}
-      >
-        <View style={styles.fabCircle}>
-          <MaterialCommunityIcons name="plus" size={24} color="#fff" />
-        </View>
-      </Pressable>
+        {/* Log Payment — inside the bar so it always receives touches */}
+        <Pressable
+          style={styles.fab}
+          onPress={() => router.push('/log-payment')}
+        >
+          <View style={styles.fabCircle}>
+            <MaterialCommunityIcons name="plus" size={22} color="#fff" />
+          </View>
+          <Text style={styles.fabLabel}>Log</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -104,22 +102,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   fab: {
-    position: 'absolute',
-    top: -FAB_SIZE / 2,
-    right: 16,
-    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    gap: 4,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   fabCircle: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.primaryDark,
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
-    elevation: 8,
+  },
+  fabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.primary,
+    letterSpacing: 0.1,
   },
 });
