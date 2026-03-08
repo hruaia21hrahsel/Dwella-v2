@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, IconButton, ActivityIndicator, Chip, Button } from 'react-native-paper';
+import { Text, IconButton, ActivityIndicator, Chip, Button, Icon } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
 import { useTenants } from '@/hooks/useTenants';
+import { useExpenses } from '@/hooks/useExpenses';
 import { TenantCard } from '@/components/TenantCard';
 import { EmptyState } from '@/components/EmptyState';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -12,6 +13,7 @@ import { Colors } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
+import { getCategoryLabel, getCategoryIcon, getCategoryColor } from '@/lib/expenses';
 
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,6 +21,7 @@ export default function PropertyDetailScreen() {
   const { user, bumpPropertyRefresh } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
+  const { expenses } = useExpenses(id ?? null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -165,19 +168,74 @@ export default function PropertyDetailScreen() {
           )}
         </View>
 
-        {/* Expenses Link (owner only) */}
+        {/* Expenses (owner only) */}
         {isOwner && (
-          <TouchableOpacity
-            style={styles.expensesLink}
-            onPress={() => router.push(`/property/${id}/expenses`)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.expensesLinkLeft}>
-              <IconButton icon="cash-minus" size={20} iconColor={Colors.primary} style={styles.expensesIcon} />
-              <Text variant="titleSmall" style={styles.expensesLinkText}>Expenses</Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Expenses</Text>
+              <TouchableOpacity
+                style={styles.addExpenseBtn}
+                onPress={() => router.push(`/property/${id}/expenses/add`)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons name="plus" size={16} color="#fff" />
+                <Text style={styles.addExpenseBtnText}>Add</Text>
+              </TouchableOpacity>
             </View>
-            <IconButton icon="chevron-right" size={20} iconColor={Colors.textSecondary} />
-          </TouchableOpacity>
+
+            {expenses.length === 0 ? (
+              <View style={styles.expenseEmptyCard}>
+                <MaterialCommunityIcons name="cash-minus" size={24} color={Colors.textDisabled} />
+                <Text style={styles.expenseEmptyText}>No expenses logged yet</Text>
+              </View>
+            ) : (
+              <>
+                {expenses.slice(0, 5).map((e) => {
+                  const color = getCategoryColor(e.category);
+                  const icon = getCategoryIcon(e.category);
+                  const label = getCategoryLabel(e.category);
+                  const dateStr = new Date(e.expense_date).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                  });
+
+                  return (
+                    <TouchableOpacity
+                      key={e.id}
+                      style={styles.expenseRow}
+                      onPress={() => router.push(`/property/${id}/expenses/${e.id}`)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.expenseIconBox, { backgroundColor: color + '18' }]}>
+                        <Icon source={icon} size={16} color={color} />
+                      </View>
+                      <View style={styles.expenseInfo}>
+                        <Text style={styles.expenseCat}>{label}</Text>
+                        {e.description ? (
+                          <Text style={styles.expenseDesc} numberOfLines={1}>{e.description}</Text>
+                        ) : null}
+                      </View>
+                      <View style={styles.expenseRight}>
+                        <Text style={styles.expenseAmount}>{formatCurrency(e.amount)}</Text>
+                        <Text style={styles.expenseDate}>{dateStr}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {expenses.length > 5 && (
+                  <TouchableOpacity
+                    style={styles.viewAllBtn}
+                    onPress={() => router.push(`/property/${id}/expenses`)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.viewAllText}>View all {expenses.length} expenses</Text>
+                    <MaterialCommunityIcons name="chevron-right" size={16} color={Colors.primary} />
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </View>
         )}
 
         {property.notes ? (
@@ -324,22 +382,88 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textTransform: 'uppercase',
   },
-  expensesLink: {
+  addExpenseBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 4,
+    backgroundColor: Colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  addExpenseBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  expenseEmptyCard: {
     backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.border,
-    paddingRight: 4,
+    padding: 20,
+    alignItems: 'center',
+    gap: 6,
   },
-  expensesLinkLeft: {
+  expenseEmptyText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  expenseRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 10,
   },
-  expensesIcon: { margin: 0 },
-  expensesLinkText: { color: Colors.textPrimary, fontWeight: '600' },
+  expenseIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expenseInfo: {
+    flex: 1,
+    gap: 1,
+  },
+  expenseCat: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  expenseDesc: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  expenseRight: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  expenseAmount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  expenseDate: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 8,
+  },
+  viewAllText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
   actionButtons: {
     gap: 10,
     marginTop: 8,
