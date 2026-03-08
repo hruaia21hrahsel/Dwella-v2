@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ScrollView,
   View,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Dimensions,
   Linking,
+  AppState,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -84,6 +85,19 @@ export default function DashboardScreen() {
   const [linkingTelegram, setLinkingTelegram] = useState(false);
 
   const telegramLinked = !!user?.telegram_chat_id;
+
+  // Re-fetch user when app returns to foreground (e.g. after linking Telegram)
+  const appState = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', async (nextState) => {
+      if (appState.current.match(/inactive|background/) && nextState === 'active' && user && !user.telegram_chat_id) {
+        const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+        if (data?.telegram_chat_id) setUser(data);
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, [user, setUser]);
 
   const handleLinkTelegram = useCallback(async () => {
     if (!user) return;
