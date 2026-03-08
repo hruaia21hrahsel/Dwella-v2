@@ -36,7 +36,8 @@ export default function AuthCallbackScreen() {
       const { access_token, refresh_token } = params;
       if (access_token && refresh_token) {
         await supabase.auth.setSession({ access_token, refresh_token });
-        // onAuthStateChange in _layout.tsx handles routing
+        // AuthGuard in _layout.tsx should redirect, but as a safety net:
+        router.replace('/(tabs)/dashboard');
       } else {
         router.replace('/(auth)/login');
       }

@@ -101,7 +101,7 @@ function AuthGuard() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
+    const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'auth';
     const inOnboarding = segments[0] === 'onboarding';
 
     if (!session) {
