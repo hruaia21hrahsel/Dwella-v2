@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, IconButton, ActivityIndicator } from 'react-native-paper';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
@@ -8,20 +8,16 @@ import { useTenants } from '@/hooks/useTenants';
 
 import { TenantCard } from '@/components/TenantCard';
 import { EmptyState } from '@/components/EmptyState';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { Colors } from '@/constants/colors';
-import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user, bumpPropertyRefresh } = useAuthStore();
+  const { user } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
-  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const property = ownedProperties.find((p) => p.id === id);
   const isOwner = property?.owner_id === user?.id;
@@ -38,28 +34,6 @@ export default function PropertyDetailScreen() {
   function handleRefresh() {
     refreshProps();
     refreshTenants();
-  }
-
-  async function handleArchiveProperty() {
-    if (!id) return;
-    setDeleting(true);
-
-    // Archive all tenants first
-    await supabase
-      .from('tenants')
-      .update({ is_archived: true, archived_at: new Date().toISOString() })
-      .eq('property_id', id);
-
-    // Archive property
-    await supabase
-      .from('properties')
-      .update({ is_archived: true, archived_at: new Date().toISOString() })
-      .eq('id', id);
-
-    setDeleting(false);
-    setDeleteDialogVisible(false);
-    bumpPropertyRefresh();
-    router.back();
   }
 
   if (isLoading && !property) {
@@ -85,23 +59,6 @@ export default function PropertyDetailScreen() {
           title: property.name,
           headerTitleAlign: 'center',
           headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerRight: isOwner
-            ? () => (
-                <View style={styles.headerActions}>
-                  <IconButton
-                    icon="pencil"
-                    size={22}
-                    onPress={() => router.push({ pathname: '/property/create', params: { id } })}
-                  />
-                  <IconButton
-                    icon="delete"
-                    size={22}
-                    iconColor={Colors.error}
-                    onPress={() => setDeleteDialogVisible(true)}
-                  />
-                </View>
-              )
-            : undefined,
         }}
       />
 
@@ -180,39 +137,7 @@ export default function PropertyDetailScreen() {
           </View>
         ) : null}
 
-        {/* Edit & Delete buttons (owner only) */}
-        {isOwner && (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={styles.editBtn}
-              onPress={() => router.push({ pathname: '/property/create', params: { id } })}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="pencil-outline" size={18} color={Colors.primary} />
-              <Text style={styles.editBtnText}>Edit Property</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={() => setDeleteDialogVisible(true)}
-              activeOpacity={0.8}
-            >
-              <MaterialCommunityIcons name="delete-outline" size={18} color={Colors.error} />
-              <Text style={styles.deleteBtnText}>Archive Property</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </ScrollView>
-
-      <ConfirmDialog
-        visible={deleteDialogVisible}
-        title="Archive Property"
-        message={`Archive "${property.name}"? This will also archive all its tenants. This cannot be undone.`}
-        confirmLabel="Archive"
-        confirmColor={Colors.error}
-        loading={deleting}
-        onConfirm={handleArchiveProperty}
-        onCancel={() => setDeleteDialogVisible(false)}
-      />
     </>
   );
 }
@@ -230,9 +155,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerActions: {
-    flexDirection: 'row',
   },
   infoCard: {
     backgroundColor: Colors.surface,
@@ -316,42 +238,5 @@ const styles = StyleSheet.create({
   notesLabel: {
     color: Colors.textSecondary,
     textTransform: 'uppercase',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
-  },
-  editBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.primary,
-    paddingVertical: 12,
-  },
-  editBtnText: {
-    color: Colors.primary,
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  deleteBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.error,
-    paddingVertical: 12,
-  },
-  deleteBtnText: {
-    color: Colors.error,
-    fontWeight: '700',
-    fontSize: 13,
   },
 });
