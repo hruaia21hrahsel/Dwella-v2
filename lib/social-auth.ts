@@ -3,15 +3,12 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from './supabase';
 
-// Hardcoded — must match app.json scheme and Supabase allowed redirect URLs.
-// makeRedirectUri() is avoided because it can return exp:// in Expo Go or
-// triple-slash variants that break ASWebAuthenticationSession matching.
+// Must match app.json scheme + Supabase allowed redirect URLs.
 const REDIRECT_URI = 'dwella://auth/callback';
 
 /**
- * Sign in with Google via Supabase OAuth (PKCE flow).
- * Opens an in-app browser session; Supabase redirects back with ?code=...
- * which is exchanged for a session via exchangeCodeForSession().
+ * Sign in with Google via Supabase OAuth (implicit flow).
+ * Supabase redirects back to dwella://auth/callback#access_token=...
  */
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -28,9 +25,7 @@ export async function signInWithGoogle() {
   const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
 
   if (result.type === 'success' && result.url) {
-    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(result.url);
-    if (sessionError) throw sessionError;
-    return { success: true };
+    return handleOAuthRedirect(result.url);
   }
 
   return { success: false };
@@ -100,12 +95,35 @@ async function signInWithAppleWeb() {
   const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
 
   if (result.type === 'success' && result.url) {
-    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(result.url);
-    if (sessionError) throw sessionError;
-    return { success: true };
+    return handleOAuthRedirect(result.url);
   }
 
   return { success: false };
+}
+
+/**
+ * Parses tokens from the OAuth redirect URL (implicit flow returns them
+ * in the hash fragment: dwella://auth/callback#access_token=...&refresh_token=...)
+ * then sets the Supabase session.
+ */
+async function handleOAuthRedirect(url: string) {
+  // Hash fragment: #access_token=...&refresh_token=...&token_type=bearer&...
+  const hash = url.split('#')[1] ?? '';
+  const params: Record<string, string> = {};
+  for (const pair of hash.split('&')) {
+    const [key, val] = pair.split('=');
+    if (key && val) params[decodeURIComponent(key)] = decodeURIComponent(val);
+  }
+
+  const { access_token, refresh_token } = params;
+  if (!access_token || !refresh_token) {
+    throw new Error('OAuth redirect did not return tokens. Check Supabase provider config.');
+  }
+
+  const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+  if (error) throw error;
+
+  return { success: true };
 }
 
 /**

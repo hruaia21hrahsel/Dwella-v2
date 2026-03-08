@@ -1,45 +1,45 @@
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme-context';
 
 /**
- * Handles dwella://auth/callback deep links from Supabase OAuth.
+ * Handles dwella://auth/callback deep links (cold-launch fallback).
  *
- * Two scenarios:
- * 1. App is in foreground — openAuthSessionAsync catches the redirect
- *    before it reaches this screen. This screen is a safety fallback.
- * 2. App was cold-launched via the deep link — this screen receives
- *    the full URL and exchanges the code for a session.
+ * In the normal foreground flow, openAuthSessionAsync intercepts the
+ * dwella:// redirect before the app routes here. This screen handles
+ * the edge case where the app was backgrounded/killed and iOS cold-launches
+ * it via the deep link.
  */
 export default function AuthCallbackScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  // Expo Router passes the full URL params here
-  const params = useLocalSearchParams<{ code?: string; error?: string }>();
 
   useEffect(() => {
     async function handleCallback() {
-      if (params.error) {
+      const url = await Linking.getInitialURL();
+      if (!url) {
         router.replace('/(auth)/login');
         return;
       }
 
-      if (params.code) {
-        // Build the full callback URL so Supabase can verify the PKCE code
-        const url = `dwella://auth/callback?code=${params.code}`;
-        const { error } = await supabase.auth.exchangeCodeForSession(url);
-        if (error) {
-          console.warn('OAuth callback error:', error.message);
-          router.replace('/(auth)/login');
-        }
-        // onAuthStateChange in _layout.tsx handles routing after session is set
-        return;
+      // Implicit flow: tokens are in the hash fragment
+      const hash = url.split('#')[1] ?? '';
+      const params: Record<string, string> = {};
+      for (const pair of hash.split('&')) {
+        const [key, val] = pair.split('=');
+        if (key && val) params[decodeURIComponent(key)] = decodeURIComponent(val);
       }
 
-      // No code — back to login
-      router.replace('/(auth)/login');
+      const { access_token, refresh_token } = params;
+      if (access_token && refresh_token) {
+        await supabase.auth.setSession({ access_token, refresh_token });
+        // onAuthStateChange in _layout.tsx handles routing
+      } else {
+        router.replace('/(auth)/login');
+      }
     }
 
     handleCallback();
