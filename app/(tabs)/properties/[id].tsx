@@ -22,7 +22,7 @@ export default function PropertyDetailScreen() {
   const property = ownedProperties.find((p) => p.id === id);
   const isOwner = property?.owner_id === user?.id;
 
-  const occupiedCount = tenants.filter((t) => t.invite_status === 'accepted').length;
+  const occupiedCount = tenants.length;
 
   // Re-fetch tenants when screen regains focus
   useFocusEffect(
