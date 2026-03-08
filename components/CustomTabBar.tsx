@@ -62,7 +62,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     // overflow:visible so the FAB circle can protrude above the bar
-    <View style={[styles.container, { height: TAB_HEIGHT + insets.bottom }]}>
+    <View pointerEvents="box-none" style={[styles.container, { height: TAB_HEIGHT + insets.bottom + CIRCLE_RADIUS }]}>
       <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
         {left.map((r) => <TabButton key={r.key} route={r} />)}
 
