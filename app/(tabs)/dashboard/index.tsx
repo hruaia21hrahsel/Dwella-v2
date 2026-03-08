@@ -13,8 +13,12 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
+import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
+import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
+import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -71,6 +75,7 @@ function StatCard({ label, value, color }: StatCardProps) {
 }
 
 export default function DashboardScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user, setUser } = useAuthStore();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
@@ -187,6 +192,15 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      {/* Scrollable header */}
+      <View style={[styles.inlineHeader, { paddingTop: insets.top }]}>
+        <ProfileHeaderButton />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <DwellaHeaderTitle />
+        </View>
+        <NotificationsHeaderButton />
+      </View>
+
       <ErrorBanner error={error} onRetry={refresh} />
 
       {/* Hero gradient header */}
@@ -479,7 +493,16 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingTop: 0,
     paddingBottom: 40,
+  },
+  inlineHeader: {
+    backgroundColor: Colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 60,
+    marginHorizontal: -16,
+    marginBottom: 16,
   },
 
   // Hero

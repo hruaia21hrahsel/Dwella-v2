@@ -19,7 +19,7 @@ function TabsLayout() {
         ),
       }}
     >
-      <Tabs.Screen name="dashboard/index" options={{ title: 'Dashboard' }} />
+      <Tabs.Screen name="dashboard/index" options={{ title: 'Dashboard', headerShown: false }} />
       <Tabs.Screen name="properties"      options={{ title: 'Property' }} />
       <Tabs.Screen name="payments/index"  options={{ title: 'Payments' }} />
       <Tabs.Screen name="expenses/index"  options={{ title: 'Expenses' }} />
