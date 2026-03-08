@@ -7,7 +7,7 @@ export function LogPaymentTabButton() {
   const router = useRouter();
   return (
     <TouchableOpacity
-      onPress={() => router.push('/(tabs)/log-payment')}
+      onPress={() => router.push('/log-payment')}
       style={styles.wrapper}
       activeOpacity={0.85}
     >
