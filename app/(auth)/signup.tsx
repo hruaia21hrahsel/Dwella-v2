@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { savePinSession } from '@/lib/biometric-auth';
 import { DwellaLogo } from '@/components/DwellaLogo';
 import { GradientButton } from '@/components/GradientButton';
+import { SocialAuthButtons } from '@/components/SocialAuthButtons';
 import { useTheme } from '@/lib/theme-context';
 
 export default function SignupScreen() {
@@ -19,6 +20,7 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(false);
 
   async function handleSignup() {
     if (!fullName.trim() || !email.trim() || !password) {
@@ -171,9 +173,15 @@ export default function SignupScreen() {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-            <Text style={[styles.dividerText, { color: colors.textDisabled }]}>or</Text>
+            <Text style={[styles.dividerText, { color: colors.textDisabled }]}>or sign up with</Text>
             <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           </View>
+
+          <SocialAuthButtons
+            onError={setError}
+            onLoading={setSocialLoading}
+            disabled={loading || socialLoading}
+          />
 
           <View style={styles.footer}>
             <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
