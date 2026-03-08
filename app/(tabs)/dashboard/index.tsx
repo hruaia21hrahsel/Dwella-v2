@@ -35,8 +35,8 @@ import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 
 const SCREEN_W = Dimensions.get('window').width;
 // 6 circles per row, 2 rows = 12 months
-// Available: SCREEN_W - screen padding (32) - tenantBlock padding (24) - 5 gaps of 8px (40)
-const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 40) / 6);
+// Available: SCREEN_W - screen padding (32) - overviewSection padding (24) - overviewSection border (2) - tenantBlock padding (24) - 5 gaps of 8px (40)
+const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 2 - 24 - 40) / 6);
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -311,7 +311,7 @@ export default function DashboardScreen() {
       )}
 
       {/* Payment grid — always shown */}
-      <View style={[styles.tenantBlock, Shadows.sm]}>
+      <View style={styles.tenantBlock}>
         <View style={styles.monthGrid}>
           {MONTHS.map((m) => {
             const payment = selectedRow?.paymentsByMonth[m];
@@ -358,6 +358,9 @@ export default function DashboardScreen() {
           })}
         </View>
       </View>
+
+      </View>
+      {/* End overview section */}
 
       {/* Telegram CTA — only when not linked */}
       {!telegramLinked && (
@@ -417,9 +420,6 @@ export default function DashboardScreen() {
         <MaterialCommunityIcons name="bell-ring-outline" size={16} color={Colors.primary} style={{ marginRight: 6 }} />
         <Text style={styles.remindersBtnText}>Send Reminders</Text>
       </TouchableOpacity>
-
-      </View>
-      {/* End overview section */}
 
       {/* AI Nudge */}
       <AiInsightCard nudge={aiNudge} loading={aiNudgeLoading} />
@@ -587,14 +587,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     padding: 12,
-    marginBottom: 4,
+    gap: 8,
   },
   // Hero
   heroCard: {
-    borderRadius: 16,
+    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginBottom: 12,
   },
   heroTitleRow: {
     flexDirection: 'row',
@@ -631,7 +630,6 @@ const styles = StyleSheet.create({
   },
   // Selector rows
   selectorRow: {
-    marginBottom: 8,
   },
   selectorContent: {
     gap: 8,
@@ -673,9 +671,8 @@ const styles = StyleSheet.create({
   // Tenant payment block
   tenantBlock: {
     backgroundColor: Colors.primarySoft,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 12,
-    marginBottom: 4,
   },
   monthGrid: {
     flexDirection: 'row',
