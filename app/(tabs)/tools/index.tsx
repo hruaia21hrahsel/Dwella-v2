@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Shadows } from '@/constants/colors';
 
 const TOOLS = [
@@ -18,6 +17,27 @@ const TOOLS = [
     icon: 'cash-minus',
     route: '/(tabs)/expenses',
     color: Colors.statusPartial,
+  },
+  {
+    label: 'AI Insights',
+    description: 'AI-powered analytics and recommendations',
+    icon: 'chart-timeline-variant-shimmer',
+    route: '/tools/ai-insights',
+    color: '#8B5CF6',
+  },
+  {
+    label: 'Smart Reminders',
+    description: 'AI-drafted personalized rent reminders',
+    icon: 'bell-badge-outline',
+    route: '/tools/smart-reminders',
+    color: '#EC4899',
+  },
+  {
+    label: 'AI Search',
+    description: 'Search your data with natural language',
+    icon: 'text-search',
+    route: '/tools/ai-search',
+    color: '#0EA5E9',
   },
 ] as const;
 
