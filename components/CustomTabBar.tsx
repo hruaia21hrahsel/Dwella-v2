@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
-const TAB_HEIGHT = Platform.select({ ios: 52, android: 56, default: 56 })!;
+const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
 const FAB_SIZE = 48;
 
 const TAB_CONFIG: Record<string, { label: string; icon: string; iconOutline: string }> = {
@@ -96,8 +96,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    paddingTop: 6,
+    gap: 4,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   label: {
     fontSize: 10,
