@@ -8,7 +8,7 @@ import { useTenants } from '@/hooks/useTenants';
 
 import { TenantCard } from '@/components/TenantCard';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors } from '@/constants/colors';
+import { Colors, Shadows } from '@/constants/colors';
 import { useAuthStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 
@@ -23,6 +23,8 @@ export default function PropertyDetailScreen() {
   const isOwner = property?.owner_id === user?.id;
 
   const occupiedCount = tenants.length;
+  const totalRent = tenants.reduce((sum, t) => sum + t.monthly_rent, 0);
+  const vacantCount = (property?.total_units ?? 0) - occupiedCount;
 
   // Re-fetch tenants when screen regains focus
   useFocusEffect(
@@ -45,11 +47,7 @@ export default function PropertyDetailScreen() {
   }
 
   if (!property) {
-    return (
-      <View style={styles.centered}>
-        <Text>Property not found.</Text>
-      </View>
-    );
+    return <View style={styles.centered}><Text>Property not found.</Text></View>;
   }
 
   return (
@@ -59,6 +57,7 @@ export default function PropertyDetailScreen() {
           title: property.name,
           headerTitleAlign: 'center',
           headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
+          headerTintColor: Colors.textPrimary,
         }}
       />
 
@@ -67,45 +66,65 @@ export default function PropertyDetailScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
       >
-        {/* Stats + Address row */}
-        <View style={styles.infoCard}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{property.total_units}</Text>
-              <Text style={styles.statLabel}>Units</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{occupiedCount}</Text>
-              <Text style={styles.statLabel}>Occupied</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { fontSize: 15 }]}>
-                {tenants.length > 0
-                  ? formatCurrency(tenants.reduce((sum, t) => sum + t.monthly_rent, 0))
-                  : '₹0'}
-              </Text>
-              <Text style={styles.statLabel}>Rent/mo</Text>
-            </View>
+        {/* Property header */}
+        <View style={styles.propertyHeader}>
+          <View style={styles.propertyIconWrap}>
+            <MaterialCommunityIcons name="home-city" size={28} color={Colors.primary} />
           </View>
-          <View style={styles.addressRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.addressText} numberOfLines={1}>{property.address}, {property.city}</Text>
+          <Text style={styles.propertyName}>{property.name}</Text>
+          <View style={styles.addressChip}>
+            <MaterialCommunityIcons name="map-marker-outline" size={13} color={Colors.textSecondary} />
+            <Text style={styles.addressText}>{property.address}, {property.city}</Text>
+          </View>
+        </View>
+
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <MaterialCommunityIcons name="door-open" size={18} color={Colors.primary} style={{ marginBottom: 4 }} />
+            <Text style={styles.statValue}>{property.total_units}</Text>
+            <Text style={styles.statLabel}>Total Units</Text>
+          </View>
+          <View style={styles.statCard}>
+            <MaterialCommunityIcons name="account-group-outline" size={18} color={Colors.statusConfirmed} style={{ marginBottom: 4 }} />
+            <Text style={styles.statValue}>{occupiedCount}</Text>
+            <Text style={styles.statLabel}>Occupied</Text>
+          </View>
+          <View style={[styles.statCard, vacantCount > 0 && styles.statCardWarning]}>
+            <MaterialCommunityIcons name="door-closed-lock" size={18} color={vacantCount > 0 ? Colors.statusPartial : Colors.textDisabled} style={{ marginBottom: 4 }} />
+            <Text style={[styles.statValue, vacantCount > 0 && { color: Colors.statusPartial }]}>{vacantCount}</Text>
+            <Text style={styles.statLabel}>Vacant</Text>
+          </View>
+        </View>
+
+        {/* Revenue card */}
+        <View style={styles.revenueCard}>
+          <View style={styles.revenueLeft}>
+            <Text style={styles.revenueLabel}>Monthly Revenue</Text>
+            <Text style={styles.revenueValue}>{formatCurrency(totalRent)}</Text>
+          </View>
+          <View style={styles.revenueIconWrap}>
+            <MaterialCommunityIcons name="trending-up" size={22} color={Colors.primaryDark} />
           </View>
         </View>
 
         {/* Tenants */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Tenants</Text>
+            <View style={styles.sectionTitleRow}>
+              <MaterialCommunityIcons name="account-multiple-outline" size={18} color={Colors.textPrimary} />
+              <Text style={styles.sectionTitle}>Tenants</Text>
+              <View style={styles.tenantCountBadge}>
+                <Text style={styles.tenantCountText}>{tenants.length}</Text>
+              </View>
+            </View>
             {isOwner && (
               <TouchableOpacity
                 style={styles.addTenantBtn}
                 onPress={() => router.push(`/property/${id}/tenant/create`)}
                 activeOpacity={0.8}
               >
-                <MaterialCommunityIcons name="account-plus-outline" size={16} color="#fff" />
+                <MaterialCommunityIcons name="account-plus-outline" size={15} color="#fff" />
                 <Text style={styles.addTenantBtnText}>Add Tenant</Text>
               </TouchableOpacity>
             )}
@@ -115,8 +134,8 @@ export default function PropertyDetailScreen() {
             <EmptyState
               icon="account-plus"
               title="No tenants yet"
-              subtitle={isOwner ? "Tap + to add a tenant and send them an invite" : "No tenants in this property"}
-              actionLabel={isOwner ? "Add Tenant" : undefined}
+              subtitle={isOwner ? "Tap 'Add Tenant' to get started" : 'No tenants in this property'}
+              actionLabel={isOwner ? 'Add Tenant' : undefined}
               onAction={isOwner ? () => router.push(`/property/${id}/tenant/create`) : undefined}
             />
           ) : (
@@ -130,13 +149,16 @@ export default function PropertyDetailScreen() {
           )}
         </View>
 
+        {/* Notes */}
         {property.notes ? (
           <View style={styles.notesCard}>
-            <Text variant="labelMedium" style={styles.notesLabel}>Notes</Text>
-            <Text variant="bodyMedium">{property.notes}</Text>
+            <View style={styles.notesHeader}>
+              <MaterialCommunityIcons name="note-text-outline" size={16} color={Colors.textSecondary} />
+              <Text style={styles.notesLabel}>Notes</Text>
+            </View>
+            <Text style={styles.notesText}>{property.notes}</Text>
           </View>
         ) : null}
-
       </ScrollView>
     </>
   );
@@ -149,69 +171,149 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 40,
     gap: 16,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Colors.background,
   },
-  infoCard: {
+
+  // Property header
+  propertyHeader: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  propertyIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: Colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  propertyName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  addressChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  addressText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+
+  // Stats row
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statCard: {
+    flex: 1,
     backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.border,
-    padding: 14,
-    gap: 12,
-  },
-  statsRow: {
-    flexDirection: 'row',
+    padding: 12,
     alignItems: 'center',
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: Colors.border,
+  statCardWarning: {
+    borderColor: Colors.statusPartialSoft,
+    backgroundColor: '#FFFBEB',
   },
   statValue: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
-    color: Colors.primary,
+    color: Colors.textPrimary,
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: Colors.textSecondary,
     marginTop: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  addressRow: {
+
+  // Revenue card
+  revenueCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: 10,
+    backgroundColor: Colors.primarySoft,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+    padding: 16,
   },
-  addressText: {
+  revenueLeft: {
     flex: 1,
-    fontSize: 13,
-    color: Colors.textSecondary,
+    gap: 2,
   },
+  revenueLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.primaryDark,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    opacity: 0.7,
+  },
+  revenueValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.primaryDark,
+  },
+  revenueIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Section
   section: {
-    gap: 8,
+    gap: 10,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  tenantCountBadge: {
+    backgroundColor: Colors.primarySoft,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  tenantCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   addTenantBtn: {
     flexDirection: 'row',
@@ -221,22 +323,38 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    ...Shadows.sm,
   },
   addTenantBtnText: {
     color: '#fff',
     fontSize: 13,
     fontWeight: '600',
   },
+
+  // Notes card
   notesCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
     borderColor: Colors.border,
     gap: 8,
   },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   notesLabel: {
+    fontSize: 12,
+    fontWeight: '700',
     color: Colors.textSecondary,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  notesText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    lineHeight: 20,
   },
 });

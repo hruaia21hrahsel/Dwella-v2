@@ -27,9 +27,11 @@ interface PropertyCardProps {
 export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
   const iconColor = isTenantView ? Colors.statusConfirmed : Colors.primary;
   const iconName = isTenantView ? 'home-account' : 'home-city';
+  const totalRent = tenants?.reduce((sum, t) => sum + t.monthly_rent, 0) ?? 0;
+  const occupiedCount = tenants?.length ?? 0;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isTenantView && styles.cardTenant]}>
       {/* Header row */}
       <TouchableOpacity style={styles.headerRow} onPress={onPress} activeOpacity={0.7}>
         <View style={[styles.iconContainer, { backgroundColor: isTenantView ? '#DCFCE7' : Colors.primarySoft }]}>
@@ -38,15 +40,12 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
         <View style={styles.info}>
           <Text style={styles.name} numberOfLines={1}>{property.name}</Text>
-          <Text style={styles.address} numberOfLines={1}>
-            {property.address}, {property.city}
-          </Text>
-          {!isTenantView && (
-            <Text style={styles.meta}>
-              {property.total_units} unit{property.total_units !== 1 ? 's' : ''}
-              {paidCount !== undefined ? ` · ${paidCount}/${property.total_units} paid` : ''}
+          <View style={styles.addressRow}>
+            <MaterialCommunityIcons name="map-marker-outline" size={12} color={Colors.textSecondary} />
+            <Text style={styles.address} numberOfLines={1}>
+              {property.address}, {property.city}
             </Text>
-          )}
+          </View>
           {isTenantView && (
             <View style={styles.tenantBadge}>
               <Text style={styles.tenantBadgeText}>TENANT</Text>
@@ -59,12 +58,12 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
           <View style={styles.actions}>
             {onEdit && (
               <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={styles.actionBtn}>
-                <MaterialCommunityIcons name="pencil-outline" size={18} color={Colors.textSecondary} />
+                <MaterialCommunityIcons name="pencil-outline" size={16} color={Colors.textSecondary} />
               </TouchableOpacity>
             )}
             {onDelete && (
               <TouchableOpacity onPress={(e) => { e.stopPropagation(); onDelete(); }} hitSlop={6} style={styles.actionBtn}>
-                <MaterialCommunityIcons name="delete-outline" size={18} color={Colors.error} />
+                <MaterialCommunityIcons name="archive-outline" size={16} color={Colors.error} />
               </TouchableOpacity>
             )}
           </View>
@@ -73,15 +72,45 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
         <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.textDisabled} />
       </TouchableOpacity>
 
+      {/* Stats strip — owner view only */}
+      {!isTenantView && tenants && (
+        <View style={styles.statsStrip}>
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons name="door-open" size={14} color={Colors.primary} />
+            <Text style={styles.statText}>
+              <Text style={styles.statBold}>{occupiedCount}</Text>/{property.total_units} occupied
+            </Text>
+          </View>
+          <View style={styles.statDot} />
+          <View style={styles.statItem}>
+            <MaterialCommunityIcons name="cash" size={14} color={Colors.statusConfirmed} />
+            <Text style={styles.statText}>
+              <Text style={styles.statBold}>{formatCurrency(totalRent)}</Text>/mo
+            </Text>
+          </View>
+          {paidCount !== undefined && (
+            <>
+              <View style={styles.statDot} />
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="check-circle-outline" size={14} color={Colors.statusPaid} />
+                <Text style={styles.statText}>
+                  <Text style={styles.statBold}>{paidCount}</Text> paid
+                </Text>
+              </View>
+            </>
+          )}
+        </View>
+      )}
+
       {/* Tenant list */}
       {tenants && tenants.length > 0 && (
         <View style={styles.tenantList}>
-          {tenants.map((t) => {
+          {tenants.map((t, index) => {
             const isPending = t.invite_status === 'pending';
             return (
               <TouchableOpacity
                 key={t.id}
-                style={styles.tenantRow}
+                style={[styles.tenantRow, index < tenants.length - 1 && styles.tenantRowBorder]}
                 onPress={() => onTenantPress?.(t.id)}
                 activeOpacity={0.7}
               >
@@ -111,7 +140,8 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
       {/* No tenants hint */}
       {tenants && tenants.length === 0 && !isTenantView && (
         <View style={styles.noTenants}>
-          <Text style={styles.noTenantsText}>No tenants yet</Text>
+          <MaterialCommunityIcons name="account-plus-outline" size={14} color={Colors.textDisabled} />
+          <Text style={styles.noTenantsText}>No tenants added yet</Text>
         </View>
       )}
     </View>
@@ -121,48 +151,55 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    marginBottom: 8,
+    borderRadius: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
     overflow: 'hidden',
+    ...Shadows.sm,
+  },
+  cardTenant: {
+    borderColor: Colors.statusConfirmedSoft,
+    marginBottom: 8,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    gap: 10,
+    padding: 14,
+    gap: 12,
   },
   iconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   info: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
   name: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: Colors.textPrimary,
   },
-  address: {
-    fontSize: 12,
-    color: Colors.textSecondary,
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
-  meta: {
-    fontSize: 11,
+  address: {
+    flex: 1,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   tenantBadge: {
     alignSelf: 'flex-start',
     backgroundColor: Colors.statusConfirmedSoft,
     borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     marginTop: 2,
   },
   tenantBadgeText: {
@@ -176,32 +213,68 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   actionBtn: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
+  // Stats strip
+  statsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: Colors.background,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    gap: 8,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  statBold: {
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  statDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: Colors.textDisabled,
+  },
+
   // Tenant list
   tenantList: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 4,
+    paddingHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   tenantRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 6,
+    gap: 10,
+    paddingVertical: 8,
+  },
+  tenantRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.divider,
   },
   tenantIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 7,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -223,7 +296,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderRadius: 6,
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 3,
   },
   tenantStatusDot: {
@@ -236,10 +309,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   noTenants: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    paddingVertical: 10,
-    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: Colors.background,
   },
   noTenantsText: {
     fontSize: 12,
