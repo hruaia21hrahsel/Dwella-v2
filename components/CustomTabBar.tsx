@@ -91,6 +91,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       >
         {/* Glowing pulse ring */}
         <Animated.View
+          pointerEvents="none"
           style={[
             styles.glowRing,
             {
