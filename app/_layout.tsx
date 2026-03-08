@@ -46,20 +46,28 @@ function usePaperTheme() {
 }
 
 function AuthGuard() {
-  const { session, isLoading, isLocked, setSession, setUser, setLoading, onboardingCompleted } = useAuthStore();
+  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompleted } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const initialRedirectDone = useRef(false);
+  /** Incremented each time the routing effect fires; stale async callbacks bail out. */
+  const routingGeneration = useRef(0);
 
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
     // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
     const fallback = setTimeout(() => setLoading(false), 8000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       clearTimeout(fallback);
       try {
         setSession(newSession);
+
+        // When the user actively signs in (email/password, Google, Apple),
+        // unlock the app so AuthGuard skips the PIN screen.
+        if (event === 'SIGNED_IN') {
+          setLocked(false);
+        }
 
         if (newSession?.user) {
           await supabase.from('users').upsert(
@@ -92,29 +100,32 @@ function AuthGuard() {
   // ── Routing logic ──────────────────────────────────────────────────
   //
   // Correct model:
-  //   if (!session)              → /login          (must authenticate)
-  //   else if (pinEnabled && isLocked) → /lock     (session exists, UI locked)
-  //   else                       → /dashboard      (session + unlocked)
+  //   if (!session)                    → /login      (must authenticate)
+  //   else if (pinEnabled && isLocked) → /lock       (session exists, UI locked)
+  //   else                             → /dashboard  (session + unlocked)
   //
   // isLocked is a pure in-memory flag. It has nothing to do with the backend.
   // PIN only sets isLocked = false. It never touches Supabase.
   useEffect(() => {
     if (isLoading) return;
+    // Skip routing when segments haven't resolved yet
+    if (!segments[0]) return;
 
+    const gen = ++routingGeneration.current;
     const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'auth';
     const inOnboarding = segments[0] === 'onboarding';
 
     if (!session) {
-      // No Supabase session — user must log in with email/password.
       if (!inAuthGroup) router.replace('/(auth)/login');
       return;
     }
 
     // Session exists. Check if the UI is locally locked.
     isBiometricEnabled().then((pinEnabled) => {
+      // Bail out if the effect has re-fired since we started the async check.
+      if (gen !== routingGeneration.current) return;
+
       if (pinEnabled && isLocked) {
-        // App is locked — show PIN screen. PIN will call setLocked(false).
-        // Only navigate if not already on the lock screen.
         const alreadyOnLock = inAuthGroup && segments[1] === 'lock';
         if (!alreadyOnLock) router.replace('/(auth)/lock');
         return;

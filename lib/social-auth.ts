@@ -3,6 +3,10 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from './supabase';
 
+// Complete any dangling auth sessions (important when the app resumes
+// after the in-app browser redirect).
+WebBrowser.maybeCompleteAuthSession();
+
 // Must match app.json scheme + Supabase allowed redirect URLs.
 const REDIRECT_URI = 'dwella://auth/callback';
 
@@ -22,13 +26,25 @@ export async function signInWithGoogle() {
   if (error) throw error;
   if (!data.url) throw new Error('No OAuth URL returned');
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
-
-  if (result.type === 'success' && result.url) {
-    return handleOAuthRedirect(result.url);
+  // Warm up the browser on Android for faster launch
+  if (Platform.OS === 'android') {
+    await WebBrowser.warmUpAsync();
   }
 
-  return { success: false };
+  try {
+    const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
+
+    if (result.type === 'success' && result.url) {
+      return handleOAuthRedirect(result.url);
+    }
+
+    // type === 'cancel' or 'dismiss' — user closed the browser
+    return { success: false };
+  } finally {
+    if (Platform.OS === 'android') {
+      await WebBrowser.coolDownAsync();
+    }
+  }
 }
 
 /**
@@ -92,13 +108,23 @@ async function signInWithAppleWeb() {
   if (error) throw error;
   if (!data.url) throw new Error('No OAuth URL returned');
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
-
-  if (result.type === 'success' && result.url) {
-    return handleOAuthRedirect(result.url);
+  if (Platform.OS === 'android') {
+    await WebBrowser.warmUpAsync();
   }
 
-  return { success: false };
+  try {
+    const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
+
+    if (result.type === 'success' && result.url) {
+      return handleOAuthRedirect(result.url);
+    }
+
+    return { success: false };
+  } finally {
+    if (Platform.OS === 'android') {
+      await WebBrowser.coolDownAsync();
+    }
+  }
 }
 
 /**
@@ -107,12 +133,13 @@ async function signInWithAppleWeb() {
  * then sets the Supabase session.
  */
 async function handleOAuthRedirect(url: string) {
-  // Hash fragment: #access_token=...&refresh_token=...&token_type=bearer&...
   const hash = url.split('#')[1] ?? '';
   const params: Record<string, string> = {};
   for (const pair of hash.split('&')) {
-    const [key, val] = pair.split('=');
-    if (key && val) params[decodeURIComponent(key)] = decodeURIComponent(val);
+    const idx = pair.indexOf('=');
+    if (idx > 0) {
+      params[decodeURIComponent(pair.slice(0, idx))] = decodeURIComponent(pair.slice(idx + 1));
+    }
   }
 
   const { access_token, refresh_token } = params;
