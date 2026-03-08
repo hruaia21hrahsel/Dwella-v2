@@ -402,13 +402,13 @@ export default function DashboardScreen() {
           if (selectedRow) {
             router.push(`/log-payment?propertyId=${selectedRow.propertyId}&tenantId=${selectedRow.tenantId}`);
           } else {
-            router.push('/property/create');
+            router.push('/log-payment');
           }
         }}
         activeOpacity={0.8}
       >
         <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-        <Text style={styles.logPaymentBtnText}>{selectedRow ? 'Log Payment' : 'Add a Property to Start'}</Text>
+        <Text style={styles.logPaymentBtnText}>Log Payment</Text>
       </TouchableOpacity>
 
       {/* Send Reminders shortcut */}
