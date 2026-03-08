@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -52,9 +52,12 @@ export function useDashboard(year: number, month: number): DashboardData {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const hasLoadedOnce = useRef(false);
+
   const load = useCallback(async () => {
     if (!user?.id) return;
-    setIsLoading(true);
+    // Only show skeleton on the very first load — subsequent refreshes keep stale data visible
+    if (!hasLoadedOnce.current) setIsLoading(true);
     setError(null);
 
     try {
@@ -97,41 +100,42 @@ export function useDashboard(year: number, month: number): DashboardData {
       }
     }
 
-    setTenantRows(rows);
-
-    // Query 2: last 5 paid/confirmed payments across all owned tenants
+    // Query 2 runs in parallel with processing — start it as soon as we have tenant IDs
+    let recentPromise: Promise<RecentTx[]> = Promise.resolve([]);
     if (allTenantIds.length > 0) {
-      const { data: recentData } = await supabase
+      recentPromise = Promise.resolve(supabase
         .from('payments')
         .select('*, tenants(tenant_name, flat_no, properties(name, id))')
         .in('tenant_id', allTenantIds)
         .in('status', ['paid', 'confirmed'])
         .not('paid_at', 'is', null)
         .order('paid_at', { ascending: false })
-        .limit(5);
-
-      const txs: RecentTx[] = (recentData ?? []).map((p: any) => ({
-        paymentId: p.id,
-        tenantName: p.tenants?.tenant_name ?? '',
-        flatNo: p.tenants?.flat_no ?? '',
-        propertyName: p.tenants?.properties?.name ?? '',
-        propertyId: p.tenants?.properties?.id ?? '',
-        tenantId: p.tenant_id,
-        amountPaid: p.amount_paid,
-        month: p.month,
-        year: p.year,
-        status: p.status,
-        paidAt: p.paid_at,
-      }));
-
-      setRecentTransactions(txs);
-    } else {
-      setRecentTransactions([]);
+        .limit(5)
+        .then(({ data }) =>
+          (data ?? []).map((p: any) => ({
+            paymentId: p.id,
+            tenantName: p.tenants?.tenant_name ?? '',
+            flatNo: p.tenants?.flat_no ?? '',
+            propertyName: p.tenants?.properties?.name ?? '',
+            propertyId: p.tenants?.properties?.id ?? '',
+            tenantId: p.tenant_id,
+            amountPaid: p.amount_paid,
+            month: p.month,
+            year: p.year,
+            status: p.status,
+            paidAt: p.paid_at,
+          })),
+        ));
     }
+
+    const txs = await recentPromise;
+    setTenantRows(rows);
+    setRecentTransactions(txs);
 
     } catch (err: any) {
       setError(err.message ?? 'Failed to load dashboard');
     } finally {
+      hasLoadedOnce.current = true;
       setIsLoading(false);
     }
   }, [user?.id, year]);
