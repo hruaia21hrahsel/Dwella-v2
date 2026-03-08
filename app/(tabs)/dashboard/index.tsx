@@ -16,9 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
-import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
-import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
-import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
+import { DwellaLogo } from '@/components/DwellaLogo';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -194,11 +192,23 @@ export default function DashboardScreen() {
     >
       {/* Scrollable header */}
       <View style={[styles.inlineHeader, { paddingTop: insets.top }]}>
-        <ProfileHeaderButton />
+        <TouchableOpacity
+          onPress={() => router.push('/(tabs)/profile')}
+          style={{ width: 56, alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="account-circle-outline" size={26} color={Colors.textPrimary} />
+        </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <DwellaHeaderTitle />
+          <DwellaLogo width={180} height={44} />
         </View>
-        <NotificationsHeaderButton />
+        <TouchableOpacity
+          onPress={() => router.push('/notifications')}
+          style={{ width: 40, alignItems: 'center', justifyContent: 'center' }}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="bell-outline" size={26} color={Colors.textPrimary} />
+        </TouchableOpacity>
       </View>
 
       <ErrorBanner error={error} onRetry={refresh} />
@@ -497,7 +507,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   inlineHeader: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.background,
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 60,
