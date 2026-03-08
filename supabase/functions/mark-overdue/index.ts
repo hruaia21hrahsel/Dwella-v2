@@ -73,7 +73,7 @@ Deno.serve(async (_req) => {
           token: tokenMap[tenantUserId],
           title: 'Rent Overdue',
           body: 'Your rent payment is now overdue.',
-          data: { screen: '/(tabs)/payments' },
+          data: { screen: '/payments' },
         });
       }
       if (ownerId && tokenMap[ownerId]) {
@@ -81,7 +81,7 @@ Deno.serve(async (_req) => {
           token: tokenMap[ownerId],
           title: 'Rent Overdue',
           body: `${tenantName}'s rent is now overdue.`,
-          data: { screen: '/(tabs)/payments' },
+          data: { screen: '/payments' },
         });
       }
     }

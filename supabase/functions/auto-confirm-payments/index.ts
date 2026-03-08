@@ -49,7 +49,7 @@ Deno.serve(async (_req) => {
             token: tokenMap[ownerId],
             title: 'Payment Confirmed',
             body: `Payment confirmed — ${tenantName}`,
-            data: { screen: '/(tabs)/payments' },
+            data: { screen: '/payments' },
           });
         }
       }

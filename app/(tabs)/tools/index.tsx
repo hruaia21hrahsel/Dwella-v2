@@ -12,14 +12,14 @@ export default function ToolsScreen() {
       label: 'Payment History',
       description: 'Track rent payments and confirmations',
       icon: 'receipt',
-      route: '/(tabs)/payments',
+      route: '/payments',
       color: colors.primary,
     },
     {
       label: 'Expenses',
       description: 'Log and manage property expenses',
       icon: 'cash-minus',
-      route: '/(tabs)/expenses',
+      route: '/expenses',
       color: colors.statusPartial,
     },
     {

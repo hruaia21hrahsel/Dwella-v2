@@ -15,14 +15,14 @@ export const TOUR_STEPS: TourStep[] = [
     cta: 'Next',
   },
   {
-    route: '/(tabs)/payments',
+    route: '/payments',
     icon: 'receipt',
     title: 'Track Every Payment',
     body: 'Monthly payment rows are auto-generated for each tenant. Log and confirm here.',
     cta: 'Next',
   },
   {
-    route: '/(tabs)/expenses',
+    route: '/expenses',
     icon: 'cash-minus',
     title: 'Log Your Expenses',
     body: 'Record maintenance costs and see your net P&L against rental income.',

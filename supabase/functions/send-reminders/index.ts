@@ -99,7 +99,7 @@ Deno.serve(async (_req) => {
         token: tokenMap[n.user_id],
         title: n.title,
         body: n.body,
-        data: { screen: '/(tabs)/payments' },
+        data: { screen: '/payments' },
       }));
 
     if (pushMessages.length > 0) {
