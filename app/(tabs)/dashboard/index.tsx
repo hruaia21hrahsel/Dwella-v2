@@ -286,7 +286,7 @@ export default function DashboardScreen() {
             const status: PaymentStatus | null = payment?.status ?? null;
             const isCurrentMonth = m === currentMonth;
 
-            const bgColor = status ? getStatusColor(status) + '22' : Colors.primarySoft;
+            const bgColor = status ? getStatusColor(status) + '22' : Colors.statusPendingSoft;
             const iconColor = status ? getStatusColor(status) : Colors.statusPending;
             const canNavigate = !!payment?.id;
 
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   // Tenant payment block
   tenantBlock: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.primarySoft,
     borderRadius: 14,
     padding: 12,
     marginBottom: 4,
