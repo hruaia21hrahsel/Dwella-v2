@@ -12,7 +12,7 @@ interface Props {
  * viewBox is cropped to the content area (10 58 180 88).
  * Pass `size` for square rendering, or `width`/`height` for custom dimensions.
  */
-export function DwellaLogo({ size = 40, width, height, color = '#1E293B' }: Props) {
+export function DwellaLogo({ size = 40, width, height, color = '#00BFA5' }: Props) {
   return (
     <Svg viewBox="10 50 180 100" width={width ?? size} height={height ?? size}>
       <SvgText
