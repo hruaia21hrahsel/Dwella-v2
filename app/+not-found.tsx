@@ -2,13 +2,14 @@ import { View, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 export default function NotFoundScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <EmptyState
         icon="alert-circle"
         title="Page Not Found"
@@ -23,7 +24,6 @@ export default function NotFoundScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     justifyContent: 'center',
   },
 });

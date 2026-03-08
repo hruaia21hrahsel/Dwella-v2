@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
 import { supabase } from '@/lib/supabase';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { formatCurrency } from '@/lib/utils';
@@ -28,6 +28,7 @@ const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai-dr
 
 export default function SmartRemindersScreen() {
   const { user } = useAuthStore();
+  const { colors, shadows } = useTheme();
   const [reminders, setReminders] = useState<ReminderDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,46 +123,46 @@ export default function SmartRemindersScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Smart Reminders' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>
-          <MaterialCommunityIcons name="robot-outline" size={20} color={Colors.primary} />
-          <Text style={styles.headerText}>
+          <MaterialCommunityIcons name="robot-outline" size={20} color={colors.primary} />
+          <Text style={[styles.headerText, { color: colors.textSecondary }]}>
             AI-drafted reminders for tenants with outstanding payments
           </Text>
         </View>
 
         {loading && (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>Drafting personalized reminders...</Text>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Drafting personalized reminders...</Text>
           </View>
         )}
 
         {error && (
-          <View style={[styles.card, { borderColor: Colors.error }]}>
-            <Text style={{ color: Colors.error }}>{error}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.error }]}>
+            <Text style={{ color: colors.error }}>{error}</Text>
             <TouchableOpacity onPress={fetchReminders} style={styles.retryBtn}>
-              <Text style={{ color: Colors.primary, fontWeight: '600' }}>Retry</Text>
+              <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {!loading && !error && reminders.length === 0 && (
-          <View style={styles.emptyCard}>
-            <MaterialCommunityIcons name="check-circle-outline" size={40} color={Colors.statusConfirmed} />
-            <Text style={styles.emptyTitle}>All caught up!</Text>
-            <Text style={styles.emptySubtitle}>No tenants need reminders right now.</Text>
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
+            <MaterialCommunityIcons name="check-circle-outline" size={40} color={colors.statusConfirmed} />
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>All caught up!</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>No tenants need reminders right now.</Text>
           </View>
         )}
 
         {reminders.map((reminder, index) => (
           <AnimatedCard key={reminder.tenant_id} index={index}>
-            <View style={[styles.card, Shadows.sm]}>
+            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
               {/* Header */}
               <View style={styles.cardHeaderRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.tenantName}>{reminder.tenant_name}</Text>
-                  <Text style={styles.tenantSub}>
+                  <Text style={[styles.tenantName, { color: colors.textPrimary }]}>{reminder.tenant_name}</Text>
+                  <Text style={[styles.tenantSub, { color: colors.textSecondary }]}>
                     Flat {reminder.flat_no} · {reminder.property_name}
                   </Text>
                 </View>
@@ -170,8 +171,8 @@ export default function SmartRemindersScreen() {
 
               {/* Amount info */}
               <View style={styles.amountRow}>
-                <Text style={styles.amountLabel}>
-                  Balance: <Text style={{ color: Colors.statusOverdue, fontWeight: '700' }}>
+                <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>
+                  Balance: <Text style={{ color: colors.statusOverdue, fontWeight: '700' }}>
                     {formatCurrency(reminder.amount_due - reminder.amount_paid)}
                   </Text>
                 </Text>
@@ -183,26 +184,26 @@ export default function SmartRemindersScreen() {
                   <RNTextInput
                     value={editText}
                     onChangeText={setEditText}
-                    style={styles.editInput}
+                    style={[styles.editInput, { backgroundColor: colors.primarySoft, color: colors.textPrimary }]}
                     multiline
                     autoFocus
                   />
                   <View style={styles.editActions}>
                     <TouchableOpacity onPress={() => setEditingId(null)}>
-                      <Text style={{ color: Colors.textSecondary }}>Cancel</Text>
+                      <Text style={{ color: colors.textSecondary }}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleSaveEdit(reminder.tenant_id)}>
-                      <Text style={{ color: Colors.primary, fontWeight: '600' }}>Save</Text>
+                      <Text style={{ color: colors.primary, fontWeight: '600' }}>Save</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               ) : (
-                <TouchableOpacity onPress={() => handleEdit(reminder)} style={styles.messageWrap}>
-                  <Text style={styles.messageText}>{reminder.draft_message}</Text>
+                <TouchableOpacity onPress={() => handleEdit(reminder)} style={[styles.messageWrap, { backgroundColor: colors.primarySoft }]}>
+                  <Text style={[styles.messageText, { color: colors.textPrimary }]}>{reminder.draft_message}</Text>
                   <MaterialCommunityIcons
                     name="pencil-outline"
                     size={14}
-                    color={Colors.textDisabled}
+                    color={colors.textDisabled}
                     style={styles.editIcon}
                   />
                 </TouchableOpacity>
@@ -215,7 +216,7 @@ export default function SmartRemindersScreen() {
                 onPress={() => handleSend(reminder)}
                 loading={sendingId === reminder.tenant_id}
                 disabled={sendingId === reminder.tenant_id || !reminder.can_notify}
-                buttonColor={Colors.primary}
+                buttonColor={colors.primary}
                 style={styles.sendBtn}
                 compact
               >
@@ -230,10 +231,10 @@ export default function SmartRemindersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
   centered: { alignItems: 'center', paddingVertical: 40 },
-  loadingText: { color: Colors.textSecondary, marginTop: 12, fontSize: 14 },
+  loadingText: { marginTop: 12, fontSize: 14 },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -243,15 +244,12 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     fontSize: 13,
-    color: Colors.textSecondary,
     lineHeight: 18,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -262,11 +260,9 @@ const styles = StyleSheet.create({
   tenantName: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   tenantSub: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   amountRow: {
@@ -274,10 +270,8 @@ const styles = StyleSheet.create({
   },
   amountLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   messageWrap: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,
@@ -286,7 +280,6 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 13,
     lineHeight: 19,
-    color: Colors.textPrimary,
     paddingRight: 20,
   },
   editIcon: {
@@ -298,12 +291,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   editInput: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 10,
     padding: 12,
     fontSize: 13,
     lineHeight: 19,
-    color: Colors.textPrimary,
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -321,7 +312,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   emptyCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 32,
     alignItems: 'center',
@@ -330,10 +320,8 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   emptySubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
   },
 });

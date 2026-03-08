@@ -14,7 +14,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getCurrentMonthYear } from '@/lib/utils';
 import { PaymentStatus } from '@/lib/types';
 
@@ -42,6 +42,7 @@ interface ReminderItem {
 export default function RemindersScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { colors } = useTheme();
   const [eligible, setEligible] = useState<ReminderItem[]>([]);
   const [unlinked, setUnlinked] = useState<ReminderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -128,8 +129,8 @@ export default function RemindersScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={Colors.primary} size="large" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
@@ -137,10 +138,10 @@ export default function RemindersScreen() {
   const allEmpty = eligible.length === 0 && unlinked.length === 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Summary banner */}
-      <View style={styles.banner}>
-        <Text style={styles.bannerText}>
+      <View style={[styles.banner, { backgroundColor: colors.primary + '15', borderBottomColor: colors.border }]}>
+        <Text style={[styles.bannerText, { color: colors.primary }]}>
           {eligible.length > 0
             ? `${eligible.length} tenant${eligible.length === 1 ? '' : 's'} will be notified`
             : 'No tenants due today'}
@@ -157,31 +158,31 @@ export default function RemindersScreen() {
             <MaterialCommunityIcons
               name="bell-check-outline"
               size={48}
-              color={Colors.textDisabled}
+              color={colors.textDisabled}
             />
-            <Text style={styles.emptyTitle}>No tenants due today</Text>
-            <Text style={styles.emptySub}>
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>No tenants due today</Text>
+            <Text style={[styles.emptySub, { color: colors.textDisabled }]}>
               All tenants are either paid up or not yet due.
             </Text>
           </View>
         }
         ListFooterComponent={
           unlinked.length > 0 ? (
-            <View style={styles.unlinkedSection}>
-              <Text style={styles.unlinkedHeader}>
+            <View style={[styles.unlinkedSection, { backgroundColor: colors.surface, borderLeftColor: colors.warning }]}>
+              <Text style={[styles.unlinkedHeader, { color: colors.textSecondary }]}>
                 <MaterialCommunityIcons
                   name="alert-circle-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />{' '}
                 Not linked — won't receive reminders
               </Text>
               {unlinked.map((item) => (
                 <View key={item.id} style={styles.unlinkedRow}>
-                  <Text style={styles.unlinkedName}>
+                  <Text style={[styles.unlinkedName, { color: colors.textPrimary }]}>
                     {item.tenants.tenant_name} · Flat {item.tenants.flat_no}
                   </Text>
-                  <Text style={styles.unlinkedProp}>{item.tenants.properties.name}</Text>
+                  <Text style={[styles.unlinkedProp, { color: colors.textSecondary }]}>{item.tenants.properties.name}</Text>
                 </View>
               ))}
             </View>
@@ -190,23 +191,23 @@ export default function RemindersScreen() {
         renderItem={({ item }) => {
           const remaining = item.amount_due - item.amount_paid;
           return (
-            <View style={styles.card}>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <View style={styles.cardTop}>
                 <View style={styles.cardLeft}>
-                  <Text style={styles.tenantName}>
+                  <Text style={[styles.tenantName, { color: colors.textPrimary }]}>
                     {item.tenants.tenant_name} · Flat {item.tenants.flat_no}
                   </Text>
-                  <Text style={styles.propName}>{item.tenants.properties.name}</Text>
+                  <Text style={[styles.propName, { color: colors.textSecondary }]}>{item.tenants.properties.name}</Text>
                 </View>
                 <PaymentStatusBadge status={item.status} />
               </View>
               <View style={styles.cardBottom}>
-                <Text style={styles.amountLabel}>Due</Text>
-                <Text style={styles.amountValue}>{formatCurrency(item.amount_due)}</Text>
+                <Text style={[styles.amountLabel, { color: colors.textSecondary }]}>Due</Text>
+                <Text style={[styles.amountValue, { color: colors.textPrimary }]}>{formatCurrency(item.amount_due)}</Text>
                 {item.amount_paid > 0 && (
                   <>
-                    <Text style={[styles.amountLabel, { marginLeft: 16 }]}>Remaining</Text>
-                    <Text style={[styles.amountValue, { color: Colors.statusOverdue }]}>
+                    <Text style={[styles.amountLabel, { marginLeft: 16, color: colors.textSecondary }]}>Remaining</Text>
+                    <Text style={[styles.amountValue, { color: colors.statusOverdue }]}>
                       {formatCurrency(remaining)}
                     </Text>
                   </>
@@ -217,27 +218,28 @@ export default function RemindersScreen() {
         }}
       />
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity
           style={[
             styles.sendBtn,
-            (eligible.length === 0 || isSending) && styles.sendBtnDisabled,
+            { backgroundColor: colors.primary },
+            (eligible.length === 0 || isSending) && { backgroundColor: colors.textDisabled },
           ]}
           onPress={handleSend}
           disabled={eligible.length === 0 || isSending}
           activeOpacity={0.8}
         >
           {isSending ? (
-            <ActivityIndicator color="#fff" size="small" style={{ marginRight: 8 }} />
+            <ActivityIndicator color={colors.textOnPrimary} size="small" style={{ marginRight: 8 }} />
           ) : (
             <MaterialCommunityIcons
               name="bell-ring-outline"
               size={18}
-              color="#fff"
+              color={colors.textOnPrimary}
               style={{ marginRight: 8 }}
             />
           )}
-          <Text style={styles.sendBtnText}>
+          <Text style={[styles.sendBtnText, { color: colors.textOnPrimary }]}>
             {isSending
               ? 'Sending…'
               : eligible.length === 0
@@ -253,25 +255,20 @@ export default function RemindersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
   banner: {
-    backgroundColor: Colors.primary + '15',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   bannerText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.primary,
   },
   listContent: {
     padding: 16,
@@ -279,7 +276,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 10,
     padding: 14,
     marginBottom: 10,
@@ -302,11 +298,9 @@ const styles = StyleSheet.create({
   tenantName: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   propName: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   cardBottom: {
@@ -315,13 +309,11 @@ const styles = StyleSheet.create({
   },
   amountLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginRight: 4,
   },
   amountValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   emptyWrap: {
     flex: 1,
@@ -332,28 +324,23 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textSecondary,
     marginTop: 12,
   },
   emptySub: {
     fontSize: 13,
-    color: Colors.textDisabled,
     marginTop: 6,
     textAlign: 'center',
     paddingHorizontal: 32,
   },
   unlinkedSection: {
     marginTop: 8,
-    backgroundColor: Colors.surface,
     borderRadius: 10,
     padding: 14,
     borderLeftWidth: 3,
-    borderLeftColor: Colors.warning,
   },
   unlinkedHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textSecondary,
     marginBottom: 10,
   },
   unlinkedRow: {
@@ -362,32 +349,23 @@ const styles = StyleSheet.create({
   unlinkedName: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   unlinkedProp: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 1,
   },
   footer: {
     padding: 16,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   sendBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
     borderRadius: 10,
     paddingVertical: 14,
   },
-  sendBtnDisabled: {
-    backgroundColor: Colors.textDisabled,
-  },
   sendBtnText: {
-    color: '#fff',
     fontWeight: '700',
     fontSize: 15,
   },

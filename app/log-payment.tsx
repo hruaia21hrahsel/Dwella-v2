@@ -18,7 +18,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { getDueDate, getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
@@ -28,10 +28,11 @@ const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.sectionHeader}>
-      <MaterialCommunityIcons name={icon as any} size={18} color={Colors.primary} />
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <MaterialCommunityIcons name={icon as any} size={18} color={colors.primary} />
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
     </View>
   );
 }
@@ -54,6 +55,7 @@ interface TenantOption {
 export default function LogPaymentScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { colors, shadows } = useTheme();
   const params = useLocalSearchParams<{ propertyId?: string; tenantId?: string }>();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
 
@@ -204,16 +206,16 @@ export default function LogPaymentScreen() {
 
   if (loadingData) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={Colors.primary} size="large" />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
 
   if (properties.length === 0) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyText}>No properties found. Add a property first.</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No properties found. Add a property first.</Text>
       </View>
     );
   }
@@ -232,39 +234,44 @@ export default function LogPaymentScreen() {
         }}
       />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
           {/* Page title */}
           <View style={styles.pageHeader}>
-            <Text style={styles.pageTitle}>Log Payment</Text>
-            <Text style={styles.pageSubtitle}>Record a rent payment for a tenant</Text>
+            <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>Log Payment</Text>
+            <Text style={[styles.pageSubtitle, { color: colors.textSecondary }]}>Record a rent payment for a tenant</Text>
           </View>
 
           {/* Property & Tenant selector */}
-          <View style={styles.sectionCard}>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <SectionHeader icon="home-city-outline" title="Property & Tenant" />
 
-            <Text style={styles.fieldLabel}>Property</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Property</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
               {properties.map((p, i) => {
                 const active = p.id === selectedPropertyId;
                 return (
                   <TouchableOpacity
                     key={p.id}
-                    style={[styles.chip, active && styles.chipActive, i < properties.length - 1 && styles.chipMargin]}
+                    style={[
+                      styles.chip,
+                      { borderColor: colors.border, backgroundColor: colors.background },
+                      active && { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+                      i < properties.length - 1 && styles.chipMargin,
+                    ]}
                     onPress={() => selectProperty(p.id)}
                     activeOpacity={0.7}
                   >
                     <MaterialCommunityIcons
                       name={active ? 'home-city' : 'home-city-outline'}
                       size={15}
-                      color={active ? Colors.primary : Colors.textSecondary}
+                      color={active ? colors.primary : colors.textSecondary}
                       style={{ marginRight: 5 }}
                     />
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{p.name}</Text>
+                    <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.primary, fontWeight: '700' }]}>{p.name}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -272,27 +279,32 @@ export default function LogPaymentScreen() {
 
             {tenantsForProperty.length > 0 ? (
               <>
-                <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Tenant</Text>
+                <Text style={[styles.fieldLabel, { marginTop: 12, color: colors.textSecondary }]}>Tenant</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
                   {tenantsForProperty.map((t, i) => {
                     const active = t.id === selectedTenantId;
                     return (
                       <TouchableOpacity
                         key={t.id}
-                        style={[styles.chip, active && styles.chipActive, i < tenantsForProperty.length - 1 && styles.chipMargin]}
+                        style={[
+                          styles.chip,
+                          { borderColor: colors.border, backgroundColor: colors.background },
+                          active && { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+                          i < tenantsForProperty.length - 1 && styles.chipMargin,
+                        ]}
                         onPress={() => selectTenant(t)}
                         activeOpacity={0.7}
                       >
                         <MaterialCommunityIcons
                           name={active ? 'account' : 'account-outline'}
                           size={15}
-                          color={active ? Colors.primary : Colors.textSecondary}
+                          color={active ? colors.primary : colors.textSecondary}
                           style={{ marginRight: 5 }}
                         />
-                        <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                        <Text style={[styles.chipText, { color: colors.textSecondary }, active && { color: colors.primary, fontWeight: '700' }]}>
                           {t.tenant_name}
                         </Text>
-                        <Text style={[styles.chipSub, active && { color: Colors.primary }]}>
+                        <Text style={[styles.chipSub, { color: colors.textSecondary }, active && { color: colors.primary }]}>
                           {' · '}{t.flat_no}
                         </Text>
                       </TouchableOpacity>
@@ -302,36 +314,36 @@ export default function LogPaymentScreen() {
               </>
             ) : (
               <View style={styles.noTenantRow}>
-                <MaterialCommunityIcons name="account-alert-outline" size={16} color={Colors.textDisabled} />
-                <Text style={styles.noTenantText}>No tenants in this property.</Text>
+                <MaterialCommunityIcons name="account-alert-outline" size={16} color={colors.textDisabled} />
+                <Text style={[styles.noTenantText, { color: colors.textDisabled }]}>No tenants in this property.</Text>
               </View>
             )}
           </View>
 
           {/* Rent context summary — only when tenant selected */}
           {selectedTenant && (
-            <View style={styles.contextCard}>
+            <View style={[styles.contextCard, { backgroundColor: colors.primarySoft, borderColor: colors.primaryLight }]}>
               <View style={styles.contextRow}>
                 <View style={styles.contextItem}>
-                  <Text style={styles.contextLabel}>Monthly Rent</Text>
-                  <Text style={styles.contextValue}>{formatCurrency(selectedTenant.monthly_rent)}</Text>
+                  <Text style={[styles.contextLabel, { color: colors.primaryDark }]}>Monthly Rent</Text>
+                  <Text style={[styles.contextValue, { color: colors.primaryDark }]}>{formatCurrency(selectedTenant.monthly_rent)}</Text>
                 </View>
-                <View style={styles.contextDivider} />
+                <View style={[styles.contextDivider, { backgroundColor: colors.primaryLight }]} />
                 <View style={styles.contextItem}>
-                  <Text style={styles.contextLabel}>Due Day</Text>
-                  <Text style={styles.contextValue}>{selectedTenant.due_day}<Text style={styles.contextSuffix}>{getOrdinalSuffix(selectedTenant.due_day)}</Text></Text>
+                  <Text style={[styles.contextLabel, { color: colors.primaryDark }]}>Due Day</Text>
+                  <Text style={[styles.contextValue, { color: colors.primaryDark }]}>{selectedTenant.due_day}<Text style={styles.contextSuffix}>{getOrdinalSuffix(selectedTenant.due_day)}</Text></Text>
                 </View>
-                <View style={styles.contextDivider} />
+                <View style={[styles.contextDivider, { backgroundColor: colors.primaryLight }]} />
                 <View style={styles.contextItem}>
-                  <Text style={styles.contextLabel}>Flat</Text>
-                  <Text style={styles.contextValue}>{selectedTenant.flat_no}</Text>
+                  <Text style={[styles.contextLabel, { color: colors.primaryDark }]}>Flat</Text>
+                  <Text style={[styles.contextValue, { color: colors.primaryDark }]}>{selectedTenant.flat_no}</Text>
                 </View>
               </View>
             </View>
           )}
 
           {/* Month selector */}
-          <View style={styles.sectionCard}>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <SectionHeader icon="calendar-month-outline" title={`Month (${currentYear})`} />
             <View style={styles.monthGrid}>
               {MONTHS.map((m) => {
@@ -342,8 +354,9 @@ export default function LogPaymentScreen() {
                     key={m}
                     style={[
                       styles.monthChip,
-                      active && styles.monthChipActive,
-                      isFuture && styles.monthChipDisabled,
+                      { borderColor: colors.border, backgroundColor: colors.background },
+                      active && { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+                      isFuture && { backgroundColor: colors.background, borderColor: colors.border, opacity: 0.35 },
                     ]}
                     onPress={() => !isFuture && setSelectedMonth(m)}
                     disabled={isFuture}
@@ -351,8 +364,9 @@ export default function LogPaymentScreen() {
                   >
                     <Text style={[
                       styles.monthChipText,
-                      active && styles.monthChipTextActive,
-                      isFuture && styles.monthChipTextDisabled,
+                      { color: colors.textSecondary },
+                      active && { color: colors.primary, fontWeight: '700' },
+                      isFuture && { color: colors.textDisabled },
                     ]}>
                       {MONTH_SHORT[m - 1]}
                     </Text>
@@ -363,7 +377,7 @@ export default function LogPaymentScreen() {
           </View>
 
           {/* Payment Details */}
-          <View style={styles.sectionCard}>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <SectionHeader icon="currency-inr" title="Payment Details" />
 
             <TextInput
@@ -375,7 +389,7 @@ export default function LogPaymentScreen() {
               onChangeText={(v) => { setAmount(v); setAmountError(''); }}
               left={<TextInput.Affix text="₹" />}
               error={!!amountError}
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
             />
             {amountError ? <HelperText type="error">{amountError}</HelperText> : null}
@@ -388,14 +402,14 @@ export default function LogPaymentScreen() {
               onChangeText={setNotes}
               multiline
               numberOfLines={2}
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
             />
           </View>
 
           {/* Proof upload */}
           {storagePath && (
-            <View style={styles.sectionCard}>
+            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <SectionHeader icon="camera-outline" title="Payment Proof" />
               <ProofUploader
                 storagePath={storagePath}
@@ -409,8 +423,8 @@ export default function LogPaymentScreen() {
             onPress={handleSubmit}
             loading={submitting}
             disabled={submitting || !selectedTenantId}
-            style={styles.submitBtn}
-            buttonColor={Colors.primary}
+            style={[styles.submitBtn, shadows.sm]}
+            buttonColor={colors.primary}
             contentStyle={styles.submitBtnContent}
             icon="check-circle-outline"
           >
@@ -433,10 +447,10 @@ function getOrdinalSuffix(n: number): string {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, gap: 16 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  emptyText: { color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  emptyText: { textAlign: 'center', paddingHorizontal: 32 },
 
   // Page header
   pageHeader: {
@@ -446,19 +460,15 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: Colors.textPrimary,
   },
   pageSubtitle: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
 
   // Section cards
   sectionCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     gap: 12,
   },
@@ -471,7 +481,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -480,7 +489,6 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -494,19 +502,12 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
   },
   chipMargin: {
     marginRight: 8,
   },
-  chipActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primarySoft,
-  },
-  chipText: { fontSize: 13, fontWeight: '500', color: Colors.textSecondary },
-  chipTextActive: { color: Colors.primary, fontWeight: '700' },
-  chipSub: { fontSize: 12, color: Colors.textSecondary },
+  chipText: { fontSize: 13, fontWeight: '500' },
+  chipSub: { fontSize: 12 },
 
   // No tenant hint
   noTenantRow: {
@@ -518,15 +519,12 @@ const styles = StyleSheet.create({
   },
   noTenantText: {
     fontSize: 13,
-    color: Colors.textDisabled,
   },
 
   // Context summary card
   contextCard: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.primaryLight,
     padding: 14,
   },
   contextRow: {
@@ -540,12 +538,10 @@ const styles = StyleSheet.create({
   contextDivider: {
     width: 1,
     height: 28,
-    backgroundColor: Colors.primaryLight,
   },
   contextLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.primaryDark,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 3,
@@ -553,7 +549,6 @@ const styles = StyleSheet.create({
   contextValue: {
     fontSize: 16,
     fontWeight: '800',
-    color: Colors.primaryDark,
   },
   contextSuffix: {
     fontSize: 11,
@@ -571,32 +566,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
     alignItems: 'center',
   },
-  monthChipActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primarySoft,
-  },
-  monthChipDisabled: {
-    backgroundColor: Colors.background,
-    borderColor: Colors.border,
-    opacity: 0.35,
-  },
-  monthChipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
-  monthChipTextActive: { color: Colors.primary, fontWeight: '700' },
-  monthChipTextDisabled: { color: Colors.textDisabled },
+  monthChipText: { fontSize: 12, fontWeight: '600' },
 
   // Inputs
-  input: { backgroundColor: Colors.surface },
+  input: {},
   inputOutline: { borderRadius: 12 },
 
   // Submit
   submitBtn: {
     marginTop: 4,
     borderRadius: 14,
-    ...Shadows.sm,
   },
   submitBtnContent: { paddingVertical: 10 },
 });

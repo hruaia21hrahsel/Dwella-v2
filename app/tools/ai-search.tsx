@@ -5,7 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { formatCurrency, getMonthName } from '@/lib/utils';
@@ -28,6 +28,7 @@ const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai-se
 export default function AiSearchScreen() {
   const { user } = useAuthStore();
   const router = useRouter();
+  const { colors, shadows } = useTheme();
   const [query, setQuery] = useState('');
   const [data, setData] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,7 +68,7 @@ export default function AiSearchScreen() {
     return (
       <AnimatedCard key={item.id} index={index}>
         <TouchableOpacity
-          style={[styles.resultCard, Shadows.sm]}
+          style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}
           activeOpacity={0.8}
           onPress={() => {
             // Navigate to payment detail if we have the needed IDs
@@ -80,18 +81,18 @@ export default function AiSearchScreen() {
         >
           <View style={styles.resultHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.resultTitle}>{(item as any).tenant_name}</Text>
-              <Text style={styles.resultSub}>
+              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{(item as any).tenant_name}</Text>
+              <Text style={[styles.resultSub, { color: colors.textSecondary }]}>
                 Flat {(item as any).flat_no} · {(item as any).property_name}
               </Text>
             </View>
             <PaymentStatusBadge status={(item as any).status as PaymentStatus} />
           </View>
           <View style={styles.resultMeta}>
-            <Text style={styles.resultMetaText}>
+            <Text style={[styles.resultMetaText, { color: colors.textSecondary }]}>
               {getMonthName((item as any).month)} {(item as any).year}
             </Text>
-            <Text style={styles.resultAmount}>
+            <Text style={[styles.resultAmount, { color: colors.textPrimary }]}>
               {formatCurrency((item as any).amount_paid)} / {formatCurrency((item as any).amount_due)}
             </Text>
           </View>
@@ -103,18 +104,18 @@ export default function AiSearchScreen() {
   function renderTenantResult(item: SearchResult, index: number) {
     return (
       <AnimatedCard key={item.id} index={index}>
-        <View style={[styles.resultCard, Shadows.sm]}>
+        <View style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
           <View style={styles.resultHeader}>
-            <MaterialCommunityIcons name="account" size={20} color={Colors.primary} style={{ marginRight: 8 }} />
+            <MaterialCommunityIcons name="account" size={20} color={colors.primary} style={{ marginRight: 8 }} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.resultTitle}>{(item as any).tenant_name}</Text>
-              <Text style={styles.resultSub}>
+              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{(item as any).tenant_name}</Text>
+              <Text style={[styles.resultSub, { color: colors.textSecondary }]}>
                 Flat {(item as any).flat_no} · {(item as any).property_name}
               </Text>
             </View>
           </View>
           <View style={styles.resultMeta}>
-            <Text style={styles.resultMetaText}>
+            <Text style={[styles.resultMetaText, { color: colors.textSecondary }]}>
               Rent: {formatCurrency((item as any).monthly_rent)} · Due day: {(item as any).due_day}
             </Text>
           </View>
@@ -126,15 +127,15 @@ export default function AiSearchScreen() {
   function renderPropertyResult(item: SearchResult, index: number) {
     return (
       <AnimatedCard key={item.id} index={index}>
-        <View style={[styles.resultCard, Shadows.sm]}>
+        <View style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
           <View style={styles.resultHeader}>
-            <MaterialCommunityIcons name="home-city" size={20} color={Colors.primary} style={{ marginRight: 8 }} />
+            <MaterialCommunityIcons name="home-city" size={20} color={colors.primary} style={{ marginRight: 8 }} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.resultTitle}>{(item as any).name}</Text>
-              <Text style={styles.resultSub}>{(item as any).address}, {(item as any).city}</Text>
+              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{(item as any).name}</Text>
+              <Text style={[styles.resultSub, { color: colors.textSecondary }]}>{(item as any).address}, {(item as any).city}</Text>
             </View>
           </View>
-          <Text style={styles.resultMetaText}>
+          <Text style={[styles.resultMetaText, { color: colors.textSecondary }]}>
             {(item as any).total_units} unit(s)
           </Text>
         </View>
@@ -145,7 +146,7 @@ export default function AiSearchScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'AI Search' }} />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Search bar */}
         <View style={styles.searchRow}>
           <TextInput
@@ -153,39 +154,39 @@ export default function AiSearchScreen() {
             onChangeText={setQuery}
             placeholder={'Try "overdue payments this month" or "Rahul\'s rent history"'}
             mode="outlined"
-            style={styles.searchInput}
+            style={[styles.searchInput, { backgroundColor: colors.surface }]}
             outlineStyle={styles.searchOutline}
             returnKeyType="search"
             onSubmitEditing={handleSearch}
             maxLength={200}
           />
           <TouchableOpacity
-            style={[styles.searchBtn, (!query.trim() || loading) && styles.searchBtnDisabled]}
+            style={[styles.searchBtn, { backgroundColor: colors.primary }, (!query.trim() || loading) && styles.searchBtnDisabled]}
             onPress={handleSearch}
             disabled={!query.trim() || loading}
           >
-            <MaterialCommunityIcons name="magnify" size={22} color="#fff" />
+            <MaterialCommunityIcons name="magnify" size={22} color={colors.textOnPrimary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.resultsWrap} contentContainerStyle={styles.resultsContent}>
           {loading && (
             <View style={styles.centered}>
-              <ActivityIndicator size="large" color={Colors.primary} />
-              <Text style={styles.loadingText}>Searching...</Text>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Searching...</Text>
             </View>
           )}
 
           {error && (
-            <View style={[styles.resultCard, { borderColor: Colors.error }]}>
-              <Text style={{ color: Colors.error }}>{error}</Text>
+            <View style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.error }]}>
+              <Text style={{ color: colors.error }}>{error}</Text>
             </View>
           )}
 
           {data && !loading && (
             <>
-              <Text style={styles.explanationText}>{data.explanation}</Text>
-              <Text style={styles.countText}>
+              <Text style={[styles.explanationText, { color: colors.textSecondary }]}>{data.explanation}</Text>
+              <Text style={[styles.countText, { color: colors.textDisabled }]}>
                 {data.count} result{data.count !== 1 ? 's' : ''} found
               </Text>
 
@@ -197,8 +198,8 @@ export default function AiSearchScreen() {
 
               {data.count === 0 && (
                 <View style={styles.emptyCard}>
-                  <MaterialCommunityIcons name="magnify-close" size={36} color={Colors.textDisabled} />
-                  <Text style={styles.emptyText}>No results found. Try a different query.</Text>
+                  <MaterialCommunityIcons name="magnify-close" size={36} color={colors.textDisabled} />
+                  <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No results found. Try a different query.</Text>
                 </View>
               )}
             </>
@@ -206,9 +207,9 @@ export default function AiSearchScreen() {
 
           {!data && !loading && !error && (
             <View style={styles.emptyCard}>
-              <MaterialCommunityIcons name="text-search" size={40} color={Colors.textDisabled} />
-              <Text style={styles.emptyTitle}>Search your data with AI</Text>
-              <Text style={styles.emptyText}>
+              <MaterialCommunityIcons name="text-search" size={40} color={colors.textDisabled} />
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Search your data with AI</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 {'Ask in plain English \u2014 "show overdue payments", "find tenants in Whitefield", "Rahul\'s payment history"'}
               </Text>
             </View>
@@ -220,7 +221,7 @@ export default function AiSearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -230,7 +231,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    backgroundColor: Colors.surface,
     fontSize: 14,
   },
   searchOutline: {
@@ -240,7 +240,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -250,24 +249,20 @@ const styles = StyleSheet.create({
   resultsWrap: { flex: 1 },
   resultsContent: { padding: 16, paddingTop: 4, gap: 10, paddingBottom: 40 },
   centered: { alignItems: 'center', paddingVertical: 40 },
-  loadingText: { color: Colors.textSecondary, marginTop: 12, fontSize: 14 },
+  loadingText: { marginTop: 12, fontSize: 14 },
   explanationText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     fontStyle: 'italic',
     marginBottom: 2,
   },
   countText: {
     fontSize: 12,
-    color: Colors.textDisabled,
     marginBottom: 4,
   },
   resultCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   resultHeader: {
     flexDirection: 'row',
@@ -277,11 +272,9 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   resultSub: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   resultMeta: {
@@ -291,12 +284,10 @@ const styles = StyleSheet.create({
   },
   resultMetaText: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   resultAmount: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   emptyCard: {
     alignItems: 'center',
@@ -306,11 +297,9 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   emptyText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 19,
     maxWidth: 280,

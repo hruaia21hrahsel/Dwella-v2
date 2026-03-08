@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
 
@@ -22,6 +22,7 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setOnboardingCompleted, setTourStep } = useAuthStore();
+  const { colors, gradients } = useTheme();
 
   function handleExplore() {
     setTourStep(0);
@@ -35,25 +36,25 @@ export default function OnboardingScreen() {
 
   return (
     <LinearGradient
-      colors={Colors.gradientHero as [string, string]}
+      colors={gradients.hero}
       style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
     >
       {/* Skip link top-right */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={handleSkip} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Text style={styles.skipText}>Skip</Text>
+          <Text style={[styles.skipText, { color: colors.textOnGradientMuted }]}>Skip</Text>
         </TouchableOpacity>
       </View>
 
       {/* Centred welcome content */}
       <View style={styles.content}>
         <View style={styles.iconCircle}>
-          <MaterialCommunityIcons name="home-heart" size={64} color={Colors.textOnGradient} />
+          <MaterialCommunityIcons name="home-heart" size={64} color={colors.textOnGradient} />
         </View>
 
-        <Text style={styles.title}>Welcome to Dwella</Text>
-        <Text style={styles.tagline}>The AI that runs your rentals.</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.textOnGradient }]}>Welcome to Dwella</Text>
+        <Text style={[styles.tagline, { color: colors.textOnGradient }]}>The AI that runs your rentals.</Text>
+        <Text style={[styles.subtitle, { color: colors.textOnGradientMuted }]}>
           Your all-in-one rental management platform. Track rent, manage tenants, and get
           AI-powered insights — all in one place.
         </Text>
@@ -61,9 +62,9 @@ export default function OnboardingScreen() {
 
       {/* CTA */}
       <View style={styles.bottom}>
-        <TouchableOpacity style={styles.ctaBtn} onPress={handleExplore} activeOpacity={0.85}>
-          <Text style={styles.ctaText}>Let's Explore</Text>
-          <MaterialCommunityIcons name="arrow-right" size={18} color={Colors.primary} />
+        <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: colors.textOnGradient }]} onPress={handleExplore} activeOpacity={0.85}>
+          <Text style={[styles.ctaText, { color: colors.primary }]}>Let's Explore</Text>
+          <MaterialCommunityIcons name="arrow-right" size={18} color={colors.primary} />
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -83,7 +84,6 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 15,
     fontWeight: '500',
-    color: Colors.textOnGradientMuted,
   },
   content: {
     flex: 1,
@@ -104,20 +104,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: '800',
-    color: Colors.textOnGradient,
     textAlign: 'center',
     lineHeight: 38,
   },
   tagline: {
     fontSize: 17,
     fontStyle: 'italic',
-    color: Colors.textOnGradient,
     textAlign: 'center',
     opacity: 0.9,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textOnGradientMuted,
     textAlign: 'center',
     lineHeight: 25,
   },
@@ -130,7 +127,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: Colors.textOnGradient,
     paddingHorizontal: 28,
     paddingVertical: 16,
     borderRadius: 100,
@@ -138,6 +134,5 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.primary,
   },
 });

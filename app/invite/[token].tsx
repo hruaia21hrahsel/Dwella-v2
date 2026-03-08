@@ -4,7 +4,7 @@ import { Text, Button, ActivityIndicator, Divider } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuthStore } from '@/lib/store';
 import { getInviteDetails, acceptInvite } from '@/lib/invite';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getOrdinal } from '@/lib/utils';
 import { Tenant, Property } from '@/lib/types';
 
@@ -14,6 +14,7 @@ export default function InviteScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const router = useRouter();
   const { user, session } = useAuthStore();
+  const { colors } = useTheme();
 
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,17 +60,17 @@ export default function InviteScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (accepted) {
     return (
-      <View style={styles.centered}>
-        <Text variant="headlineMedium" style={styles.successTitle}>Welcome! 🎉</Text>
-        <Text variant="bodyLarge" style={styles.successSubtitle}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text variant="headlineMedium" style={{ color: colors.statusConfirmed, fontWeight: '700' }}>Welcome! 🎉</Text>
+        <Text variant="bodyLarge" style={{ color: colors.textSecondary, textAlign: 'center' }}>
           You've been linked to the property. Redirecting…
         </Text>
       </View>
@@ -78,8 +79,8 @@ export default function InviteScreen() {
 
   if (error || !inviteData) {
     return (
-      <View style={styles.centered}>
-        <Text variant="titleMedium" style={styles.errorText}>{error || 'Invalid invite.'}</Text>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <Text variant="titleMedium" style={{ color: colors.error, textAlign: 'center' }}>{error || 'Invalid invite.'}</Text>
         <Button mode="outlined" onPress={() => router.replace('/(tabs)/properties')} style={styles.button}>
           Go Home
         </Button>
@@ -88,40 +89,40 @@ export default function InviteScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text variant="headlineSmall" style={styles.headline}>You've been invited!</Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Text variant="headlineSmall" style={{ color: colors.primary, fontWeight: '700', marginBottom: 8 }}>You've been invited!</Text>
+        <Text variant="bodyMedium" style={{ color: colors.textSecondary, marginBottom: 8 }}>
           You've been added as a tenant. Review the details below and accept to get started.
         </Text>
 
         <Divider style={styles.divider} />
 
         <View style={styles.detailRow}>
-          <Text variant="bodySmall" style={styles.label}>Property</Text>
-          <Text variant="bodyLarge" style={styles.value}>{inviteData.properties?.name}</Text>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Property</Text>
+          <Text variant="bodyLarge" style={{ color: colors.textPrimary, fontWeight: '500' }}>{inviteData.properties?.name}</Text>
         </View>
         <Divider />
         <View style={styles.detailRow}>
-          <Text variant="bodySmall" style={styles.label}>Address</Text>
-          <Text variant="bodyMedium" style={styles.value}>{inviteData.properties?.address}</Text>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Address</Text>
+          <Text variant="bodyMedium" style={{ color: colors.textPrimary, fontWeight: '500' }}>{inviteData.properties?.address}</Text>
         </View>
         <Divider />
         <View style={styles.detailRow}>
-          <Text variant="bodySmall" style={styles.label}>Flat / Unit</Text>
-          <Text variant="bodyLarge" style={styles.value}>{inviteData.flat_no}</Text>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Flat / Unit</Text>
+          <Text variant="bodyLarge" style={{ color: colors.textPrimary, fontWeight: '500' }}>{inviteData.flat_no}</Text>
         </View>
         <Divider />
         <View style={styles.detailRow}>
-          <Text variant="bodySmall" style={styles.label}>Monthly Rent</Text>
-          <Text variant="bodyLarge" style={[styles.value, styles.rentValue]}>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Monthly Rent</Text>
+          <Text variant="bodyLarge" style={{ color: colors.primary, fontWeight: '700' }}>
             {formatCurrency(inviteData.monthly_rent)}
           </Text>
         </View>
         <Divider />
         <View style={styles.detailRow}>
-          <Text variant="bodySmall" style={styles.label}>Due Date</Text>
-          <Text variant="bodyLarge" style={styles.value}>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Due Date</Text>
+          <Text variant="bodyLarge" style={{ color: colors.textPrimary, fontWeight: '500' }}>
             {getOrdinal(inviteData.due_day)} of each month
           </Text>
         </View>
@@ -140,7 +141,7 @@ export default function InviteScreen() {
         <Button
           mode="text"
           onPress={() => router.replace('/(tabs)/properties')}
-          textColor={Colors.textSecondary}
+          textColor={colors.textSecondary}
         >
           Decline
         </Button>
@@ -152,7 +153,6 @@ export default function InviteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     padding: 24,
     justifyContent: 'center',
   },
@@ -162,24 +162,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     gap: 16,
-    backgroundColor: Colors.background,
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 24,
     borderWidth: 1,
-    borderColor: Colors.border,
     gap: 0,
-  },
-  headline: {
-    color: Colors.primary,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    marginBottom: 8,
   },
   divider: { marginVertical: 4 },
   detailRow: {
@@ -188,13 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
   },
-  label: { color: Colors.textSecondary },
-  value: { color: Colors.textPrimary, fontWeight: '500' },
-  rentValue: { color: Colors.primary, fontWeight: '700' },
   acceptButton: { marginTop: 16 },
   acceptButtonContent: { paddingVertical: 6 },
-  successTitle: { color: Colors.statusConfirmed, fontWeight: '700' },
-  successSubtitle: { color: Colors.textSecondary, textAlign: 'center' },
-  errorText: { color: Colors.error, textAlign: 'center' },
   button: { marginTop: 8 },
 });

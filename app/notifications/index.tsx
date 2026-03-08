@@ -3,7 +3,7 @@ import { Text, Button } from 'react-native-paper';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Notification } from '@/lib/types';
@@ -33,13 +33,14 @@ function iconForType(type: string): IconName {
   }
 }
 
-function iconColorForType(type: string): string {
+function useIconColorForType(type: string): string {
+  const { colors } = useTheme();
   switch (type) {
-    case 'reminder_overdue': return Colors.error;
-    case 'reminder_due':     return Colors.warning;
+    case 'reminder_overdue': return colors.error;
+    case 'reminder_due':     return colors.warning;
     case 'payment_confirmed':
-    case 'payment_received': return Colors.success;
-    default:                 return Colors.primary;
+    case 'payment_received': return colors.success;
+    default:                 return colors.primary;
   }
 }
 
@@ -49,30 +50,36 @@ interface NotifRowProps {
 }
 
 function NotifRow({ notif, onPress }: NotifRowProps) {
+  const { colors, shadows } = useTheme();
+  const iconColor = useIconColorForType(notif.type);
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
-      style={[styles.row, !notif.is_read && styles.rowUnread]}
+      style={[
+        styles.row,
+        { backgroundColor: colors.surface, ...shadows.sm },
+        !notif.is_read && { backgroundColor: colors.primarySoft },
+      ]}
     >
-      <View style={[styles.iconWrap, { backgroundColor: iconColorForType(notif.type) + '18' }]}>
+      <View style={[styles.iconWrap, { backgroundColor: iconColor + '18' }]}>
         <MaterialCommunityIcons
           name={iconForType(notif.type)}
           size={22}
-          color={iconColorForType(notif.type)}
+          color={iconColor}
         />
       </View>
       <View style={styles.rowContent}>
         <Text
-          style={[styles.rowTitle, !notif.is_read && styles.rowTitleUnread]}
+          style={[styles.rowTitle, { color: colors.textPrimary }, !notif.is_read && styles.rowTitleUnread]}
           numberOfLines={1}
         >
           {notif.title}
         </Text>
-        <Text style={styles.rowBody} numberOfLines={2}>{notif.body}</Text>
-        <Text style={styles.rowTime}>{relativeTime(notif.created_at)}</Text>
+        <Text style={[styles.rowBody, { color: colors.textSecondary }]} numberOfLines={2}>{notif.body}</Text>
+        <Text style={[styles.rowTime, { color: colors.textDisabled }]}>{relativeTime(notif.created_at)}</Text>
       </View>
-      {!notif.is_read && <View style={styles.unreadDot} />}
+      {!notif.is_read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
     </TouchableOpacity>
   );
 }
@@ -82,6 +89,7 @@ export default function NotificationsScreen() {
   const { notifications, unreadCount, loading, markRead, markAllRead } = useNotifications(user?.id);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   async function handlePress(notif: Notification) {
     if (!notif.is_read) await markRead(notif.id);
@@ -98,15 +106,15 @@ export default function NotificationsScreen() {
           headerShown: true,
           presentation: 'modal',
           title: 'Notifications',
-          headerStyle: { backgroundColor: Colors.surface },
-          headerTitleStyle: { color: Colors.textPrimary, fontWeight: '700' },
+          headerStyle: { backgroundColor: colors.surface },
+          headerTitleStyle: { color: colors.textPrimary, fontWeight: '700' },
           headerRight: () =>
             unreadCount > 0 ? (
               <Button
                 compact
                 mode="text"
                 onPress={markAllRead}
-                textColor={Colors.primary}
+                textColor={colors.primary}
                 style={{ marginRight: 8 }}
               >
                 Mark all read
@@ -115,13 +123,13 @@ export default function NotificationsScreen() {
         }}
       />
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}
       >
         {!loading && notifications.length === 0 && (
           <View style={styles.emptyWrap}>
-            <MaterialCommunityIcons name="bell-off-outline" size={48} color={Colors.textDisabled} />
-            <Text style={styles.emptyText}>No notifications yet</Text>
+            <MaterialCommunityIcons name="bell-off-outline" size={48} color={colors.textDisabled} />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No notifications yet</Text>
           </View>
         )}
 
@@ -140,7 +148,6 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 16,
@@ -149,14 +156,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 14,
     gap: 12,
-    ...Shadows.sm,
-  },
-  rowUnread: {
-    backgroundColor: Colors.primarySoft,
   },
   iconWrap: {
     width: 40,
@@ -171,7 +173,6 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     fontSize: 14,
-    color: Colors.textPrimary,
     fontWeight: '500',
   },
   rowTitleUnread: {
@@ -179,19 +180,16 @@ const styles = StyleSheet.create({
   },
   rowBody: {
     fontSize: 13,
-    color: Colors.textSecondary,
     lineHeight: 18,
   },
   rowTime: {
     fontSize: 11,
-    color: Colors.textDisabled,
     marginTop: 2,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.primary,
   },
   emptyWrap: {
     alignItems: 'center',
@@ -201,6 +199,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: Colors.textSecondary,
   },
 });

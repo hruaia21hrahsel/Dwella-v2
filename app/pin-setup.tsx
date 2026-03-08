@@ -4,13 +4,14 @@ import { Text } from 'react-native-paper';
 import { useRouter, useNavigation } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { savePin } from '@/lib/biometric-auth';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 type Step = 'enter' | 'confirm';
 
 export default function PinSetupScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { colors } = useTheme();
   const [step, setStep] = useState<Step>('enter');
   const [pin, setPin] = useState('');
   const [firstPin, setFirstPin] = useState('');
@@ -61,12 +62,12 @@ export default function PinSetupScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>
           {step === 'enter' ? 'Set a 6-digit PIN' : 'Confirm your PIN'}
         </Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {step === 'enter'
             ? 'This PIN will be used as a backup to biometric sign-in.'
             : 'Enter the same PIN again to confirm.'}
@@ -75,11 +76,11 @@ export default function PinSetupScreen() {
 
       <View style={styles.dotsRow}>
         {[0,1,2,3,4,5].map((i) => (
-          <View key={i} style={[styles.dot, pin.length > i && styles.dotFilled]} />
+          <View key={i} style={[styles.dot, { borderColor: colors.primary }, pin.length > i && { backgroundColor: colors.primary }]} />
         ))}
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <Text style={[styles.error, { color: colors.statusOverdue }]}>{error}</Text>}
 
       <View style={styles.numpad}>
         {DIGITS.map((row, ri) => (
@@ -87,13 +88,13 @@ export default function PinSetupScreen() {
             {row.map((d, di) => {
               if (d === '') return <View key={di} style={styles.numpadKey} />;
               if (d === '⌫') return (
-                <TouchableOpacity key={di} style={styles.numpadKey} onPress={handleDelete} activeOpacity={0.6}>
-                  <MaterialCommunityIcons name="backspace-outline" size={26} color={Colors.textSecondary} />
+                <TouchableOpacity key={di} style={[styles.numpadKey, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleDelete} activeOpacity={0.6}>
+                  <MaterialCommunityIcons name="backspace-outline" size={26} color={colors.textSecondary} />
                 </TouchableOpacity>
               );
               return (
-                <TouchableOpacity key={di} style={styles.numpadKey} onPress={() => handleDigit(d)} activeOpacity={0.6}>
-                  <Text style={styles.numpadDigit}>{d}</Text>
+                <TouchableOpacity key={di} style={[styles.numpadKey, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleDigit(d)} activeOpacity={0.6}>
+                  <Text style={[styles.numpadDigit, { color: colors.textPrimary }]}>{d}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -102,7 +103,7 @@ export default function PinSetupScreen() {
       </View>
 
       <TouchableOpacity onPress={handleSkip}>
-        <Text style={styles.skipLink}>Skip for now</Text>
+        <Text style={[styles.skipLink, { color: colors.textSecondary }]}>Skip for now</Text>
       </TouchableOpacity>
     </View>
   );
@@ -111,29 +112,27 @@ export default function PinSetupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 60,
     paddingHorizontal: 32,
   },
   header: { alignItems: 'center', gap: 12 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+  title: { fontSize: 22, fontWeight: '700', textAlign: 'center' },
+  subtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   dotsRow: { flexDirection: 'row', gap: 16 },
   dot: {
     width: 16, height: 16, borderRadius: 8,
-    borderWidth: 2, borderColor: Colors.primary, backgroundColor: 'transparent',
+    borderWidth: 2, backgroundColor: 'transparent',
   },
-  dotFilled: { backgroundColor: Colors.primary },
-  error: { fontSize: 13, color: Colors.statusOverdue, textAlign: 'center' },
+  error: { fontSize: 13, textAlign: 'center' },
   numpad: { width: '100%', gap: 8 },
   numpadRow: { flexDirection: 'row', justifyContent: 'space-around' },
   numpadKey: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1,
   },
-  numpadDigit: { fontSize: 28, fontWeight: '400', color: Colors.textPrimary },
-  skipLink: { fontSize: 14, color: Colors.textSecondary },
+  numpadDigit: { fontSize: 28, fontWeight: '400' },
+  skipLink: { fontSize: 14 },
 });

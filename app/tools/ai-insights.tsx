@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { formatCurrency, getCurrentMonthYear, getMonthName } from '@/lib/utils';
 
@@ -25,6 +25,7 @@ const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai-in
 
 export default function AiInsightsScreen() {
   const { user } = useAuthStore();
+  const { colors, shadows } = useTheme();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -69,20 +70,20 @@ export default function AiInsightsScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'AI Insights' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
         {/* Period selector */}
         <View style={styles.periodRow}>
           <TouchableOpacity
-            style={[styles.periodChip, !isYearly && styles.periodChipActive]}
+            style={[styles.periodChip, { borderColor: colors.border, backgroundColor: colors.surface }, !isYearly && { borderColor: colors.primary, backgroundColor: colors.primarySoft }]}
             onPress={() => setIsYearly(false)}
           >
-            <Text style={[styles.periodText, !isYearly && styles.periodTextActive]}>Monthly</Text>
+            <Text style={[styles.periodText, { color: colors.textSecondary }, !isYearly && { color: colors.primary }]}>Monthly</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.periodChip, isYearly && styles.periodChipActive]}
+            style={[styles.periodChip, { borderColor: colors.border, backgroundColor: colors.surface }, isYearly && { borderColor: colors.primary, backgroundColor: colors.primarySoft }]}
             onPress={() => setIsYearly(true)}
           >
-            <Text style={[styles.periodText, isYearly && styles.periodTextActive]}>Yearly</Text>
+            <Text style={[styles.periodText, { color: colors.textSecondary }, isYearly && { color: colors.primary }]}>Yearly</Text>
           </TouchableOpacity>
         </View>
 
@@ -98,9 +99,9 @@ export default function AiInsightsScreen() {
                 }
               }}
             >
-              <MaterialCommunityIcons name="chevron-left" size={24} color={Colors.textSecondary} />
+              <MaterialCommunityIcons name="chevron-left" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
-            <Text style={styles.monthText}>{getMonthName(selectedMonth)} {selectedYear}</Text>
+            <Text style={[styles.monthText, { color: colors.textPrimary }]}>{getMonthName(selectedMonth)} {selectedYear}</Text>
             <TouchableOpacity
               onPress={() => {
                 if (selectedMonth >= 12) {
@@ -111,23 +112,23 @@ export default function AiInsightsScreen() {
                 }
               }}
             >
-              <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.textSecondary} />
+              <MaterialCommunityIcons name="chevron-right" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         )}
 
         {loading && (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>Analyzing your data...</Text>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Analyzing your data...</Text>
           </View>
         )}
 
         {error && (
-          <View style={[styles.card, { borderColor: Colors.error }]}>
-            <Text style={{ color: Colors.error }}>{error}</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.error }]}>
+            <Text style={{ color: colors.error }}>{error}</Text>
             <TouchableOpacity onPress={fetchInsights} style={styles.retryBtn}>
-              <Text style={{ color: Colors.primary, fontWeight: '600' }}>Retry</Text>
+              <Text style={{ color: colors.primary, fontWeight: '600' }}>Retry</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -136,12 +137,12 @@ export default function AiInsightsScreen() {
           <>
             {/* Summary */}
             <AnimatedCard index={0}>
-              <View style={[styles.card, Shadows.sm]}>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
                 <View style={styles.cardHeader}>
-                  <MaterialCommunityIcons name="text-box-outline" size={18} color={Colors.primary} />
-                  <Text style={styles.cardTitle}>Summary</Text>
+                  <MaterialCommunityIcons name="text-box-outline" size={18} color={colors.primary} />
+                  <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Summary</Text>
                 </View>
-                <Text style={styles.cardBody}>{data.summary}</Text>
+                <Text style={[styles.cardBody, { color: colors.textSecondary }]}>{data.summary}</Text>
               </View>
             </AnimatedCard>
 
@@ -149,23 +150,23 @@ export default function AiInsightsScreen() {
             {data.metrics && (
               <AnimatedCard index={1}>
                 <View style={styles.metricsRow}>
-                  <View style={[styles.metricCard, Shadows.sm]}>
-                    <Text style={[styles.metricValue, { color: Colors.statusConfirmed }]}>
+                  <View style={[styles.metricCard, { backgroundColor: colors.surface }, shadows.sm]}>
+                    <Text style={[styles.metricValue, { color: colors.statusConfirmed }]}>
                       {data.metrics.collection_rate}%
                     </Text>
-                    <Text style={styles.metricLabel}>Collection Rate</Text>
+                    <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Collection Rate</Text>
                   </View>
-                  <View style={[styles.metricCard, Shadows.sm]}>
-                    <Text style={[styles.metricValue, { color: Colors.primary }]}>
+                  <View style={[styles.metricCard, { backgroundColor: colors.surface }, shadows.sm]}>
+                    <Text style={[styles.metricValue, { color: colors.primary }]}>
                       {formatCurrency(data.metrics.net_income)}
                     </Text>
-                    <Text style={styles.metricLabel}>Net Income</Text>
+                    <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Net Income</Text>
                   </View>
-                  <View style={[styles.metricCard, Shadows.sm]}>
-                    <Text style={[styles.metricValue, { color: Colors.statusOverdue }]}>
+                  <View style={[styles.metricCard, { backgroundColor: colors.surface }, shadows.sm]}>
+                    <Text style={[styles.metricValue, { color: colors.statusOverdue }]}>
                       {formatCurrency(data.metrics.overdue_amount)}
                     </Text>
-                    <Text style={styles.metricLabel}>Overdue</Text>
+                    <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Overdue</Text>
                   </View>
                 </View>
               </AnimatedCard>
@@ -174,15 +175,15 @@ export default function AiInsightsScreen() {
             {/* Highlights */}
             {data.highlights?.length > 0 && (
               <AnimatedCard index={2}>
-                <View style={[styles.card, Shadows.sm]}>
+                <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
                   <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="star-outline" size={18} color={Colors.statusPartial} />
-                    <Text style={styles.cardTitle}>Highlights</Text>
+                    <MaterialCommunityIcons name="star-outline" size={18} color={colors.statusPartial} />
+                    <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Highlights</Text>
                   </View>
                   {data.highlights.map((h, i) => (
                     <View key={i} style={styles.bulletRow}>
-                      <Text style={styles.bullet}>•</Text>
-                      <Text style={styles.bulletText}>{h}</Text>
+                      <Text style={[styles.bullet, { color: colors.textSecondary }]}>•</Text>
+                      <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{h}</Text>
                     </View>
                   ))}
                 </View>
@@ -192,15 +193,15 @@ export default function AiInsightsScreen() {
             {/* Trends */}
             {data.trends?.length > 0 && (
               <AnimatedCard index={3}>
-                <View style={[styles.card, Shadows.sm]}>
+                <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
                   <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="trending-up" size={18} color={Colors.info} />
-                    <Text style={styles.cardTitle}>Trends</Text>
+                    <MaterialCommunityIcons name="trending-up" size={18} color={colors.info} />
+                    <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Trends</Text>
                   </View>
                   {data.trends.map((t, i) => (
                     <View key={i} style={styles.bulletRow}>
-                      <Text style={styles.bullet}>•</Text>
-                      <Text style={styles.bulletText}>{t}</Text>
+                      <Text style={[styles.bullet, { color: colors.textSecondary }]}>•</Text>
+                      <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{t}</Text>
                     </View>
                   ))}
                 </View>
@@ -210,15 +211,15 @@ export default function AiInsightsScreen() {
             {/* Recommendations */}
             {data.recommendations?.length > 0 && (
               <AnimatedCard index={4}>
-                <View style={[styles.card, Shadows.sm]}>
+                <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
                   <View style={styles.cardHeader}>
-                    <MaterialCommunityIcons name="lightbulb-outline" size={18} color={Colors.statusConfirmed} />
-                    <Text style={styles.cardTitle}>Recommendations</Text>
+                    <MaterialCommunityIcons name="lightbulb-outline" size={18} color={colors.statusConfirmed} />
+                    <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Recommendations</Text>
                   </View>
                   {data.recommendations.map((r, i) => (
                     <View key={i} style={styles.bulletRow}>
-                      <Text style={styles.bullet}>•</Text>
-                      <Text style={styles.bulletText}>{r}</Text>
+                      <Text style={[styles.bullet, { color: colors.textSecondary }]}>•</Text>
+                      <Text style={[styles.bulletText, { color: colors.textSecondary }]}>{r}</Text>
                     </View>
                   ))}
                 </View>
@@ -232,10 +233,10 @@ export default function AiInsightsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
   centered: { alignItems: 'center', paddingVertical: 40 },
-  loadingText: { color: Colors.textSecondary, marginTop: 12, fontSize: 14 },
+  loadingText: { marginTop: 12, fontSize: 14 },
   periodRow: {
     flexDirection: 'row',
     gap: 8,
@@ -246,21 +247,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: Colors.border,
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-  },
-  periodChipActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primarySoft,
   },
   periodText: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  periodTextActive: {
-    color: Colors.primary,
   },
   monthRow: {
     flexDirection: 'row',
@@ -272,16 +263,13 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
     minWidth: 140,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -292,12 +280,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   cardBody: {
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.textSecondary,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -305,7 +291,6 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -317,7 +302,6 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 11,
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
   bulletRow: {
@@ -326,14 +310,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   bullet: {
-    color: Colors.textSecondary,
     fontSize: 14,
   },
   bulletText: {
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
-    color: Colors.textSecondary,
   },
   retryBtn: {
     marginTop: 8,
