@@ -13,10 +13,14 @@ const TAB_CONFIG: Record<string, { label: string; icon: string; iconOutline: str
   'bot/index':       { label: 'Assistant',   icon: 'robot',           iconOutline: 'robot-outline' },
 };
 
+// Order: Home, Properties, [Log], Tools, Assistant
+const LEFT_TABS = ['dashboard/index', 'properties'];
+const RIGHT_TABS = ['tools/index', 'bot/index'];
+
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
-  const visibleRoutes = state.routes.filter((r) => TAB_CONFIG[r.name]);
+  const routeMap = new Map(state.routes.map((r) => [r.name, r]));
 
   function TabButton({ route }: { route: typeof state.routes[0] }) {
     const cfg = TAB_CONFIG[route.name]!;
@@ -56,11 +60,14 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View style={styles.bar}>
-        {visibleRoutes.map((r) => <TabButton key={r.key} route={r} />)}
+        {LEFT_TABS.map((name) => {
+          const route = routeMap.get(name);
+          return route ? <TabButton key={route.key} route={route} /> : null;
+        })}
 
-        {/* Log Payment — inside the bar so it always receives touches */}
+        {/* Log Payment — center slot */}
         <Pressable
-          style={styles.fab}
+          style={styles.tab}
           onPress={() => navigation.getParent()?.navigate('log-payment')}
         >
           <View style={styles.fabCircle}>
@@ -68,6 +75,11 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           </View>
           <Text style={styles.fabLabel}>Log</Text>
         </Pressable>
+
+        {RIGHT_TABS.map((name) => {
+          const route = routeMap.get(name);
+          return route ? <TabButton key={route.key} route={route} /> : null;
+        })}
       </View>
     </View>
   );
@@ -98,14 +110,6 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     fontWeight: '600',
-  },
-  fab: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    gap: 4,
-    paddingTop: 4,
-    paddingBottom: 4,
   },
   fabCircle: {
     width: 36,
