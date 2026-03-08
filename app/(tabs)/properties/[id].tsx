@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
 import { Text, IconButton, ActivityIndicator, Chip, Button, Icon } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
 import { useTenants } from '@/hooks/useTenants';
 import { useExpenses } from '@/hooks/useExpenses';
@@ -21,7 +21,7 @@ export default function PropertyDetailScreen() {
   const { user, bumpPropertyRefresh } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
-  const { expenses } = useExpenses(id ?? null);
+  const { expenses, refresh: refreshExpenses } = useExpenses(id ?? null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -30,9 +30,17 @@ export default function PropertyDetailScreen() {
 
   const occupiedCount = tenants.filter((t) => t.invite_status === 'accepted').length;
 
+  // Re-fetch expenses when screen regains focus (e.g. after adding an expense)
+  useFocusEffect(
+    useCallback(() => {
+      refreshExpenses();
+    }, [refreshExpenses])
+  );
+
   function handleRefresh() {
     refreshProps();
     refreshTenants();
+    refreshExpenses();
   }
 
   async function handleArchiveProperty() {
