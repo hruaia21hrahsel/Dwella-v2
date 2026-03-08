@@ -19,7 +19,7 @@ export function NotificationsHeaderButton() {
       <MaterialCommunityIcons
         name={unreadCount > 0 ? 'bell-badge' : 'bell-outline'}
         size={26}
-        color={Colors.textPrimary}
+        color="#fff"
       />
       {unreadCount > 0 && (
         <View style={styles.badge}>

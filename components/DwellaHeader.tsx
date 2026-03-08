@@ -14,7 +14,7 @@ export function DwellaHeader({ right }: Props) {
   return (
     <View
       style={{
-        backgroundColor: Colors.surface,
+        backgroundColor: Colors.primary,
         paddingTop: insets.top,
         height: 60 + insets.top,
         flexDirection: 'row',

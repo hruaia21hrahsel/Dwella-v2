@@ -17,7 +17,7 @@ export function ProfileHeaderButton({ style }: { style?: ViewStyle }) {
       style={[styles.btn, style]}
       activeOpacity={0.7}
     >
-      <MaterialCommunityIcons name="account-circle-outline" size={26} color={Colors.textPrimary} />
+      <MaterialCommunityIcons name="account-circle-outline" size={26} color="#fff" />
       {unreadCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
