@@ -201,6 +201,27 @@ export default function DashboardScreen() {
         </View>
       </LinearGradient>
 
+      {/* Telegram CTA — only when not linked */}
+      {!telegramLinked && (
+        <TouchableOpacity
+          style={styles.telegramCta}
+          onPress={handleLinkTelegram}
+          disabled={linkingTelegram}
+          activeOpacity={0.8}
+        >
+          <View style={styles.telegramCtaIcon}>
+            <MaterialCommunityIcons name="send" size={16} color="#fff" />
+          </View>
+          <View style={styles.telegramCtaTextWrap}>
+            <Text style={styles.telegramCtaTitle}>
+              {linkingTelegram ? 'Opening Telegram…' : 'Chat with Dwella on Telegram!'}
+            </Text>
+            <Text style={styles.telegramCtaSub}>Get rent reminders & manage via chat</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      )}
+
       {/* Property selector */}
       <ScrollView
         horizontal
@@ -337,27 +358,6 @@ export default function DashboardScreen() {
         <MaterialCommunityIcons name="bell-ring-outline" size={16} color={Colors.primary} style={{ marginRight: 6 }} />
         <Text style={styles.remindersBtnText}>Send Reminders</Text>
       </TouchableOpacity>
-
-      {/* Telegram CTA — only when not linked */}
-      {!telegramLinked && (
-        <TouchableOpacity
-          style={styles.telegramCta}
-          onPress={handleLinkTelegram}
-          disabled={linkingTelegram}
-          activeOpacity={0.8}
-        >
-          <View style={styles.telegramCtaIcon}>
-            <MaterialCommunityIcons name="send" size={16} color="#fff" />
-          </View>
-          <View style={styles.telegramCtaTextWrap}>
-            <Text style={styles.telegramCtaTitle}>
-              {linkingTelegram ? 'Opening Telegram…' : 'Chat with Dwella on Telegram!'}
-            </Text>
-            <Text style={styles.telegramCtaSub}>Get rent reminders & manage via chat</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      )}
 
       {/* Section 2 — Stats */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
