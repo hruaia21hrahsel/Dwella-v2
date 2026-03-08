@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity } from 'react-native';
-import { Text, ActivityIndicator, FAB } from 'react-native-paper';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -368,17 +368,7 @@ export default function PaymentsScreen() {
           ))
         )}
 
-        <View style={{ height: 80 }} />
       </ScrollView>
-
-      {/* Log Payment FAB */}
-      <FAB
-        icon="plus"
-        label="Log Payment"
-        style={styles.fab}
-        color="#fff"
-        onPress={() => router.push('/log-payment')}
-      />
 
       {/* ── Sort Modal ── */}
       <Modal
@@ -652,15 +642,6 @@ const styles = StyleSheet.create({
   },
   paymentAmount: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary },
   paymentDue: { fontSize: 11, color: Colors.textSecondary },
-
-  // FAB
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 24,
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-  },
 
   // Sort modal
   modalOverlay: {
