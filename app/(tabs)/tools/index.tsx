@@ -5,7 +5,7 @@ import { Colors, Shadows } from '@/constants/colors';
 
 const TOOLS = [
   {
-    label: 'Payments',
+    label: 'Payment History',
     description: 'Track rent payments and confirmations',
     icon: 'receipt',
     route: '/(tabs)/payments',
