@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,7 +38,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     }
 
     return (
-      <TouchableOpacity style={styles.tab} onPress={onPress} activeOpacity={0.6}>
+      <Pressable style={styles.tab} onPress={onPress}>
         <MaterialCommunityIcons
           name={(isFocused ? cfg.icon : cfg.iconOutline) as any}
           size={22}
@@ -53,44 +53,39 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         >
           {cfg.label}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     );
   }
 
   return (
-    <View pointerEvents="box-none" style={[styles.container, { height: TAB_HEIGHT + insets.bottom + FAB_SIZE / 2 }]}>
-      <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      {/* Tab bar row */}
+      <View style={styles.bar}>
         {visibleRoutes.map((r) => <TabButton key={r.key} route={r} />)}
       </View>
 
       {/* Floating FAB — Log Payment */}
-      <TouchableOpacity
-        style={[styles.fab, { bottom: TAB_HEIGHT + insets.bottom - FAB_SIZE / 2 }]}
+      <Pressable
+        style={styles.fab}
         onPress={() => router.push('/log-payment' as any)}
-        activeOpacity={0.85}
       >
         <View style={styles.fabCircle}>
           <MaterialCommunityIcons name="plus" size={24} color="#fff" />
         </View>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    overflow: 'visible',
-  },
-  bar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: TAB_HEIGHT,
-    flexDirection: 'row',
     backgroundColor: '#fff',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: Colors.border,
+  },
+  bar: {
+    height: TAB_HEIGHT,
+    flexDirection: 'row',
   },
   tab: {
     flex: 1,
@@ -110,8 +105,8 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
+    top: -FAB_SIZE / 2,
     right: 16,
-    alignItems: 'center',
     zIndex: 10,
   },
   fabCircle: {
@@ -125,6 +120,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
-    elevation: 6,
+    elevation: 8,
   },
 });
