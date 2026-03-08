@@ -312,20 +312,14 @@ export default function DashboardScreen() {
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
         {getMonthName(currentMonth)} {selectedYear}
       </Text>
-      <View style={styles.statsGrid}>
-        <AnimatedCard index={0} style={{ flex: 1, minWidth: '45%' }}>
+      <AnimatedCard index={0}>
+        <View style={styles.statsGrid}>
           <StatCard label="Total Receivable" value={stats.totalReceivable} color={Colors.primary} />
-        </AnimatedCard>
-        <AnimatedCard index={1} style={{ flex: 1, minWidth: '45%' }}>
           <StatCard label="Received" value={stats.totalReceived} color={Colors.statusConfirmed} />
-        </AnimatedCard>
-        <AnimatedCard index={2} style={{ flex: 1, minWidth: '45%' }}>
           <StatCard label="Yet to Receive" value={stats.totalPending} color={Colors.statusPartial} />
-        </AnimatedCard>
-        <AnimatedCard index={3} style={{ flex: 1, minWidth: '45%' }}>
           <StatCard label="Overdue" value={stats.totalOverdue} color={Colors.statusOverdue} />
-        </AnimatedCard>
-      </View>
+        </View>
+      </AnimatedCard>
 
       {/* P&L card */}
       <View style={[styles.plCard, Shadows.sm]}>
