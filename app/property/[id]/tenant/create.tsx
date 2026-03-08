@@ -242,9 +242,11 @@ export default function TenantCreateScreen() {
           headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
           headerTintColor: Colors.textPrimary,
           headerShown: true,
-          headerLeft: () => (
-            <IconButton icon="close" size={22} onPress={() => router.back()} />
-          ),
+          headerLeft: isEditing
+            ? undefined
+            : () => (
+                <IconButton icon="close" size={22} onPress={() => router.back()} />
+              ),
         }}
       />
       <KeyboardAvoidingView
