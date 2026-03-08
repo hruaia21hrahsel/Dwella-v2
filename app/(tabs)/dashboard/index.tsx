@@ -30,11 +30,9 @@ import { generateTelegramLinkToken } from '@/lib/bot';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 
 const SCREEN_W = Dimensions.get('window').width;
-// 4-col grid: outer padding 32, block padding 24, 3 gaps of 4px
 // 6 circles per row, 2 rows = 12 months
-// Total horizontal space used: 6 * CHIP_SIZE + 5 gaps
-// Available: SCREEN_W - screen padding (32) - tenantBlock padding (24) - 5 gaps (20)
-const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 20) / 6);
+// Available: SCREEN_W - screen padding (32) - tenantBlock padding (24) - 5 gaps of 8px (40)
+const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 40) / 6);
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
