@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { BotConversation } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 
@@ -14,28 +14,41 @@ interface Props {
 }
 
 export function ChatBubble({ message, onConfirm, onCancel, isLatestAssistant }: Props) {
+  const { colors, isDark } = useTheme();
   const isUser = message.role === 'user';
   const hasPendingAction = !!(message.metadata as any)?.pending_action && isLatestAssistant;
 
+  const actionBorderColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+
   return (
     <View style={[styles.row, isUser ? styles.rowUser : styles.rowBot]}>
-      <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleBot]}>
-        <Text style={[styles.text, isUser ? styles.textUser : styles.textBot]}>
+      <View style={[
+        styles.bubble,
+        isUser
+          ? [styles.bubbleUser, { backgroundColor: colors.primary }]
+          : [styles.bubbleBot, { backgroundColor: colors.primarySoft }],
+      ]}>
+        <Text style={[styles.text, { color: isUser ? colors.textOnPrimary : colors.textPrimary }]}>
           {message.content}
         </Text>
-        <Text style={[styles.time, isUser ? styles.timeUser : styles.timeBot]}>
+        <Text style={[
+          styles.time,
+          isUser
+            ? { color: 'rgba(255,255,255,0.7)', textAlign: 'right' as const }
+            : { color: colors.textSecondary },
+        ]}>
           {formatDate(message.created_at)}
         </Text>
 
         {hasPendingAction && onConfirm && onCancel && (
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.confirmBtn} onPress={onConfirm} activeOpacity={0.8}>
-              <MaterialCommunityIcons name="check" size={16} color="#fff" />
-              <Text style={styles.confirmText}>Confirm</Text>
+          <View style={[styles.actionRow, { borderTopColor: actionBorderColor }]}>
+            <TouchableOpacity style={[styles.confirmBtn, { backgroundColor: colors.statusConfirmed }]} onPress={onConfirm} activeOpacity={0.8}>
+              <MaterialCommunityIcons name="check" size={16} color={colors.textOnPrimary} />
+              <Text style={[styles.confirmText, { color: colors.textOnPrimary }]}>Confirm</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.8}>
-              <MaterialCommunityIcons name="close" size={16} color={Colors.error} />
-              <Text style={styles.cancelText}>Cancel</Text>
+            <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.error }]} onPress={onCancel} activeOpacity={0.8}>
+              <MaterialCommunityIcons name="close" size={16} color={colors.error} />
+              <Text style={[styles.cancelText, { color: colors.error }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -63,33 +76,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   bubbleUser: {
-    backgroundColor: Colors.primary,
     borderBottomRightRadius: 4,
   },
   bubbleBot: {
-    backgroundColor: Colors.primarySoft,
     borderBottomLeftRadius: 4,
   },
   text: {
     fontSize: 15,
     lineHeight: 21,
   },
-  textUser: {
-    color: '#fff',
-  },
-  textBot: {
-    color: Colors.textPrimary,
-  },
   time: {
     fontSize: 11,
     marginTop: 4,
-  },
-  timeUser: {
-    color: 'rgba(255,255,255,0.7)',
-    textAlign: 'right',
-  },
-  timeBot: {
-    color: Colors.textSecondary,
   },
   actionRow: {
     flexDirection: 'row',
@@ -97,19 +95,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.08)',
   },
   confirmBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.statusConfirmed,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 6,
     gap: 4,
   },
   confirmText: {
-    color: '#fff',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -120,11 +115,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: Colors.error,
     gap: 4,
   },
   cancelText: {
-    color: Colors.error,
     fontSize: 13,
     fontWeight: '600',
   },

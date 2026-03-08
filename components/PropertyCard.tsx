@@ -2,8 +2,8 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Property } from '@/lib/types';
-import { Colors, Shadows } from '@/constants/colors';
-import { formatCurrency } from '@/lib/utils';
+import { useTheme } from '@/lib/theme-context';
+import { formatCurrency, adjustPropertyColor } from '@/lib/utils';
 
 export interface TenantSummary {
   id: string;
@@ -25,9 +25,10 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
-  const propColor = property.color ?? Colors.primary;
-  const iconColor = isTenantView ? Colors.statusConfirmed : propColor;
-  const iconBg = isTenantView ? '#DCFCE7' : propColor + '18';
+  const { colors, shadows, isDark } = useTheme();
+  const propColor = adjustPropertyColor(property.color ?? colors.primary, isDark);
+  const iconColor = isTenantView ? colors.statusConfirmed : propColor;
+  const iconBg = isTenantView ? colors.statusConfirmedSoft : propColor + '18';
   const iconName = isTenantView ? 'home-account' : 'home-city';
   const totalRent = tenants?.reduce((sum, t) => sum + t.monthly_rent, 0) ?? 0;
   const occupiedCount = tenants?.length ?? 0;
@@ -35,7 +36,10 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
   return (
     <View style={[
       styles.card,
-      isTenantView ? styles.cardTenant : { backgroundColor: propColor + '08', borderColor: propColor + '40' },
+      { backgroundColor: colors.surface, borderColor: colors.border, ...shadows.sm },
+      isTenantView
+        ? { borderColor: colors.statusConfirmedSoft, marginBottom: 8 }
+        : { backgroundColor: propColor + '08', borderColor: propColor + '40' },
     ]}>
       {/* Left color accent strip + content */}
       {!isTenantView && (
@@ -48,16 +52,16 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
         </View>
 
         <View style={styles.info}>
-          <Text style={[styles.name, !isTenantView && { color: propColor }]} numberOfLines={1}>{property.name}</Text>
+          <Text style={[styles.name, { color: colors.textPrimary }, !isTenantView && { color: propColor }]} numberOfLines={1}>{property.name}</Text>
           <View style={styles.addressRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={12} color={Colors.textSecondary} />
-            <Text style={styles.address} numberOfLines={1}>
+            <MaterialCommunityIcons name="map-marker-outline" size={12} color={colors.textSecondary} />
+            <Text style={[styles.address, { color: colors.textSecondary }]} numberOfLines={1}>
               {property.address}, {property.city}
             </Text>
           </View>
           {isTenantView && (
-            <View style={styles.tenantBadge}>
-              <Text style={styles.tenantBadgeText}>TENANT</Text>
+            <View style={[styles.tenantBadge, { backgroundColor: colors.statusConfirmedSoft }]}>
+              <Text style={[styles.tenantBadgeText, { color: colors.statusConfirmed }]}>TENANT</Text>
             </View>
           )}
         </View>
@@ -66,19 +70,19 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
         {(onEdit || onDelete) && (
           <View style={styles.actions}>
             {onEdit && (
-              <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={styles.actionBtn}>
-                <MaterialCommunityIcons name="pencil-outline" size={16} color={Colors.textSecondary} />
+              <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={[styles.actionBtn, { backgroundColor: colors.background }]}>
+                <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
             {onDelete && (
-              <TouchableOpacity onPress={(e) => { e.stopPropagation(); onDelete(); }} hitSlop={6} style={styles.actionBtn}>
-                <MaterialCommunityIcons name="archive-outline" size={16} color={Colors.error} />
+              <TouchableOpacity onPress={(e) => { e.stopPropagation(); onDelete(); }} hitSlop={6} style={[styles.actionBtn, { backgroundColor: colors.background }]}>
+                <MaterialCommunityIcons name="archive-outline" size={16} color={colors.error} />
               </TouchableOpacity>
             )}
           </View>
         )}
 
-        <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.textDisabled} />
+        <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
       </TouchableOpacity>
 
       {/* Stats strip — owner view only */}
@@ -86,24 +90,24 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
         <View style={[styles.statsStrip, { backgroundColor: propColor + '0D', borderTopColor: propColor + '20' }]}>
           <View style={styles.statItem}>
             <MaterialCommunityIcons name="door-open" size={14} color={propColor} />
-            <Text style={styles.statText}>
-              <Text style={styles.statBold}>{occupiedCount}</Text>/{property.total_units} occupied
+            <Text style={[styles.statText, { color: colors.textSecondary }]}>
+              <Text style={[styles.statBold, { color: colors.textPrimary }]}>{occupiedCount}</Text>/{property.total_units} occupied
             </Text>
           </View>
-          <View style={styles.statDot} />
+          <View style={[styles.statDot, { backgroundColor: colors.textDisabled }]} />
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="cash" size={14} color={Colors.statusConfirmed} />
-            <Text style={styles.statText}>
-              <Text style={styles.statBold}>{formatCurrency(totalRent)}</Text>/mo
+            <MaterialCommunityIcons name="cash" size={14} color={colors.statusConfirmed} />
+            <Text style={[styles.statText, { color: colors.textSecondary }]}>
+              <Text style={[styles.statBold, { color: colors.textPrimary }]}>{formatCurrency(totalRent)}</Text>/mo
             </Text>
           </View>
           {paidCount !== undefined && (
             <>
-              <View style={styles.statDot} />
+              <View style={[styles.statDot, { backgroundColor: colors.textDisabled }]} />
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="check-circle-outline" size={14} color={Colors.statusPaid} />
-                <Text style={styles.statText}>
-                  <Text style={styles.statBold}>{paidCount}</Text> paid
+                <MaterialCommunityIcons name="check-circle-outline" size={14} color={colors.statusPaid} />
+                <Text style={[styles.statText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.statBold, { color: colors.textPrimary }]}>{paidCount}</Text> paid
                 </Text>
               </View>
             </>
@@ -113,30 +117,30 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
       {/* Tenant list */}
       {tenants && tenants.length > 0 && (
-        <View style={styles.tenantList}>
+        <View style={[styles.tenantList, { borderTopColor: colors.border }]}>
           {tenants.map((t, index) => {
             const isPending = t.invite_status === 'pending';
             return (
               <TouchableOpacity
                 key={t.id}
-                style={[styles.tenantRow, index < tenants.length - 1 && styles.tenantRowBorder]}
+                style={[styles.tenantRow, index < tenants.length - 1 && [styles.tenantRowBorder, { borderBottomColor: colors.divider }]]}
                 onPress={() => onTenantPress?.(t.id)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.tenantIcon, { backgroundColor: isPending ? Colors.statusPartialSoft : Colors.statusConfirmedSoft }]}>
+                <View style={[styles.tenantIcon, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
                   <MaterialCommunityIcons
                     name={isPending ? 'account-clock-outline' : 'account-check-outline'}
                     size={14}
-                    color={isPending ? Colors.statusPartial : Colors.statusConfirmed}
+                    color={isPending ? colors.statusPartial : colors.statusConfirmed}
                   />
                 </View>
                 <View style={styles.tenantInfo}>
-                  <Text style={styles.tenantName} numberOfLines={1}>{t.tenant_name}</Text>
-                  <Text style={styles.tenantMeta}>Flat {t.flat_no} · {formatCurrency(t.monthly_rent)}/mo</Text>
+                  <Text style={[styles.tenantName, { color: colors.textPrimary }]} numberOfLines={1}>{t.tenant_name}</Text>
+                  <Text style={[styles.tenantMeta, { color: colors.textSecondary }]}>Flat {t.flat_no} · {formatCurrency(t.monthly_rent)}/mo</Text>
                 </View>
-                <View style={[styles.tenantStatus, { backgroundColor: isPending ? '#FEF3C7' : '#DCFCE7' }]}>
-                  <View style={[styles.tenantStatusDot, { backgroundColor: isPending ? Colors.statusPartial : Colors.statusConfirmed }]} />
-                  <Text style={[styles.tenantStatusText, { color: isPending ? '#92400E' : '#166534' }]}>
+                <View style={[styles.tenantStatus, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
+                  <View style={[styles.tenantStatusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
+                  <Text style={[styles.tenantStatusText, { color: isPending ? colors.statusPartial : colors.statusConfirmed }]}>
                     {isPending ? 'Pending' : 'Active'}
                   </Text>
                 </View>
@@ -148,9 +152,9 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
       {/* No tenants hint */}
       {tenants && tenants.length === 0 && !isTenantView && (
-        <View style={styles.noTenants}>
-          <MaterialCommunityIcons name="account-plus-outline" size={14} color={Colors.textDisabled} />
-          <Text style={styles.noTenantsText}>No tenants added yet</Text>
+        <View style={[styles.noTenants, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
+          <MaterialCommunityIcons name="account-plus-outline" size={14} color={colors.textDisabled} />
+          <Text style={[styles.noTenantsText, { color: colors.textDisabled }]}>No tenants added yet</Text>
         </View>
       )}
     </View>
@@ -159,17 +163,10 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     overflow: 'hidden',
-    ...Shadows.sm,
-  },
-  cardTenant: {
-    borderColor: Colors.statusConfirmedSoft,
-    marginBottom: 8,
   },
   colorStrip: {
     position: 'absolute',
@@ -200,7 +197,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   addressRow: {
     flexDirection: 'row',
@@ -210,11 +206,9 @@ const styles = StyleSheet.create({
   address: {
     flex: 1,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   tenantBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: Colors.statusConfirmedSoft,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -223,7 +217,6 @@ const styles = StyleSheet.create({
   tenantBadgeText: {
     fontSize: 9,
     fontWeight: '700',
-    color: Colors.statusConfirmed,
     letterSpacing: 0.5,
   },
   actions: {
@@ -234,7 +227,6 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 8,
-    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -246,9 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 14,
-    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     gap: 8,
   },
   statItem: {
@@ -258,23 +248,19 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   statBold: {
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   statDot: {
     width: 3,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: Colors.textDisabled,
   },
 
   // Tenant list
   tenantList: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingHorizontal: 14,
     paddingTop: 4,
     paddingBottom: 8,
@@ -287,7 +273,6 @@ const styles = StyleSheet.create({
   },
   tenantRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.divider,
   },
   tenantIcon: {
     width: 28,
@@ -303,11 +288,9 @@ const styles = StyleSheet.create({
   tenantName: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
   tenantMeta: {
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   tenantStatus: {
     flexDirection: 'row',
@@ -332,12 +315,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     paddingVertical: 12,
-    backgroundColor: Colors.background,
   },
   noTenantsText: {
     fontSize: 12,
-    color: Colors.textDisabled,
   },
 });

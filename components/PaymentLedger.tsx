@@ -3,7 +3,7 @@ import { Text, Button, Divider, ActivityIndicator } from 'react-native-paper';
 import { Payment } from '@/lib/types';
 import { PaymentStatusBadge } from './PaymentStatusBadge';
 import { EmptyState } from './EmptyState';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getMonthName } from '@/lib/utils';
 import { canMarkAsPaid, canConfirm } from '@/lib/payments';
 
@@ -35,6 +35,7 @@ function PaymentRow({
   onExportReceipt?: () => void;
   onLogPayment?: () => void;
 }) {
+  const { colors } = useTheme();
   const isTenant = !isOwner;
   const showMarkPaid = isTenant && canMarkAsPaid(payment.status);
   const showLogPayment = isOwner && onLogPayment && canMarkAsPaid(payment.status);
@@ -44,15 +45,15 @@ function PaymentRow({
   return (
     <View style={styles.row}>
       <View style={styles.rowLeft}>
-        <Text variant="titleSmall" style={styles.monthLabel}>
+        <Text variant="titleSmall" style={[styles.monthLabel, { color: colors.textPrimary }]}>
           {getMonthName(payment.month)} {payment.year}
         </Text>
         <View style={styles.amountsRow}>
-          <Text variant="bodySmall" style={styles.amountText}>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
             Due: {formatCurrency(payment.amount_due)}
           </Text>
           {payment.amount_paid > 0 && (
-            <Text variant="bodySmall" style={styles.paidText}>
+            <Text variant="bodySmall" style={{ color: colors.statusConfirmed }}>
               · Paid: {formatCurrency(payment.amount_paid)}
             </Text>
           )}
@@ -77,17 +78,17 @@ function PaymentRow({
             compact
             onPress={onConfirm}
             style={[styles.actionBtn, styles.confirmBtn]}
-            buttonColor={Colors.statusConfirmed}
+            buttonColor={colors.statusConfirmed}
           >
             Confirm
           </Button>
         )}
         {showReceipt && (
-          <Button mode="text" compact onPress={onExportReceipt} textColor={Colors.primary} icon="file-pdf-box">
+          <Button mode="text" compact onPress={onExportReceipt} textColor={colors.primary} icon="file-pdf-box">
             PDF
           </Button>
         )}
-        <Button mode="text" compact onPress={onPress} textColor={Colors.textSecondary}>
+        <Button mode="text" compact onPress={onPress} textColor={colors.textSecondary}>
           View
         </Button>
       </View>
@@ -105,10 +106,12 @@ export function PaymentLedger({
   onExportReceipt,
   onLogPayment,
 }: PaymentLedgerProps) {
+  const { colors } = useTheme();
+
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={Colors.primary} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -124,7 +127,7 @@ export function PaymentLedger({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       {payments.map((payment, index) => (
         <View key={payment.id}>
           <PaymentRow
@@ -145,10 +148,8 @@ export function PaymentLedger({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     overflow: 'hidden',
   },
   row: {
@@ -163,18 +164,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   monthLabel: {
-    color: Colors.textPrimary,
     fontWeight: '600',
   },
   amountsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  amountText: {
-    color: Colors.textSecondary,
-  },
-  paidText: {
-    color: Colors.statusConfirmed,
   },
   rowRight: {
     flexDirection: 'row',

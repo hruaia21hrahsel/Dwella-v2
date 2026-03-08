@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Modal, Portal, Text, Button, Surface } from 'react-native-paper';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -18,11 +18,14 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel = 'Confirm',
-  confirmColor = Colors.primary,
+  confirmColor,
   loading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { colors } = useTheme();
+  const resolvedConfirmColor = confirmColor ?? colors.primary;
+
   return (
     <Portal>
       <Modal
@@ -30,15 +33,15 @@ export function ConfirmDialog({
         onDismiss={onCancel}
         contentContainerStyle={styles.container}
       >
-        <Surface style={styles.surface} elevation={4}>
-          <Text variant="titleLarge" style={styles.title}>{title}</Text>
-          <Text variant="bodyMedium" style={styles.message}>{message}</Text>
+        <Surface style={[styles.surface, { backgroundColor: colors.surface }]} elevation={4}>
+          <Text variant="titleLarge" style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
+          <Text variant="bodyMedium" style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
           <View style={styles.actions}>
             <Button
               mode="text"
               onPress={onCancel}
               disabled={loading}
-              textColor={Colors.textSecondary}
+              textColor={colors.textSecondary}
             >
               Cancel
             </Button>
@@ -47,7 +50,7 @@ export function ConfirmDialog({
               onPress={onConfirm}
               loading={loading}
               disabled={loading}
-              buttonColor={confirmColor}
+              buttonColor={resolvedConfirmColor}
             >
               {confirmLabel}
             </Button>
@@ -68,11 +71,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    color: Colors.textPrimary,
     fontWeight: '700',
   },
   message: {
-    color: Colors.textSecondary,
     lineHeight: 22,
   },
   actions: {

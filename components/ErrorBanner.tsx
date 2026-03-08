@@ -1,7 +1,7 @@
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 interface ErrorBannerProps {
   error: string | null;
@@ -9,14 +9,16 @@ interface ErrorBannerProps {
 }
 
 export function ErrorBanner({ error, onRetry }: ErrorBannerProps) {
+  const { colors } = useTheme();
+
   if (!error) return null;
 
   return (
-    <View style={styles.container}>
-      <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.error} />
-      <Text style={styles.message} numberOfLines={2}>{error}</Text>
-      <TouchableOpacity onPress={onRetry} style={styles.retryBtn}>
-        <Text style={styles.retryText}>Retry</Text>
+    <View style={[styles.container, { backgroundColor: colors.statusOverdueSoft }]}>
+      <MaterialCommunityIcons name="alert-circle-outline" size={20} color={colors.error} />
+      <Text style={[styles.message, { color: colors.error }]} numberOfLines={2}>{error}</Text>
+      <TouchableOpacity onPress={onRetry} style={[styles.retryBtn, { backgroundColor: colors.error }]}>
+        <Text style={[styles.retryText, { color: colors.textOnPrimary }]}>Retry</Text>
       </TouchableOpacity>
     </View>
   );
@@ -26,7 +28,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.statusOverdueSoft,
     borderRadius: 10,
     padding: 12,
     gap: 8,
@@ -35,16 +36,13 @@ const styles = StyleSheet.create({
   message: {
     flex: 1,
     fontSize: 13,
-    color: Colors.error,
   },
   retryBtn: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
-    backgroundColor: Colors.error,
   },
   retryText: {
-    color: '#fff',
     fontSize: 12,
     fontWeight: '600',
   },

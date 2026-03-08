@@ -4,7 +4,7 @@ import { Button, Text, ActivityIndicator } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { STORAGE_BUCKET } from '@/constants/config';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 
 interface ProofUploaderProps {
@@ -14,6 +14,7 @@ interface ProofUploaderProps {
 }
 
 export function ProofUploader({ storagePath, onUploaded, existingUrl }: ProofUploaderProps) {
+  const { colors } = useTheme();
   const [previewUri, setPreviewUri] = useState<string | null>(existingUrl ?? null);
   const [uploading, setUploading] = useState(false);
 
@@ -73,14 +74,14 @@ export function ProofUploader({ storagePath, onUploaded, existingUrl }: ProofUpl
 
   return (
     <View style={styles.container}>
-      <Text variant="labelMedium" style={styles.label}>Payment Proof (optional)</Text>
+      <Text variant="labelMedium" style={[styles.label, { color: colors.textSecondary }]}>Payment Proof (optional)</Text>
 
       {previewUri ? (
         <View style={styles.previewContainer}>
-          <Image source={{ uri: previewUri }} style={styles.preview} resizeMode="cover" />
+          <Image source={{ uri: previewUri }} style={[styles.preview, { borderColor: colors.border }]} resizeMode="cover" />
           {uploading && (
             <View style={styles.uploadingOverlay}>
-              <ActivityIndicator color={Colors.textOnPrimary} />
+              <ActivityIndicator color={colors.textOnPrimary} />
             </View>
           )}
         </View>
@@ -117,7 +118,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -131,7 +131,6 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   uploadingOverlay: {
     ...StyleSheet.absoluteFillObject,

@@ -1,18 +1,19 @@
 import { View, StyleSheet } from 'react-native';
 import { Snackbar } from 'react-native-paper';
 import { useToastStore, ToastType } from '@/lib/toast';
-import { Colors } from '@/constants/colors';
-
-const BG: Record<ToastType, string> = {
-  success: Colors.statusConfirmed,
-  error: Colors.error,
-  info: Colors.primary,
-};
+import { useTheme } from '@/lib/theme-context';
 
 export function ToastProvider() {
+  const { colors } = useTheme();
   const { visible, message, type, hideToast } = useToastStore();
 
   if (!visible) return null;
+
+  const BG: Record<ToastType, string> = {
+    success: colors.success,
+    error: colors.error,
+    info: colors.primary,
+  };
 
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
@@ -21,7 +22,7 @@ export function ToastProvider() {
         onDismiss={hideToast}
         duration={3000}
         style={{ backgroundColor: BG[type] }}
-        action={{ label: 'OK', textColor: '#fff', onPress: hideToast }}
+        action={{ label: 'OK', textColor: colors.textOnPrimary, onPress: hideToast }}
       >
         {message}
       </Snackbar>

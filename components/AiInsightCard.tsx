@@ -3,7 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 interface Props {
   nudge: string | null;
@@ -11,27 +11,35 @@ interface Props {
 }
 
 export function AiInsightCard({ nudge, loading }: Props) {
+  const { colors, shadows, isDark } = useTheme();
   const router = useRouter();
 
   if (!nudge && !loading) return null;
 
+  const aiBg = isDark ? 'rgba(139,92,246,0.10)' : '#F5F3FF';
+  const aiBorder = isDark ? 'rgba(139,92,246,0.20)' : '#E9E5FF';
+  const aiIconBg = isDark ? 'rgba(139,92,246,0.18)' : '#EDE9FE';
+  const aiIconColor = isDark ? '#A78BFA' : '#8B5CF6';
+  const aiTextColor = isDark ? '#C4B5FD' : '#4C1D95';
+  const aiLoadingColor = isDark ? '#A78BFA' : '#7C3AED';
+
   return (
     <TouchableOpacity
-      style={[styles.card, Shadows.sm]}
+      style={[styles.card, shadows.sm, { backgroundColor: aiBg, borderColor: aiBorder }]}
       onPress={() => router.push('/tools/ai-insights')}
       activeOpacity={0.8}
     >
-      <View style={styles.iconWrap}>
-        <MaterialCommunityIcons name="robot-outline" size={18} color="#8B5CF6" />
+      <View style={[styles.iconWrap, { backgroundColor: aiIconBg }]}>
+        <MaterialCommunityIcons name="robot-outline" size={18} color={aiIconColor} />
       </View>
       <View style={styles.textWrap}>
         {loading ? (
-          <Text style={styles.loadingText}>Analyzing your data...</Text>
+          <Text style={[styles.loadingText, { color: aiLoadingColor }]}>Analyzing your data...</Text>
         ) : (
-          <Text style={styles.nudgeText} numberOfLines={2}>{nudge}</Text>
+          <Text style={[styles.nudgeText, { color: aiTextColor }]} numberOfLines={2}>{nudge}</Text>
         )}
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.textDisabled} />
+      <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
     </TouchableOpacity>
   );
 }
@@ -40,19 +48,16 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F3FF',
     borderRadius: 12,
     padding: 12,
     marginTop: 10,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#E9E5FF',
   },
   iconWrap: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#EDE9FE',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -64,12 +69,10 @@ const styles = StyleSheet.create({
   nudgeText: {
     fontSize: 13,
     lineHeight: 18,
-    color: '#4C1D95',
     fontWeight: '500',
   },
   loadingText: {
     fontSize: 13,
-    color: '#7C3AED',
     fontStyle: 'italic',
   },
 });

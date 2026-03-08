@@ -3,7 +3,7 @@ import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { PaymentStatus } from '@/lib/types';
 import { getStatusColor, getStatusLabel } from '@/lib/payments';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 interface PaymentStatusBadgeProps {
   status: PaymentStatus;
@@ -18,17 +18,19 @@ const STATUS_ICONS: Record<PaymentStatus, string> = {
   overdue: 'alert-circle-outline',
 };
 
-const STATUS_BG: Record<PaymentStatus, string> = {
-  pending: Colors.statusPendingSoft,
-  partial: Colors.statusPartialSoft,
-  paid: Colors.statusPaidSoft,
-  confirmed: Colors.statusConfirmedSoft,
-  overdue: Colors.statusOverdueSoft,
-};
-
 export function PaymentStatusBadge({ status }: PaymentStatusBadgeProps) {
+  const { colors } = useTheme();
   const color = getStatusColor(status);
   const icon = STATUS_ICONS[status];
+
+  const STATUS_BG: Record<PaymentStatus, string> = {
+    pending: colors.statusPendingSoft,
+    partial: colors.statusPartialSoft,
+    paid: colors.statusPaidSoft,
+    confirmed: colors.statusConfirmedSoft,
+    overdue: colors.statusOverdueSoft,
+  };
+
   const bg = STATUS_BG[status];
 
   return (

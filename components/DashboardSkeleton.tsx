@@ -1,10 +1,12 @@
 import { View, StyleSheet } from 'react-native';
 import { Skeleton } from './Skeleton';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 
 export function DashboardSkeleton() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Hero card */}
       <Skeleton width="100%" height={52} borderRadius={16} />
 
@@ -31,7 +33,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: Colors.background,
   },
   statsGrid: {
     flexDirection: 'row',

@@ -11,13 +11,14 @@ import { Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
 
 const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })!;
 
 export function TourGuideCard() {
+  const { colors, shadows } = useTheme();
   const { tourStep, setTourStep, setOnboardingCompleted } = useAuthStore();
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(300)).current;
@@ -66,16 +67,21 @@ export function TourGuideCard() {
       <Animated.View
         style={[
           styles.card,
-          { bottom: bottomOffset, transform: [{ translateY }] },
+          {
+            bottom: bottomOffset,
+            transform: [{ translateY }],
+            backgroundColor: colors.surface,
+            ...shadows.hero,
+          },
         ]}
       >
         {/* Icon pill + step counter */}
         <View style={styles.topRow}>
-          <View style={styles.iconPill}>
+          <View style={[styles.iconPill, { backgroundColor: colors.primarySoft }]}>
             <MaterialCommunityIcons
               name={step.icon as any}
               size={22}
-              color={Colors.primary}
+              color={colors.primary}
             />
           </View>
           <View style={styles.dotsRow}>
@@ -84,7 +90,9 @@ export function TourGuideCard() {
                 key={i}
                 style={[
                   styles.dot,
-                  i === tourStep ? styles.dotActive : styles.dotInactive,
+                  i === tourStep
+                    ? [styles.dotActive, { backgroundColor: colors.primary }]
+                    : [styles.dotInactive, { backgroundColor: colors.border }],
                 ]}
               />
             ))}
@@ -92,19 +100,19 @@ export function TourGuideCard() {
         </View>
 
         {/* Title + body */}
-        <Text style={styles.title}>{step.title}</Text>
-        <Text style={styles.body}>{step.body}</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{step.title}</Text>
+        <Text style={[styles.body, { color: colors.textSecondary }]}>{step.body}</Text>
 
         {/* Buttons */}
         <View style={styles.actions}>
           <TouchableOpacity onPress={handleSkip} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.skipText}>Skip Tour</Text>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip Tour</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.ctaBtn} onPress={handleCta} activeOpacity={0.85}>
-            <Text style={styles.ctaText}>{step.cta}</Text>
+          <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: colors.primary }]} onPress={handleCta} activeOpacity={0.85}>
+            <Text style={[styles.ctaText, { color: colors.textOnPrimary }]}>{step.cta}</Text>
             {!isLast && (
-              <MaterialCommunityIcons name="arrow-right" size={16} color={Colors.textOnPrimary} />
+              <MaterialCommunityIcons name="arrow-right" size={16} color={colors.textOnPrimary} />
             )}
           </TouchableOpacity>
         </View>
@@ -118,19 +126,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     right: 16,
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: 20,
     gap: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.18,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 24,
-      },
-      android: { elevation: 12 },
-    }),
   },
   topRow: {
     flexDirection: 'row',
@@ -141,7 +139,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: Colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -156,21 +153,17 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 18,
-    backgroundColor: Colors.primary,
   },
   dotInactive: {
     width: 6,
-    backgroundColor: Colors.border,
   },
   title: {
     fontSize: 17,
     fontWeight: '700',
-    color: Colors.textPrimary,
     lineHeight: 24,
   },
   body: {
     fontSize: 14,
-    color: Colors.textSecondary,
     lineHeight: 21,
   },
   actions: {
@@ -181,14 +174,12 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 14,
-    color: Colors.textSecondary,
     fontWeight: '500',
   },
   ctaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primary,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 100,
@@ -196,6 +187,5 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textOnPrimary,
   },
 });
