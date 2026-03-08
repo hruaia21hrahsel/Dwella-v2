@@ -169,27 +169,6 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.heroPills}>
-          <View style={styles.heroPill}>
-            <Text style={styles.heroPillText}>{tenantRows.length} Tenant{tenantRows.length !== 1 ? 's' : ''}</Text>
-          </View>
-          <View style={styles.heroPill}>
-            <Text style={styles.heroPillText}>
-              Received {formatCurrency(stats.totalReceived)}
-            </Text>
-          </View>
-          {stats.totalOverdue > 0 ? (
-            <View style={[styles.heroPill, styles.heroPillAlert]}>
-              <Text style={styles.heroPillText}>
-                {formatCurrency(stats.totalOverdue)} Overdue
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.heroPill}>
-              <Text style={styles.heroPillText}>All Clear</Text>
-            </View>
-          )}
-        </View>
       </LinearGradient>
 
       {/* Property selector */}
@@ -460,25 +439,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     marginHorizontal: 2,
-  },
-  heroPills: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  heroPill: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  heroPillAlert: {
-    backgroundColor: 'rgba(239,68,68,0.3)',
-  },
-  heroPillText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 16,
