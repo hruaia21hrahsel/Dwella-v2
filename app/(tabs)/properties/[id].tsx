@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, IconButton, ActivityIndicator, Chip } from 'react-native-paper';
+import { Text, IconButton, ActivityIndicator, Chip, Button } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
 import { useTenants } from '@/hooks/useTenants';
@@ -181,6 +182,28 @@ export default function PropertyDetailScreen() {
             <Text variant="bodyMedium">{property.notes}</Text>
           </View>
         ) : null}
+
+        {/* Edit & Delete buttons (owner only) */}
+        {isOwner && (
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => router.push({ pathname: '/property/create', params: { id } })}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="pencil-outline" size={18} color={Colors.primary} />
+              <Text style={styles.editBtnText}>Edit Property</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={() => setDeleteDialogVisible(true)}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="delete-outline" size={18} color={Colors.error} />
+              <Text style={styles.deleteBtnText}>Archive Property</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       <ConfirmDialog
@@ -290,4 +313,38 @@ const styles = StyleSheet.create({
   },
   expensesIcon: { margin: 0 },
   expensesLinkText: { color: Colors.textPrimary, fontWeight: '600' },
+  actionButtons: {
+    gap: 10,
+    marginTop: 8,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    paddingVertical: 13,
+  },
+  editBtnText: {
+    color: Colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.error,
+    paddingVertical: 13,
+  },
+  deleteBtnText: {
+    color: Colors.error,
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });
