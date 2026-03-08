@@ -11,7 +11,7 @@ import { ListSkeleton } from '@/components/ListSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { AnimatedCard } from '@/components/AnimatedCard';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Property } from '@/lib/types';
@@ -19,6 +19,7 @@ import { formatCurrency } from '@/lib/utils';
 
 export default function PropertiesScreen() {
   const router = useRouter();
+  const { colors, shadows } = useTheme();
   const { bumpPropertyRefresh } = useAuthStore();
   const { ownedProperties, tenantProperties, isLoading, error, refresh } = useProperties();
   const [archiveTarget, setArchiveTarget] = useState<Property | null>(null);
@@ -95,7 +96,7 @@ export default function PropertiesScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -107,25 +108,25 @@ export default function PropertiesScreen() {
 
         {/* Portfolio summary — only when there are properties */}
         {ownedProperties.length > 0 && (
-          <View style={styles.summaryCard}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.primarySoft, borderColor: colors.primaryLight }]}>
             <View style={styles.summaryHeader}>
-              <MaterialCommunityIcons name="chart-box-outline" size={16} color={Colors.primaryDark} />
-              <Text style={styles.summaryTitle}>Portfolio Overview</Text>
+              <MaterialCommunityIcons name="chart-box-outline" size={16} color={colors.primaryDark} />
+              <Text style={[styles.summaryTitle, { color: colors.primaryDark }]}>Portfolio Overview</Text>
             </View>
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{ownedProperties.length}</Text>
-                <Text style={styles.summaryLabel}>{ownedProperties.length === 1 ? 'Property' : 'Properties'}</Text>
+                <Text style={[styles.summaryValue, { color: colors.primaryDark }]}>{ownedProperties.length}</Text>
+                <Text style={[styles.summaryLabel, { color: colors.primaryDark }]}>{ownedProperties.length === 1 ? 'Property' : 'Properties'}</Text>
               </View>
-              <View style={styles.summaryDivider} />
+              <View style={[styles.summaryDivider, { backgroundColor: colors.primaryLight }]} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{totalTenants}<Text style={styles.summarySmall}>/{totalUnits}</Text></Text>
-                <Text style={styles.summaryLabel}>Occupied</Text>
+                <Text style={[styles.summaryValue, { color: colors.primaryDark }]}>{totalTenants}<Text style={[styles.summarySmall, { color: colors.primaryMid }]}>/{totalUnits}</Text></Text>
+                <Text style={[styles.summaryLabel, { color: colors.primaryDark }]}>Occupied</Text>
               </View>
-              <View style={styles.summaryDivider} />
+              <View style={[styles.summaryDivider, { backgroundColor: colors.primaryLight }]} />
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryValue}>{formatCurrency(totalRent)}</Text>
-                <Text style={styles.summaryLabel}>Rent/mo</Text>
+                <Text style={[styles.summaryValue, { color: colors.primaryDark }]}>{formatCurrency(totalRent)}</Text>
+                <Text style={[styles.summaryLabel, { color: colors.primaryDark }]}>Rent/mo</Text>
               </View>
             </View>
           </View>
@@ -133,9 +134,9 @@ export default function PropertiesScreen() {
 
         {/* My Properties Section */}
         <View style={styles.sectionDivider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.sectionHeaderText}>My Properties</Text>
-          <View style={styles.dividerLine} />
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          <Text style={[styles.sectionHeaderText, { color: colors.textSecondary }]}>My Properties</Text>
+          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
         </View>
 
         {ownedProperties.length === 0 ? (
@@ -163,11 +164,11 @@ export default function PropertiesScreen() {
         {tenantProperties.length > 0 && (
           <>
             <View style={[styles.sectionDivider, { marginTop: 20 }]}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.sectionHeaderText}>I'm a Tenant At</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.sectionHeaderText, { color: colors.textSecondary }]}>I'm a Tenant At</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </View>
-            <View style={styles.tenantSection}>
+            <View style={[styles.tenantSection, { backgroundColor: colors.primarySoft }]}>
               {tenantProperties.map((tenant) => (
                 tenant.properties && (
                   <PropertyCard
@@ -187,9 +188,9 @@ export default function PropertiesScreen() {
 
       <FAB
         icon="plus"
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.primary, ...shadows.md }]}
         onPress={handleAddProperty}
-        color={Colors.textOnPrimary}
+        color={colors.textOnPrimary}
       />
 
       <ConfirmDialog
@@ -197,7 +198,7 @@ export default function PropertiesScreen() {
         title="Archive Property"
         message={`Archive "${archiveTarget?.name}"? This will also archive all its tenants. This cannot be undone.`}
         confirmLabel="Archive"
-        confirmColor={Colors.error}
+        confirmColor={colors.error}
         loading={deleting}
         onConfirm={handleArchiveProperty}
         onCancel={() => setArchiveTarget(null)}
@@ -209,7 +210,6 @@ export default function PropertiesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scroll: {
     flex: 1,
@@ -221,10 +221,8 @@ const styles = StyleSheet.create({
 
   // Portfolio summary
   summaryCard: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.primaryLight,
     padding: 16,
     marginBottom: 20,
     gap: 12,
@@ -237,7 +235,6 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.primaryDark,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -252,22 +249,18 @@ const styles = StyleSheet.create({
   summaryDivider: {
     width: 1,
     height: 30,
-    backgroundColor: Colors.primaryLight,
   },
   summaryValue: {
     fontSize: 18,
     fontWeight: '800',
-    color: Colors.primaryDark,
   },
   summarySmall: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.primaryMid,
   },
   summaryLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.primaryDark,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginTop: 2,
@@ -284,17 +277,14 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.border,
   },
   sectionHeaderText: {
     fontSize: 11,
-    color: Colors.textSecondary,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   tenantSection: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 16,
     padding: 14,
   },
@@ -302,8 +292,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 16,
-    backgroundColor: Colors.primary,
     borderRadius: 16,
-    ...Shadows.md,
   },
 });

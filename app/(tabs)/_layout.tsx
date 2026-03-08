@@ -1,16 +1,18 @@
 import { Tabs } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
 import { CustomTabBar } from '@/components/CustomTabBar';
 
 function TabsLayout() {
+  const { colors } = useTheme();
+
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarAllowFontScaling: false,
         header: () => (
           <DwellaHeader
@@ -23,8 +25,6 @@ function TabsLayout() {
       <Tabs.Screen name="properties"      options={{ title: 'Property' }} />
       <Tabs.Screen name="tools/index"     options={{ title: 'Tools' }} />
       <Tabs.Screen name="bot/index"       options={{ title: 'Assistant' }} />
-      <Tabs.Screen name="payments/index"  options={{ title: 'Payments', href: null }} />
-      <Tabs.Screen name="expenses/index"  options={{ title: 'Expenses', href: null }} />
       <Tabs.Screen name="profile/index"   options={{ title: 'Profile', href: null, headerShown: false }} />
     </Tabs>
   );

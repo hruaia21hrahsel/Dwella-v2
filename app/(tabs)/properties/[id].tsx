@@ -8,13 +8,14 @@ import { useTenants } from '@/hooks/useTenants';
 
 import { TenantCard } from '@/components/TenantCard';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils';
 
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors, shadows } = useTheme();
   const { user } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
@@ -25,7 +26,7 @@ export default function PropertyDetailScreen() {
   const occupiedCount = tenants.length;
   const totalRent = tenants.reduce((sum, t) => sum + t.monthly_rent, 0);
   const vacantCount = (property?.total_units ?? 0) - occupiedCount;
-  const propColor = property?.color ?? Colors.primary;
+  const propColor = property?.color ?? colors.primary;
   const propColorSoft = propColor + '18';
   const propColorLight = propColor + '30';
 
@@ -43,14 +44,14 @@ export default function PropertyDetailScreen() {
 
   if (isLoading && !property) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (!property) {
-    return <View style={styles.centered}><Text>Property not found.</Text></View>;
+    return <View style={[styles.centered, { backgroundColor: colors.background }]}><Text>Property not found.</Text></View>;
   }
 
   return (
@@ -59,13 +60,13 @@ export default function PropertyDetailScreen() {
         options={{
           title: property.name,
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
         }}
       />
 
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />}
       >
@@ -74,29 +75,29 @@ export default function PropertyDetailScreen() {
           <View style={[styles.propertyIconWrap, { backgroundColor: propColorSoft }]}>
             <MaterialCommunityIcons name="home-city" size={28} color={propColor} />
           </View>
-          <Text style={styles.propertyName}>{property.name}</Text>
-          <View style={styles.addressChip}>
-            <MaterialCommunityIcons name="map-marker-outline" size={13} color={Colors.textSecondary} />
-            <Text style={styles.addressText}>{property.address}, {property.city}</Text>
+          <Text style={[styles.propertyName, { color: colors.textPrimary }]}>{property.name}</Text>
+          <View style={[styles.addressChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="map-marker-outline" size={13} color={colors.textSecondary} />
+            <Text style={[styles.addressText, { color: colors.textSecondary }]}>{property.address}, {property.city}</Text>
           </View>
         </View>
 
         {/* Stats row */}
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <MaterialCommunityIcons name="door-open" size={18} color={propColor} style={{ marginBottom: 4 }} />
-            <Text style={styles.statValue}>{property.total_units}</Text>
-            <Text style={styles.statLabel}>Total Units</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{property.total_units}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Units</Text>
           </View>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="account-group-outline" size={18} color={Colors.statusConfirmed} style={{ marginBottom: 4 }} />
-            <Text style={styles.statValue}>{occupiedCount}</Text>
-            <Text style={styles.statLabel}>Occupied</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="account-group-outline" size={18} color={colors.statusConfirmed} style={{ marginBottom: 4 }} />
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{occupiedCount}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Occupied</Text>
           </View>
-          <View style={[styles.statCard, vacantCount > 0 && styles.statCardWarning]}>
-            <MaterialCommunityIcons name="door-closed-lock" size={18} color={vacantCount > 0 ? Colors.statusPartial : Colors.textDisabled} style={{ marginBottom: 4 }} />
-            <Text style={[styles.statValue, vacantCount > 0 && { color: Colors.statusPartial }]}>{vacantCount}</Text>
-            <Text style={styles.statLabel}>Vacant</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }, vacantCount > 0 && { borderColor: colors.statusPartialSoft, backgroundColor: colors.statusPartialSoft }]}>
+            <MaterialCommunityIcons name="door-closed-lock" size={18} color={vacantCount > 0 ? colors.statusPartial : colors.textDisabled} style={{ marginBottom: 4 }} />
+            <Text style={[styles.statValue, { color: colors.textPrimary }, vacantCount > 0 && { color: colors.statusPartial }]}>{vacantCount}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Vacant</Text>
           </View>
         </View>
 
@@ -115,15 +116,15 @@ export default function PropertyDetailScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleRow}>
-              <MaterialCommunityIcons name="account-multiple-outline" size={18} color={Colors.textPrimary} />
-              <Text style={styles.sectionTitle}>Tenants</Text>
+              <MaterialCommunityIcons name="account-multiple-outline" size={18} color={colors.textPrimary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tenants</Text>
               <View style={[styles.tenantCountBadge, { backgroundColor: propColorSoft }]}>
                 <Text style={[styles.tenantCountText, { color: propColor }]}>{tenants.length}</Text>
               </View>
             </View>
             {isOwner && (
               <TouchableOpacity
-                style={[styles.addTenantBtn, { backgroundColor: propColor }]}
+                style={[styles.addTenantBtn, { backgroundColor: propColor, ...shadows.sm }]}
                 onPress={() => router.push(`/property/${id}/tenant/create`)}
                 activeOpacity={0.8}
               >
@@ -154,12 +155,12 @@ export default function PropertyDetailScreen() {
 
         {/* Notes */}
         {property.notes ? (
-          <View style={styles.notesCard}>
+          <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.notesHeader}>
-              <MaterialCommunityIcons name="note-text-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.notesLabel}>Notes</Text>
+              <MaterialCommunityIcons name="note-text-outline" size={16} color={colors.textSecondary} />
+              <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Notes</Text>
             </View>
-            <Text style={styles.notesText}>{property.notes}</Text>
+            <Text style={[styles.notesText, { color: colors.textPrimary }]}>{property.notes}</Text>
           </View>
         ) : null}
       </ScrollView>
@@ -170,7 +171,6 @@ export default function PropertyDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 16,
@@ -181,7 +181,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
   },
 
   // Property header
@@ -194,7 +193,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: Colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -202,23 +200,19 @@ const styles = StyleSheet.create({
   propertyName: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
   addressChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   addressText: {
     fontSize: 12,
-    color: Colors.textSecondary,
   },
 
   // Stats row
@@ -228,25 +222,17 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 12,
     alignItems: 'center',
-  },
-  statCardWarning: {
-    borderColor: Colors.statusPartialSoft,
-    backgroundColor: '#FFFBEB',
   },
   statValue: {
     fontSize: 18,
     fontWeight: '800',
-    color: Colors.textPrimary,
   },
   statLabel: {
     fontSize: 10,
-    color: Colors.textSecondary,
     marginTop: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -256,10 +242,8 @@ const styles = StyleSheet.create({
   revenueCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primarySoft,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.primaryLight,
     padding: 16,
   },
   revenueLeft: {
@@ -269,7 +253,6 @@ const styles = StyleSheet.create({
   revenueLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.primaryDark,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     opacity: 0.7,
@@ -277,13 +260,11 @@ const styles = StyleSheet.create({
   revenueValue: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.primaryDark,
   },
   revenueIconWrap: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -305,10 +286,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   tenantCountBadge: {
-    backgroundColor: Colors.primarySoft,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -316,17 +295,14 @@ const styles = StyleSheet.create({
   tenantCountText: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.primary,
   },
   addTenantBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primary,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    ...Shadows.sm,
   },
   addTenantBtnText: {
     color: '#fff',
@@ -336,11 +312,9 @@ const styles = StyleSheet.create({
 
   // Notes card
   notesCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     gap: 8,
   },
   notesHeader: {
@@ -351,13 +325,11 @@ const styles = StyleSheet.create({
   notesLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   notesText: {
     fontSize: 14,
-    color: Colors.textPrimary,
     lineHeight: 20,
   },
 });

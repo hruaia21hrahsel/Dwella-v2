@@ -16,10 +16,11 @@ import { useBotConversations } from '@/hooks/useBotConversations';
 import { sendBotMessage } from '@/lib/bot';
 import { ChatBubble } from '@/components/ChatBubble';
 import { EmptyState } from '@/components/EmptyState';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { BotConversation } from '@/lib/types';
 
 export default function BotScreen() {
+  const { colors, shadows } = useTheme();
   const { user } = useAuthStore();
   const { messages, loading, clearHistory } = useBotConversations(user?.id);
   const [input, setInput] = useState('');
@@ -42,10 +43,10 @@ export default function BotScreen() {
   useEffect(() => {
     navigation.setOptions({
       headerRight: messages.length > 0
-        ? () => <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={Colors.textSecondary} />
+        ? () => <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={colors.textSecondary} />
         : () => <View style={{ width: 50 }} />,
     });
-  }, [messages.length, navigation]);
+  }, [messages.length, navigation, colors.textSecondary]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || !user || sending) return;
@@ -94,14 +95,14 @@ export default function BotScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.flex, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
       {/* Messages */}
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : messages.length === 0 ? (
         <View style={styles.emptyWrap}>
@@ -125,19 +126,19 @@ export default function BotScreen() {
       {/* Sending indicator */}
       {sending && (
         <View style={styles.typingRow}>
-          <ActivityIndicator size="small" color={Colors.primary} style={{ marginRight: 8 }} />
-          <Text variant="bodySmall" style={styles.typingText}>Thinking…</Text>
+          <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
+          <Text variant="bodySmall" style={[styles.typingText, { color: colors.textSecondary }]}>Thinking…</Text>
         </View>
       )}
 
       {/* Input */}
-      <View style={[styles.inputRow, { paddingBottom: insets.bottom + 8 }]}>
+      <View style={[styles.inputRow, { backgroundColor: colors.surface, ...shadows.sm, shadowOffset: { width: 0, height: -2 } }, { paddingBottom: insets.bottom + 8 }]}>
         <TextInput
           value={input}
           onChangeText={setInput}
           placeholder="Ask anything or give a command…"
           mode="outlined"
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.surface }]}
           outlineStyle={styles.inputOutline}
           multiline
           maxLength={1000}
@@ -148,7 +149,7 @@ export default function BotScreen() {
         <IconButton
           icon="send"
           mode="contained"
-          containerColor={Colors.primary}
+          containerColor={colors.primary}
           iconColor="#fff"
           size={22}
           onPress={handleSend}
@@ -161,7 +162,7 @@ export default function BotScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.background },
+  flex: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyWrap: { flex: 1, justifyContent: 'center' },
   list: { paddingTop: 12 },
@@ -171,18 +172,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 6,
   },
-  typingText: { color: Colors.textSecondary },
+  typingText: {},
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 12,
     paddingTop: 8,
-    backgroundColor: Colors.surface,
     gap: 8,
-    ...Shadows.sm,
-    shadowOffset: { width: 0, height: -2 },
   },
-  input: { flex: 1, backgroundColor: Colors.surface, maxHeight: 120 },
+  input: { flex: 1, maxHeight: 120 },
   inputOutline: { borderRadius: 24 },
   sendBtn: { marginBottom: 2 },
 });
