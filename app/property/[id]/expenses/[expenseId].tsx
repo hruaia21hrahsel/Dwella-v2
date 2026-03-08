@@ -234,7 +234,7 @@ export default function EditExpenseScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  content: { padding: 16, gap: 4, paddingBottom: 40 },
+  content: { padding: 16, gap: 8, paddingBottom: 40 },
   fieldLabel: { color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
   fieldLabelSpaced: { marginTop: 16 },
   optional: { color: Colors.textDisabled, textTransform: 'none' },

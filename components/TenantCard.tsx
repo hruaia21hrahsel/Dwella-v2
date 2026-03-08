@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 10,
+    gap: 12,
   },
   iconContainer: {
     width: 42,

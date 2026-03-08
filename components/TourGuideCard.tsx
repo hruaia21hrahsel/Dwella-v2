@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   dotsRow: {
     flexDirection: 'row',
-    gap: 5,
+    gap: 8,
     alignItems: 'center',
   },
   dot: {

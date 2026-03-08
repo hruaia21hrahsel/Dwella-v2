@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
     backgroundColor: Colors.surface,
-    gap: 4,
+    gap: 8,
     ...Shadows.sm,
     shadowOffset: { width: 0, height: -2 },
   },

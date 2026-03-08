@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 4,
+    gap: 8,
     marginBottom: 4,
   },
   month: { color: Colors.textPrimary, fontWeight: '700' },

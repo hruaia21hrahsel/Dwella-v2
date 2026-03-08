@@ -366,7 +366,7 @@ export default function LogPaymentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: 16, paddingBottom: 40, gap: 4 },
+  content: { padding: 16, paddingBottom: 40, gap: 8 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
   emptyText: { color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 32 },
   fieldLabel: {
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   monthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
     marginBottom: 4,
   },
   monthChip: {

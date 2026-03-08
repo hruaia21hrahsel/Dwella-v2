@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   rowLeft: {
     flex: 1,
-    gap: 4,
+    gap: 8,
   },
   monthLabel: {
     color: Colors.textPrimary,

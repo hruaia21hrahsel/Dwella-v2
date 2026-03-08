@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    gap: 4,
+    gap: 8,
   },
   input: {
     backgroundColor: Colors.surface,

@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 4,
+    gap: 8,
   },
   notesLabel: {
     color: Colors.textSecondary,

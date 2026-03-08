@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-    gap: 20,
+    gap: 24,
   },
   iconCircle: {
     width: 120,

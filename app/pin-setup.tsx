@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
     paddingHorizontal: 32,
   },
-  header: { alignItems: 'center', gap: 10 },
+  header: { alignItems: 'center', gap: 12 },
   title: { fontSize: 22, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center' },
   subtitle: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
   dotsRow: { flexDirection: 'row', gap: 16 },

@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   rowContent: {
     flex: 1,
-    gap: 2,
+    gap: 8,
   },
   rowTitle: {
     fontSize: 14,

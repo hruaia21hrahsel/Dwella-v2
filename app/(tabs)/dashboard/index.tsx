@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
   monthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 4,
+    gap: 8,
   },
   monthChip: {
     width: CHIP_SIZE,
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   },
   telegramCtaChips: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
     marginTop: 8,
   },
   telegramCtaChip: {
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
     marginBottom: 24,
   },
   statCard: {
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
   },
   txRight: {
     alignItems: 'flex-end',
-    gap: 6,
+    gap: 8,
   },
   txTenant: {
     fontSize: 14,

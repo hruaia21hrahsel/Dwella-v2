@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   pinSection: {
     alignItems: 'center',
     width: '100%',
-    gap: 20,
+    gap: 24,
   },
   logo: {},
   tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: -4 },

@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     padding: 24,
     paddingBottom: 40,
-    gap: 4,
+    gap: 8,
   },
   yearPickerTitle: {
     fontSize: 16,

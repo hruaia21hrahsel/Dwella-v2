@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
 sectionDivider: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     marginBottom: 12,
   },
   dividerLine: {
