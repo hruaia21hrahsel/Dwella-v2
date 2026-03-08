@@ -25,7 +25,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   function TabButton({ route }: { route: typeof state.routes[0] }) {
     const cfg = TAB_CONFIG[route.name]!;
     const isFocused = state.routes[state.index]?.key === route.key;
-    const color = isFocused ? Colors.primary : Colors.textSecondary;
+    const color = isFocused ? '#fff' : 'rgba(255,255,255,0.5)';
 
     function onPress() {
       const event = navigation.emit({
@@ -68,7 +68,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         activeOpacity={0.85}
       >
         <View style={styles.assistantCircle}>
-          <MaterialCommunityIcons name="robot" size={26} color="#fff" />
+          <MaterialCommunityIcons name="robot" size={26} color={Colors.primary} />
         </View>
       </TouchableOpacity>
 
@@ -79,7 +79,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         activeOpacity={0.85}
       >
         <View style={styles.circle}>
-          <MaterialCommunityIcons name="plus" size={30} color="#fff" />
+          <MaterialCommunityIcons name="plus" size={30} color={Colors.primary} />
         </View>
         <Text style={styles.fabLabel}>Log Payment</Text>
       </TouchableOpacity>
@@ -99,9 +99,9 @@ const styles = StyleSheet.create({
     right: 0,
     height: TAB_HEIGHT,
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    shadowColor: '#134E4A',
-    shadowOpacity: 0.08,
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primaryDark,
+    shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: -4 },
     shadowRadius: 12,
     elevation: 8,
@@ -130,11 +130,11 @@ const styles = StyleSheet.create({
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
     borderRadius: CIRCLE_RADIUS,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.4,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     elevation: 10,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   fabLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: Colors.primary,
+    color: '#fff',
     marginTop: 3,
   },
   assistantFab: {
@@ -155,11 +155,11 @@ const styles = StyleSheet.create({
     width: ASSISTANT_RADIUS * 2,
     height: ASSISTANT_RADIUS * 2,
     borderRadius: ASSISTANT_RADIUS,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.4,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10,
     elevation: 10,
