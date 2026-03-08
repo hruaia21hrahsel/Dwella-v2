@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Share, Alert, Modal, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Share, Modal, TouchableOpacity } from 'react-native';
 import { Text, Chip, Button, IconButton, Divider, ActivityIndicator, Menu } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +14,7 @@ import { usePayments } from '@/hooks/usePayments';
 import { useProperties } from '@/hooks/useProperties';
 import { sharePaymentReceipt, shareAnnualSummary } from '@/lib/pdf';
 import { getInviteLink } from '@/lib/invite';
+import { useToastStore } from '@/lib/toast';
 
 export default function TenantDetailScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId: string }>();
@@ -55,7 +56,7 @@ export default function TenantDetailScreen() {
     try {
       await sharePaymentReceipt(payment, tenant, property, user?.full_name ?? 'Landlord');
     } catch (err) {
-      Alert.alert('Export Failed', String(err));
+      useToastStore.getState().showToast('Export failed: ' + String(err), 'error');
     } finally {
       setExportingPdf(false);
     }
@@ -72,14 +73,14 @@ export default function TenantDetailScreen() {
     setExportingPdf(true);
     const yearPayments = payments.filter((p) => p.year === selectedYear);
     if (yearPayments.length === 0) {
-      Alert.alert('No Data', `No payments found for ${selectedYear}.`);
+      useToastStore.getState().showToast(`No payments found for ${selectedYear}.`, 'info');
       setExportingPdf(false);
       return;
     }
     try {
       await shareAnnualSummary(yearPayments, tenant, property, selectedYear);
     } catch (err) {
-      Alert.alert('Export Failed', String(err));
+      useToastStore.getState().showToast('Export failed: ' + String(err), 'error');
     } finally {
       setExportingPdf(false);
     }
@@ -112,7 +113,7 @@ export default function TenantDetailScreen() {
       .from('tenants')
       .update({ is_archived: true, archived_at: new Date().toISOString() })
       .eq('id', tenant.id);
-    if (error) Alert.alert('Error', error.message);
+    if (error) useToastStore.getState().showToast(error.message, 'error');
     else router.back();
     setArchiving(false);
     setArchiveDialogVisible(false);
@@ -128,7 +129,7 @@ export default function TenantDetailScreen() {
         auto_confirmed: false,
       })
       .eq('id', payment.id);
-    if (error) Alert.alert('Error', error.message);
+    if (error) useToastStore.getState().showToast(error.message, 'error');
     else refreshPayments();
     setConfirmingPayment(null);
   }

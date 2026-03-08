@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import { Text, TextInput, Button, ActivityIndicator, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Colors } from '@/constants/colors';
+import { useToastStore } from '@/lib/toast';
 import { EXPENSE_CATEGORIES } from '@/lib/expenses';
 import { ExpenseCategory } from '@/lib/types';
 import { TouchableOpacity } from 'react-native';
@@ -27,11 +28,11 @@ export default function AddExpenseScreen() {
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      Alert.alert('Validation', 'Please enter a valid amount greater than 0.');
+      useToastStore.getState().showToast('Please enter a valid amount greater than 0.', 'error');
       return;
     }
     if (!category) {
-      Alert.alert('Validation', 'Please select a category.');
+      useToastStore.getState().showToast('Please select a category.', 'error');
       return;
     }
 
@@ -46,7 +47,7 @@ export default function AddExpenseScreen() {
     });
 
     if (error) {
-      Alert.alert('Error', error.message);
+      useToastStore.getState().showToast(error.message, 'error');
     } else {
       router.back();
     }

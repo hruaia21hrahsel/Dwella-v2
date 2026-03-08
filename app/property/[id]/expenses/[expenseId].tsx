@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Platform, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, ActivityIndicator, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { useToastStore } from '@/lib/toast';
 import { EXPENSE_CATEGORIES } from '@/lib/expenses';
 import { ExpenseCategory } from '@/lib/types';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -33,7 +34,7 @@ export default function EditExpenseScreen() {
         .single();
 
       if (error || !data) {
-        Alert.alert('Error', 'Could not load expense.');
+        useToastStore.getState().showToast('Could not load expense.', 'error');
         router.back();
         return;
       }
@@ -50,11 +51,11 @@ export default function EditExpenseScreen() {
   async function handleSave() {
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      Alert.alert('Validation', 'Please enter a valid amount greater than 0.');
+      useToastStore.getState().showToast('Please enter a valid amount greater than 0.', 'error');
       return;
     }
     if (!category) {
-      Alert.alert('Validation', 'Please select a category.');
+      useToastStore.getState().showToast('Please select a category.', 'error');
       return;
     }
 
@@ -70,7 +71,7 @@ export default function EditExpenseScreen() {
       .eq('id', expenseId);
 
     if (error) {
-      Alert.alert('Error', error.message);
+      useToastStore.getState().showToast(error.message, 'error');
     } else {
       router.back();
     }
@@ -81,7 +82,7 @@ export default function EditExpenseScreen() {
     setDeleting(true);
     const { error } = await supabase.from('expenses').delete().eq('id', expenseId);
     if (error) {
-      Alert.alert('Error', error.message);
+      useToastStore.getState().showToast(error.message, 'error');
       setDeleting(false);
     } else {
       setShowDeleteConfirm(false);
