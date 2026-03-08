@@ -41,6 +41,8 @@ export interface Tenant {
   lease_end: string | null;
   invite_token: string;
   invite_status: InviteStatus;
+  photo_url: string | null;
+  notes: string | null;
   is_archived: boolean;
   archived_at: string | null;
   created_at: string;

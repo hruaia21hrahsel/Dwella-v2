@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Share } from 'react-native';
-import { TextInput, Button, HelperText, Text, IconButton } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Share, Image, TouchableOpacity } from 'react-native';
+import { TextInput, Button, HelperText, Text, IconButton, ActivityIndicator } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
 import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
 import { getInviteLink } from '@/lib/invite';
+
+const PHOTO_BUCKET = 'tenant-photos';
 
 export default function TenantCreateScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId?: string }>();
@@ -20,6 +24,10 @@ export default function TenantCreateScreen() {
   const [dueDay, setDueDay] = useState('1');
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
+  const [notes, setNotes] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoPath, setPhotoPath] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -42,12 +50,80 @@ export default function TenantCreateScreen() {
         setDueDay(String(data.due_day));
         setLeaseStart(data.lease_start);
         setLeaseEnd(data.lease_end ?? '');
+        setNotes(data.notes ?? '');
+        if (data.photo_url) {
+          setPhotoPath(data.photo_url);
+          // Get signed URL for preview
+          const { data: urlData } = await supabase.storage
+            .from(PHOTO_BUCKET)
+            .createSignedUrl(data.photo_url, 3600);
+          if (urlData?.signedUrl) setPhotoUri(urlData.signedUrl);
+        }
       }
       setFetching(false);
     }
 
     fetchTenant();
   }, [tenantId, isEditing]);
+
+  async function pickPhoto(source: 'camera' | 'library') {
+    const permission = source === 'camera'
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      useToastStore.getState().showToast(`Please allow ${source} access.`, 'error');
+      return;
+    }
+
+    const result = source === 'camera'
+      ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    const uri = result.assets[0].uri;
+    setPhotoUri(uri);
+    // We'll upload on submit to get the tenant ID for the path
+  }
+
+  function removePhoto() {
+    setPhotoUri(null);
+    setPhotoPath(null);
+  }
+
+  async function uploadPhoto(tid: string): Promise<string | null> {
+    if (!photoUri || photoUri.startsWith('http')) {
+      // No new photo selected or using existing signed URL
+      return photoPath;
+    }
+
+    setUploading(true);
+    const path = `${propertyId}/${tid}/photo.jpg`;
+
+    try {
+      const response = await fetch(photoUri);
+      const blob = await response.blob();
+
+      // Remove old photo if exists
+      await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+
+      const { error } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(path, blob, { contentType: 'image/jpeg' });
+
+      if (error) {
+        useToastStore.getState().showToast('Photo upload failed: ' + error.message, 'error');
+        return photoPath;
+      }
+      return path;
+    } catch {
+      useToastStore.getState().showToast('Photo upload failed.', 'error');
+      return photoPath;
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function validate(): boolean {
     const errs: Record<string, string> = {};
@@ -73,12 +149,17 @@ export default function TenantCreateScreen() {
       due_day: parseInt(dueDay, 10),
       lease_start: leaseStart || new Date().toISOString().split('T')[0],
       lease_end: leaseEnd || null,
+      notes: notes.trim() || null,
     };
 
     if (isEditing) {
+      const uploadedPath = await uploadPhoto(tenantId!);
       const { error } = await supabase
         .from('tenants')
-        .update(payload)
+        .update({
+          ...payload,
+          photo_url: photoUri === null && photoPath === null ? null : uploadedPath,
+        })
         .eq('id', tenantId);
 
       if (error) {
@@ -90,13 +171,23 @@ export default function TenantCreateScreen() {
       const { data, error } = await supabase
         .from('tenants')
         .insert({ ...payload, property_id: propertyId })
-        .select('invite_token')
+        .select('id, invite_token')
         .single();
 
       if (error) {
         useToastStore.getState().showToast(error.message, 'error');
       } else if (data) {
-        // Show invite link share modal
+        // Upload photo if selected
+        if (photoUri) {
+          const uploadedPath = await uploadPhoto(data.id);
+          if (uploadedPath) {
+            await supabase
+              .from('tenants')
+              .update({ photo_url: uploadedPath })
+              .eq('id', data.id);
+          }
+        }
+
         const inviteLink = getInviteLink(data.invite_token);
         await Share.share({
           message: `You've been added as a tenant on Dwella! Open this link to accept your invitation:\n\n${inviteLink}`,
@@ -132,15 +223,36 @@ export default function TenantCreateScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <TextInput
-            label="Flat / Unit Number"
-            value={flatNo}
-            onChangeText={setFlatNo}
-            mode="outlined"
-            style={styles.input}
-            error={!!errors.flatNo}
-          />
-          {errors.flatNo && <HelperText type="error">{errors.flatNo}</HelperText>}
+          {/* Photo upload */}
+          <View style={styles.photoSection}>
+            {photoUri ? (
+              <View style={styles.photoPreviewWrap}>
+                <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                {uploading && (
+                  <View style={styles.photoUploading}>
+                    <ActivityIndicator color="#fff" />
+                  </View>
+                )}
+                <TouchableOpacity style={styles.photoRemoveBtn} onPress={removePhoto} hitSlop={8}>
+                  <MaterialCommunityIcons name="close-circle" size={24} color={Colors.error} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.photoPlaceholder}>
+                <MaterialCommunityIcons name="account-outline" size={32} color={Colors.textDisabled} />
+              </View>
+            )}
+            <View style={styles.photoActions}>
+              <TouchableOpacity style={styles.photoBtn} onPress={() => pickPhoto('camera')} activeOpacity={0.7}>
+                <MaterialCommunityIcons name="camera-outline" size={18} color={Colors.primary} />
+                <Text style={styles.photoBtnText}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoBtn} onPress={() => pickPhoto('library')} activeOpacity={0.7}>
+                <MaterialCommunityIcons name="image-outline" size={18} color={Colors.primary} />
+                <Text style={styles.photoBtnText}>Gallery</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
           <TextInput
             label="Tenant Name"
@@ -151,6 +263,16 @@ export default function TenantCreateScreen() {
             error={!!errors.tenantName}
           />
           {errors.tenantName && <HelperText type="error">{errors.tenantName}</HelperText>}
+
+          <TextInput
+            label="Flat / Unit Number"
+            value={flatNo}
+            onChangeText={setFlatNo}
+            mode="outlined"
+            style={styles.input}
+            error={!!errors.flatNo}
+          />
+          {errors.flatNo && <HelperText type="error">{errors.flatNo}</HelperText>}
 
           <TextInput
             label="Monthly Rent (₹)"
@@ -201,6 +323,17 @@ export default function TenantCreateScreen() {
             placeholder="2025-01-01"
           />
 
+          <TextInput
+            label="Notes (optional)"
+            value={notes}
+            onChangeText={setNotes}
+            mode="outlined"
+            style={styles.input}
+            multiline
+            numberOfLines={3}
+            placeholder="e.g. Contact number, ID proof details, special terms..."
+          />
+
           {!isEditing && (
             <Text variant="bodySmall" style={styles.inviteNote}>
               After saving, an invite link will be generated and shared with the tenant.
@@ -210,8 +343,8 @@ export default function TenantCreateScreen() {
           <Button
             mode="contained"
             onPress={handleSubmit}
-            loading={loading}
-            disabled={loading}
+            loading={loading || uploading}
+            disabled={loading || uploading}
             style={styles.button}
             contentStyle={styles.buttonContent}
           >
@@ -245,5 +378,66 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     paddingVertical: 6,
+  },
+
+  // Photo section
+  photoSection: {
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  photoPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoPreviewWrap: {
+    position: 'relative',
+  },
+  photoPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  photoUploading: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoRemoveBtn: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  photoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  photoBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.primary,
   },
 });

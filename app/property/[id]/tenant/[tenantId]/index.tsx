@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Share, Modal, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, Share, Modal, TouchableOpacity, RefreshControl, Image } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
@@ -33,6 +33,8 @@ export default function TenantDetailScreen() {
   const [yearPickerVisible, setYearPickerVisible] = useState(false);
   const [actionsVisible, setActionsVisible] = useState(false);
 
+  const [photoSignedUrl, setPhotoSignedUrl] = useState<string | null>(null);
+
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
   const isPending = tenant?.invite_status === 'pending';
 
@@ -65,6 +67,14 @@ export default function TenantDetailScreen() {
       .eq('id', tenantId)
       .single<Tenant>();
     setTenant(data);
+    if (data?.photo_url) {
+      const { data: urlData } = await supabase.storage
+        .from('tenant-photos')
+        .createSignedUrl(data.photo_url, 3600);
+      setPhotoSignedUrl(urlData?.signedUrl ?? null);
+    } else {
+      setPhotoSignedUrl(null);
+    }
     setLoading(false);
   }
 
@@ -194,13 +204,17 @@ export default function TenantDetailScreen() {
       >
         {/* Profile header */}
         <View style={styles.profileHeader}>
-          <View style={[styles.avatar, { backgroundColor: isPending ? Colors.statusPartialSoft : Colors.statusConfirmedSoft }]}>
-            <MaterialCommunityIcons
-              name={isPending ? 'account-clock-outline' : 'account-check-outline'}
-              size={28}
-              color={isPending ? Colors.statusPartial : Colors.statusConfirmed}
-            />
-          </View>
+          {photoSignedUrl ? (
+            <Image source={{ uri: photoSignedUrl }} style={styles.avatarPhoto} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: isPending ? Colors.statusPartialSoft : Colors.statusConfirmedSoft }]}>
+              <MaterialCommunityIcons
+                name={isPending ? 'account-clock-outline' : 'account-check-outline'}
+                size={28}
+                color={isPending ? Colors.statusPartial : Colors.statusConfirmed}
+              />
+            </View>
+          )}
           <Text style={styles.tenantName}>{tenant.tenant_name}</Text>
           <View style={[styles.statusPill, { backgroundColor: isPending ? '#FEF3C7' : '#DCFCE7' }]}>
             <View style={[styles.statusDot, { backgroundColor: isPending ? Colors.statusPartial : Colors.statusConfirmed }]} />
@@ -239,6 +253,17 @@ export default function TenantDetailScreen() {
             <DetailRow icon="calendar-end" label="Lease End" value={formatDate(tenant.lease_end)} />
           )}
         </View>
+
+        {/* Notes */}
+        {tenant.notes ? (
+          <View style={styles.notesCard}>
+            <View style={styles.notesHeader}>
+              <MaterialCommunityIcons name="note-text-outline" size={16} color={Colors.textSecondary} />
+              <Text style={styles.notesLabel}>Notes</Text>
+            </View>
+            <Text style={styles.notesText}>{tenant.notes}</Text>
+          </View>
+        ) : null}
 
         {/* Invite action */}
         {isPending && (
@@ -451,11 +476,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 64,
+    height: 64,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 4,
+  },
+  avatarPhoto: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: Colors.primary,
     marginBottom: 4,
   },
   tenantName: {
@@ -520,6 +553,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: 14,
+  },
+
+  // Notes card
+  notesCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 14,
+    gap: 8,
+  },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  notesLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  notesText: {
+    fontSize: 14,
+    color: Colors.textPrimary,
+    lineHeight: 20,
   },
 
   // Invite button
