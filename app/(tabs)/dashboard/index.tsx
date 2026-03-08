@@ -315,21 +315,32 @@ export default function DashboardScreen() {
       {/* Telegram CTA — only when not linked */}
       {!telegramLinked && (
         <TouchableOpacity
-          style={styles.telegramCta}
           onPress={handleLinkTelegram}
           disabled={linkingTelegram}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
+          style={{ marginTop: 10 }}
         >
-          <View style={styles.telegramCtaIcon}>
-            <MaterialCommunityIcons name="send" size={16} color="#fff" />
-          </View>
-          <View style={styles.telegramCtaTextWrap}>
-            <Text style={styles.telegramCtaTitle}>
-              {linkingTelegram ? 'Opening Telegram…' : 'Chat with Dwella on Telegram!'}
-            </Text>
-            <Text style={styles.telegramCtaSub}>Get rent reminders & manage via chat</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.primary} />
+          <LinearGradient
+            colors={[Colors.primary, Colors.primaryDark]}
+            style={styles.telegramCta}
+          >
+            <View style={styles.telegramCtaTop}>
+              <View style={styles.telegramCtaIcon}>
+                <MaterialCommunityIcons name="robot-happy-outline" size={20} color={Colors.primary} />
+              </View>
+              <View style={styles.telegramCtaTextWrap}>
+                <Text style={styles.telegramCtaTitle}>
+                  {linkingTelegram ? 'Opening Telegram…' : 'Link Telegram to meet your AI assistant! ✨'}
+                </Text>
+                <Text style={styles.telegramCtaSub}>You command, the AI executes</Text>
+              </View>
+            </View>
+            <View style={styles.telegramCtaChips}>
+              <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Log Rent</Text></View>
+              <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Send Reminders</Text></View>
+              <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Check Balance</Text></View>
+            </View>
+          </LinearGradient>
         </TouchableOpacity>
       )}
 
@@ -612,21 +623,18 @@ const styles = StyleSheet.create({
   },
   // Telegram CTA
   telegramCta: {
+    borderRadius: 16,
+    padding: 14,
+  },
+  telegramCtaTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primarySoft,
-    borderRadius: 14,
-    padding: 12,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: Colors.primaryLight,
-    borderStyle: 'dashed',
   },
   telegramCtaIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primary,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -635,14 +643,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   telegramCtaTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.primary,
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#fff',
   },
   telegramCtaSub: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    marginTop: 1,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  telegramCtaChips: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 8,
+  },
+  telegramCtaChip: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  telegramCtaChipText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
   },
   // Stats
   statsGrid: {
