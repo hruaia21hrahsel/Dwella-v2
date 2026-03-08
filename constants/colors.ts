@@ -1,10 +1,10 @@
 export const Colors = {
   // Brand — NoBroker Teal
-  primary: '#00BFA5',
-  primaryLight: '#CCFBF1',
-  primaryDark: '#009688',
-  primarySoft: '#F0FDFA',
-  primaryMid: '#5EEAD4',
+  primary: '#009688',
+  primaryLight: '#B2DFDB',
+  primaryDark: '#00796B',
+  primarySoft: '#E0F2F1',
+  primaryMid: '#4DB6AC',
 
   // Status
   statusPending: '#94A3B8',
@@ -35,8 +35,8 @@ export const Colors = {
   textOnGradientMuted: 'rgba(255,255,255,0.75)',
 
   // Gradient pairs
-  gradientHero: ['#00BFA5', '#5EEAD4'] as string[],
-  gradientHeroSubtle: ['#F0FDFA', '#CCFBF1'] as string[],
+  gradientHero: ['#009688', '#009688'] as string[],
+  gradientHeroSubtle: ['#E0F2F1', '#B2DFDB'] as string[],
 
   // Functional
   success: '#22C55E',
@@ -49,21 +49,21 @@ export type ColorKey = keyof typeof Colors;
 
 export const Shadows = {
   sm: {
-    shadowColor: '#009688',
+    shadowColor: '#00796B',
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 3,
   },
   md: {
-    shadowColor: '#009688',
+    shadowColor: '#00796B',
     shadowOpacity: 0.12,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 16,
     elevation: 6,
   },
   hero: {
-    shadowColor: '#00BFA5',
+    shadowColor: '#009688',
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 24,
