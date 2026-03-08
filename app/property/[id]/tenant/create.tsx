@@ -71,7 +71,7 @@ export default function TenantCreateScreen() {
       monthly_rent: parseFloat(monthlyRent),
       security_deposit: parseFloat(securityDeposit) || 0,
       due_day: parseInt(dueDay, 10),
-      lease_start: leaseStart || null,
+      lease_start: leaseStart || new Date().toISOString().split('T')[0],
       lease_end: leaseEnd || null,
     };
 
