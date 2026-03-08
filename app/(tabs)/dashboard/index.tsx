@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,6 +23,10 @@ import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@
 import { getStatusColor } from '@/lib/payments';
 import { PaymentStatus } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/lib/store';
+import { useToastStore } from '@/lib/toast';
+import { generateTelegramLinkToken } from '@/lib/bot';
+import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 
 const SCREEN_W = Dimensions.get('window').width;
 // 4-col grid: outer padding 32, block padding 24, 3 gaps of 4px
@@ -68,6 +73,7 @@ function StatCard({ label, value, color }: StatCardProps) {
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { user, setUser } = useAuthStore();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const { tenantRows, stats, recentTransactions, isLoading, error, refresh } = useDashboard(selectedYear);
@@ -75,6 +81,30 @@ export default function DashboardScreen() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [linkingTelegram, setLinkingTelegram] = useState(false);
+
+  const telegramLinked = !!user?.telegram_chat_id;
+
+  const handleLinkTelegram = useCallback(async () => {
+    if (!user) return;
+    setLinkingTelegram(true);
+    try {
+      const token = await generateTelegramLinkToken(user.id);
+      const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+      if (data) setUser(data);
+      const deepLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`;
+      const canOpen = await Linking.canOpenURL(deepLink);
+      if (canOpen) {
+        await Linking.openURL(deepLink);
+      } else {
+        useToastStore.getState().showToast('Please install Telegram, then try again.', 'error');
+      }
+    } catch (err) {
+      useToastStore.getState().showToast(String(err), 'error');
+    } finally {
+      setLinkingTelegram(false);
+    }
+  }, [user, setUser]);
 
 
   useEffect(() => {
@@ -307,6 +337,27 @@ export default function DashboardScreen() {
         <MaterialCommunityIcons name="bell-ring-outline" size={16} color={Colors.primary} style={{ marginRight: 6 }} />
         <Text style={styles.remindersBtnText}>Send Reminders</Text>
       </TouchableOpacity>
+
+      {/* Telegram CTA — only when not linked */}
+      {!telegramLinked && (
+        <TouchableOpacity
+          style={styles.telegramCta}
+          onPress={handleLinkTelegram}
+          disabled={linkingTelegram}
+          activeOpacity={0.8}
+        >
+          <View style={styles.telegramCtaIcon}>
+            <MaterialCommunityIcons name="send" size={16} color="#fff" />
+          </View>
+          <View style={styles.telegramCtaTextWrap}>
+            <Text style={styles.telegramCtaTitle}>
+              {linkingTelegram ? 'Opening Telegram…' : 'Chat with Dwella on Telegram!'}
+            </Text>
+            <Text style={styles.telegramCtaSub}>Get rent reminders & manage via chat</Text>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      )}
 
       {/* Section 2 — Stats */}
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
@@ -558,6 +609,40 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: '700',
     fontSize: 14,
+  },
+  // Telegram CTA
+  telegramCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primarySoft,
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+    borderStyle: 'dashed',
+  },
+  telegramCtaIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  telegramCtaTextWrap: {
+    flex: 1,
+  },
+  telegramCtaTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  telegramCtaSub: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 1,
   },
   // Stats
   statsGrid: {
