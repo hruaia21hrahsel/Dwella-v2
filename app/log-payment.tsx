@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Alert,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +16,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Colors } from '@/constants/colors';
+import { useToastStore } from '@/lib/toast';
 import { getDueDate, getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
 import { formatCurrency, getCurrentMonthYear } from '@/lib/utils';
@@ -122,7 +122,7 @@ export default function LogPaymentScreen() {
 
   async function handleSubmit() {
     if (!selectedTenant || !selectedPropertyId) {
-      Alert.alert('Missing info', 'Please select a property and tenant.');
+      useToastStore.getState().showToast('Please select a property and tenant.', 'error');
       return;
     }
 
@@ -184,7 +184,7 @@ export default function LogPaymentScreen() {
 
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Could not save payment.');
+      useToastStore.getState().showToast(err.message ?? 'Could not save payment.', 'error');
     } finally {
       setSubmitting(false);
     }

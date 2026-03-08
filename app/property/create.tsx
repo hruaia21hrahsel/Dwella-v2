@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, HelperText, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Colors } from '@/constants/colors';
+import { useToastStore } from '@/lib/toast';
 import { Property } from '@/lib/types';
 
 export default function PropertyCreateScreen() {
@@ -59,7 +60,7 @@ export default function PropertyCreateScreen() {
   async function handleSubmit() {
     if (!validate()) return;
     if (!user) {
-      Alert.alert('Not signed in', 'Your session expired. Please log out and log back in.');
+      useToastStore.getState().showToast('Session expired. Please log out and log back in.', 'error');
       return;
     }
     setLoading(true);
@@ -79,7 +80,7 @@ export default function PropertyCreateScreen() {
         .eq('id', id);
 
       if (error) {
-        Alert.alert('Error', error.message);
+        useToastStore.getState().showToast(error.message, 'error');
       } else {
         bumpPropertyRefresh();
         router.back();
@@ -92,9 +93,9 @@ export default function PropertyCreateScreen() {
         .single();
 
       if (error) {
-        Alert.alert('Error saving property', error.message);
+        useToastStore.getState().showToast(error.message, 'error');
       } else if (!created) {
-        Alert.alert('Error', 'Property was not saved. Check your connection and try again.');
+        useToastStore.getState().showToast('Property was not saved. Check your connection and try again.', 'error');
       } else {
         bumpPropertyRefresh();
         router.dismiss();

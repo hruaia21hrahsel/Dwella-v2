@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Share } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Share } from 'react-native';
 import { TextInput, Button, HelperText, Text, IconButton } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
 import { getInviteLink } from '@/lib/invite';
 
@@ -81,7 +82,7 @@ export default function TenantCreateScreen() {
         .eq('id', tenantId);
 
       if (error) {
-        Alert.alert('Error', error.message);
+        useToastStore.getState().showToast(error.message, 'error');
       } else {
         router.back();
       }
@@ -93,7 +94,7 @@ export default function TenantCreateScreen() {
         .single();
 
       if (error) {
-        Alert.alert('Error', error.message);
+        useToastStore.getState().showToast(error.message, 'error');
       } else if (data) {
         // Show invite link share modal
         const inviteLink = getInviteLink(data.invite_token);
