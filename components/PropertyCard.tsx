@@ -33,10 +33,13 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
   const occupiedCount = tenants?.length ?? 0;
 
   return (
-    <View style={[styles.card, isTenantView && styles.cardTenant]}>
-      {/* Color accent bar */}
+    <View style={[
+      styles.card,
+      isTenantView ? styles.cardTenant : { backgroundColor: propColor + '08', borderColor: propColor + '40' },
+    ]}>
+      {/* Left color accent strip + content */}
       {!isTenantView && (
-        <View style={[styles.colorBar, { backgroundColor: propColor }]} />
+        <View style={[styles.colorStrip, { backgroundColor: propColor }]} />
       )}
       {/* Header row */}
       <TouchableOpacity style={styles.headerRow} onPress={onPress} activeOpacity={0.7}>
@@ -45,7 +48,7 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
         </View>
 
         <View style={styles.info}>
-          <Text style={styles.name} numberOfLines={1}>{property.name}</Text>
+          <Text style={[styles.name, !isTenantView && { color: propColor }]} numberOfLines={1}>{property.name}</Text>
           <View style={styles.addressRow}>
             <MaterialCommunityIcons name="map-marker-outline" size={12} color={Colors.textSecondary} />
             <Text style={styles.address} numberOfLines={1}>
@@ -80,7 +83,7 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
       {/* Stats strip — owner view only */}
       {!isTenantView && tenants && (
-        <View style={styles.statsStrip}>
+        <View style={[styles.statsStrip, { backgroundColor: propColor + '0D', borderTopColor: propColor + '20' }]}>
           <View style={styles.statItem}>
             <MaterialCommunityIcons name="door-open" size={14} color={propColor} />
             <Text style={styles.statText}>
@@ -168,10 +171,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.statusConfirmedSoft,
     marginBottom: 8,
   },
-  colorBar: {
-    height: 4,
+  colorStrip: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
     borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 16,
   },
   headerRow: {
     flexDirection: 'row',
