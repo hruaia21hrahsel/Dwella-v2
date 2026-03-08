@@ -338,12 +338,12 @@ export default function DashboardScreen() {
           style={{ marginTop: 10 }}
         >
           <LinearGradient
-            colors={['#0088CC', '#006699']}
+            colors={['#FBBF24', '#F59E0B']}
             style={styles.telegramCta}
           >
             <View style={styles.telegramCtaTop}>
               <View style={styles.telegramCtaIcon}>
-                <MaterialCommunityIcons name="robot-happy-outline" size={20} color="#0088CC" />
+                <MaterialCommunityIcons name="robot-happy-outline" size={20} color="#78350F" />
               </View>
               <View style={styles.telegramCtaTextWrap}>
                 <Text style={styles.telegramCtaTitle}>
@@ -663,11 +663,11 @@ const styles = StyleSheet.create({
   telegramCtaTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#fff',
+    color: '#78350F',
   },
   telegramCtaSub: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(120,53,15,0.7)',
     marginTop: 2,
   },
   telegramCtaChips: {
@@ -676,13 +676,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   telegramCtaChip: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(120,53,15,0.15)',
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   telegramCtaChipText: {
-    color: '#fff',
+    color: '#78350F',
     fontSize: 10,
     fontWeight: '600',
   },
