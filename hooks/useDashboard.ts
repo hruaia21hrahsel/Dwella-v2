@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Payment, PaymentStatus } from '@/lib/types';
-import { getCurrentMonthYear } from '@/lib/utils';
+
 
 export interface TenantRow {
   tenantId: string;
@@ -45,7 +45,7 @@ export interface DashboardData {
   refresh: () => void;
 }
 
-export function useDashboard(year: number): DashboardData {
+export function useDashboard(year: number, month: number): DashboardData {
   const { user } = useAuthStore();
   const [tenantRows, setTenantRows] = useState<TenantRow[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -57,8 +57,6 @@ export function useDashboard(year: number): DashboardData {
   const [recentTransactions, setRecentTransactions] = useState<RecentTx[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const { month: currentMonth } = getCurrentMonthYear();
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -113,7 +111,7 @@ export function useDashboard(year: number): DashboardData {
     let totalOverdue = 0;
 
     for (const row of rows) {
-      const p = row.paymentsByMonth[currentMonth];
+      const p = row.paymentsByMonth[month];
       if (p) {
         totalReceivable += p.amount_due;
         totalReceived += p.amount_paid;
@@ -163,7 +161,7 @@ export function useDashboard(year: number): DashboardData {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, year, currentMonth]);
+  }, [user?.id, year, month]);
 
   useFocusEffect(
     useCallback(() => {
