@@ -4,7 +4,7 @@ import { Text, TextInput, Button, ActivityIndicator, IconButton } from 'react-na
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { EXPENSE_CATEGORIES } from '@/lib/expenses';
 import { ExpenseCategory } from '@/lib/types';
@@ -13,6 +13,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 export default function EditExpenseScreen() {
   const { id: propertyId, expenseId } = useLocalSearchParams<{ id: string; expenseId: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
 
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory | null>(null);
@@ -98,8 +99,8 @@ export default function EditExpenseScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -111,16 +112,16 @@ export default function EditExpenseScreen() {
           headerShown: true,
           title: 'Edit Expense',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />
           ),
         }}
       />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* Amount */}
-        <Text variant="labelMedium" style={styles.fieldLabel}>Amount</Text>
+        <Text variant="labelMedium" style={[styles.fieldLabel, { color: colors.textSecondary }]}>Amount</Text>
         <TextInput
           mode="outlined"
           keyboardType="decimal-pad"
@@ -128,12 +129,12 @@ export default function EditExpenseScreen() {
           value={amount}
           onChangeText={setAmount}
           left={<TextInput.Affix text="₹" />}
-          outlineColor={Colors.border}
-          activeOutlineColor={Colors.primary}
+          outlineColor={colors.border}
+          activeOutlineColor={colors.primary}
         />
 
         {/* Category */}
-        <Text variant="labelMedium" style={[styles.fieldLabel, styles.fieldLabelSpaced]}>Category</Text>
+        <Text variant="labelMedium" style={[styles.fieldLabel, styles.fieldLabelSpaced, { color: colors.textSecondary }]}>Category</Text>
         <View style={styles.categoryGrid}>
           {EXPENSE_CATEGORIES.map((cat) => {
             const selected = category === cat.value;
@@ -142,6 +143,7 @@ export default function EditExpenseScreen() {
                 key={cat.value}
                 style={[
                   styles.categoryChip,
+                  { borderColor: colors.border, backgroundColor: colors.surface },
                   selected && { backgroundColor: cat.color + '22', borderColor: cat.color },
                 ]}
                 onPress={() => setCategory(cat.value)}
@@ -149,7 +151,7 @@ export default function EditExpenseScreen() {
               >
                 <Text
                   variant="labelMedium"
-                  style={[styles.categoryLabel, selected && { color: cat.color }]}
+                  style={[{ color: colors.textSecondary }, selected && { color: cat.color }]}
                 >
                   {cat.label}
                 </Text>
@@ -159,14 +161,14 @@ export default function EditExpenseScreen() {
         </View>
 
         {/* Date */}
-        <Text variant="labelMedium" style={[styles.fieldLabel, styles.fieldLabelSpaced]}>Date</Text>
+        <Text variant="labelMedium" style={[styles.fieldLabel, styles.fieldLabelSpaced, { color: colors.textSecondary }]}>Date</Text>
         <TouchableOpacity
-          style={styles.datePicker}
+          style={[styles.datePicker, { backgroundColor: colors.surface, borderColor: colors.border }]}
           onPress={() => setShowDatePicker(true)}
           activeOpacity={0.7}
         >
-          <Text variant="bodyMedium" style={styles.dateText}>{dateLabel}</Text>
-          <Text variant="bodySmall" style={styles.dateHint}>Tap to change</Text>
+          <Text variant="bodyMedium" style={{ color: colors.textPrimary, fontWeight: '500' }}>{dateLabel}</Text>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Tap to change</Text>
         </TouchableOpacity>
 
         {showDatePicker && (
@@ -182,8 +184,8 @@ export default function EditExpenseScreen() {
         )}
 
         {/* Description */}
-        <Text variant="labelMedium" style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-          Description <Text style={styles.optional}>(optional)</Text>
+        <Text variant="labelMedium" style={[styles.fieldLabel, styles.fieldLabelSpaced, { color: colors.textSecondary }]}>
+          Description <Text style={{ color: colors.textDisabled, textTransform: 'none' }}>(optional)</Text>
         </Text>
         <TextInput
           mode="outlined"
@@ -192,8 +194,8 @@ export default function EditExpenseScreen() {
           onChangeText={setDescription}
           multiline
           numberOfLines={3}
-          outlineColor={Colors.border}
-          activeOutlineColor={Colors.primary}
+          outlineColor={colors.border}
+          activeOutlineColor={colors.primary}
         />
 
         <Button
@@ -201,17 +203,17 @@ export default function EditExpenseScreen() {
           onPress={handleSave}
           disabled={saving || deleting}
           style={styles.saveButton}
-          buttonColor={Colors.primary}
+          buttonColor={colors.primary}
         >
-          {saving ? <ActivityIndicator size="small" color="#fff" /> : 'Save Changes'}
+          {saving ? <ActivityIndicator size="small" color={colors.textOnPrimary} /> : 'Save Changes'}
         </Button>
 
         <Button
           mode="outlined"
           onPress={() => setShowDeleteConfirm(true)}
           disabled={saving || deleting}
-          style={styles.deleteButton}
-          textColor={Colors.error}
+          style={[styles.deleteButton, { borderColor: colors.error }]}
+          textColor={colors.error}
         >
           Delete Expense
         </Button>
@@ -222,7 +224,7 @@ export default function EditExpenseScreen() {
         title="Delete Expense"
         message="This expense will be permanently removed. This cannot be undone."
         confirmLabel="Delete"
-        confirmColor={Colors.error}
+        confirmColor={colors.error}
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteConfirm(false)}
@@ -232,36 +234,27 @@ export default function EditExpenseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
+  container: { flex: 1 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 16, gap: 8, paddingBottom: 40 },
-  fieldLabel: { color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  fieldLabel: { textTransform: 'uppercase', letterSpacing: 0.5 },
   fieldLabelSpaced: { marginTop: 16 },
-  optional: { color: Colors.textDisabled, textTransform: 'none' },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   categoryChip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
   },
-  categoryLabel: { color: Colors.textSecondary },
   datePicker: {
-    backgroundColor: Colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 14,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 4,
   },
-  dateText: { color: Colors.textPrimary, fontWeight: '500' },
-  dateHint: { color: Colors.textSecondary },
   saveButton: { marginTop: 24, borderRadius: 8 },
-  deleteButton: { marginTop: 10, borderRadius: 8, borderColor: Colors.error },
-  error: { color: Colors.error },
+  deleteButton: { marginTop: 10, borderRadius: 8 },
 });

@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Payment, Tenant, Property } from '@/lib/types';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { sharePaymentReceipt } from '@/lib/pdf';
 import { useToastStore } from '@/lib/toast';
 import { formatCurrency, formatDate, getMonthName } from '@/lib/utils';
@@ -20,6 +20,7 @@ export default function PaymentDetailScreen() {
     paymentId: string;
   }>();
   const router = useRouter();
+  const { colors } = useTheme();
   const { ownedProperties } = useProperties();
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
 
@@ -130,7 +131,7 @@ export default function PaymentDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -146,30 +147,30 @@ export default function PaymentDetailScreen() {
           title: `${getMonthName(payment.month)} ${payment.year}`,
           headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
         }}
       />
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
         {/* Header */}
-        <View style={styles.headerCard}>
-          <Text variant="headlineSmall" style={styles.monthTitle}>
+        <View style={[styles.headerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text variant="headlineSmall" style={[styles.monthTitle, { color: colors.textPrimary }]}>
             {getMonthName(payment.month)} {payment.year}
           </Text>
           <PaymentStatusBadge status={payment.status} compact={false} />
         </View>
 
         {/* Amounts */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardRow}>
-            <Text variant="bodySmall" style={styles.label}>Amount Due</Text>
-            <Text variant="bodyLarge" style={styles.value}>{formatCurrency(payment.amount_due)}</Text>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Amount Due</Text>
+            <Text variant="bodyLarge" style={{ color: colors.textPrimary, fontWeight: '500' }}>{formatCurrency(payment.amount_due)}</Text>
           </View>
           <Divider />
           <View style={styles.cardRow}>
-            <Text variant="bodySmall" style={styles.label}>Amount Paid</Text>
-            <Text variant="bodyLarge" style={[styles.value, { color: Colors.statusConfirmed }]}>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Amount Paid</Text>
+            <Text variant="bodyLarge" style={{ color: colors.statusConfirmed, fontWeight: '500' }}>
               {formatCurrency(payment.amount_paid)}
             </Text>
           </View>
@@ -177,8 +178,8 @@ export default function PaymentDetailScreen() {
             <>
               <Divider />
               <View style={styles.cardRow}>
-                <Text variant="bodySmall" style={styles.label}>Balance</Text>
-                <Text variant="bodyLarge" style={[styles.value, { color: Colors.statusOverdue }]}>
+                <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Balance</Text>
+                <Text variant="bodyLarge" style={{ color: colors.statusOverdue, fontWeight: '500' }}>
                   {formatCurrency(payment.amount_due - payment.amount_paid)}
                 </Text>
               </View>
@@ -187,17 +188,17 @@ export default function PaymentDetailScreen() {
         </View>
 
         {/* Timeline */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardRow}>
-            <Text variant="bodySmall" style={styles.label}>Due Date</Text>
-            <Text variant="bodyMedium" style={styles.value}>{formatDate(payment.due_date)}</Text>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Due Date</Text>
+            <Text variant="bodyMedium" style={{ color: colors.textPrimary, fontWeight: '500' }}>{formatDate(payment.due_date)}</Text>
           </View>
           {payment.paid_at && (
             <>
               <Divider />
               <View style={styles.cardRow}>
-                <Text variant="bodySmall" style={styles.label}>Marked Paid</Text>
-                <Text variant="bodyMedium" style={styles.value}>{formatDate(payment.paid_at)}</Text>
+                <Text variant="bodySmall" style={{ color: colors.textSecondary }}>Marked Paid</Text>
+                <Text variant="bodyMedium" style={{ color: colors.textPrimary, fontWeight: '500' }}>{formatDate(payment.paid_at)}</Text>
               </View>
             </>
           )}
@@ -205,10 +206,10 @@ export default function PaymentDetailScreen() {
             <>
               <Divider />
               <View style={styles.cardRow}>
-                <Text variant="bodySmall" style={styles.label}>
+                <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
                   {payment.auto_confirmed ? 'Auto-confirmed' : 'Confirmed'}
                 </Text>
-                <Text variant="bodyMedium" style={styles.value}>{formatDate(payment.confirmed_at)}</Text>
+                <Text variant="bodyMedium" style={{ color: colors.textPrimary, fontWeight: '500' }}>{formatDate(payment.confirmed_at)}</Text>
               </View>
             </>
           )}
@@ -216,8 +217,8 @@ export default function PaymentDetailScreen() {
 
         {/* Notes */}
         {payment.notes ? (
-          <View style={styles.notesCard}>
-            <Text variant="labelMedium" style={styles.label}>Notes</Text>
+          <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text variant="labelMedium" style={{ color: colors.textSecondary }}>Notes</Text>
             <Text variant="bodyMedium">{payment.notes}</Text>
           </View>
         ) : null}
@@ -225,35 +226,35 @@ export default function PaymentDetailScreen() {
         {/* Proof */}
         {proofUrl ? (
           <View style={styles.proofSection}>
-            <Text variant="labelMedium" style={styles.label}>Payment Proof</Text>
+            <Text variant="labelMedium" style={{ color: colors.textSecondary }}>Payment Proof</Text>
             <TouchableOpacity onPress={() => setProofFullscreen(true)}>
-              <Image source={{ uri: proofUrl }} style={styles.proofThumb} resizeMode="cover" />
-              <Text variant="bodySmall" style={styles.tapHint}>Tap to view full screen</Text>
+              <Image source={{ uri: proofUrl }} style={[styles.proofThumb, { borderColor: colors.border }]} resizeMode="cover" />
+              <Text variant="bodySmall" style={[styles.tapHint, { color: colors.textSecondary }]}>Tap to view full screen</Text>
             </TouchableOpacity>
           </View>
         ) : null}
 
         {/* AI Suggestions */}
         {isOwner && payment.status === 'paid' && (
-          <View style={styles.suggestionCard}>
-            <MaterialCommunityIcons name="lightbulb-outline" size={16} color="#8B5CF6" />
-            <Text style={styles.suggestionText}>
+          <View style={[styles.suggestionCard, { backgroundColor: colors.primarySoft, borderColor: colors.primaryLight }]}>
+            <MaterialCommunityIcons name="lightbulb-outline" size={16} color={colors.primary} />
+            <Text style={[styles.suggestionText, { color: colors.primaryDark }]}>
               Payment marked as paid. Consider confirming promptly to keep records clean.
             </Text>
           </View>
         )}
         {isOwner && payment.status === 'overdue' && (
-          <View style={[styles.suggestionCard, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-            <MaterialCommunityIcons name="alert-outline" size={16} color={Colors.statusOverdue} />
-            <Text style={[styles.suggestionText, { color: '#991B1B' }]}>
+          <View style={[styles.suggestionCard, { backgroundColor: colors.statusOverdueSoft, borderColor: colors.error }]}>
+            <MaterialCommunityIcons name="alert-outline" size={16} color={colors.statusOverdue} />
+            <Text style={[styles.suggestionText, { color: colors.error }]}>
               {Math.max(1, Math.floor((Date.now() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)))} days overdue. Consider sending a reminder to {tenant?.tenant_name ?? 'the tenant'}.
             </Text>
           </View>
         )}
         {isOwner && payment.status === 'partial' && (
-          <View style={[styles.suggestionCard, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
-            <MaterialCommunityIcons name="information-outline" size={16} color={Colors.statusPartial} />
-            <Text style={[styles.suggestionText, { color: '#92400E' }]}>
+          <View style={[styles.suggestionCard, { backgroundColor: colors.statusPartialSoft, borderColor: colors.warning }]}>
+            <MaterialCommunityIcons name="information-outline" size={16} color={colors.statusPartial} />
+            <Text style={[styles.suggestionText, { color: colors.warning }]}>
               {formatCurrency(payment.amount_due - payment.amount_paid)} remaining. Follow up with {tenant?.tenant_name ?? 'the tenant'} for the balance.
             </Text>
           </View>
@@ -280,7 +281,7 @@ export default function PaymentDetailScreen() {
             onPress={handleConfirm}
             loading={confirming}
             disabled={confirming}
-            buttonColor={Colors.statusConfirmed}
+            buttonColor={colors.statusConfirmed}
             style={styles.actionBtn}
             contentStyle={styles.actionBtnContent}
           >
@@ -295,8 +296,8 @@ export default function PaymentDetailScreen() {
             onPress={handleReset}
             loading={resetting}
             disabled={resetting}
-            textColor={Colors.error}
-            style={[styles.actionBtn, styles.resetBtn]}
+            textColor={colors.error}
+            style={[styles.actionBtn, { borderColor: colors.error }]}
           >
             Mark as Unpaid (Disputed)
           </Button>
@@ -316,24 +317,20 @@ export default function PaymentDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   content: { padding: 16, gap: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   headerCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
     gap: 8,
     alignItems: 'flex-start',
   },
-  monthTitle: { color: Colors.textPrimary, fontWeight: '700' },
+  monthTitle: { fontWeight: '700' },
   card: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     overflow: 'hidden',
   },
   cardRow: {
@@ -342,14 +339,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
   },
-  label: { color: Colors.textSecondary },
-  value: { color: Colors.textPrimary, fontWeight: '500' },
   notesCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
     gap: 8,
   },
   proofSection: { gap: 8 },
@@ -358,27 +351,22 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
-  tapHint: { color: Colors.textSecondary, textAlign: 'center', marginTop: 4 },
+  tapHint: { textAlign: 'center', marginTop: 4 },
   actionBtn: { marginTop: 4 },
   actionBtnContent: { paddingVertical: 6 },
-  resetBtn: { borderColor: Colors.error },
   suggestionCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: '#F5F3FF',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E9E5FF',
   },
   suggestionText: {
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
-    color: '#4C1D95',
   },
   fullscreenOverlay: {
     flex: 1,

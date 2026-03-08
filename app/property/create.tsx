@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { Property } from '@/lib/types';
 
@@ -24,19 +24,11 @@ const PROPERTY_COLORS = [
   { value: '#78716C', label: 'Stone' },
 ];
 
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <MaterialCommunityIcons name={icon as any} size={18} color={Colors.primary} />
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-  );
-}
-
 export default function PropertyCreateScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
   const { user, bumpPropertyRefresh } = useAuthStore();
+  const { colors, shadows } = useTheme();
   const isEditing = !!id;
 
   const [name, setName] = useState('');
@@ -134,7 +126,7 @@ export default function PropertyCreateScreen() {
   }
 
   if (fetchingProperty) {
-    return <View style={styles.container} />;
+    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
   return (
@@ -143,27 +135,30 @@ export default function PropertyCreateScreen() {
         options={{
           title: isEditing ? 'Edit Property' : 'New Property',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />
           ),
         }}
       />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {/* Property Details */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="office-building-outline" title="Property Details" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="office-building-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Property Details</Text>
+            </View>
             <TextInput
               label="Property Name"
               value={name}
               onChangeText={setName}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.name}
             />
@@ -175,7 +170,7 @@ export default function PropertyCreateScreen() {
               onChangeText={setTotalUnits}
               keyboardType="number-pad"
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.totalUnits}
             />
@@ -183,9 +178,12 @@ export default function PropertyCreateScreen() {
           </View>
 
           {/* Color Picker */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="palette-outline" title="Property Color" />
-            <Text style={styles.colorHint}>Choose a color to identify this property</Text>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="palette-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Property Color</Text>
+            </View>
+            <Text style={[styles.colorHint, { color: colors.textSecondary }]}>Choose a color to identify this property</Text>
             <View style={styles.colorGrid}>
               {PROPERTY_COLORS.map((c) => {
                 const selected = c.value === color;
@@ -195,13 +193,13 @@ export default function PropertyCreateScreen() {
                     style={[
                       styles.colorSwatch,
                       { backgroundColor: c.value },
-                      selected && styles.colorSwatchSelected,
+                      selected && [styles.colorSwatchSelected, { borderColor: colors.textOnPrimary }],
                     ]}
                     onPress={() => setColor(c.value)}
                     activeOpacity={0.7}
                   >
                     {selected && (
-                      <MaterialCommunityIcons name="check" size={18} color="#fff" />
+                      <MaterialCommunityIcons name="check" size={18} color={colors.textOnPrimary} />
                     )}
                   </TouchableOpacity>
                 );
@@ -217,14 +215,17 @@ export default function PropertyCreateScreen() {
           </View>
 
           {/* Location */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="map-marker-outline" title="Location" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="map-marker-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Location</Text>
+            </View>
             <TextInput
               label="Address"
               value={address}
               onChangeText={setAddress}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               multiline
               numberOfLines={2}
@@ -237,7 +238,7 @@ export default function PropertyCreateScreen() {
               value={city}
               onChangeText={setCity}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.city}
             />
@@ -245,14 +246,17 @@ export default function PropertyCreateScreen() {
           </View>
 
           {/* Additional Info */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="note-text-outline" title="Additional Info" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="note-text-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Additional Info</Text>
+            </View>
             <TextInput
               label="Notes (optional)"
               value={notes}
               onChangeText={setNotes}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               multiline
               numberOfLines={3}
@@ -264,7 +268,7 @@ export default function PropertyCreateScreen() {
             onPress={handleSubmit}
             loading={loading}
             disabled={loading}
-            style={styles.submitBtn}
+            style={[styles.submitBtn, shadows.sm]}
             contentStyle={styles.submitBtnContent}
           >
             {isEditing ? 'Save Changes' : 'Create Property'}
@@ -278,7 +282,6 @@ export default function PropertyCreateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 16,
@@ -286,10 +289,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   sectionCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     gap: 12,
   },
@@ -302,12 +303,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: Colors.surface,
   },
   inputOutline: {
     borderRadius: 12,
@@ -316,7 +315,6 @@ const styles = StyleSheet.create({
   // Color picker
   colorHint: {
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: -4,
   },
   colorGrid: {
@@ -333,7 +331,6 @@ const styles = StyleSheet.create({
   },
   colorSwatchSelected: {
     borderWidth: 3,
-    borderColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.25,
     shadowOffset: { width: 0, height: 2 },
@@ -362,7 +359,6 @@ const styles = StyleSheet.create({
   submitBtn: {
     marginTop: 4,
     borderRadius: 14,
-    ...Shadows.sm,
   },
   submitBtnContent: {
     paddingVertical: 10,

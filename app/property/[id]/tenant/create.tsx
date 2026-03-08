@@ -6,21 +6,12 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
-import { Colors, Shadows } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
 import { getInviteLink } from '@/lib/invite';
 
 const PHOTO_BUCKET = 'tenant-photos';
-
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <MaterialCommunityIcons name={icon as any} size={18} color={Colors.primary} />
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-  );
-}
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -36,6 +27,7 @@ function toISODate(date: Date): string {
 export default function TenantCreateScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId?: string }>();
   const router = useRouter();
+  const { colors, shadows } = useTheme();
   const isEditing = !!tenantId;
 
   const [flatNo, setFlatNo] = useState('');
@@ -230,7 +222,7 @@ export default function TenantCreateScreen() {
   }
 
   if (fetching) {
-    return <View style={styles.container} />;
+    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
   return (
@@ -239,8 +231,8 @@ export default function TenantCreateScreen() {
         options={{
           title: isEditing ? 'Edit Tenant' : 'Add Tenant',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
           headerShown: true,
           headerLeft: isEditing
             ? undefined
@@ -250,7 +242,7 @@ export default function TenantCreateScreen() {
         }}
       />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -258,42 +250,45 @@ export default function TenantCreateScreen() {
           <View style={styles.photoSection}>
             {photoUri ? (
               <View style={styles.photoPreviewWrap}>
-                <Image source={{ uri: photoUri }} style={styles.photoPreview} />
+                <Image source={{ uri: photoUri }} style={[styles.photoPreview, { borderColor: colors.primary }]} />
                 {uploading && (
                   <View style={styles.photoUploading}>
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={colors.textOnPrimary} />
                   </View>
                 )}
-                <TouchableOpacity style={styles.photoRemoveBtn} onPress={removePhoto} hitSlop={8}>
-                  <MaterialCommunityIcons name="close-circle" size={24} color={Colors.error} />
+                <TouchableOpacity style={[styles.photoRemoveBtn, { backgroundColor: colors.surface }]} onPress={removePhoto} hitSlop={8}>
+                  <MaterialCommunityIcons name="close-circle" size={24} color={colors.error} />
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.photoPlaceholder}>
-                <MaterialCommunityIcons name="account-outline" size={32} color={Colors.textDisabled} />
+              <View style={[styles.photoPlaceholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <MaterialCommunityIcons name="account-outline" size={32} color={colors.textDisabled} />
               </View>
             )}
             <View style={styles.photoActions}>
-              <TouchableOpacity style={styles.photoBtn} onPress={() => pickPhoto('camera')} activeOpacity={0.7}>
-                <MaterialCommunityIcons name="camera-outline" size={18} color={Colors.primary} />
-                <Text style={styles.photoBtnText}>Camera</Text>
+              <TouchableOpacity style={[styles.photoBtn, { borderColor: colors.primary }]} onPress={() => pickPhoto('camera')} activeOpacity={0.7}>
+                <MaterialCommunityIcons name="camera-outline" size={18} color={colors.primary} />
+                <Text style={[styles.photoBtnText, { color: colors.primary }]}>Camera</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.photoBtn} onPress={() => pickPhoto('library')} activeOpacity={0.7}>
-                <MaterialCommunityIcons name="image-outline" size={18} color={Colors.primary} />
-                <Text style={styles.photoBtnText}>Gallery</Text>
+              <TouchableOpacity style={[styles.photoBtn, { borderColor: colors.primary }]} onPress={() => pickPhoto('library')} activeOpacity={0.7}>
+                <MaterialCommunityIcons name="image-outline" size={18} color={colors.primary} />
+                <Text style={[styles.photoBtnText, { color: colors.primary }]}>Gallery</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Tenant Info */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="account-outline" title="Tenant Info" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="account-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Tenant Info</Text>
+            </View>
             <TextInput
               label="Tenant Name"
               value={tenantName}
               onChangeText={setTenantName}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.tenantName}
             />
@@ -304,7 +299,7 @@ export default function TenantCreateScreen() {
               value={flatNo}
               onChangeText={setFlatNo}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.flatNo}
             />
@@ -312,15 +307,18 @@ export default function TenantCreateScreen() {
           </View>
 
           {/* Financials */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="currency-inr" title="Financials" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="currency-inr" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Financials</Text>
+            </View>
             <TextInput
               label="Monthly Rent (₹)"
               value={monthlyRent}
               onChangeText={setMonthlyRent}
               keyboardType="decimal-pad"
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.monthlyRent}
             />
@@ -332,7 +330,7 @@ export default function TenantCreateScreen() {
               onChangeText={setSecurityDeposit}
               keyboardType="decimal-pad"
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
             />
 
@@ -342,7 +340,7 @@ export default function TenantCreateScreen() {
               onChangeText={setDueDay}
               keyboardType="number-pad"
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               error={!!errors.dueDay}
             />
@@ -350,22 +348,25 @@ export default function TenantCreateScreen() {
           </View>
 
           {/* Lease Period */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="calendar-range" title="Lease Period" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="calendar-range" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Lease Period</Text>
+            </View>
 
             <TouchableOpacity
-              style={styles.dateField}
+              style={[styles.dateField, { backgroundColor: colors.background, borderColor: colors.border }]}
               onPress={() => setShowStartPicker(true)}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons name="calendar" size={20} color={Colors.primary} />
+              <MaterialCommunityIcons name="calendar" size={20} color={colors.primary} />
               <View style={styles.dateFieldText}>
-                <Text style={styles.dateLabel}>Lease Start</Text>
-                <Text style={leaseStart ? styles.dateValue : styles.datePlaceholder}>
+                <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>Lease Start</Text>
+                <Text style={leaseStart ? [styles.dateValue, { color: colors.textPrimary }] : [styles.datePlaceholder, { color: colors.textDisabled }]}>
                   {leaseStart ? formatDate(leaseStart) : 'Select date (optional)'}
                 </Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textDisabled} />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textDisabled} />
             </TouchableOpacity>
 
             {showStartPicker && (
@@ -378,14 +379,14 @@ export default function TenantCreateScreen() {
             )}
 
             <TouchableOpacity
-              style={styles.dateField}
+              style={[styles.dateField, { backgroundColor: colors.background, borderColor: colors.border }]}
               onPress={() => setShowEndPicker(true)}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons name="calendar" size={20} color={Colors.primary} />
+              <MaterialCommunityIcons name="calendar" size={20} color={colors.primary} />
               <View style={styles.dateFieldText}>
-                <Text style={styles.dateLabel}>Lease End</Text>
-                <Text style={leaseEnd ? styles.dateValue : styles.datePlaceholder}>
+                <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>Lease End</Text>
+                <Text style={leaseEnd ? [styles.dateValue, { color: colors.textPrimary }] : [styles.datePlaceholder, { color: colors.textDisabled }]}>
                   {leaseEnd ? formatDate(leaseEnd) : 'Select date (optional)'}
                 </Text>
               </View>
@@ -395,10 +396,10 @@ export default function TenantCreateScreen() {
                   hitSlop={8}
                   style={styles.dateClearBtn}
                 >
-                  <MaterialCommunityIcons name="close-circle-outline" size={18} color={Colors.textSecondary} />
+                  <MaterialCommunityIcons name="close-circle-outline" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
               )}
-              <MaterialCommunityIcons name="chevron-right" size={20} color={Colors.textDisabled} />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textDisabled} />
             </TouchableOpacity>
 
             {showEndPicker && (
@@ -412,14 +413,17 @@ export default function TenantCreateScreen() {
           </View>
 
           {/* Additional Info */}
-          <View style={styles.sectionCard}>
-            <SectionHeader icon="note-text-outline" title="Additional Info" />
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="note-text-outline" size={18} color={colors.primary} />
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Additional Info</Text>
+            </View>
             <TextInput
               label="Notes (optional)"
               value={notes}
               onChangeText={setNotes}
               mode="outlined"
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surface }]}
               outlineStyle={styles.inputOutline}
               multiline
               numberOfLines={3}
@@ -428,7 +432,7 @@ export default function TenantCreateScreen() {
           </View>
 
           {!isEditing && (
-            <Text variant="bodySmall" style={styles.inviteNote}>
+            <Text variant="bodySmall" style={[styles.inviteNote, { color: colors.textSecondary }]}>
               After saving, an invite link will be generated and shared with the tenant.
             </Text>
           )}
@@ -438,7 +442,7 @@ export default function TenantCreateScreen() {
             onPress={handleSubmit}
             loading={loading || uploading}
             disabled={loading || uploading}
-            style={styles.submitBtn}
+            style={[styles.submitBtn, shadows.sm]}
             contentStyle={styles.submitBtnContent}
           >
             {isEditing ? 'Save Changes' : 'Add Tenant & Share Invite'}
@@ -452,17 +456,14 @@ export default function TenantCreateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: 16,
     gap: 16,
   },
   sectionCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 16,
     gap: 12,
   },
@@ -475,12 +476,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.textPrimary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: Colors.surface,
   },
   inputOutline: {
     borderRadius: 12,
@@ -491,10 +490,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: Colors.background,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     paddingHorizontal: 14,
     paddingVertical: 14,
   },
@@ -504,32 +501,27 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     marginBottom: 2,
   },
   dateValue: {
     fontSize: 15,
-    color: Colors.textPrimary,
     fontWeight: '500',
   },
   datePlaceholder: {
     fontSize: 15,
-    color: Colors.textDisabled,
   },
   dateClearBtn: {
     padding: 2,
   },
 
   inviteNote: {
-    color: Colors.textSecondary,
     paddingHorizontal: 4,
   },
   submitBtn: {
     marginTop: 4,
     borderRadius: 14,
-    ...Shadows.sm,
   },
   submitBtnContent: {
     paddingVertical: 10,
@@ -545,9 +537,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
     borderWidth: 2,
-    borderColor: Colors.border,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
@@ -560,7 +550,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: Colors.primary,
   },
   photoUploading: {
     ...StyleSheet.absoluteFillObject,
@@ -573,7 +562,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -6,
-    backgroundColor: '#fff',
     borderRadius: 12,
   },
   photoActions: {
@@ -588,11 +576,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: Colors.primary,
   },
   photoBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.primary,
   },
 });

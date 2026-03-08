@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useExpenses } from '@/hooks/useExpenses';
 import { Expense } from '@/lib/types';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getCategoryLabel, getCategoryIcon, getCategoryColor } from '@/lib/expenses';
 import { EmptyState } from '@/components/EmptyState';
@@ -29,6 +29,7 @@ function groupByMonth(expenses: Expense[]): { title: string; data: Expense[] }[]
 export default function ExpensesScreen() {
   const { id: propertyId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
   const { expenses, isLoading, refresh } = useExpenses(propertyId ?? null);
   const { month, year } = getCurrentMonthYear();
 
@@ -74,7 +75,7 @@ export default function ExpensesScreen() {
   function renderItem({ item }: { item: ListItem }) {
     if (item.type === 'header') {
       return (
-        <Text variant="labelMedium" style={styles.sectionHeader}>
+        <Text variant="labelMedium" style={[styles.sectionHeader, { color: colors.textSecondary }]}>
           {item.title}
         </Text>
       );
@@ -90,7 +91,7 @@ export default function ExpensesScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.expenseRow}
+        style={[styles.expenseRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
         onPress={() => router.push(`/property/${propertyId}/expenses/${e.id}`)}
         activeOpacity={0.7}
       >
@@ -98,22 +99,22 @@ export default function ExpensesScreen() {
           <Icon source={icon} size={20} color={color} />
         </View>
         <View style={styles.expenseInfo}>
-          <Text variant="titleSmall" style={styles.categoryText}>{label}</Text>
+          <Text variant="titleSmall" style={[styles.categoryText, { color: colors.textPrimary }]}>{label}</Text>
           {e.description ? (
-            <Text variant="bodySmall" style={styles.descText} numberOfLines={1}>{e.description}</Text>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary }} numberOfLines={1}>{e.description}</Text>
           ) : null}
-          <Text variant="bodySmall" style={styles.dateText}>{dateStr}</Text>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>{dateStr}</Text>
         </View>
-        <Text variant="titleSmall" style={styles.amount}>{formatCurrency(e.amount)}</Text>
-        <Icon source="chevron-right" size={18} color={Colors.textDisabled} />
+        <Text variant="titleSmall" style={[styles.amount, { color: colors.textPrimary }]}>{formatCurrency(e.amount)}</Text>
+        <Icon source="chevron-right" size={18} color={colors.textDisabled} />
       </TouchableOpacity>
     );
   }
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -125,11 +126,11 @@ export default function ExpensesScreen() {
           headerShown: true,
           title: 'Expenses',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
         }}
       />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <FlatList
           data={listData}
           keyExtractor={(item, index) =>
@@ -139,31 +140,31 @@ export default function ExpensesScreen() {
           refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refresh} />}
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
-            <View style={styles.plCard}>
-              <Text variant="labelMedium" style={styles.plTitle}>
+            <View style={[styles.plCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text variant="labelMedium" style={[styles.plTitle, { color: colors.textSecondary }]}>
                 {getMonthName(month)} {year} — P&L
               </Text>
               <View style={styles.plRow}>
                 <View style={styles.plItem}>
-                  <Text variant="headlineSmall" style={styles.incomeValue}>
+                  <Text variant="headlineSmall" style={[styles.incomeValue, { color: colors.success }]}>
                     {formatCurrency(monthlyIncome)}
                   </Text>
-                  <Text variant="bodySmall" style={styles.plLabel}>Income</Text>
+                  <Text variant="bodySmall" style={{ color: colors.textSecondary, marginTop: 2 }}>Income</Text>
                 </View>
                 <View style={styles.plItem}>
-                  <Text variant="headlineSmall" style={styles.expenseValue}>
+                  <Text variant="headlineSmall" style={[styles.expenseValue, { color: colors.error }]}>
                     {formatCurrency(monthlyExpenses)}
                   </Text>
-                  <Text variant="bodySmall" style={styles.plLabel}>Expenses</Text>
+                  <Text variant="bodySmall" style={{ color: colors.textSecondary, marginTop: 2 }}>Expenses</Text>
                 </View>
                 <View style={styles.plItem}>
                   <Text
                     variant="headlineSmall"
-                    style={[styles.netValue, { color: net >= 0 ? Colors.success : Colors.error }]}
+                    style={[styles.netValue, { color: net >= 0 ? colors.success : colors.error }]}
                   >
                     {formatCurrency(net)}
                   </Text>
-                  <Text variant="bodySmall" style={styles.plLabel}>Net</Text>
+                  <Text variant="bodySmall" style={{ color: colors.textSecondary, marginTop: 2 }}>Net</Text>
                 </View>
               </View>
             </View>
@@ -178,8 +179,8 @@ export default function ExpensesScreen() {
         />
         <FAB
           icon="plus"
-          style={styles.fab}
-          color="#fff"
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          color={colors.textOnPrimary}
           onPress={() => router.push(`/property/${propertyId}/expenses/add`)}
         />
       </View>
@@ -188,31 +189,26 @@ export default function ExpensesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
+  container: { flex: 1 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { padding: 16, gap: 8, paddingBottom: 88 },
   plCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
     marginBottom: 8,
   },
   plTitle: {
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 12,
   },
   plRow: { flexDirection: 'row', justifyContent: 'space-between' },
   plItem: { flex: 1, alignItems: 'center' },
-  incomeValue: { color: Colors.success, fontWeight: '700' },
-  expenseValue: { color: Colors.error, fontWeight: '700' },
+  incomeValue: { fontWeight: '700' },
+  expenseValue: { fontWeight: '700' },
   netValue: { fontWeight: '700' },
-  plLabel: { color: Colors.textSecondary, marginTop: 2 },
   sectionHeader: {
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 8,
@@ -221,11 +217,9 @@ const styles = StyleSheet.create({
   expenseRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
     gap: 12,
   },
   iconBox: {
@@ -236,14 +230,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   expenseInfo: { flex: 1, gap: 2 },
-  categoryText: { color: Colors.textPrimary, fontWeight: '600' },
-  descText: { color: Colors.textSecondary },
-  dateText: { color: Colors.textSecondary },
-  amount: { color: Colors.textPrimary, fontWeight: '700' },
+  categoryText: { fontWeight: '600' },
+  amount: { fontWeight: '700' },
   fab: {
     position: 'absolute',
     right: 16,
     bottom: 24,
-    backgroundColor: Colors.primary,
   },
 });

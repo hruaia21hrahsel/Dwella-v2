@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Tenant, Property, Payment } from '@/lib/types';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, formatDate, getOrdinal } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PaymentLedger } from '@/components/PaymentLedger';
@@ -20,6 +20,7 @@ export default function TenantDetailScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
+  const { colors } = useTheme();
   const { ownedProperties } = useProperties();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,14 +157,14 @@ export default function TenantDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (!tenant) {
-    return <View style={styles.centered}><Text>Tenant not found.</Text></View>;
+    return <View style={[styles.centered, { backgroundColor: colors.background }]}><Text>Tenant not found.</Text></View>;
   }
 
   const availableYears = [...new Set(payments.map((p) => p.year))].sort((a, b) => b - a);
@@ -175,8 +176,8 @@ export default function TenantDetailScreen() {
           title: '',
           headerBackTitle: 'Back',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.background } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.background } as any,
+          headerTintColor: colors.textPrimary,
           headerShadowVisible: false,
           headerRight: isOwner
             ? () => (
@@ -185,7 +186,7 @@ export default function TenantDetailScreen() {
                   onPress={() => setActionsVisible(true)}
                   hitSlop={8}
                 >
-                  <MaterialCommunityIcons name="dots-vertical" size={22} color={Colors.textSecondary} />
+                  <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textSecondary} />
                 </TouchableOpacity>
               )
             : undefined,
@@ -193,7 +194,7 @@ export default function TenantDetailScreen() {
       />
 
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
@@ -205,98 +206,98 @@ export default function TenantDetailScreen() {
         {/* Profile header */}
         <View style={styles.profileHeader}>
           {photoSignedUrl ? (
-            <Image source={{ uri: photoSignedUrl }} style={styles.avatarPhoto} />
+            <Image source={{ uri: photoSignedUrl }} style={[styles.avatarPhoto, { borderColor: colors.primary }]} />
           ) : (
-            <View style={[styles.avatar, { backgroundColor: isPending ? Colors.statusPartialSoft : Colors.statusConfirmedSoft }]}>
+            <View style={[styles.avatar, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
               <MaterialCommunityIcons
                 name={isPending ? 'account-clock-outline' : 'account-check-outline'}
                 size={28}
-                color={isPending ? Colors.statusPartial : Colors.statusConfirmed}
+                color={isPending ? colors.statusPartial : colors.statusConfirmed}
               />
             </View>
           )}
-          <Text style={styles.tenantName}>{tenant.tenant_name}</Text>
-          <View style={[styles.statusPill, { backgroundColor: isPending ? '#FEF3C7' : '#DCFCE7' }]}>
-            <View style={[styles.statusDot, { backgroundColor: isPending ? Colors.statusPartial : Colors.statusConfirmed }]} />
-            <Text style={[styles.statusText, { color: isPending ? '#92400E' : '#166534' }]}>
+          <Text style={[styles.tenantName, { color: colors.textPrimary }]}>{tenant.tenant_name}</Text>
+          <View style={[styles.statusPill, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
+            <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
+            <Text style={[styles.statusText, { color: isPending ? colors.warning : colors.success }]}>
               {isPending ? 'Invite Pending' : 'Active Tenant'}
             </Text>
           </View>
           {property && (
-            <Text style={styles.propertyLabel}>{property.name} · Flat {tenant.flat_no}</Text>
+            <Text style={[styles.propertyLabel, { color: colors.textSecondary }]}>{property.name} · Flat {tenant.flat_no}</Text>
           )}
         </View>
 
         {/* Key stats */}
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="cash" size={18} color={Colors.primary} style={{ marginBottom: 4 }} />
-            <Text style={styles.statValue}>{formatCurrency(tenant.monthly_rent)}</Text>
-            <Text style={styles.statLabel}>Monthly Rent</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="cash" size={18} color={colors.primary} style={{ marginBottom: 4 }} />
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.monthly_rent)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Monthly Rent</Text>
           </View>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="calendar-clock" size={18} color={Colors.statusPartial} style={{ marginBottom: 4 }} />
-            <Text style={styles.statValue}>{getOrdinal(tenant.due_day)}</Text>
-            <Text style={styles.statLabel}>Due Day</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="calendar-clock" size={18} color={colors.statusPartial} style={{ marginBottom: 4 }} />
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{getOrdinal(tenant.due_day)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Due Day</Text>
           </View>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="shield-lock-outline" size={18} color={Colors.statusConfirmed} style={{ marginBottom: 4 }} />
-            <Text style={styles.statValue}>{formatCurrency(tenant.security_deposit)}</Text>
-            <Text style={styles.statLabel}>Deposit</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <MaterialCommunityIcons name="shield-lock-outline" size={18} color={colors.statusConfirmed} style={{ marginBottom: 4 }} />
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.security_deposit)}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Deposit</Text>
           </View>
         </View>
 
         {/* Details card */}
-        <View style={styles.detailCard}>
-          <DetailRow icon="calendar-start" label="Lease Start" value={formatDate(tenant.lease_start)} />
+        <View style={[styles.detailCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <DetailRow icon="calendar-start" label="Lease Start" value={formatDate(tenant.lease_start)} colors={colors} />
           {tenant.lease_end && (
-            <DetailRow icon="calendar-end" label="Lease End" value={formatDate(tenant.lease_end)} />
+            <DetailRow icon="calendar-end" label="Lease End" value={formatDate(tenant.lease_end)} colors={colors} />
           )}
         </View>
 
         {/* Notes */}
         {tenant.notes ? (
-          <View style={styles.notesCard}>
+          <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.notesHeader}>
-              <MaterialCommunityIcons name="note-text-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.notesLabel}>Notes</Text>
+              <MaterialCommunityIcons name="note-text-outline" size={16} color={colors.textSecondary} />
+              <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Notes</Text>
             </View>
-            <Text style={styles.notesText}>{tenant.notes}</Text>
+            <Text style={[styles.notesText, { color: colors.textPrimary }]}>{tenant.notes}</Text>
           </View>
         ) : null}
 
         {/* Invite action */}
         {isPending && (
-          <TouchableOpacity style={styles.inviteBtn} onPress={handleShareInvite} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="share-variant-outline" size={18} color="#fff" />
-            <Text style={styles.inviteBtnText}>Share Invite Link</Text>
+          <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.primary }]} onPress={handleShareInvite} activeOpacity={0.8}>
+            <MaterialCommunityIcons name="share-variant-outline" size={18} color={colors.textOnPrimary} />
+            <Text style={[styles.inviteBtnText, { color: colors.textOnPrimary }]}>Share Invite Link</Text>
           </TouchableOpacity>
         )}
 
         {/* Payment History */}
         <View style={styles.paymentSection}>
           <View style={styles.paymentHeader}>
-            <Text style={styles.sectionTitle}>Payment History</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Payment History</Text>
             <View style={styles.paymentHeaderActions}>
               {isOwner && (
                 <TouchableOpacity
-                  style={styles.logPaymentBtn}
+                  style={[styles.logPaymentBtn, { borderColor: colors.primary }]}
                   onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons name="plus-circle-outline" size={16} color={Colors.primary} />
-                  <Text style={styles.logPaymentBtnText}>Log Payment</Text>
+                  <MaterialCommunityIcons name="plus-circle-outline" size={16} color={colors.primary} />
+                  <Text style={[styles.logPaymentBtnText, { color: colors.primary }]}>Log Payment</Text>
                 </TouchableOpacity>
               )}
               {payments.length > 0 && (
                 <TouchableOpacity
-                  style={styles.exportBtn}
+                  style={[styles.exportBtn, { borderColor: colors.primary }]}
                   onPress={() => setYearPickerVisible(true)}
                   disabled={exportingPdf}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons name="file-pdf-box" size={16} color={Colors.primary} />
-                  <Text style={styles.exportBtnText}>Export</Text>
+                  <MaterialCommunityIcons name="file-pdf-box" size={16} color={colors.primary} />
+                  <Text style={[styles.exportBtnText, { color: colors.primary }]}>Export</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -320,7 +321,7 @@ export default function TenantDetailScreen() {
         title="Remove Tenant"
         message={`Remove ${tenant.tenant_name} from this property? Their payment history will be preserved.`}
         confirmLabel="Remove"
-        confirmColor={Colors.error}
+        confirmColor={colors.error}
         loading={archiving}
         onConfirm={handleArchive}
         onCancel={() => setArchiveDialogVisible(false)}
@@ -338,8 +339,8 @@ export default function TenantDetailScreen() {
           activeOpacity={1}
           onPress={() => setActionsVisible(false)}
         >
-          <View style={styles.actionSheet}>
-            <View style={styles.sheetHandle} />
+          <View style={[styles.actionSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
             <TouchableOpacity
               style={styles.actionOption}
               onPress={() => {
@@ -348,8 +349,8 @@ export default function TenantDetailScreen() {
               }}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons name="pencil-outline" size={20} color={Colors.textPrimary} />
-              <Text style={styles.actionOptionText}>Edit Tenant</Text>
+              <MaterialCommunityIcons name="pencil-outline" size={20} color={colors.textPrimary} />
+              <Text style={[styles.actionOptionText, { color: colors.textPrimary }]}>Edit Tenant</Text>
             </TouchableOpacity>
             {payments.length > 0 && (
               <TouchableOpacity
@@ -360,8 +361,8 @@ export default function TenantDetailScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <MaterialCommunityIcons name="file-pdf-box" size={20} color={Colors.textPrimary} />
-                <Text style={styles.actionOptionText}>Export Annual PDF</Text>
+                <MaterialCommunityIcons name="file-pdf-box" size={20} color={colors.textPrimary} />
+                <Text style={[styles.actionOptionText, { color: colors.textPrimary }]}>Export Annual PDF</Text>
               </TouchableOpacity>
             )}
             {isPending && (
@@ -373,26 +374,26 @@ export default function TenantDetailScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <MaterialCommunityIcons name="share-variant-outline" size={20} color={Colors.textPrimary} />
-                <Text style={styles.actionOptionText}>Share Invite Link</Text>
+                <MaterialCommunityIcons name="share-variant-outline" size={20} color={colors.textPrimary} />
+                <Text style={[styles.actionOptionText, { color: colors.textPrimary }]}>Share Invite Link</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
-              style={[styles.actionOption, styles.actionOptionDanger]}
+              style={[styles.actionOption, styles.actionOptionDanger, { borderTopColor: colors.border }]}
               onPress={() => {
                 setActionsVisible(false);
                 setArchiveDialogVisible(true);
               }}
               activeOpacity={0.7}
             >
-              <MaterialCommunityIcons name="archive-outline" size={20} color={Colors.error} />
-              <Text style={[styles.actionOptionText, { color: Colors.error }]}>Remove Tenant</Text>
+              <MaterialCommunityIcons name="archive-outline" size={20} color={colors.error} />
+              <Text style={[styles.actionOptionText, { color: colors.error }]}>Remove Tenant</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.actionCancel}
+              style={[styles.actionCancel, { borderTopColor: colors.border }]}
               onPress={() => setActionsVisible(false)}
             >
-              <Text style={styles.actionCancelText}>Cancel</Text>
+              <Text style={[styles.actionCancelText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -410,8 +411,8 @@ export default function TenantDetailScreen() {
           activeOpacity={1}
           onPress={() => setYearPickerVisible(false)}
         >
-          <View style={styles.actionSheet}>
-            <Text style={styles.yearPickerTitle}>Export Annual Summary</Text>
+          <View style={[styles.actionSheet, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.yearPickerTitle, { color: colors.textPrimary }]}>Export Annual Summary</Text>
             {availableYears.map((y) => (
               <TouchableOpacity
                 key={y}
@@ -419,11 +420,11 @@ export default function TenantDetailScreen() {
                 onPress={() => handleExportAnnualForYear(y)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.yearOptionText}>{y}</Text>
+                <Text style={[styles.yearOptionText, { color: colors.primary }]}>{y}</Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.actionCancel} onPress={() => setYearPickerVisible(false)}>
-              <Text style={styles.actionCancelText}>Cancel</Text>
+            <TouchableOpacity style={[styles.actionCancel, { borderTopColor: colors.border }]} onPress={() => setYearPickerVisible(false)}>
+              <Text style={[styles.actionCancelText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -432,14 +433,14 @@ export default function TenantDetailScreen() {
   );
 }
 
-function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function DetailRow({ icon, label, value, colors }: { icon: string; label: string; value: string; colors: any }) {
   return (
-    <View style={detailStyles.row}>
+    <View style={[detailStyles.row, { borderBottomColor: colors.border }]}>
       <View style={detailStyles.left}>
-        <MaterialCommunityIcons name={icon as any} size={16} color={Colors.textSecondary} />
-        <Text style={detailStyles.label}>{label}</Text>
+        <MaterialCommunityIcons name={icon as any} size={16} color={colors.textSecondary} />
+        <Text style={[detailStyles.label, { color: colors.textSecondary }]}>{label}</Text>
       </View>
-      <Text style={detailStyles.value}>{value}</Text>
+      <Text style={[detailStyles.value, { color: colors.textPrimary }]}>{value}</Text>
     </View>
   );
 }
@@ -451,7 +452,6 @@ const detailStyles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
   },
   left: {
     flexDirection: 'row',
@@ -460,19 +460,17 @@ const detailStyles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   value: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.textPrimary,
   },
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, gap: 16 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   moreBtn: {
     width: 36,
@@ -501,13 +499,11 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: Colors.primary,
     marginBottom: 4,
   },
   tenantName: {
     fontSize: 22,
     fontWeight: '800',
-    color: Colors.textPrimary,
   },
   statusPill: {
     flexDirection: 'row',
@@ -528,7 +524,6 @@ const styles = StyleSheet.create({
   },
   propertyLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
 
@@ -539,21 +534,17 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 12,
     alignItems: 'center',
   },
   statValue: {
     fontSize: 15,
     fontWeight: '800',
-    color: Colors.textPrimary,
   },
   statLabel: {
     fontSize: 10,
-    color: Colors.textSecondary,
     marginTop: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -561,19 +552,15 @@ const styles = StyleSheet.create({
 
   // Detail card
   detailCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     paddingHorizontal: 14,
   },
 
   // Notes card
   notesCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 14,
     gap: 8,
   },
@@ -585,13 +572,11 @@ const styles = StyleSheet.create({
   notesLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   notesText: {
     fontSize: 14,
-    color: Colors.textPrimary,
     lineHeight: 20,
   },
 
@@ -601,12 +586,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.primary,
     borderRadius: 12,
     paddingVertical: 13,
   },
   inviteBtnText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -633,17 +616,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.primary,
   },
   logPaymentBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.primary,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
   },
   exportBtn: {
     flexDirection: 'row',
@@ -653,12 +633,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.primary,
   },
   exportBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.primary,
   },
 
   // Modal
@@ -668,7 +646,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   actionSheet: {
-    backgroundColor: Colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 20,
@@ -678,7 +655,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.border,
     alignSelf: 'center',
     marginBottom: 16,
   },
@@ -693,30 +669,25 @@ const styles = StyleSheet.create({
   actionOptionDanger: {
     marginTop: 4,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     borderRadius: 0,
     paddingTop: 18,
   },
   actionOptionText: {
     fontSize: 15,
     fontWeight: '500',
-    color: Colors.textPrimary,
   },
   actionCancel: {
     paddingVertical: 14,
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
     alignItems: 'center',
   },
   actionCancelText: {
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   yearPickerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -728,6 +699,5 @@ const styles = StyleSheet.create({
   yearOptionText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.primary,
   },
 });

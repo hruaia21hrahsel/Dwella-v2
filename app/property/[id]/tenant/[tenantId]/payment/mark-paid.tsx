@@ -4,7 +4,7 @@ import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Payment } from '@/lib/types';
-import { Colors } from '@/constants/colors';
+import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getMonthName } from '@/lib/utils';
 import { getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
@@ -19,6 +19,7 @@ export default function MarkPaidScreen() {
   }>();
   const router = useRouter();
   const { user } = useAuthStore();
+  const { colors } = useTheme();
 
   const [payment, setPayment] = useState<Payment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +88,7 @@ export default function MarkPaidScreen() {
   }
 
   if (loading || !payment) {
-    return <View style={styles.container} />;
+    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
   }
 
   const storagePath = getProofStoragePath(propertyId, tenantId, payment.year, payment.month);
@@ -100,29 +101,29 @@ export default function MarkPaidScreen() {
           title: 'Mark as Paid',
           headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: Colors.surface, height: 64 } as any,
-          headerTintColor: Colors.textPrimary,
+          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerTintColor: colors.textPrimary,
           presentation: 'modal',
         }}
       />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.summaryCard}>
-            <Text variant="titleMedium" style={styles.month}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text variant="titleMedium" style={[styles.month, { color: colors.textPrimary }]}>
               {getMonthName(payment.month)} {payment.year}
             </Text>
-            <Text variant="bodyMedium" style={styles.dueText}>
+            <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
               Total Due: {formatCurrency(payment.amount_due)}
             </Text>
             {payment.amount_paid > 0 && (
-              <Text variant="bodySmall" style={styles.paidText}>
+              <Text variant="bodySmall" style={{ color: colors.statusConfirmed }}>
                 Already Paid: {formatCurrency(payment.amount_paid)}
               </Text>
             )}
-            <Text variant="bodyMedium" style={styles.remainingText}>
+            <Text variant="bodyMedium" style={[styles.remainingText, { color: colors.primary }]}>
               Remaining: {formatCurrency(remaining)}
             </Text>
           </View>
@@ -133,7 +134,7 @@ export default function MarkPaidScreen() {
             onChangeText={(v) => { setAmountPaid(v); setAmountError(''); }}
             keyboardType="decimal-pad"
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface }]}
             error={!!amountError}
           />
           {amountError ? <HelperText type="error">{amountError}</HelperText> : null}
@@ -143,7 +144,7 @@ export default function MarkPaidScreen() {
             value={notes}
             onChangeText={setNotes}
             mode="outlined"
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surface }]}
             multiline
             numberOfLines={2}
           />
@@ -170,22 +171,18 @@ export default function MarkPaidScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1 },
   content: { padding: 16, gap: 12 },
   summaryCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
     gap: 8,
     marginBottom: 4,
   },
-  month: { color: Colors.textPrimary, fontWeight: '700' },
-  dueText: { color: Colors.textSecondary },
-  paidText: { color: Colors.statusConfirmed },
-  remainingText: { color: Colors.primary, fontWeight: '600', marginTop: 4 },
-  input: { backgroundColor: Colors.surface },
+  month: { fontWeight: '700' },
+  remainingText: { fontWeight: '600', marginTop: 4 },
+  input: {},
   button: { marginTop: 8 },
   buttonContent: { paddingVertical: 6 },
 });
