@@ -15,6 +15,7 @@ interface PaymentLedgerProps {
   onMarkPaid: (payment: Payment) => void;
   onConfirm: (payment: Payment) => void;
   onExportReceipt?: (payment: Payment) => void;
+  onLogPayment?: (payment: Payment) => void;
 }
 
 function PaymentRow({
@@ -24,6 +25,7 @@ function PaymentRow({
   onMarkPaid,
   onConfirm,
   onExportReceipt,
+  onLogPayment,
 }: {
   payment: Payment;
   isOwner: boolean;
@@ -31,9 +33,11 @@ function PaymentRow({
   onMarkPaid: () => void;
   onConfirm: () => void;
   onExportReceipt?: () => void;
+  onLogPayment?: () => void;
 }) {
   const isTenant = !isOwner;
   const showMarkPaid = isTenant && canMarkAsPaid(payment.status);
+  const showLogPayment = isOwner && onLogPayment && canMarkAsPaid(payment.status);
   const showConfirm = isOwner && canConfirm(payment.status);
   const showReceipt = onExportReceipt && (payment.status === 'paid' || payment.status === 'confirmed');
 
@@ -60,6 +64,11 @@ function PaymentRow({
         {showMarkPaid && (
           <Button mode="contained" compact onPress={onMarkPaid} style={styles.actionBtn}>
             Pay
+          </Button>
+        )}
+        {showLogPayment && (
+          <Button mode="contained" compact onPress={onLogPayment} style={styles.actionBtn}>
+            Log
           </Button>
         )}
         {showConfirm && (
@@ -94,6 +103,7 @@ export function PaymentLedger({
   onMarkPaid,
   onConfirm,
   onExportReceipt,
+  onLogPayment,
 }: PaymentLedgerProps) {
   if (isLoading) {
     return (
@@ -124,6 +134,7 @@ export function PaymentLedger({
             onMarkPaid={() => onMarkPaid(payment)}
             onConfirm={() => onConfirm(payment)}
             onExportReceipt={onExportReceipt ? () => onExportReceipt(payment) : undefined}
+            onLogPayment={onLogPayment ? () => onLogPayment(payment) : undefined}
           />
           {index < payments.length - 1 && <Divider />}
         </View>

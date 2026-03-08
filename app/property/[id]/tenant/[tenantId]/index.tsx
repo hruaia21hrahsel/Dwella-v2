@@ -277,17 +277,29 @@ export default function TenantDetailScreen() {
         <View style={styles.paymentSection}>
           <View style={styles.paymentHeader}>
             <Text style={styles.sectionTitle}>Payment History</Text>
-            {payments.length > 0 && (
-              <TouchableOpacity
-                style={styles.exportBtn}
-                onPress={() => setYearPickerVisible(true)}
-                disabled={exportingPdf}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons name="file-pdf-box" size={16} color={Colors.primary} />
-                <Text style={styles.exportBtnText}>Export</Text>
-              </TouchableOpacity>
-            )}
+            <View style={styles.paymentHeaderActions}>
+              {isOwner && (
+                <TouchableOpacity
+                  style={styles.logPaymentBtn}
+                  onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons name="plus-circle-outline" size={16} color={Colors.primary} />
+                  <Text style={styles.logPaymentBtnText}>Log Payment</Text>
+                </TouchableOpacity>
+              )}
+              {payments.length > 0 && (
+                <TouchableOpacity
+                  style={styles.exportBtn}
+                  onPress={() => setYearPickerVisible(true)}
+                  disabled={exportingPdf}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons name="file-pdf-box" size={16} color={Colors.primary} />
+                  <Text style={styles.exportBtnText}>Export</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
           <PaymentLedger
             payments={payments}
@@ -297,6 +309,7 @@ export default function TenantDetailScreen() {
             onMarkPaid={handleMarkPaid}
             onConfirm={handleConfirmPayment}
             onExportReceipt={handleExportReceipt}
+            onLogPayment={(payment) => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
           />
         </View>
 
@@ -606,6 +619,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  paymentHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logPaymentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  logPaymentBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
   },
   sectionTitle: {
     fontSize: 16,
