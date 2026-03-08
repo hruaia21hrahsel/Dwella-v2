@@ -59,8 +59,15 @@ export default function LoginScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.hero}
       >
-        <DwellaLogo size={80} color="#fff" />
-        <Text style={styles.heroSubtitle}>The AI that runs your rentals.</Text>
+        {/* Subtle decorative circles */}
+        <View style={[styles.heroCircle, styles.heroCircle1]} />
+        <View style={[styles.heroCircle, styles.heroCircle2]} />
+
+        <View style={styles.heroContent}>
+          <DwellaLogo size={90} color="#fff" />
+          <Text style={styles.heroTitle}>Welcome back</Text>
+          <Text style={styles.heroSubtitle}>Sign in to manage your properties</Text>
+        </View>
       </LinearGradient>
 
       <ScrollView
@@ -73,26 +80,34 @@ export default function LoginScreen() {
             label="Email"
             value={email}
             onChangeText={setEmail}
+            left={<TextInput.Icon icon="email-outline" />}
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
             mode="outlined"
             style={[styles.input, { backgroundColor: colors.surface }]}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+            outlineStyle={styles.inputOutline}
           />
 
           <TextInput
             label="Password"
             value={password}
             onChangeText={setPassword}
+            left={<TextInput.Icon icon="lock-outline" />}
             secureTextEntry={!showPassword}
             right={
               <TextInput.Icon
-                icon={showPassword ? 'eye-off' : 'eye'}
+                icon={showPassword ? 'eye-off-outline' : 'eye-outline'}
                 onPress={() => setShowPassword((v) => !v)}
               />
             }
             mode="outlined"
             style={[styles.input, { backgroundColor: colors.surface }]}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+            outlineStyle={styles.inputOutline}
           />
 
           {!!error && (
@@ -117,12 +132,19 @@ export default function LoginScreen() {
             <Text variant="bodySmall" style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
           </TouchableOpacity>
 
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.textDisabled }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          </View>
+
           <View style={styles.footer}>
             <Text variant="bodyMedium" style={{ color: colors.textSecondary }}>
               Don't have an account?{' '}
             </Text>
             <Link href="/(auth)/signup" asChild>
-              <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: '600' }}>Sign Up</Text>
+              <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: '700' }}>Sign Up</Text>
             </Link>
           </View>
         </View>
@@ -136,38 +158,87 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hero: {
-    height: '35%',
+    height: '38%',
     justifyContent: 'flex-end',
-    paddingBottom: 32,
+    paddingBottom: 48,
     paddingHorizontal: 32,
+    overflow: 'hidden',
+  },
+  heroCircle: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  heroCircle1: {
+    width: 260,
+    height: 260,
+    top: -60,
+    right: -80,
+  },
+  heroCircle2: {
+    width: 180,
+    height: 180,
+    bottom: 20,
+    left: -60,
+  },
+  heroContent: {
+    gap: 6,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    marginTop: 16,
+    letterSpacing: -0.5,
   },
   heroSubtitle: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.2,
   },
   cardScroll: {
     flex: 1,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -28,
   },
   cardContent: {
     flexGrow: 1,
   },
   card: {
     padding: 28,
-    paddingTop: 32,
-    gap: 12,
+    paddingTop: 36,
+    gap: 14,
   },
   input: {},
+  inputOutline: {
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
   button: {
     marginTop: 8,
   },
   forgotRow: { alignItems: 'center', marginTop: 2 },
-  forgotText: {},
+  forgotText: { fontWeight: '600', fontSize: 13 },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 4,
   },
 });

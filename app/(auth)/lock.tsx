@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
@@ -14,7 +15,7 @@ const DIGITS = [['1','2','3'],['4','5','6'],['7','8','9'],['','0','⌫']];
 export default function LockScreen() {
   const router = useRouter();
   const setLocked = useAuthStore((s) => s.setLocked);
-  const { colors } = useTheme();
+  const { colors, gradients, isDark } = useTheme();
   const [ready, setReady] = useState(false);
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
@@ -76,14 +77,35 @@ export default function LockScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <LinearGradient
+      colors={isDark ? ['#0A0A0A', '#1A1A2E', '#0A0A0A'] : [colors.background, '#E0F2F1', colors.background]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      {/* Subtle decorative circles */}
+      <View style={[styles.bgCircle, styles.bgCircle1, { backgroundColor: colors.primary + '08' }]} />
+      <View style={[styles.bgCircle, styles.bgCircle2, { backgroundColor: colors.primary + '06' }]} />
+
       <View style={styles.pinSection}>
-        <DwellaLogo size={120} color={colors.textPrimary} />
+        <DwellaLogo size={100} color={colors.primary} />
         <Text style={[styles.tagline, { color: colors.textSecondary }]}>Enter your PIN</Text>
 
         <View style={styles.dotsRow}>
           {[0,1,2,3,4,5].map((i) => (
-            <View key={i} style={[styles.dot, { borderColor: colors.primary }, pin.length > i && { backgroundColor: colors.primary }]} />
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                { borderColor: colors.primary + '60' },
+                pin.length > i && styles.dotFilled,
+                pin.length > i && { backgroundColor: colors.primary, borderColor: colors.primary },
+              ]}
+            >
+              {pin.length > i && (
+                <View style={[styles.dotGlow, { backgroundColor: colors.primary + '30' }]} />
+              )}
+            </View>
           ))}
         </View>
 
@@ -95,12 +117,22 @@ export default function LockScreen() {
               {row.map((d, di) => {
                 if (d === '') return <View key={di} style={styles.numpadKey} />;
                 if (d === '⌫') return (
-                  <TouchableOpacity key={di} style={[styles.numpadKey, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={handleDelete} activeOpacity={0.6}>
-                    <MaterialCommunityIcons name="backspace-outline" size={26} color={colors.textSecondary} />
+                  <TouchableOpacity
+                    key={di}
+                    style={[styles.numpadKey, styles.numpadKeyBg, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}
+                    onPress={handleDelete}
+                    activeOpacity={0.5}
+                  >
+                    <MaterialCommunityIcons name="backspace-outline" size={24} color={colors.textSecondary} />
                   </TouchableOpacity>
                 );
                 return (
-                  <TouchableOpacity key={di} style={[styles.numpadKey, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => handleDigit(d)} activeOpacity={0.6}>
+                  <TouchableOpacity
+                    key={di}
+                    style={[styles.numpadKey, styles.numpadKeyBg, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}
+                    onPress={() => handleDigit(d)}
+                    activeOpacity={0.5}
+                  >
                     <Text style={[styles.numpadDigit, { color: colors.textPrimary }]}>{d}</Text>
                   </TouchableOpacity>
                 );
@@ -110,10 +142,10 @@ export default function LockScreen() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.altLinkWrap} onPress={signOutAndGoToLogin}>
+      <TouchableOpacity style={styles.altLinkWrap} onPress={signOutAndGoToLogin} activeOpacity={0.7}>
         <Text style={[styles.altLink, { color: colors.primary }]}>Use email & password</Text>
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -125,26 +157,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   center: { flex: 1 },
+  bgCircle: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  bgCircle1: {
+    width: 300,
+    height: 300,
+    top: -80,
+    right: -100,
+  },
+  bgCircle2: {
+    width: 220,
+    height: 220,
+    bottom: 40,
+    left: -80,
+  },
   pinSection: {
     alignItems: 'center',
     width: '100%',
-    gap: 24,
+    gap: 20,
   },
-  tagline: { fontSize: 16, marginTop: -4 },
-  dotsRow: { flexDirection: 'row', gap: 16 },
+  tagline: { fontSize: 16, fontWeight: '500', marginTop: -4, letterSpacing: 0.3 },
+  dotsRow: { flexDirection: 'row', gap: 18, marginVertical: 4 },
   dot: {
-    width: 16, height: 16, borderRadius: 8,
-    borderWidth: 2, backgroundColor: 'transparent',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  pinError: { fontSize: 13, textAlign: 'center' },
-  numpad: { width: '100%', gap: 8 },
+  dotFilled: {
+    transform: [{ scale: 1.15 }],
+  },
+  dotGlow: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  pinError: { fontSize: 13, textAlign: 'center', fontWeight: '500' },
+  numpad: { width: '100%', gap: 10, marginTop: 8 },
   numpadRow: { flexDirection: 'row', justifyContent: 'space-around' },
   numpadKey: {
-    width: 80, height: 80, borderRadius: 40,
-    alignItems: 'center', justifyContent: 'center',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  numpadKeyBg: {
     borderWidth: 1,
   },
-  numpadDigit: { fontSize: 28, fontWeight: '400' },
+  numpadDigit: { fontSize: 28, fontWeight: '500' },
   altLinkWrap: { position: 'absolute', bottom: 52 },
-  altLink: { fontSize: 14, fontWeight: '500' },
+  altLink: { fontSize: 14, fontWeight: '600', letterSpacing: 0.2 },
 });
