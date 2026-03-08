@@ -1,15 +1,6 @@
-import { Image, StyleSheet } from 'react-native';
+import { DwellaLogo } from '@/components/DwellaLogo';
+import { Colors } from '@/constants/colors';
 
 export function DwellaHeaderTitle() {
-  return (
-    <Image
-      source={require('@/assets/images/logo.png')}
-      style={styles.logo}
-      resizeMode="contain"
-    />
-  );
+  return <DwellaLogo size={40} color={Colors.textPrimary} />;
 }
-
-const styles = StyleSheet.create({
-  logo: { width: 260, height: 72 },
-});

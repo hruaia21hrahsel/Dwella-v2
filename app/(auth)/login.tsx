@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Image, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { DwellaLogo } from '@/components/DwellaLogo';
 import { isPinSet } from '@/lib/biometric-auth';
 import { useAuthStore } from '@/lib/store';
 
@@ -58,11 +59,7 @@ export default function LoginScreen() {
         colors={Colors.gradientHero as [string, string]}
         style={styles.hero}
       >
-        <Image
-          source={require('@/assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <DwellaLogo size={80} color="#fff" />
         <Text style={styles.heroSubtitle}>The AI that runs your rentals.</Text>
       </LinearGradient>
 
@@ -192,8 +189,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   logo: {
-    width: 200,
-    height: 58,
     marginBottom: 12,
   },
 });

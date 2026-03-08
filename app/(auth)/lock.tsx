@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/colors';
+import { DwellaLogo } from '@/components/DwellaLogo';
 import { verifyPin, isPinSet, isBiometricEnabled } from '@/lib/biometric-auth';
 import { useAuthStore } from '@/lib/store';
 
@@ -82,11 +83,7 @@ export default function LockScreen() {
     <View style={styles.container}>
       {/* Logo + subtitle + dots + numpad all grouped together, centred */}
       <View style={styles.pinSection}>
-        <Image
-          source={require('@/assets/images/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <DwellaLogo size={120} color={Colors.textPrimary} />
         <Text style={styles.tagline}>Enter your PIN</Text>
 
         <View style={styles.dotsRow}>
@@ -140,7 +137,7 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 20,
   },
-  logo: { width: 390, height: 108 },
+  logo: {},
   tagline: { fontSize: 16, color: Colors.textSecondary, marginTop: -4 },
   dotsRow: { flexDirection: 'row', gap: 16 },
   dot: {
