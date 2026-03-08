@@ -355,7 +355,8 @@ export default function DashboardScreen() {
             <View style={styles.telegramCtaChips}>
               <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Log Rent</Text></View>
               <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Send Reminders</Text></View>
-              <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Check Balance</Text></View>
+              <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Add a Property</Text></View>
+              <View style={styles.telegramCtaChip}><Text style={styles.telegramCtaChipText}>Check Payments</Text></View>
             </View>
           </LinearGradient>
         </TouchableOpacity>
