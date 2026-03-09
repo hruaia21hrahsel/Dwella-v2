@@ -224,11 +224,10 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 3: rotated diamonds */}
-        <View style={styles.overviewDecorA} />
-        <View style={styles.overviewDecorB} />
-        <View style={styles.overviewDecorC} />
-        <View style={styles.overviewDecorD} />
+        {/* Abstract background decoration — Design 4: diagonal pinstripes */}
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          <View key={i} style={[styles.overviewDecorStripe, { left: i * 52 - 40 }]} />
+        ))}
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -602,46 +601,14 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  // Design 3: rotated diamonds
-  overviewDecorA: {
+  // Design 4: diagonal pinstripes
+  overviewDecorStripe: {
     position: 'absolute',
-    width: 130,
-    height: 130,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    top: -50,
-    right: -30,
-    transform: [{ rotate: '45deg' }],
-  },
-  overviewDecorB: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'transparent',
-    bottom: 10,
-    left: 20,
-    transform: [{ rotate: '45deg' }],
-  },
-  overviewDecorC: {
-    position: 'absolute',
-    width: 50,
-    height: 50,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    bottom: -15,
-    right: 80,
-    transform: [{ rotate: '45deg' }],
-  },
-  overviewDecorD: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'transparent',
-    top: 20,
-    left: -30,
-    transform: [{ rotate: '45deg' }],
+    width: 1.5,
+    height: 500,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    top: -180,
+    transform: [{ rotate: '-35deg' }],
   },
   overviewTitleWrap: {
     flexDirection: 'row',
