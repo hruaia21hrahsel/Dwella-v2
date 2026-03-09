@@ -224,29 +224,12 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 8: bubble trail */}
-        {[
-          { size: 22, bottom: 18,  left: 10,  opacity: 0.18, filled: true  },
-          { size: 34, bottom: 40,  left: 50,  opacity: 0.12, filled: false },
-          { size: 48, bottom: 70,  left: 110, opacity: 0.10, filled: true  },
-          { size: 66, bottom: 90,  left: 190, opacity: 0.08, filled: false },
-          { size: 90, bottom: 50,  left: 270, opacity: 0.07, filled: true  },
-          { size: 56, bottom: 130, left: 300, opacity: 0.09, filled: false },
-        ].map((b, i) => (
-          <View
-            key={i}
-            style={{
-              position: 'absolute',
-              width: b.size,
-              height: b.size,
-              borderRadius: b.size / 2,
-              bottom: b.bottom,
-              left: b.left,
-              backgroundColor: b.filled ? `rgba(255,255,255,${b.opacity})` : 'transparent',
-              borderWidth: b.filled ? 0 : 1,
-              borderColor: `rgba(255,255,255,${b.opacity})`,
-            }}
-          />
+        {/* Abstract background decoration — Design 9: crosshatch mesh */}
+        {[0,1,2,3,4,5,6,7].map((i) => (
+          <View key={`a${i}`} style={[styles.overviewDecorMeshLine, { left: i * 44 - 60, transform: [{ rotate: '40deg' }] }]} />
+        ))}
+        {[0,1,2,3,4,5,6,7].map((i) => (
+          <View key={`b${i}`} style={[styles.overviewDecorMeshLine, { left: i * 44 - 60, transform: [{ rotate: '-40deg' }] }]} />
         ))}
 
         {/* Title row */}
@@ -676,6 +659,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  // Design 9: crosshatch mesh
+  overviewDecorMeshLine: {
+    position: 'absolute',
+    width: 1,
+    height: 500,
+    top: -200,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   overviewMonthSub: {
     fontSize: 10,
