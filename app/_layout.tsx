@@ -114,6 +114,7 @@ function AuthGuard() {
     const gen = ++routingGeneration.current;
     const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'auth';
     const inOnboarding = segments[0] === 'onboarding';
+    const inPinSetup = segments[0] === 'pin-setup';
 
     if (!session) {
       if (!inAuthGroup) router.replace('/(auth)/login');
@@ -132,7 +133,9 @@ function AuthGuard() {
       }
 
       // Unlocked — go to the app. Only redirect if coming from auth screens
-      // or on the very first load.
+      // or on the very first load. Leave pin-setup alone so the user can
+      // finish entering their PIN before we move them anywhere.
+      if (inPinSetup) return;
       if (inAuthGroup || inOnboarding || !initialRedirectDone.current) {
         initialRedirectDone.current = true;
         router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');

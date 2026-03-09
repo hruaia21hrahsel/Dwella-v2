@@ -4,6 +4,7 @@ import { Text } from 'react-native-paper';
 import { useRouter, useNavigation } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { savePin } from '@/lib/biometric-auth';
+import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 
 type Step = 'enter' | 'confirm';
@@ -21,7 +22,10 @@ export default function PinSetupScreen() {
     if (navigation.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)/dashboard');
+      // New users (email signup) arrive here via router.replace, so canGoBack
+      // is false. Send them to onboarding if they haven't seen it yet.
+      const { onboardingCompleted } = useAuthStore.getState();
+      router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
     }
   }
 
