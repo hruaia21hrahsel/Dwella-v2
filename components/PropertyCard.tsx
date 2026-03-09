@@ -27,8 +27,6 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
   const { colors, gradients, shadows } = useTheme();
-  const totalRent = tenants?.reduce((sum, t) => sum + t.monthly_rent, 0) ?? 0;
-  const occupiedCount = tenants?.length ?? 0;
 
   return (
     <View style={[styles.card, { borderColor: colors.border, ...shadows.sm }]}>
@@ -84,32 +82,14 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
       </LinearGradient>
 
       {/* Stats strip */}
-      {!isTenantView && tenants && (
+      {!isTenantView && paidCount !== undefined && (
         <View style={[styles.statsStrip, { backgroundColor: colors.primarySoft, borderTopColor: colors.primaryLight + '60' }]}>
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="door-open" size={14} color={colors.primary} />
+            <MaterialCommunityIcons name="check-circle-outline" size={14} color={colors.statusPaid} />
             <Text style={[styles.statText, { color: colors.textSecondary }]}>
-              <Text style={[styles.statBold, { color: colors.textPrimary }]}>{occupiedCount}</Text>/{property.total_units} occupied
+              <Text style={[styles.statBold, { color: colors.textPrimary }]}>{paidCount}</Text> paid
             </Text>
           </View>
-          <View style={[styles.statDot, { backgroundColor: colors.textDisabled }]} />
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="cash" size={14} color={colors.statusConfirmed} />
-            <Text style={[styles.statText, { color: colors.textSecondary }]}>
-              <Text style={[styles.statBold, { color: colors.textPrimary }]}>{formatCurrency(totalRent)}</Text>/mo
-            </Text>
-          </View>
-          {paidCount !== undefined && (
-            <>
-              <View style={[styles.statDot, { backgroundColor: colors.textDisabled }]} />
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons name="check-circle-outline" size={14} color={colors.statusPaid} />
-                <Text style={[styles.statText, { color: colors.textSecondary }]}>
-                  <Text style={[styles.statBold, { color: colors.textPrimary }]}>{paidCount}</Text> paid
-                </Text>
-              </View>
-            </>
-          )}
         </View>
       )}
 
