@@ -4,9 +4,6 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from './supabase';
 
-// Complete any dangling auth sessions when the app resumes.
-WebBrowser.maybeCompleteAuthSession();
-
 // makeRedirectUri generates the correct callback URL for the current
 // environment: custom scheme for standalone builds, proxy URL for Expo Go.
 const REDIRECT_URI = makeRedirectUri({ scheme: 'dwella', path: 'auth/callback' });

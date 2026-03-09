@@ -6,6 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { signInWithGoogle, signInWithApple, isAppleSignInAvailable } from '@/lib/social-auth';
 import { useAuthStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme-context';
 
 interface SocialAuthButtonsProps {
@@ -40,6 +41,10 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
       onLoading?.(true);
       const result = await signInWithGoogle();
       if (result.success) {
+        // Sync session into Zustand before navigating — onAuthStateChange fires
+        // asynchronously, so the store may still have session:null at this point.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) useAuthStore.getState().setSession(session);
         navigateAfterAuth();
         return;
       }
@@ -58,6 +63,8 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
       onLoading?.(true);
       const result = await signInWithApple();
       if (result.success) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) useAuthStore.getState().setSession(session);
         navigateAfterAuth();
         return;
       }
