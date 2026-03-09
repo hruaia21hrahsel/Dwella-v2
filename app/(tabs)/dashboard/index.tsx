@@ -30,6 +30,17 @@ import { GradientButton } from '@/components/GradientButton';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
+
+const HERO_STATUS_COLORS: Record<string, string> = {
+  confirmed: '#FDE68A',
+  paid:      '#93C5FD',
+  partial:   '#FBBF24',
+  overdue:   '#FCA5A5',
+};
+function getHeroStatusColor(status: string | null): string {
+  if (!status) return 'rgba(255,255,255,0.35)';
+  return HERO_STATUS_COLORS[status] ?? 'rgba(255,255,255,0.35)';
+}
 import { PaymentStatus } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -345,7 +356,7 @@ export default function DashboardScreen() {
             {tenantsForProperty.map((t) => {
               const active = t.tenantId === selectedTenantId;
               const monthStatus = t.paymentsByMonth[currentMonth]?.status ?? null;
-              const dotColor = monthStatus ? getStatusColor(monthStatus) : 'rgba(255,255,255,0.4)';
+              const dotColor = getHeroStatusColor(monthStatus);
               return (
                 <TouchableOpacity
                   key={t.tenantId}
@@ -382,10 +393,10 @@ export default function DashboardScreen() {
             const bgColor = isFuture
               ? 'rgba(255,255,255,0.05)'
               : status
-              ? getStatusColor(status) + '40'
+              ? getHeroStatusColor(status) + '40'
               : 'rgba(255,255,255,0.12)';
             const dotColor = status
-              ? getStatusColor(status)
+              ? getHeroStatusColor(status)
               : isFuture
               ? 'rgba(255,255,255,0.18)'
               : 'rgba(255,255,255,0.35)';
