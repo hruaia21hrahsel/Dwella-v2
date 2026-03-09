@@ -215,17 +215,18 @@ export default function DashboardScreen() {
       <ErrorBanner error={error} onRetry={refresh} />
 
       {/* Overview section */}
-      <GlassCard variant="elevated" style={{ padding: 12, gap: 8 }}>
-
-      {/* Hero gradient header */}
       <LinearGradient
         colors={gradients.hero}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.heroCard, shadows.hero]}
+        style={[styles.overviewCard, shadows.hero]}
       >
+        {/* Title row */}
         <View style={styles.heroTitleRow}>
-          <Text style={styles.heroTitle}>Overview</Text>
+          <View style={styles.overviewTitleWrap}>
+            <MaterialCommunityIcons name="view-dashboard-outline" size={18} color="rgba(255,255,255,0.8)" style={{ marginRight: 6 }} />
+            <Text style={styles.heroTitle}>Overview</Text>
+          </View>
           <View style={styles.yearPicker}>
             <TouchableOpacity
               onPress={() => setSelectedYear((y) => Math.max(2000, y - 1))}
@@ -244,96 +245,87 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
 
-      {/* Property selector */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.selectorRow}
-        contentContainerStyle={styles.selectorContent}
-      >
-        {properties.map((p) => {
-          const active = p.id === selectedPropertyId;
-          return (
-            <TouchableOpacity
-              key={p.id}
-              style={[
-                styles.selectorChip,
-                { borderColor: colors.border, backgroundColor: colors.surface },
-                active && { borderColor: colors.primaryMid, backgroundColor: colors.primarySoft },
-              ]}
-              onPress={() => selectProperty(p.id)}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name="home-city"
-                size={13}
-                color={active ? colors.primary : colors.textSecondary}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[
-                styles.selectorChipText,
-                { color: colors.textSecondary },
-                active && { color: colors.primary, fontWeight: '700' },
-              ]}>
-                {p.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+        {/* Divider */}
+        <View style={styles.overviewDivider} />
 
-      {/* Tenant selector */}
-      {tenantsForProperty.length > 0 && (
+        {/* Property selector */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.selectorRow}
           contentContainerStyle={styles.selectorContent}
         >
-          {tenantsForProperty.map((t) => {
-            const active = t.tenantId === selectedTenantId;
-            const monthStatus = t.paymentsByMonth[currentMonth]?.status ?? null;
-            const dotColor = monthStatus ? getStatusColor(monthStatus) : colors.textDisabled;
+          {properties.map((p) => {
+            const active = p.id === selectedPropertyId;
             return (
               <TouchableOpacity
-                key={t.tenantId}
+                key={p.id}
                 style={[
-                  styles.selectorChip,
-                  { borderColor: colors.border, backgroundColor: colors.surface },
-                  active && { borderColor: colors.primaryMid, backgroundColor: colors.primarySoft },
+                  styles.overviewChip,
+                  active && styles.overviewChipActive,
                 ]}
-                onPress={() => setSelectedTenantId(t.tenantId)}
+                onPress={() => selectProperty(p.id)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
-                <Text style={[
-                  styles.selectorChipText,
-                  { color: colors.textSecondary },
-                  active && { color: colors.primary, fontWeight: '700' },
-                ]}>
-                  {t.tenantName}
-                </Text>
-                <Text style={[styles.selectorChipSub, { color: colors.textSecondary }, active && { color: colors.primary }]}>
-                  {' '}· {t.flatNo}
+                <MaterialCommunityIcons
+                  name="home-city"
+                  size={13}
+                  color={active ? '#fff' : 'rgba(255,255,255,0.65)'}
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={[styles.overviewChipText, active && styles.overviewChipTextActive]}>
+                  {p.name}
                 </Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
-      )}
 
-      {/* Payment grid */}
-      <View style={[styles.tenantBlock, { backgroundColor: colors.primarySoft }]}>
-        <View style={styles.monthGrid}>
+        {/* Tenant selector */}
+        {tenantsForProperty.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.selectorRow}
+            contentContainerStyle={styles.selectorContent}
+          >
+            {tenantsForProperty.map((t) => {
+              const active = t.tenantId === selectedTenantId;
+              const monthStatus = t.paymentsByMonth[currentMonth]?.status ?? null;
+              const dotColor = monthStatus ? getStatusColor(monthStatus) : 'rgba(255,255,255,0.4)';
+              return (
+                <TouchableOpacity
+                  key={t.tenantId}
+                  style={[
+                    styles.overviewChip,
+                    active && styles.overviewChipActive,
+                  ]}
+                  onPress={() => setSelectedTenantId(t.tenantId)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
+                  <Text style={[styles.overviewChipText, active && styles.overviewChipTextActive]}>
+                    {t.tenantName}
+                  </Text>
+                  <Text style={[styles.overviewChipSub, active && { color: 'rgba(255,255,255,0.85)' }]}>
+                    {' '}· {t.flatNo}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {/* Payment grid */}
+        <View style={styles.overviewGrid}>
           {MONTHS.map((m) => {
             const payment = selectedRow?.paymentsByMonth[m];
             const status: PaymentStatus | null = payment?.status ?? null;
             const isCurrentMonth = m === currentMonth;
 
-            const bgColor = status ? getStatusColor(status) + '22' : colors.statusPendingSoft;
-            const iconColor = status ? getStatusColor(status) : colors.statusPending;
+            const bgColor = status ? getStatusColor(status) + '33' : 'rgba(255,255,255,0.1)';
+            const iconColor = status ? getStatusColor(status) : 'rgba(255,255,255,0.45)';
             const canNavigate = !!payment?.id;
 
             return (
@@ -350,11 +342,11 @@ export default function DashboardScreen() {
                 style={[
                   styles.monthChip,
                   { backgroundColor: bgColor },
-                  isCurrentMonth && { borderWidth: 1.5, borderColor: colors.primary },
+                  isCurrentMonth && { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)' },
                 ]}
               >
-                {isCurrentMonth && <View style={[styles.currentDot, { backgroundColor: colors.primary }]} />}
-                <Text style={[styles.monthChipLabel, { color: iconColor }]}>
+                {isCurrentMonth && <View style={[styles.currentDot, { backgroundColor: '#fff' }]} />}
+                <Text style={[styles.monthChipLabel, { color: status ? '#fff' : 'rgba(255,255,255,0.55)' }]}>
                   {MONTH_SHORT[m - 1]}
                 </Text>
                 {status ? (
@@ -371,9 +363,7 @@ export default function DashboardScreen() {
             );
           })}
         </View>
-      </View>
-
-      </GlassCard>
+      </LinearGradient>
       {/* End overview section */}
 
       {/* Telegram CTA */}
@@ -590,11 +580,53 @@ const styles = StyleSheet.create({
     marginHorizontal: -16,
     marginBottom: 16,
   },
-  // Hero
-  heroCard: {
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  // Overview card (replaces heroCard)
+  overviewCard: {
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+  },
+  overviewTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  overviewDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginHorizontal: -2,
+  },
+  overviewChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  overviewChipActive: {
+    borderColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  overviewChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.65)',
+  },
+  overviewChipTextActive: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  overviewChipSub: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  overviewGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 2,
   },
   heroTitleRow: {
     flexDirection: 'row',
@@ -654,16 +686,6 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
     marginRight: 6,
-  },
-  // Tenant payment block
-  tenantBlock: {
-    borderRadius: 12,
-    padding: 12,
-  },
-  monthGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
   },
   monthChip: {
     width: CHIP_SIZE,
