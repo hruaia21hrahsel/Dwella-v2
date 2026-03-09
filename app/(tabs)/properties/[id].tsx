@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from '
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useProperties } from '@/hooks/useProperties';
 import { useTenants } from '@/hooks/useTenants';
 
@@ -60,8 +61,15 @@ export default function PropertyDetailScreen() {
         options={{
           title: property.name,
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
           headerTintColor: colors.textPrimary,
+          headerBackground: () => (
+            <LinearGradient
+              colors={[colors.surface, colors.primarySoft]}
+              start={{ x: 0.35, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ flex: 1 }}
+            />
+          ),
         }}
       />
 

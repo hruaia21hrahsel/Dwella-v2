@@ -4,6 +4,7 @@ import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useProperties } from '@/hooks/useProperties';
@@ -234,15 +235,20 @@ export default function PaymentsScreen() {
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Top bar */}
-      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+      <LinearGradient
+        colors={[colors.surface, colors.primarySoft]}
+        start={{ x: 0.35, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.topBar, { paddingTop: insets.top, shadowColor: colors.primary }]}
+      >
         <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
           <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>Payment History</Text>
         <View style={styles.topBarBtn} />
-      </View>
+      </LinearGradient>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
@@ -523,7 +529,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     paddingVertical: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    shadowOpacity: 0.07,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    elevation: 3,
   },
   topBarBtn: {
     width: 44,
