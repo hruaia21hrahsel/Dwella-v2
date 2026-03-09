@@ -26,9 +26,9 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
 
   return (
     <LinearGradient
-      colors={[colors.surface, gradients.heroSubtle[1]]}
-      start={{ x: 0.35, y: 0 }}
-      end={{ x: 1, y: 0 }}
+      colors={[colors.surface, gradients.heroSubtle[1], colors.background]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
       style={[styles.header, { paddingTop: insets.top, height: 60 + insets.top, shadowColor: colors.primary }]}
     >
       {/* Property map decoration — kept within [56, SCREEN_W-56] to avoid both buttons */}

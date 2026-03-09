@@ -178,7 +178,7 @@ export default function TenantDetailScreen() {
           headerBackTitle: 'Back',
           headerShown: true,
           headerBackground: () => (
-            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1], colors.background]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }} />
           ),
           headerStyle: {} as any,
           headerTintColor: colors.textPrimary,
