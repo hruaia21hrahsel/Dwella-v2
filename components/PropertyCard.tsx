@@ -74,14 +74,14 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
           {(onEdit || onAddTenant || onDelete) && (
             <View style={styles.actions}>
-              {onEdit && (
-                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={styles.actionBtn}>
-                  <MaterialCommunityIcons name="pencil-outline" size={16} color="rgba(255,255,255,0.85)" />
-                </TouchableOpacity>
-              )}
               {onAddTenant && (
                 <TouchableOpacity onPress={(e) => { e.stopPropagation(); onAddTenant(); }} hitSlop={6} style={styles.actionBtn}>
                   <MaterialCommunityIcons name="account-plus-outline" size={16} color="rgba(255,255,255,0.85)" />
+                </TouchableOpacity>
+              )}
+              {onEdit && (
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={styles.actionBtn}>
+                  <MaterialCommunityIcons name="pencil-outline" size={16} color="rgba(255,255,255,0.85)" />
                 </TouchableOpacity>
               )}
               {onDelete && (
