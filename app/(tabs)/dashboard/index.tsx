@@ -198,12 +198,14 @@ export default function DashboardScreen() {
     >
       {/* Scrollable header — matches DwellaHeader exactly but scrolls with content */}
       <LinearGradient
-        colors={[colors.surface, colors.primarySoft]}
+        colors={[colors.surface, colors.surface]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[styles.inlineHeader, { height: 60 + insets.top, paddingTop: insets.top }]}
       >
-        <View style={[styles.inlineHeaderBloom, { backgroundColor: colors.primaryMid + '22' }]} />
+        <View style={[styles.inlineHeaderRing1, { borderColor: colors.primary + '22' }]} />
+        <View style={[styles.inlineHeaderRing2, { borderColor: colors.primary + '14' }]} />
+        <View style={[styles.inlineHeaderRing3, { borderColor: colors.primary + '0A' }]} />
         <ProfileHeaderButton dark />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <DwellaHeaderTitle dark />
@@ -595,13 +597,32 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
   },
-  inlineHeaderBloom: {
+  inlineHeaderRing1: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    top: -80,
-    right: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1.5,
+    top: -60,
+    right: -60,
+  },
+  inlineHeaderRing2: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 1,
+    top: -100,
+    right: -100,
+  },
+  inlineHeaderRing3: {
+    position: 'absolute',
+    width: 290,
+    height: 290,
+    borderRadius: 145,
+    borderWidth: 1,
+    top: -145,
+    right: -145,
   },
   // Overview card (replaces heroCard)
   overviewCard: {

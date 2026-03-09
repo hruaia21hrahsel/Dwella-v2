@@ -20,7 +20,7 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
     : <View style={{ width: 56 }} />;
   return (
     <LinearGradient
-      colors={[colors.surface, colors.primarySoft]}
+      colors={[colors.surface, colors.surface]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={[
@@ -32,8 +32,10 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
         },
       ]}
     >
-      {/* Design 1: bloom circle top-right */}
-      <View style={[styles.bloomCircle, { backgroundColor: colors.primaryMid + '22' }]} />
+      {/* Design 2: concentric rings from top-right */}
+      <View style={[styles.ring1, { borderColor: colors.primary + '22' }]} />
+      <View style={[styles.ring2, { borderColor: colors.primary + '14' }]} />
+      <View style={[styles.ring3, { borderColor: colors.primary + '0A' }]} />
 
       <ProfileHeaderButton dark />
       <View style={{ flex: 1, alignItems: 'center' }}>
@@ -54,12 +56,31 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  bloomCircle: {
+  ring1: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    top: -80,
-    right: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1.5,
+    top: -60,
+    right: -60,
+  },
+  ring2: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 1,
+    top: -100,
+    right: -100,
+  },
+  ring3: {
+    position: 'absolute',
+    width: 290,
+    height: 290,
+    borderRadius: 145,
+    borderWidth: 1,
+    top: -145,
+    right: -145,
   },
 });
