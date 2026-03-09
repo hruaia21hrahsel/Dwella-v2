@@ -710,9 +710,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.22)',
-    transform: [{ translateY: -2 }],
   },
   overviewMonthLabel: {
     fontSize: 13,
