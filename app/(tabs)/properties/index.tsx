@@ -153,6 +153,7 @@ export default function PropertiesScreen() {
                 tenants={tenantsByProperty[property.id]}
                 onPress={() => router.push(`/(tabs)/properties/${property.id}`)}
                 onEdit={() => router.push({ pathname: '/property/create', params: { id: property.id } })}
+                onAddTenant={() => router.push(`/property/${property.id}/tenant/create`)}
                 onDelete={() => setArchiveTarget(property)}
                 onTenantPress={(tenantId) => router.push(`/property/${property.id}/tenant/${tenantId}`)}
               />

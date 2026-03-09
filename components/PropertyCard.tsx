@@ -21,6 +21,7 @@ interface PropertyCardProps {
   tenants?: TenantSummary[];
   onPress?: () => void;
   onEdit?: () => void;
+  onAddTenant?: () => void;
   onDelete?: () => void;
   onTenantPress?: (tenantId: string) => void;
 }
@@ -32,7 +33,7 @@ function darkenHex(hex: string): string {
   return `rgb(${Math.floor(r * 0.65)}, ${Math.floor(g * 0.65)}, ${Math.floor(b * 0.65)})`;
 }
 
-export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
+export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onAddTenant, onDelete, onTenantPress }: PropertyCardProps) {
   const { colors, shadows } = useTheme();
   const propColor = property.color ?? colors.primary;
   const gradientColors: [string, string] = [propColor, darkenHex(propColor)];
@@ -71,11 +72,16 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
             )}
           </View>
 
-          {(onEdit || onDelete) && (
+          {(onEdit || onAddTenant || onDelete) && (
             <View style={styles.actions}>
               {onEdit && (
                 <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={styles.actionBtn}>
                   <MaterialCommunityIcons name="pencil-outline" size={16} color="rgba(255,255,255,0.85)" />
+                </TouchableOpacity>
+              )}
+              {onAddTenant && (
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onAddTenant(); }} hitSlop={6} style={styles.actionBtn}>
+                  <MaterialCommunityIcons name="account-plus-outline" size={16} color="rgba(255,255,255,0.85)" />
                 </TouchableOpacity>
               )}
               {onDelete && (
