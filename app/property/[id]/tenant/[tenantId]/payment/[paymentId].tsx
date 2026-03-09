@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal } from 'react-native';
 import { Text, Button, Divider, ActivityIndicator } from 'react-native-paper';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { Payment, Tenant, Property } from '@/lib/types';
 import { useTheme } from '@/lib/theme-context';
@@ -20,6 +21,7 @@ export default function PaymentDetailScreen() {
     paymentId: string;
   }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { ownedProperties } = useProperties();
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
@@ -130,29 +132,30 @@ export default function PaymentDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (!payment) {
-    return <View style={styles.centered}><Text>Payment not found.</Text></View>;
+    return <View style={[styles.centered, { paddingTop: insets.top }]}><Text>Payment not found.</Text></View>;
   }
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: `${getMonthName(payment.month)} ${payment.year}`,
-          headerTitleAlign: 'center',
-          headerShown: true,
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
-          headerTintColor: colors.textPrimary,
-        }}
-      />
+    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {/* Top bar */}
+      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>
+          {getMonthName(payment.month)} {payment.year}
+        </Text>
+        <View style={styles.topBarBtn} />
+      </View>
 
-      <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={[styles.headerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text variant="headlineSmall" style={[styles.monthTitle, { color: colors.textPrimary }]}>
@@ -312,11 +315,31 @@ export default function PaymentDetailScreen() {
           )}
         </TouchableOpacity>
       </Modal>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  topBarBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
+  },
   container: { flex: 1 },
   content: { padding: 16, gap: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
