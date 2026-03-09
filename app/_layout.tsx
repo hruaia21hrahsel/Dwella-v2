@@ -166,14 +166,14 @@ function InnerLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ presentation: 'modal', header: () => <DwellaHeader /> }} />
-        <Stack.Screen name="log-payment" options={{ presentation: 'modal', header: () => <DwellaHeader /> }} />
-        <Stack.Screen name="payments/index" options={{ header: () => <DwellaHeader /> }} />
-        <Stack.Screen name="expenses/index" options={{ header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="payments/index" options={{ headerShown: true, header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="expenses/index" options={{ headerShown: true, header: () => <DwellaHeader /> }} />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite/[token]" />
-        <Stack.Screen name="pin-setup" options={{ header: () => <DwellaHeader /> }} />
-        <Stack.Screen name="reminders/index" options={{ presentation: 'modal', header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="pin-setup" options={{ headerShown: true, header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="reminders/index" options={{ headerShown: true, presentation: 'modal', header: () => <DwellaHeader /> }} />
         <Stack.Screen
           name="notifications/index"
           options={{ headerShown: false, presentation: 'modal' }}

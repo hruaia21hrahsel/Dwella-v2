@@ -13,9 +13,9 @@ const SCREEN_W = Dimensions.get('window').width;
 // 6 columns, card padding 16*2, section card padding 16*2, gaps 5*8
 const MONTH_CHIP_W = Math.floor((SCREEN_W - 32 - 32 - 40) / 6);
 
-import { Text, TextInput, Button, ActivityIndicator, HelperText, IconButton } from 'react-native-paper';
+import { Text, TextInput, Button, ActivityIndicator, HelperText } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
@@ -86,11 +86,13 @@ export default function LogPaymentScreen() {
   async function loadProperties() {
     if (!userId) return;
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('properties')
         .select('id, name, tenants(id, tenant_name, flat_no, monthly_rent, due_day, lease_start, property_id, is_archived)')
         .eq('owner_id', userId)
         .eq('is_archived', false);
+
+      if (error) throw error;
 
       const props: PropertyOption[] = [];
       const allTenants: TenantOption[] = [];
@@ -116,6 +118,8 @@ export default function LogPaymentScreen() {
         const t = allTenants.find((x) => x.id === params.tenantId);
         if (t) setAmount(String(t.monthly_rent));
       }
+    } catch (err: any) {
+      useToastStore.getState().showToast(err.message ?? 'Failed to load properties.', 'error');
     } finally {
       setLoadingData(false);
     }
@@ -228,18 +232,10 @@ export default function LogPaymentScreen() {
     : null;
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerLeft: () => (
-            <IconButton icon="close" size={22} onPress={() => router.back()} />
-          ),
-        }}
-      />
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: colors.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
           {/* Page title */}
@@ -435,7 +431,6 @@ export default function LogPaymentScreen() {
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
-    </>
   );
 }
 
