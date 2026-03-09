@@ -204,54 +204,53 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 0 }}
         style={[styles.inlineHeader, { height: 60 + insets.top, paddingTop: insets.top }]}
       >
-        {/* Property map decoration — dashed cadastral grid + location pins */}
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60 }}>
-          <Svg width={SCREEN_W} height={60}>
-            {/* Cadastral grid lines */}
-            {[0.50, 0.62, 0.74, 0.86, 0.97].map((x, i) => (
-              <Line key={`v${i}`} x1={SCREEN_W * x} y1={0} x2={SCREEN_W * x} y2={60}
+        {/* Property map decoration — kept within [56, SCREEN_W-56] to avoid both buttons */}
+        <View style={{ position: 'absolute', bottom: 0, left: 56, right: 56, height: 60 }}>
+          <Svg width={SCREEN_W - 112} height={60}>
+            {/* Cadastral grid lines — clamped to decoration zone */}
+            {[0.18, 0.34, 0.52, 0.70].map((x, i) => (
+              <Line key={`v${i}`} x1={(SCREEN_W - 112) * x} y1={0} x2={(SCREEN_W - 112) * x} y2={60}
                 stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
             ))}
-            <Line x1={SCREEN_W * 0.48} y1={20} x2={SCREEN_W} y2={20}
-              stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
-            <Line x1={SCREEN_W * 0.48} y1={40} x2={SCREEN_W} y2={40}
-              stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
+            <Line x1={0} y1={20} x2={SCREEN_W - 112} y2={20}
+              stroke={colors.primary} strokeOpacity={0.08} strokeWidth={0.8} strokeDasharray="2,5" />
+            <Line x1={0} y1={40} x2={SCREEN_W - 112} y2={40}
+              stroke={colors.primary} strokeOpacity={0.08} strokeWidth={0.8} strokeDasharray="2,5" />
 
             {/* Property lot blocks */}
-            <Rect x={SCREEN_W * 0.51} y={2} width={SCREEN_W * 0.10} height={17} rx={1}
-              fill={colors.primary} fillOpacity={0.07} />
-            <Rect x={SCREEN_W * 0.51} y={21} width={SCREEN_W * 0.10} height={17} rx={1}
-              fill={colors.primary} fillOpacity={0.07} />
-            <Rect x={SCREEN_W * 0.63} y={2} width={SCREEN_W * 0.10} height={37} rx={1}
-              fill={colors.primary} fillOpacity={0.07} />
-            <Rect x={SCREEN_W * 0.63} y={41} width={SCREEN_W * 0.10} height={17} rx={1}
-              fill={colors.primary} fillOpacity={0.05} />
-            <Rect x={SCREEN_W * 0.75} y={2} width={SCREEN_W * 0.10} height={17} rx={1}
-              fill={colors.primary} fillOpacity={0.05} />
+            {(() => {
+              const W = SCREEN_W - 112;
+              const col = W * 0.16;
+              return (<>
+                <Rect x={W * 0.01} y={2}  width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.07} />
+                <Rect x={W * 0.01} y={21} width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.07} />
+                <Rect x={W * 0.19} y={2}  width={col} height={37} rx={1} fill={colors.primary} fillOpacity={0.07} />
+                <Rect x={W * 0.19} y={41} width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.05} />
+                <Rect x={W * 0.37} y={2}  width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.05} />
+              </>);
+            })()}
 
             {/* Pin 1 — large, primary focus */}
-            <Circle cx={SCREEN_W * 0.755} cy={36} r={9}
-              fill={colors.primary} fillOpacity={0.18} />
-            <Circle cx={SCREEN_W * 0.755} cy={36} r={4}
-              fill={colors.primary} fillOpacity={0.35} />
-            <Path d={`M${SCREEN_W * 0.755 - 6},${41} L${SCREEN_W * 0.755},${56} L${SCREEN_W * 0.755 + 6},${41} Z`}
-              fill={colors.primary} fillOpacity={0.18} />
+            {(() => {
+              const W = SCREEN_W - 112;
+              const cx = W * 0.62;
+              return (<>
+                <Circle cx={cx} cy={33} r={9} fill={colors.primary} fillOpacity={0.18} />
+                <Circle cx={cx} cy={33} r={4} fill={colors.primary} fillOpacity={0.35} />
+                <Path d={`M${cx - 6},${38} L${cx},${53} L${cx + 6},${38} Z`} fill={colors.primary} fillOpacity={0.18} />
+              </>);
+            })()}
 
             {/* Pin 2 — medium */}
-            <Circle cx={SCREEN_W * 0.885} cy={30} r={7}
-              fill={colors.primary} fillOpacity={0.13} />
-            <Circle cx={SCREEN_W * 0.885} cy={30} r={3}
-              fill={colors.primary} fillOpacity={0.26} />
-            <Path d={`M${SCREEN_W * 0.885 - 4.5},${35} L${SCREEN_W * 0.885},${47} L${SCREEN_W * 0.885 + 4.5},${35} Z`}
-              fill={colors.primary} fillOpacity={0.13} />
-
-            {/* Pin 3 — small, right edge */}
-            <Circle cx={SCREEN_W - 10} cy={22} r={5}
-              fill={colors.primary} fillOpacity={0.09} />
-            <Circle cx={SCREEN_W - 10} cy={22} r={2}
-              fill={colors.primary} fillOpacity={0.18} />
-            <Path d={`M${SCREEN_W - 13},${26} L${SCREEN_W - 10},${35} L${SCREEN_W - 7},${26} Z`}
-              fill={colors.primary} fillOpacity={0.09} />
+            {(() => {
+              const W = SCREEN_W - 112;
+              const cx = W * 0.84;
+              return (<>
+                <Circle cx={cx} cy={27} r={7} fill={colors.primary} fillOpacity={0.13} />
+                <Circle cx={cx} cy={27} r={3} fill={colors.primary} fillOpacity={0.26} />
+                <Path d={`M${cx - 4.5},${32} L${cx},${44} L${cx + 4.5},${32} Z`} fill={colors.primary} fillOpacity={0.13} />
+              </>);
+            })()}
           </Svg>
         </View>
 
