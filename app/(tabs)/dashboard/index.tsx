@@ -87,7 +87,7 @@ export default function DashboardScreen() {
   const { user, setUser } = useAuthStore();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [summaryMonth, setSummaryMonth] = useState(currentMonth);
   const { tenantRows, stats, recentTransactions, isLoading, error, refresh } = useDashboard(selectedYear, summaryMonth);
   const { nudge: aiNudge, loading: aiNudgeLoading } = useAiNudge(user?.id);
