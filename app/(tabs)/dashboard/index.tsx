@@ -41,7 +41,7 @@ const SCREEN_W = Dimensions.get('window').width;
 const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 2 - 24 - 40) / 6);
 // Overview card: outer padding 16*2 + card padding 14*2 = 60, 5 gaps of 8 = 40
 const OVERVIEW_CHIP_W = Math.floor((SCREEN_W - 60 - 40) / 6);
-const OVERVIEW_CHIP_H = OVERVIEW_CHIP_W + 10;
+const OVERVIEW_CHIP_H = OVERVIEW_CHIP_W;
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
   overviewMonthChip: {
     width: OVERVIEW_CHIP_W,
     height: OVERVIEW_CHIP_H,
-    borderRadius: 10,
+    borderRadius: OVERVIEW_CHIP_W / 2,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
