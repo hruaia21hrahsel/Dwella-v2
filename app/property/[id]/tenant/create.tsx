@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Share, Image, TouchableOpacity } from 'react-native';
-import { TextInput, Button, HelperText, Text, IconButton, ActivityIndicator } from 'react-native-paper';
+import { TextInput, Button, HelperText, Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
@@ -28,7 +28,8 @@ function toISODate(date: Date): string {
 export default function TenantCreateScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId?: string }>();
   const router = useRouter();
-  const { colors, shadows, gradients } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { colors, shadows } = useTheme();
   const isEditing = !!tenantId;
 
   const [flatNo, setFlatNo] = useState('');
@@ -227,25 +228,19 @@ export default function TenantCreateScreen() {
   }
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: isEditing ? 'Edit Tenant' : 'Add Tenant',
-          headerTitleAlign: 'center',
-          presentation: 'modal',
-          headerBackground: () => (
-            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
-          ),
-          headerStyle: { height: 64 } as any,
-          headerTintColor: colors.textPrimary,
-          headerShown: true,
-          headerLeft: () => (
-            <IconButton icon="close" size={22} onPress={() => router.back()} />
-          ),
-        }}
-      />
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {/* Top bar */}
+      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="close" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>
+          {isEditing ? 'Edit Tenant' : 'Add Tenant'}
+        </Text>
+        <View style={styles.topBarBtn} />
+      </View>
       <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -452,13 +447,32 @@ export default function TenantCreateScreen() {
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  topBarBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
   },
   content: {
     padding: 16,
