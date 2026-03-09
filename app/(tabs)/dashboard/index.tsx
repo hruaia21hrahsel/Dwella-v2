@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Rect, Line, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
@@ -198,23 +199,62 @@ export default function DashboardScreen() {
     >
       {/* Scrollable header — matches DwellaHeader exactly but scrolls with content */}
       <LinearGradient
-        colors={[colors.surface, colors.surface]}
-        start={{ x: 0, y: 0 }}
+        colors={[colors.surface, colors.primarySoft]}
+        start={{ x: 0.35, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={[styles.inlineHeader, { height: 60 + insets.top, paddingTop: insets.top }]}
       >
-        {[
-          { h: 28, w: 14, r: 12 },
-          { h: 42, w: 10, r: 28 },
-          { h: 20, w: 16, r: 40 },
-          { h: 50, w: 12, r: 58 },
-          { h: 32, w: 14, r: 72 },
-          { h: 44, w: 10, r: 88 },
-          { h: 24, w: 18, r: 100 },
-          { h: 36, w: 12, r: 120 },
-        ].map((b, i) => (
-          <View key={i} style={[styles.skylineBuilding, { height: b.h, width: b.w, right: b.r, backgroundColor: colors.primary + '18' }]} />
-        ))}
+        {/* Property map decoration — dashed cadastral grid + location pins */}
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 60 }}>
+          <Svg width={SCREEN_W} height={60}>
+            {/* Cadastral grid lines */}
+            {[0.50, 0.62, 0.74, 0.86, 0.97].map((x, i) => (
+              <Line key={`v${i}`} x1={SCREEN_W * x} y1={0} x2={SCREEN_W * x} y2={60}
+                stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
+            ))}
+            <Line x1={SCREEN_W * 0.48} y1={20} x2={SCREEN_W} y2={20}
+              stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
+            <Line x1={SCREEN_W * 0.48} y1={40} x2={SCREEN_W} y2={40}
+              stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
+
+            {/* Property lot blocks */}
+            <Rect x={SCREEN_W * 0.51} y={2} width={SCREEN_W * 0.10} height={17} rx={1}
+              fill={colors.primary} fillOpacity={0.07} />
+            <Rect x={SCREEN_W * 0.51} y={21} width={SCREEN_W * 0.10} height={17} rx={1}
+              fill={colors.primary} fillOpacity={0.07} />
+            <Rect x={SCREEN_W * 0.63} y={2} width={SCREEN_W * 0.10} height={37} rx={1}
+              fill={colors.primary} fillOpacity={0.07} />
+            <Rect x={SCREEN_W * 0.63} y={41} width={SCREEN_W * 0.10} height={17} rx={1}
+              fill={colors.primary} fillOpacity={0.05} />
+            <Rect x={SCREEN_W * 0.75} y={2} width={SCREEN_W * 0.10} height={17} rx={1}
+              fill={colors.primary} fillOpacity={0.05} />
+
+            {/* Pin 1 — large, primary focus */}
+            <Circle cx={SCREEN_W * 0.755} cy={36} r={9}
+              fill={colors.primary} fillOpacity={0.18} />
+            <Circle cx={SCREEN_W * 0.755} cy={36} r={4}
+              fill={colors.primary} fillOpacity={0.35} />
+            <Path d={`M${SCREEN_W * 0.755 - 6},${41} L${SCREEN_W * 0.755},${56} L${SCREEN_W * 0.755 + 6},${41} Z`}
+              fill={colors.primary} fillOpacity={0.18} />
+
+            {/* Pin 2 — medium */}
+            <Circle cx={SCREEN_W * 0.885} cy={30} r={7}
+              fill={colors.primary} fillOpacity={0.13} />
+            <Circle cx={SCREEN_W * 0.885} cy={30} r={3}
+              fill={colors.primary} fillOpacity={0.26} />
+            <Path d={`M${SCREEN_W * 0.885 - 4.5},${35} L${SCREEN_W * 0.885},${47} L${SCREEN_W * 0.885 + 4.5},${35} Z`}
+              fill={colors.primary} fillOpacity={0.13} />
+
+            {/* Pin 3 — small, right edge */}
+            <Circle cx={SCREEN_W - 10} cy={22} r={5}
+              fill={colors.primary} fillOpacity={0.09} />
+            <Circle cx={SCREEN_W - 10} cy={22} r={2}
+              fill={colors.primary} fillOpacity={0.18} />
+            <Path d={`M${SCREEN_W - 13},${26} L${SCREEN_W - 10},${35} L${SCREEN_W - 7},${26} Z`}
+              fill={colors.primary} fillOpacity={0.09} />
+          </Svg>
+        </View>
+
         <ProfileHeaderButton dark />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <DwellaHeaderTitle dark />
@@ -605,12 +645,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -16,
     marginBottom: 16,
     overflow: 'hidden',
-  },
-  skylineBuilding: {
-    position: 'absolute',
-    bottom: 0,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
   },
   // Overview card (replaces heroCard)
   overviewCard: {
