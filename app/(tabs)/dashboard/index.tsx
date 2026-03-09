@@ -37,6 +37,9 @@ import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CHIP_SIZE = Math.floor((SCREEN_W - 32 - 24 - 2 - 24 - 40) / 6);
+// Overview card: outer padding 16*2 + card padding 14*2 = 60, 5 gaps of 8 = 40
+const OVERVIEW_CHIP_W = Math.floor((SCREEN_W - 60 - 40) / 6);
+const OVERVIEW_CHIP_H = OVERVIEW_CHIP_W + 10;
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -324,7 +327,7 @@ export default function DashboardScreen() {
             const status: PaymentStatus | null = payment?.status ?? null;
             const isCurrentMonth = m === currentMonth;
 
-            const bgColor = status ? getStatusColor(status) + '33' : 'rgba(255,255,255,0.1)';
+            const bgColor = status ? getStatusColor(status) + '40' : 'rgba(255,255,255,0.12)';
             const iconColor = status ? getStatusColor(status) : 'rgba(255,255,255,0.45)';
             const canNavigate = !!payment?.id;
 
@@ -340,24 +343,24 @@ export default function DashboardScreen() {
                   }
                 }}
                 style={[
-                  styles.monthChip,
+                  styles.overviewMonthChip,
                   { backgroundColor: bgColor },
-                  isCurrentMonth && { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)' },
+                  isCurrentMonth && { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.7)' },
                 ]}
               >
                 {isCurrentMonth && <View style={[styles.currentDot, { backgroundColor: '#fff' }]} />}
-                <Text style={[styles.monthChipLabel, { color: status ? '#fff' : 'rgba(255,255,255,0.55)' }]}>
+                <Text style={[styles.overviewMonthLabel, { color: status ? '#fff' : 'rgba(255,255,255,0.6)' }]}>
                   {MONTH_SHORT[m - 1]}
                 </Text>
                 {status ? (
                   <MaterialCommunityIcons
                     name={STATUS_ICON[status] as any}
-                    size={12}
+                    size={14}
                     color={iconColor}
-                    style={{ marginTop: 2 }}
+                    style={{ marginTop: 3 }}
                   />
                 ) : (
-                  <Text style={[styles.monthChipSub, { color: iconColor }]}>—</Text>
+                  <Text style={[styles.overviewMonthSub, { color: iconColor }]}>—</Text>
                 )}
               </TouchableOpacity>
             );
@@ -627,6 +630,25 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 2,
+    marginHorizontal: 0,
+  },
+  overviewMonthChip: {
+    width: OVERVIEW_CHIP_W,
+    height: OVERVIEW_CHIP_H,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  overviewMonthLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  overviewMonthSub: {
+    fontSize: 10,
+    marginTop: 3,
+    fontWeight: '600',
   },
   heroTitleRow: {
     flexDirection: 'row',
