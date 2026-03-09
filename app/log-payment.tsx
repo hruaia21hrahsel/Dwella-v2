@@ -54,7 +54,8 @@ interface TenantOption {
 
 export default function LogPaymentScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, session } = useAuthStore();
+  const userId = user?.id ?? session?.user?.id;
   const { colors, shadows } = useTheme();
   const params = useLocalSearchParams<{ propertyId?: string; tenantId?: string }>();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
@@ -77,45 +78,47 @@ export default function LogPaymentScreen() {
   const tenantsForProperty = tenants.filter((t) => t.property_id === selectedPropertyId);
 
   useEffect(() => {
-    if (!user?.id || loadedRef.current) return;
+    if (!userId || loadedRef.current) return;
     loadedRef.current = true;
     loadProperties();
-  }, [user?.id]);
+  }, [userId]);
 
   async function loadProperties() {
-    if (!user?.id) return;
-    const { data } = await supabase
-      .from('properties')
-      .select('id, name, tenants(id, tenant_name, flat_no, monthly_rent, due_day, lease_start, property_id, is_archived)')
-      .eq('owner_id', user.id)
-      .eq('is_archived', false);
+    if (!userId) return;
+    try {
+      const { data } = await supabase
+        .from('properties')
+        .select('id, name, tenants(id, tenant_name, flat_no, monthly_rent, due_day, lease_start, property_id, is_archived)')
+        .eq('owner_id', userId)
+        .eq('is_archived', false);
 
-    const props: PropertyOption[] = [];
-    const allTenants: TenantOption[] = [];
+      const props: PropertyOption[] = [];
+      const allTenants: TenantOption[] = [];
 
-    for (const p of data ?? []) {
-      props.push({ id: p.id, name: p.name });
-      const active = ((p.tenants as any[]) ?? []).filter((t: any) => !t.is_archived);
-      allTenants.push(...active);
-    }
-
-    setProperties(props);
-    setTenants(allTenants);
-
-    // Auto-select first property/tenant if none passed
-    if (!params.propertyId && props.length > 0) {
-      setSelectedPropertyId(props[0].id);
-      const first = allTenants.find((t) => t.property_id === props[0].id);
-      if (first) {
-        setSelectedTenantId(first.id);
-        setAmount(String(first.monthly_rent));
+      for (const p of data ?? []) {
+        props.push({ id: p.id, name: p.name });
+        const active = ((p.tenants as any[]) ?? []).filter((t: any) => !t.is_archived);
+        allTenants.push(...active);
       }
-    } else if (params.tenantId) {
-      const t = allTenants.find((x) => x.id === params.tenantId);
-      if (t) setAmount(String(t.monthly_rent));
-    }
 
-    setLoadingData(false);
+      setProperties(props);
+      setTenants(allTenants);
+
+      // Auto-select first property/tenant if none passed
+      if (!params.propertyId && props.length > 0) {
+        setSelectedPropertyId(props[0].id);
+        const first = allTenants.find((t) => t.property_id === props[0].id);
+        if (first) {
+          setSelectedTenantId(first.id);
+          setAmount(String(first.monthly_rent));
+        }
+      } else if (params.tenantId) {
+        const t = allTenants.find((x) => x.id === params.tenantId);
+        if (t) setAmount(String(t.monthly_rent));
+      }
+    } finally {
+      setLoadingData(false);
+    }
   }
 
   function selectProperty(propId: string) {
