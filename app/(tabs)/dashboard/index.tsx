@@ -17,8 +17,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
 import { useAiNudge } from '@/hooks/useAiNudge';
-import { DwellaLogo } from '@/components/DwellaLogo';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
+import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
+import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
+import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { AnimatedCard } from '@/components/AnimatedCard';
@@ -196,23 +198,11 @@ export default function DashboardScreen() {
     >
       {/* Scrollable header */}
       <View style={[styles.inlineHeader, { paddingTop: insets.top, backgroundColor: colors.background }]}>
-        <TouchableOpacity
-          onPress={() => router.push('/(tabs)/profile')}
-          style={{ width: 56, alignItems: 'center', justifyContent: 'center' }}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons name="account-circle-outline" size={26} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <ProfileHeaderButton dark />
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <DwellaLogo width={180} height={44} color={colors.textPrimary} />
+          <DwellaHeaderTitle dark />
         </View>
-        <TouchableOpacity
-          onPress={() => router.push('/notifications')}
-          style={{ width: 40, alignItems: 'center', justifyContent: 'center' }}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons name="bell-outline" size={26} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <NotificationsHeaderButton dark />
       </View>
 
       <ErrorBanner error={error} onRetry={refresh} />
@@ -595,7 +585,7 @@ const styles = StyleSheet.create({
   inlineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 60,
+    height: 56,
     marginHorizontal: -16,
     marginBottom: 16,
   },

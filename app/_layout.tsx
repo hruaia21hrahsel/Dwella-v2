@@ -168,21 +168,21 @@ function InnerLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
-        <Stack.Screen name="payments/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
-        <Stack.Screen name="expenses/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.surface, height: 64 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 50 }} /> }} />
+        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
+        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
+        <Stack.Screen name="payments/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
+        <Stack.Screen name="expenses/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen
           name="pin-setup"
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+            headerStyle: { backgroundColor: colors.background, height: 56 } as any,
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
-            headerRight: () => <View style={{ width: 50 }} />,
+            headerRight: () => <View style={{ width: 56 }} />,
           }}
         />
         <Stack.Screen
@@ -190,11 +190,11 @@ function InnerLayout() {
           options={{
             headerShown: true,
             presentation: 'modal',
-            headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+            headerStyle: { backgroundColor: colors.background, height: 56 } as any,
             headerTitleAlign: 'center',
             headerTitle: () => <DwellaHeaderTitle />,
             headerLeft: () => <ProfileHeaderButton />,
-            headerRight: () => <View style={{ width: 50 }} />,
+            headerRight: () => <View style={{ width: 56 }} />,
           }}
         />
         <Stack.Screen

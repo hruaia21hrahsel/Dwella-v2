@@ -7,5 +7,5 @@ interface Props {
 
 export function DwellaHeaderTitle({ dark = false }: Props) {
   const { colors } = useTheme();
-  return <DwellaLogo width={160} height={40} color={dark ? colors.textPrimary : '#fff'} />;
+  return <DwellaLogo width={180} height={44} color={dark ? colors.textPrimary : '#fff'} />;
 }

@@ -37,7 +37,7 @@ export function NotificationsHeaderButton({ dark = false }: Props) {
 
 const styles = StyleSheet.create({
   btn: {
-    width: 40,
+    width: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
