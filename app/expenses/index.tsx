@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Text, FAB, ActivityIndicator, Icon } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';

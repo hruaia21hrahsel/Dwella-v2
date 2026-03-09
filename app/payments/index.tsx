@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
+import { useToastStore } from '@/lib/toast';
 import { ListSkeleton } from '@/components/ListSkeleton';
 import { AnimatedCard } from '@/components/AnimatedCard';
 
@@ -108,36 +109,42 @@ export default function PaymentsScreen() {
 
   async function loadData() {
     setLoading(true);
+    try {
+      // Load tenants
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('id, tenant_name, flat_no, property_id, monthly_rent')
+        .in('property_id', ownedProperties.map((p) => p.id))
+        .eq('is_archived', false)
+        .order('tenant_name');
 
-    // Load tenants
-    const { data: tenantData } = await supabase
-      .from('tenants')
-      .select('id, tenant_name, flat_no, property_id, monthly_rent')
-      .in('property_id', ownedProperties.map((p) => p.id))
-      .eq('is_archived', false)
-      .order('tenant_name');
+      if (tenantError) throw tenantError;
+      setAllTenants(tenantData ?? []);
 
-    const tenants: TenantOption[] = tenantData ?? [];
-    setAllTenants(tenants);
+      // Load all payments across all owned properties with tenant info
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('payments')
+        .select('*, tenants!inner(tenant_name, flat_no, property_id, properties!inner(name))')
+        .in('property_id', ownedProperties.map((p) => p.id))
+        .order('year', { ascending: false })
+        .order('month', { ascending: false });
 
-    // Load all payments across all owned properties with tenant info
-    const { data: paymentData } = await supabase
-      .from('payments')
-      .select('*, tenants!inner(tenant_name, flat_no, property_id, properties!inner(name))')
-      .in('property_id', ownedProperties.map((p) => p.id))
-      .order('year', { ascending: false })
-      .order('month', { ascending: false });
+      if (paymentError) throw paymentError;
 
-    const payments: PaymentRow[] = (paymentData ?? []).map((p: any) => ({
-      ...p,
-      tenant_name: p.tenants?.tenant_name ?? '—',
-      flat_no: p.tenants?.flat_no ?? '—',
-      property_name: p.tenants?.properties?.name ?? '—',
-      tenants: undefined,
-    }));
+      const payments: PaymentRow[] = (paymentData ?? []).map((p: any) => ({
+        ...p,
+        tenant_name: p.tenants?.tenant_name ?? '—',
+        flat_no: p.tenants?.flat_no ?? '—',
+        property_name: p.tenants?.properties?.name ?? '—',
+        tenants: undefined,
+      }));
 
-    setAllPayments(payments);
-    setLoading(false);
+      setAllPayments(payments);
+    } catch (err: any) {
+      useToastStore.getState().showToast(err.message ?? 'Failed to load payments.', 'error');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleRefresh() {
