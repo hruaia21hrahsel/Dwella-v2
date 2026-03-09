@@ -172,7 +172,7 @@ function InnerLayout() {
         <Stack.Screen name="expenses/index" options={{ headerShown: true, header: () => <DwellaHeader /> }} />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite/[token]" />
-        <Stack.Screen name="pin-setup" options={{ headerShown: true, header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="pin-setup" options={{ headerShown: false }} />
         <Stack.Screen name="reminders/index" options={{ headerShown: true, presentation: 'modal', header: () => <DwellaHeader /> }} />
         <Stack.Screen
           name="notifications/index"

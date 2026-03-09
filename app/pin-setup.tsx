@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter, useNavigation } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { savePin } from '@/lib/biometric-auth';
 import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
@@ -12,6 +13,7 @@ type Step = 'enter' | 'confirm';
 export default function PinSetupScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [step, setStep] = useState<Step>('enter');
   const [pin, setPin] = useState('');
@@ -66,7 +68,7 @@ export default function PinSetupScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>
           {step === 'enter' ? 'Set a 6-digit PIN' : 'Confirm your PIN'}
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 60,
     paddingHorizontal: 32,
   },
   header: { alignItems: 'center', gap: 12 },
