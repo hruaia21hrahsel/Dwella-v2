@@ -364,7 +364,6 @@ export default function DashboardScreen() {
                   isCurrentMonth && { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.7)' },
                 ]}
               >
-                {isCurrentMonth && <View style={[styles.currentDot, { backgroundColor: '#fff' }]} />}
                 <Text style={[styles.overviewMonthLabel, { color: labelColor }]}>
                   {MONTH_SHORT[m - 1]}
                 </Text>
