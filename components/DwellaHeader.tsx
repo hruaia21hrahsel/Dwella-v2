@@ -32,10 +32,19 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
         },
       ]}
     >
-      {/* Design 2: concentric rings from top-right */}
-      <View style={[styles.ring1, { borderColor: colors.primary + '22' }]} />
-      <View style={[styles.ring2, { borderColor: colors.primary + '14' }]} />
-      <View style={[styles.ring3, { borderColor: colors.primary + '0A' }]} />
+      {/* Design 3: city skyline silhouette */}
+      {[
+        { h: 28, w: 14, r: 12 },
+        { h: 42, w: 10, r: 28 },
+        { h: 20, w: 16, r: 40 },
+        { h: 50, w: 12, r: 58 },
+        { h: 32, w: 14, r: 72 },
+        { h: 44, w: 10, r: 88 },
+        { h: 24, w: 18, r: 100 },
+        { h: 36, w: 12, r: 120 },
+      ].map((b, i) => (
+        <View key={i} style={[styles.building, { height: b.h, width: b.w, right: b.r, backgroundColor: colors.primary + '18' }]} />
+      ))}
 
       <ProfileHeaderButton dark />
       <View style={{ flex: 1, alignItems: 'center' }}>
@@ -56,31 +65,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
-  ring1: {
+  building: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 1.5,
-    top: -60,
-    right: -60,
-  },
-  ring2: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 1,
-    top: -100,
-    right: -100,
-  },
-  ring3: {
-    position: 'absolute',
-    width: 290,
-    height: 290,
-    borderRadius: 145,
-    borderWidth: 1,
-    top: -145,
-    right: -145,
+    bottom: 0,
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
   },
 });
