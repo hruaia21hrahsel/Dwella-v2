@@ -106,7 +106,7 @@ export const LightTheme: Theme = {
     statusConfirmedSoft: '#DCFCE7',
     statusOverdueSoft: '#FEE2E2',
 
-    background: '#EBF5F4',
+    background: '#F5F5F7',
     surface: '#FFFFFF',
     surfaceElevated: '#FFFFFF',
     border: 'rgba(0,0,0,0.06)',
@@ -180,7 +180,7 @@ export const DarkTheme: Theme = {
     statusConfirmedSoft: 'rgba(52,211,153,0.12)',
     statusOverdueSoft: 'rgba(248,113,113,0.12)',
 
-    background: '#141b1a',
+    background: '#1f1f1e',
     surface: '#161616',
     surfaceElevated: '#1E1E1E',
     border: 'rgba(255,255,255,0.08)',

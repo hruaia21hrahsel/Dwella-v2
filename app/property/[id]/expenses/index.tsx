@@ -128,7 +128,7 @@ export default function ExpensesScreen() {
           title: 'Expenses',
           headerTitleAlign: 'center',
           headerBackground: () => (
-            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1], colors.background]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }} />
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
           ),
           headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,

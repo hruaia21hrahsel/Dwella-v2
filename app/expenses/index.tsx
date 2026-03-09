@@ -44,7 +44,7 @@ function groupByMonth(expenses: Expense[]): { title: string; key: string; data: 
 export default function GlobalExpensesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const { expenses, isLoading, refresh } = useAllExpenses();
   const { ownedProperties } = useProperties();
   const { month, year } = getCurrentMonthYear();
@@ -175,9 +175,9 @@ export default function GlobalExpensesScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Top bar */}
       <LinearGradient
-        colors={[colors.surface, gradients.heroSubtle[1], colors.background]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={[colors.surface, colors.primarySoft]}
+        start={{ x: 0.35, y: 0 }}
+        end={{ x: 1, y: 0 }}
         style={[styles.topBar, { paddingTop: insets.top, shadowColor: colors.primary }]}
       >
         <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>

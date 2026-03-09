@@ -62,7 +62,7 @@ const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 export default function PaymentsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const { user } = useAuthStore();
   const { ownedProperties } = useProperties();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
@@ -238,9 +238,9 @@ export default function PaymentsScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Top bar */}
       <LinearGradient
-        colors={[colors.surface, gradients.heroSubtle[1], colors.background]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={[colors.surface, colors.primarySoft]}
+        start={{ x: 0.35, y: 0 }}
+        end={{ x: 1, y: 0 }}
         style={[styles.topBar, { paddingTop: insets.top, shadowColor: colors.primary }]}
       >
         <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>

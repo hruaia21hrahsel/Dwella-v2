@@ -108,7 +108,7 @@ export default function NotificationsScreen() {
           presentation: 'modal',
           title: 'Notifications',
           headerBackground: () => (
-            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1], colors.background]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }} />
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
           ),
           headerTitleStyle: { color: colors.textPrimary, fontWeight: '700' },
           headerRight: () =>
