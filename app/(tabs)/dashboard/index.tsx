@@ -224,7 +224,7 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration */}
+        {/* Abstract background decoration — Design 2: concentric rings */}
         <View style={styles.overviewDecorA} />
         <View style={styles.overviewDecorB} />
         <View style={styles.overviewDecorC} />
@@ -601,32 +601,39 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
+  // Design 2: concentric rings from top-right corner
   overviewDecorA: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    top: -60,
-    right: -50,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'transparent',
+    top: -80,
+    right: -80,
   },
   overviewDecorB: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    bottom: -40,
-    left: -30,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.09)',
+    backgroundColor: 'transparent',
+    top: -130,
+    right: -130,
   },
   overviewDecorC: {
     position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    bottom: 20,
-    right: 30,
+    width: 370,
+    height: 370,
+    borderRadius: 185,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
+    top: -185,
+    right: -185,
   },
   overviewTitleWrap: {
     flexDirection: 'row',
