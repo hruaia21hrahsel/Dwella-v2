@@ -224,17 +224,10 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 5: dot grid */}
-        {Array.from({ length: 63 }).map((_, i) => {
-          const col = i % 9;
-          const row = Math.floor(i / 9);
-          return (
-            <View
-              key={i}
-              style={[styles.overviewDecorDot, { left: col * 36 - 4, top: row * 32 - 4 }]}
-            />
-          );
-        })}
+        {/* Abstract background decoration — Design 6: bold arc + accent */}
+        <View style={styles.overviewDecorArc} />
+        <View style={styles.overviewDecorArcInner} />
+        <View style={styles.overviewDecorAccent} />
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -608,13 +601,37 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  // Design 5: dot grid
-  overviewDecorDot: {
+  // Design 6: bold arc + accent dot
+  overviewDecorArc: {
     position: 'absolute',
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'transparent',
+    bottom: -200,
+    left: -80,
+  },
+  overviewDecorArcInner: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'transparent',
+    bottom: -150,
+    left: -30,
+  },
+  overviewDecorAccent: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    top: 18,
+    right: 56,
   },
   overviewTitleWrap: {
     flexDirection: 'row',
