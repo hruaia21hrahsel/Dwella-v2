@@ -741,11 +741,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   periodMonthChip: {
-    width: 70,
-    paddingVertical: 12,
-    borderRadius: 10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     borderWidth: 1.5,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   periodMonthText: {
     fontSize: 14,
