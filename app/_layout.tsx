@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { View } from 'react-native';
 import { Stack, router, useRouter, useSegments } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -8,8 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { registerPushToken } from '@/lib/notifications';
-import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
-import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
+import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
@@ -168,35 +166,14 @@ function InnerLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-        <Stack.Screen name="property/create" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
-        <Stack.Screen name="log-payment" options={{ headerShown: true, presentation: 'modal', headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
-        <Stack.Screen name="payments/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
-        <Stack.Screen name="expenses/index" options={{ headerShown: true, headerStyle: { backgroundColor: colors.background, height: 56 } as any, headerTitleAlign: 'center', headerTitle: () => <DwellaHeaderTitle dark={!isDark} />, headerLeft: () => <ProfileHeaderButton dark={!isDark} />, headerRight: () => <View style={{ width: 56 }} /> }} />
+        <Stack.Screen name="property/create" options={{ presentation: 'modal', header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="log-payment" options={{ presentation: 'modal', header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="payments/index" options={{ header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="expenses/index" options={{ header: () => <DwellaHeader /> }} />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite/[token]" />
-        <Stack.Screen
-          name="pin-setup"
-          options={{
-            headerShown: true,
-            headerStyle: { backgroundColor: colors.background, height: 56 } as any,
-            headerTitleAlign: 'center',
-            headerTitle: () => <DwellaHeaderTitle />,
-            headerLeft: () => <ProfileHeaderButton />,
-            headerRight: () => <View style={{ width: 56 }} />,
-          }}
-        />
-        <Stack.Screen
-          name="reminders/index"
-          options={{
-            headerShown: true,
-            presentation: 'modal',
-            headerStyle: { backgroundColor: colors.background, height: 56 } as any,
-            headerTitleAlign: 'center',
-            headerTitle: () => <DwellaHeaderTitle />,
-            headerLeft: () => <ProfileHeaderButton />,
-            headerRight: () => <View style={{ width: 56 }} />,
-          }}
-        />
+        <Stack.Screen name="pin-setup" options={{ header: () => <DwellaHeader /> }} />
+        <Stack.Screen name="reminders/index" options={{ presentation: 'modal', header: () => <DwellaHeader /> }} />
         <Stack.Screen
           name="notifications/index"
           options={{ headerShown: false, presentation: 'modal' }}

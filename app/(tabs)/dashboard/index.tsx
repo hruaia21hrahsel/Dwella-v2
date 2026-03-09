@@ -196,8 +196,13 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
-      {/* Scrollable header */}
-      <View style={[styles.inlineHeader, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+      {/* Scrollable header — matches DwellaHeader exactly but scrolls with content */}
+      <View style={[styles.inlineHeader, {
+        height: 56 + insets.top,
+        paddingTop: insets.top,
+        backgroundColor: colors.background,
+        borderBottomColor: colors.border,
+      }]}>
         <ProfileHeaderButton dark />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <DwellaHeaderTitle dark />
@@ -585,9 +590,9 @@ const styles = StyleSheet.create({
   inlineHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 56,
     marginHorizontal: -16,
     marginBottom: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   // Overview card (replaces heroCard)
   overviewCard: {
