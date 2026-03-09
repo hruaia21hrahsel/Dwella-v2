@@ -224,11 +224,30 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 7: tilted rectangles */}
-        <View style={styles.overviewDecorRect1} />
-        <View style={styles.overviewDecorRect2} />
-        <View style={styles.overviewDecorRect3} />
-        <View style={styles.overviewDecorRect4} />
+        {/* Abstract background decoration — Design 8: bubble trail */}
+        {[
+          { size: 22, bottom: 18,  left: 10,  opacity: 0.18, filled: true  },
+          { size: 34, bottom: 40,  left: 50,  opacity: 0.12, filled: false },
+          { size: 48, bottom: 70,  left: 110, opacity: 0.10, filled: true  },
+          { size: 66, bottom: 90,  left: 190, opacity: 0.08, filled: false },
+          { size: 90, bottom: 50,  left: 270, opacity: 0.07, filled: true  },
+          { size: 56, bottom: 130, left: 300, opacity: 0.09, filled: false },
+        ].map((b, i) => (
+          <View
+            key={i}
+            style={{
+              position: 'absolute',
+              width: b.size,
+              height: b.size,
+              borderRadius: b.size / 2,
+              bottom: b.bottom,
+              left: b.left,
+              backgroundColor: b.filled ? `rgba(255,255,255,${b.opacity})` : 'transparent',
+              borderWidth: b.filled ? 0 : 1,
+              borderColor: `rgba(255,255,255,${b.opacity})`,
+            }}
+          />
+        ))}
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -601,51 +620,6 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 10,
     overflow: 'hidden',
-  },
-  // Design 7: gently tilted rectangles
-  overviewDecorRect1: {
-    position: 'absolute',
-    width: 160,
-    height: 70,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    top: -20,
-    right: -30,
-    transform: [{ rotate: '-12deg' }],
-  },
-  overviewDecorRect2: {
-    position: 'absolute',
-    width: 120,
-    height: 50,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.11)',
-    backgroundColor: 'transparent',
-    bottom: 20,
-    left: -20,
-    transform: [{ rotate: '8deg' }],
-  },
-  overviewDecorRect3: {
-    position: 'absolute',
-    width: 80,
-    height: 36,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    bottom: -10,
-    right: 40,
-    transform: [{ rotate: '-6deg' }],
-  },
-  overviewDecorRect4: {
-    position: 'absolute',
-    width: 100,
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: 'transparent',
-    top: 30,
-    left: 30,
-    transform: [{ rotate: '14deg' }],
   },
   overviewTitleWrap: {
     flexDirection: 'row',
