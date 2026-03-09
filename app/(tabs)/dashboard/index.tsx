@@ -224,10 +224,11 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 2: concentric rings */}
+        {/* Abstract background decoration — Design 3: rotated diamonds */}
         <View style={styles.overviewDecorA} />
         <View style={styles.overviewDecorB} />
         <View style={styles.overviewDecorC} />
+        <View style={styles.overviewDecorD} />
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -601,39 +602,46 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  // Design 2: concentric rings from top-right corner
+  // Design 3: rotated diamonds
   overviewDecorA: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'transparent',
-    top: -80,
-    right: -80,
+    width: 130,
+    height: 130,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    top: -50,
+    right: -30,
+    transform: [{ rotate: '45deg' }],
   },
   overviewDecorB: {
     position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.09)',
+    width: 80,
+    height: 80,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
     backgroundColor: 'transparent',
-    top: -130,
-    right: -130,
+    bottom: 10,
+    left: 20,
+    transform: [{ rotate: '45deg' }],
   },
   overviewDecorC: {
     position: 'absolute',
-    width: 370,
-    height: 370,
-    borderRadius: 185,
+    width: 50,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -15,
+    right: 80,
+    transform: [{ rotate: '45deg' }],
+  },
+  overviewDecorD: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
     backgroundColor: 'transparent',
-    top: -185,
-    right: -185,
+    top: 20,
+    left: -30,
+    transform: [{ rotate: '45deg' }],
   },
   overviewTitleWrap: {
     flexDirection: 'row',
