@@ -224,6 +224,11 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
+        {/* Abstract background decoration */}
+        <View style={styles.overviewDecorA} />
+        <View style={styles.overviewDecorB} />
+        <View style={styles.overviewDecorC} />
+
         {/* Title row */}
         <View style={styles.heroTitleRow}>
           <View style={styles.overviewTitleWrap}>
@@ -594,6 +599,34 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     gap: 10,
+    overflow: 'hidden',
+  },
+  overviewDecorA: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    top: -60,
+    right: -50,
+  },
+  overviewDecorB: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -40,
+    left: -30,
+  },
+  overviewDecorC: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    bottom: 20,
+    right: 30,
   },
   overviewTitleWrap: {
     flexDirection: 'row',
