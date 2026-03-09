@@ -1,6 +1,8 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, IconButton } from 'react-native-paper';
+import { StyleSheet, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
+import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Share } from 'react-native';
 import { Tenant } from '@/lib/types';
 import { useTheme } from '@/lib/theme-context';
@@ -12,9 +14,8 @@ interface TenantCardProps {
 }
 
 export function TenantCard({ tenant, onPress }: TenantCardProps) {
-  const { colors } = useTheme();
+  const { colors, gradients, shadows } = useTheme();
   const isPending = tenant.invite_status === 'pending';
-  const isAccepted = tenant.invite_status === 'accepted';
 
   async function handleShareInvite() {
     const inviteLink = `dwella://invite/${tenant.invite_token}`;
@@ -25,55 +26,60 @@ export function TenantCard({ tenant, onPress }: TenantCardProps) {
   }
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.iconContainer, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-        <MaterialCommunityIcons
-          name={isPending ? 'account-clock-outline' : 'account-check-outline'}
-          size={20}
-          color={isPending ? colors.statusPartial : colors.statusConfirmed}
-        />
-      </View>
-
-      <View style={styles.info}>
-        <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={1}>{tenant.tenant_name}</Text>
-        <View style={styles.metaRow}>
-          <Text style={[styles.meta, { color: colors.textSecondary }]}>Flat {tenant.flat_no}</Text>
-          <Text style={[styles.dot, { color: colors.textDisabled }]}> · </Text>
-          <Text style={[styles.meta, { color: colors.textSecondary }]}>{formatCurrency(tenant.monthly_rent)}/mo</Text>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={[styles.wrapper, shadows.sm]}>
+      <LinearGradient
+        colors={gradients.hero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.card}
+      >
+        <View style={styles.iconContainer}>
+          <MaterialCommunityIcons
+            name={isPending ? 'account-clock-outline' : 'account-check-outline'}
+            size={20}
+            color="#fff"
+          />
         </View>
-      </View>
 
-      {/* Status badge */}
-      <View style={[styles.statusBadge, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-        <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
-        <Text style={[styles.statusText, { color: isPending ? colors.statusPartial : colors.statusConfirmed }]}>
-          {isPending ? 'Pending' : 'Accepted'}
-        </Text>
-      </View>
+        <View style={styles.info}>
+          <Text style={styles.name} numberOfLines={1}>{tenant.tenant_name}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>Flat {tenant.flat_no}</Text>
+            <Text style={styles.dot}> · </Text>
+            <Text style={styles.meta}>{formatCurrency(tenant.monthly_rent)}/mo</Text>
+          </View>
+        </View>
 
-      {isPending ? (
-        <TouchableOpacity onPress={handleShareInvite} style={[styles.shareBtn, { backgroundColor: colors.primarySoft }]} hitSlop={6}>
-          <MaterialCommunityIcons name="share-variant-outline" size={18} color={colors.primary} />
-        </TouchableOpacity>
-      ) : (
-        <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
-      )}
+        {/* Status badge */}
+        <View style={styles.statusBadge}>
+          <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
+          <Text style={styles.statusText}>
+            {isPending ? 'Pending' : 'Accepted'}
+          </Text>
+        </View>
+
+        {isPending ? (
+          <TouchableOpacity onPress={handleShareInvite} style={styles.shareBtn} hitSlop={6}>
+            <MaterialCommunityIcons name="share-variant-outline" size={18} color="#fff" />
+          </TouchableOpacity>
+        ) : (
+          <MaterialCommunityIcons name="chevron-right" size={18} color="rgba(255,255,255,0.45)" />
+        )}
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    borderRadius: 12,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
     padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
     gap: 10,
   },
   iconContainer: {
@@ -82,6 +88,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   info: {
     flex: 1,
@@ -90,6 +97,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     fontWeight: '700',
+    color: '#fff',
   },
   metaRow: {
     flexDirection: 'row',
@@ -97,9 +105,11 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
   },
   dot: {
     fontSize: 12,
+    color: 'rgba(255,255,255,0.4)',
   },
   statusBadge: {
     flexDirection: 'row',
@@ -108,6 +118,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   statusDot: {
     width: 6,
@@ -117,6 +128,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 11,
     fontWeight: '700',
+    color: '#fff',
   },
   shareBtn: {
     width: 32,
@@ -124,5 +136,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
 });

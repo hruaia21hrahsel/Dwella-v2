@@ -1,9 +1,10 @@
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Property } from '@/lib/types';
 import { useTheme } from '@/lib/theme-context';
-import { formatCurrency, adjustPropertyColor } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 export interface TenantSummary {
   id: string;
@@ -25,71 +26,68 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
-  const { colors, shadows, isDark } = useTheme();
-  const propColor = adjustPropertyColor(property.color ?? colors.primary, isDark);
-  const iconColor = isTenantView ? colors.statusConfirmed : propColor;
-  const iconBg = isTenantView ? colors.statusConfirmedSoft : propColor + '18';
-  const iconName = isTenantView ? 'home-account' : 'home-city';
+  const { colors, gradients, shadows } = useTheme();
   const totalRent = tenants?.reduce((sum, t) => sum + t.monthly_rent, 0) ?? 0;
   const occupiedCount = tenants?.length ?? 0;
 
   return (
-    <View style={[
-      styles.card,
-      { backgroundColor: colors.surface, borderColor: colors.border, ...shadows.sm },
-      isTenantView
-        ? { borderColor: colors.statusConfirmedSoft, marginBottom: 8 }
-        : { backgroundColor: propColor + '08', borderColor: propColor + '40' },
-    ]}>
-      {/* Left color accent strip + content */}
-      {!isTenantView && (
-        <View style={[styles.colorStrip, { backgroundColor: propColor }]} />
-      )}
-      {/* Header row */}
-      <TouchableOpacity style={styles.headerRow} onPress={onPress} activeOpacity={0.7}>
-        <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
-          <MaterialCommunityIcons name={iconName as any} size={22} color={iconColor} />
-        </View>
+    <View style={[styles.card, { borderColor: colors.border, ...shadows.sm }]}>
 
-        <View style={styles.info}>
-          <Text style={[styles.name, { color: colors.textPrimary }, !isTenantView && { color: propColor }]} numberOfLines={1}>{property.name}</Text>
-          <View style={styles.addressRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={12} color={colors.textSecondary} />
-            <Text style={[styles.address, { color: colors.textSecondary }]} numberOfLines={1}>
-              {property.address}, {property.city}
-            </Text>
+      {/* Gradient header */}
+      <LinearGradient
+        colors={gradients.hero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <TouchableOpacity style={styles.headerRow} onPress={onPress} activeOpacity={0.7}>
+          <View style={styles.iconContainer}>
+            <MaterialCommunityIcons
+              name={isTenantView ? 'home-account' : 'home-city'}
+              size={22}
+              color="#fff"
+            />
           </View>
-          {isTenantView && (
-            <View style={[styles.tenantBadge, { backgroundColor: colors.statusConfirmedSoft }]}>
-              <Text style={[styles.tenantBadgeText, { color: colors.statusConfirmed }]}>TENANT</Text>
+
+          <View style={styles.info}>
+            <Text style={styles.name} numberOfLines={1}>{property.name}</Text>
+            <View style={styles.addressRow}>
+              <MaterialCommunityIcons name="map-marker-outline" size={12} color="rgba(255,255,255,0.65)" />
+              <Text style={styles.address} numberOfLines={1}>
+                {property.address}, {property.city}
+              </Text>
+            </View>
+            {isTenantView && (
+              <View style={styles.tenantBadge}>
+                <Text style={styles.tenantBadgeText}>TENANT</Text>
+              </View>
+            )}
+          </View>
+
+          {(onEdit || onDelete) && (
+            <View style={styles.actions}>
+              {onEdit && (
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={styles.actionBtn}>
+                  <MaterialCommunityIcons name="pencil-outline" size={16} color="rgba(255,255,255,0.85)" />
+                </TouchableOpacity>
+              )}
+              {onDelete && (
+                <TouchableOpacity onPress={(e) => { e.stopPropagation(); onDelete(); }} hitSlop={6} style={styles.actionBtn}>
+                  <MaterialCommunityIcons name="archive-outline" size={16} color="rgba(255,255,255,0.85)" />
+                </TouchableOpacity>
+              )}
             </View>
           )}
-        </View>
 
-        {/* Edit / Delete actions (owner only) */}
-        {(onEdit || onDelete) && (
-          <View style={styles.actions}>
-            {onEdit && (
-              <TouchableOpacity onPress={(e) => { e.stopPropagation(); onEdit(); }} hitSlop={6} style={[styles.actionBtn, { backgroundColor: colors.background }]}>
-                <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity onPress={(e) => { e.stopPropagation(); onDelete(); }} hitSlop={6} style={[styles.actionBtn, { backgroundColor: colors.background }]}>
-                <MaterialCommunityIcons name="archive-outline" size={16} color={colors.error} />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+          <MaterialCommunityIcons name="chevron-right" size={18} color="rgba(255,255,255,0.45)" />
+        </TouchableOpacity>
+      </LinearGradient>
 
-        <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
-      </TouchableOpacity>
-
-      {/* Stats strip — owner view only */}
+      {/* Stats strip */}
       {!isTenantView && tenants && (
-        <View style={[styles.statsStrip, { backgroundColor: propColor + '0D', borderTopColor: propColor + '20' }]}>
+        <View style={[styles.statsStrip, { backgroundColor: colors.primarySoft, borderTopColor: colors.primaryLight + '60' }]}>
           <View style={styles.statItem}>
-            <MaterialCommunityIcons name="door-open" size={14} color={propColor} />
+            <MaterialCommunityIcons name="door-open" size={14} color={colors.primary} />
             <Text style={[styles.statText, { color: colors.textSecondary }]}>
               <Text style={[styles.statBold, { color: colors.textPrimary }]}>{occupiedCount}</Text>/{property.total_units} occupied
             </Text>
@@ -167,16 +165,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
-  colorStrip: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
-  },
+  headerGradient: {},
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -189,6 +180,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   info: {
     flex: 1,
@@ -197,6 +189,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 15,
     fontWeight: '700',
+    color: '#fff',
   },
   addressRow: {
     flexDirection: 'row',
@@ -206,6 +199,7 @@ const styles = StyleSheet.create({
   address: {
     flex: 1,
     fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
   },
   tenantBadge: {
     alignSelf: 'flex-start',
@@ -213,11 +207,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     marginTop: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   tenantBadgeText: {
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
+    color: '#fff',
   },
   actions: {
     flexDirection: 'row',
@@ -229,6 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
 
   // Stats strip
