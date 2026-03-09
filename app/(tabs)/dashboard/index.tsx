@@ -21,7 +21,6 @@ import { useAiNudge } from '@/hooks/useAiNudge';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
-import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { AnimatedCard } from '@/components/AnimatedCard';
@@ -255,9 +254,7 @@ export default function DashboardScreen() {
         </View>
 
         <ProfileHeaderButton dark />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <DwellaHeaderTitle dark />
-        </View>
+        <View style={{ flex: 1 }} />
         <NotificationsHeaderButton dark />
       </LinearGradient>
 
