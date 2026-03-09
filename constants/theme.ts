@@ -180,7 +180,7 @@ export const DarkTheme: Theme = {
     statusConfirmedSoft: 'rgba(52,211,153,0.12)',
     statusOverdueSoft: 'rgba(248,113,113,0.12)',
 
-    background: '#0A0A0A',
+    background: '#1f1f1e',
     surface: '#161616',
     surfaceElevated: '#1E1E1E',
     border: 'rgba(255,255,255,0.08)',
