@@ -232,17 +232,16 @@ export default function TenantCreateScreen() {
         options={{
           title: isEditing ? 'Edit Tenant' : 'Add Tenant',
           headerTitleAlign: 'center',
+          presentation: 'modal',
           headerBackground: () => (
             <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
           ),
           headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,
           headerShown: true,
-          headerLeft: isEditing
-            ? undefined
-            : () => (
-                <IconButton icon="close" size={22} onPress={() => router.back()} />
-              ),
+          headerLeft: () => (
+            <IconButton icon="close" size={22} onPress={() => router.back()} />
+          ),
         }}
       />
       <KeyboardAvoidingView
