@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
@@ -18,25 +19,47 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
     ? <NotificationsHeaderButton dark />
     : <View style={{ width: 56 }} />;
   return (
-    <View
-      style={{
-        backgroundColor: colors.surface,
-        paddingTop: insets.top,
-        height: 60 + insets.top,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: colors.primary,
-        shadowOpacity: 0.06,
-        shadowOffset: { width: 0, height: 3 },
-        shadowRadius: 10,
-        elevation: 3,
-      }}
+    <LinearGradient
+      colors={[colors.surface, colors.primarySoft]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={[
+        styles.header,
+        {
+          paddingTop: insets.top,
+          height: 60 + insets.top,
+          shadowColor: colors.primary,
+        },
+      ]}
     >
+      {/* Design 1: bloom circle top-right */}
+      <View style={[styles.bloomCircle, { backgroundColor: colors.primaryMid + '22' }]} />
+
       <ProfileHeaderButton dark />
       <View style={{ flex: 1, alignItems: 'center' }}>
         <DwellaHeaderTitle dark />
       </View>
       {right ?? defaultRight}
-    </View>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
+    shadowOpacity: 0.07,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  bloomCircle: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    top: -80,
+    right: -30,
+  },
+});

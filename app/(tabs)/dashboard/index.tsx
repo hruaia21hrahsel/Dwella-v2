@@ -197,17 +197,19 @@ export default function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       {/* Scrollable header — matches DwellaHeader exactly but scrolls with content */}
-      <View style={[styles.inlineHeader, {
-        height: 60 + insets.top,
-        paddingTop: insets.top,
-        backgroundColor: colors.surface,
-      }]}>
+      <LinearGradient
+        colors={[colors.surface, colors.primarySoft]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.inlineHeader, { height: 60 + insets.top, paddingTop: insets.top }]}
+      >
+        <View style={[styles.inlineHeaderBloom, { backgroundColor: colors.primaryMid + '22' }]} />
         <ProfileHeaderButton dark />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <DwellaHeaderTitle dark />
         </View>
         <NotificationsHeaderButton dark />
-      </View>
+      </LinearGradient>
 
       <ErrorBanner error={error} onRetry={refresh} />
 
@@ -591,6 +593,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: -16,
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  inlineHeaderBloom: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    top: -80,
+    right: -30,
   },
   // Overview card (replaces heroCard)
   overviewCard: {
