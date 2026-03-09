@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: true,
       propertyRefreshAt: 0,
       onboardingCompleted: false,
-      themeMode: 'light' as ThemeMode,
+      themeMode: 'dark' as ThemeMode,
       isLocked: true,
       tourStep: null,
       setSession: (session) => set({ session }),
