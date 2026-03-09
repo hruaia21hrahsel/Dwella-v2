@@ -206,10 +206,13 @@ export async function shareAnnualSummary(
   property: Property,
   year: number
 ): Promise<void> {
+  const isAvailable = await Sharing.isAvailableAsync();
+  if (!isAvailable) throw new Error('Sharing is not available on this device.');
   const html = buildAnnualSummaryHtml(payments, tenant, property, year);
   const { uri } = await Print.printToFileAsync({ html });
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',
+    UTI: 'com.adobe.pdf',
     dialogTitle: `Annual Summary ${year} — ${tenant.tenant_name}`,
   });
 }
