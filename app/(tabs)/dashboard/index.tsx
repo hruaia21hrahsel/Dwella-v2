@@ -325,10 +325,26 @@ export default function DashboardScreen() {
           {MONTHS.map((m) => {
             const payment = selectedRow?.paymentsByMonth[m];
             const status: PaymentStatus | null = payment?.status ?? null;
-            const isCurrentMonth = m === currentMonth;
+            const isCurrentMonth = m === currentMonth && selectedYear === currentYear;
+            const isFuture =
+              selectedYear > currentYear ||
+              (selectedYear === currentYear && m > currentMonth);
 
-            const bgColor = status ? getStatusColor(status) + '40' : 'rgba(255,255,255,0.12)';
-            const iconColor = status ? getStatusColor(status) : 'rgba(255,255,255,0.45)';
+            const bgColor = isFuture
+              ? 'rgba(255,255,255,0.05)'
+              : status
+              ? getStatusColor(status) + '40'
+              : 'rgba(255,255,255,0.12)';
+            const dotColor = status
+              ? getStatusColor(status)
+              : isFuture
+              ? 'rgba(255,255,255,0.18)'
+              : 'rgba(255,255,255,0.35)';
+            const labelColor = isFuture
+              ? 'rgba(255,255,255,0.3)'
+              : status
+              ? '#fff'
+              : 'rgba(255,255,255,0.6)';
             const canNavigate = !!payment?.id;
 
             return (
@@ -349,19 +365,10 @@ export default function DashboardScreen() {
                 ]}
               >
                 {isCurrentMonth && <View style={[styles.currentDot, { backgroundColor: '#fff' }]} />}
-                <Text style={[styles.overviewMonthLabel, { color: status ? '#fff' : 'rgba(255,255,255,0.6)' }]}>
+                <Text style={[styles.overviewMonthLabel, { color: labelColor }]}>
                   {MONTH_SHORT[m - 1]}
                 </Text>
-                {status ? (
-                  <MaterialCommunityIcons
-                    name={STATUS_ICON[status] as any}
-                    size={14}
-                    color={iconColor}
-                    style={{ marginTop: 3 }}
-                  />
-                ) : (
-                  <Text style={[styles.overviewMonthSub, { color: iconColor }]}>—</Text>
-                )}
+                <View style={[styles.overviewStatusDot, { backgroundColor: dotColor }]} />
               </TouchableOpacity>
             );
           })}
@@ -649,6 +656,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 3,
     fontWeight: '600',
+  },
+  overviewStatusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    marginTop: 4,
   },
   heroTitleRow: {
     flexDirection: 'row',
