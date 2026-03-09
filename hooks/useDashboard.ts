@@ -170,8 +170,9 @@ export function useDashboard(year: number, month: number): DashboardData {
 
     for (const row of tenantRows) {
       const p = row.paymentsByMonth[month];
+      // Always count every tenant's rent as receivable, whether a payment row exists or not
+      totalReceivable += p?.amount_due ?? row.monthlyRent;
       if (p) {
-        totalReceivable += p.amount_due;
         totalReceived += p.amount_paid;
         if (p.status === 'overdue') totalOverdue += p.amount_due - p.amount_paid;
       }
