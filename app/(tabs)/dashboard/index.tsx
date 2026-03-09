@@ -224,12 +224,16 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 9: crosshatch mesh */}
-        {[0,1,2,3,4,5,6,7].map((i) => (
-          <View key={`a${i}`} style={[styles.overviewDecorMeshLine, { left: i * 44 - 60, transform: [{ rotate: '40deg' }] }]} />
-        ))}
-        {[0,1,2,3,4,5,6,7].map((i) => (
-          <View key={`b${i}`} style={[styles.overviewDecorMeshLine, { left: i * 44 - 60, transform: [{ rotate: '-40deg' }] }]} />
+        {/* Abstract background decoration — Design 10: bar chart silhouette */}
+        {[
+          { width: 72, bottom: 20 },
+          { width: 110, bottom: 44 },
+          { width: 58, bottom: 68 },
+          { width: 130, bottom: 92 },
+          { width: 88, bottom: 116 },
+          { width: 50, bottom: 140 },
+        ].map((bar, i) => (
+          <View key={i} style={[styles.overviewDecorBar, { width: bar.width, bottom: bar.bottom }]} />
         ))}
 
         {/* Title row */}
@@ -660,13 +664,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.2,
   },
-  // Design 9: crosshatch mesh
-  overviewDecorMeshLine: {
+  // Design 10: bar chart silhouette
+  overviewDecorBar: {
     position: 'absolute',
-    width: 1,
-    height: 500,
-    top: -200,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    right: 0,
+    height: 16,
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.09)',
   },
   overviewMonthSub: {
     fontSize: 10,
