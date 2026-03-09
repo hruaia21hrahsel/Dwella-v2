@@ -26,7 +26,7 @@ export function ProfileHeaderButton({ style, dark = false }: Props) {
       style={[styles.btn, style]}
       activeOpacity={0.7}
     >
-      <View style={[styles.pill, { backgroundColor: pillBg }]}>
+      <View style={styles.pill}>
         <MaterialCommunityIcons name="account-circle-outline" size={20} color={iconColor} />
         {unreadCount > 0 && (
           <View style={[styles.badge, { backgroundColor: colors.error }]}>

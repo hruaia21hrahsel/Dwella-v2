@@ -24,7 +24,7 @@ export function NotificationsHeaderButton({ dark = false }: Props) {
       style={styles.btn}
       activeOpacity={0.7}
     >
-      <View style={[styles.pill, { backgroundColor: pillBg }]}>
+      <View style={styles.pill}>
         <MaterialCommunityIcons
           name={unreadCount > 0 ? 'bell-badge' : 'bell-outline'}
           size={20}
