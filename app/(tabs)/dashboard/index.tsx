@@ -224,10 +224,17 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 4: diagonal pinstripes */}
-        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-          <View key={i} style={[styles.overviewDecorStripe, { left: i * 52 - 40 }]} />
-        ))}
+        {/* Abstract background decoration — Design 5: dot grid */}
+        {Array.from({ length: 63 }).map((_, i) => {
+          const col = i % 9;
+          const row = Math.floor(i / 9);
+          return (
+            <View
+              key={i}
+              style={[styles.overviewDecorDot, { left: col * 36 - 4, top: row * 32 - 4 }]}
+            />
+          );
+        })}
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -601,14 +608,13 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  // Design 4: diagonal pinstripes
-  overviewDecorStripe: {
+  // Design 5: dot grid
+  overviewDecorDot: {
     position: 'absolute',
-    width: 1.5,
-    height: 500,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    top: -180,
-    transform: [{ rotate: '-35deg' }],
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   overviewTitleWrap: {
     flexDirection: 'row',
