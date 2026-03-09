@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
@@ -20,13 +20,16 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
   return (
     <View
       style={{
-        backgroundColor: colors.background,
+        backgroundColor: colors.surface,
         paddingTop: insets.top,
-        height: 56 + insets.top,
+        height: 60 + insets.top,
         flexDirection: 'row',
         alignItems: 'center',
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.border,
+        shadowColor: colors.primary,
+        shadowOpacity: 0.06,
+        shadowOffset: { width: 0, height: 3 },
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
       <ProfileHeaderButton dark />

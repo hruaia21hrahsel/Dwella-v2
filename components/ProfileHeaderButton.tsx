@@ -17,22 +17,23 @@ export function ProfileHeaderButton({ style, dark = false }: Props) {
   const { unreadCount } = useNotifications(user?.id);
   const { colors } = useTheme();
 
+  const pillBg = dark ? colors.primarySoft : 'rgba(255,255,255,0.18)';
+  const iconColor = dark ? colors.primary : '#fff';
+
   return (
     <TouchableOpacity
       onPress={() => router.push('/(tabs)/profile')}
       style={[styles.btn, style]}
       activeOpacity={0.7}
     >
-      <MaterialCommunityIcons
-        name="account-circle-outline"
-        size={26}
-        color={dark ? colors.textPrimary : '#fff'}
-      />
-      {unreadCount > 0 && (
-        <View style={[styles.badge, { backgroundColor: colors.error }]}>
-          <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-        </View>
-      )}
+      <View style={[styles.pill, { backgroundColor: pillBg }]}>
+        <MaterialCommunityIcons name="account-circle-outline" size={20} color={iconColor} />
+        {unreadCount > 0 && (
+          <View style={[styles.badge, { backgroundColor: colors.error }]}>
+            <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -43,21 +44,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pill: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -3,
+    right: -3,
     borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    minWidth: 15,
+    height: 15,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
   badgeText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
-    lineHeight: 12,
+    lineHeight: 11,
   },
 });

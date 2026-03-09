@@ -198,10 +198,9 @@ export default function DashboardScreen() {
     >
       {/* Scrollable header — matches DwellaHeader exactly but scrolls with content */}
       <View style={[styles.inlineHeader, {
-        height: 56 + insets.top,
+        height: 60 + insets.top,
         paddingTop: insets.top,
-        backgroundColor: colors.background,
-        borderBottomColor: colors.border,
+        backgroundColor: colors.surface,
       }]}>
         <ProfileHeaderButton dark />
         <View style={{ flex: 1, alignItems: 'center' }}>
@@ -592,7 +591,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: -16,
     marginBottom: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   // Overview card (replaces heroCard)
   overviewCard: {
