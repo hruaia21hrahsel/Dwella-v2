@@ -25,15 +25,24 @@ interface PropertyCardProps {
   onTenantPress?: (tenantId: string) => void;
 }
 
+function darkenHex(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgb(${Math.floor(r * 0.65)}, ${Math.floor(g * 0.65)}, ${Math.floor(b * 0.65)})`;
+}
+
 export function PropertyCard({ property, isTenantView = false, paidCount, tenants, onPress, onEdit, onDelete, onTenantPress }: PropertyCardProps) {
-  const { colors, gradients, shadows } = useTheme();
+  const { colors, shadows } = useTheme();
+  const propColor = property.color ?? colors.primary;
+  const gradientColors: [string, string] = [propColor, darkenHex(propColor)];
 
   return (
     <View style={[styles.card, { borderColor: colors.border, ...shadows.sm }]}>
 
       {/* Gradient header */}
       <LinearGradient
-        colors={gradients.hero}
+        colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
