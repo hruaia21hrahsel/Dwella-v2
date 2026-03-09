@@ -224,10 +224,11 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 6: bold arc + accent */}
-        <View style={styles.overviewDecorArc} />
-        <View style={styles.overviewDecorArcInner} />
-        <View style={styles.overviewDecorAccent} />
+        {/* Abstract background decoration — Design 7: tilted rectangles */}
+        <View style={styles.overviewDecorRect1} />
+        <View style={styles.overviewDecorRect2} />
+        <View style={styles.overviewDecorRect3} />
+        <View style={styles.overviewDecorRect4} />
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -601,37 +602,50 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  // Design 6: bold arc + accent dot
-  overviewDecorArc: {
+  // Design 7: gently tilted rectangles
+  overviewDecorRect1: {
     position: 'absolute',
-    width: 340,
-    height: 340,
-    borderRadius: 170,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.12)',
-    backgroundColor: 'transparent',
-    bottom: -200,
-    left: -80,
+    width: 160,
+    height: 70,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    top: -20,
+    right: -30,
+    transform: [{ rotate: '-12deg' }],
   },
-  overviewDecorArcInner: {
+  overviewDecorRect2: {
     position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    width: 120,
+    height: 50,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.11)',
     backgroundColor: 'transparent',
-    bottom: -150,
-    left: -30,
+    bottom: 20,
+    left: -20,
+    transform: [{ rotate: '8deg' }],
   },
-  overviewDecorAccent: {
+  overviewDecorRect3: {
     position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    top: 18,
-    right: 56,
+    width: 80,
+    height: 36,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -10,
+    right: 40,
+    transform: [{ rotate: '-6deg' }],
+  },
+  overviewDecorRect4: {
+    position: 'absolute',
+    width: 100,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'transparent',
+    top: 30,
+    left: 30,
+    transform: [{ rotate: '14deg' }],
   },
   overviewTitleWrap: {
     flexDirection: 'row',
