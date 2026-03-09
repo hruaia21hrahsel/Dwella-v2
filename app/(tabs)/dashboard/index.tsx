@@ -224,17 +224,11 @@ export default function DashboardScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.overviewCard, shadows.hero]}
       >
-        {/* Abstract background decoration — Design 10: bar chart silhouette */}
-        {[
-          { width: 72, bottom: 20 },
-          { width: 110, bottom: 44 },
-          { width: 58, bottom: 68 },
-          { width: 130, bottom: 92 },
-          { width: 88, bottom: 116 },
-          { width: 50, bottom: 140 },
-        ].map((bar, i) => (
-          <View key={i} style={[styles.overviewDecorBar, { width: bar.width, bottom: bar.bottom }]} />
-        ))}
+        {/* Abstract background decoration — Design 3: rotated diamonds */}
+        <View style={styles.overviewDecorRect1} />
+        <View style={styles.overviewDecorRect2} />
+        <View style={styles.overviewDecorRect3} />
+        <View style={styles.overviewDecorRect4} />
 
         {/* Title row */}
         <View style={styles.heroTitleRow}>
@@ -399,6 +393,10 @@ export default function DashboardScreen() {
             colors={['#FBBF24', '#F59E0B']}
             style={styles.telegramCta}
           >
+            {/* Design 1: scattered circles */}
+            <View style={styles.telegramDecorA} />
+            <View style={styles.telegramDecorB} />
+            <View style={styles.telegramDecorC} />
             <View style={styles.telegramCtaTop}>
               <View style={styles.telegramCtaIcon}>
                 <MaterialCommunityIcons name="robot-happy-outline" size={20} color="#78350F" />
@@ -664,14 +662,46 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.2,
   },
-  // Design 10: bar chart silhouette
-  overviewDecorBar: {
+  // Design 3: rotated diamonds (overview)
+  overviewDecorRect1: {
     position: 'absolute',
-    right: 0,
-    height: 16,
-    borderTopLeftRadius: 4,
-    borderBottomLeftRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.09)',
+    width: 130,
+    height: 130,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    top: -50,
+    right: -30,
+    transform: [{ rotate: '45deg' }],
+  },
+  overviewDecorRect2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'transparent',
+    bottom: 10,
+    left: 20,
+    transform: [{ rotate: '45deg' }],
+  },
+  overviewDecorRect3: {
+    position: 'absolute',
+    width: 50,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -15,
+    right: 80,
+    transform: [{ rotate: '45deg' }],
+  },
+  overviewDecorRect4: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'transparent',
+    top: 20,
+    left: -30,
+    transform: [{ rotate: '45deg' }],
   },
   overviewMonthSub: {
     fontSize: 10,
@@ -772,6 +802,35 @@ const styles = StyleSheet.create({
   telegramCta: {
     borderRadius: 16,
     padding: 14,
+    overflow: 'hidden',
+  },
+  // Design 1: scattered circles (Telegram CTA)
+  telegramDecorA: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    top: -60,
+    right: -50,
+  },
+  telegramDecorB: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    bottom: -40,
+    left: -30,
+  },
+  telegramDecorC: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    bottom: 20,
+    right: 30,
   },
   telegramCtaTop: {
     flexDirection: 'row',
