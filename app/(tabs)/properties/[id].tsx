@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View, RefreshControl } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
@@ -130,16 +130,6 @@ export default function PropertyDetailScreen() {
                 <Text style={[styles.tenantCountText, { color: propColor }]}>{tenants.length}</Text>
               </View>
             </View>
-            {isOwner && (
-              <TouchableOpacity
-                style={[styles.addTenantBtn, { backgroundColor: propColor, ...shadows.sm }]}
-                onPress={() => router.push(`/property/${id}/tenant/create`)}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons name="account-plus-outline" size={15} color="#fff" />
-                <Text style={styles.addTenantBtnText}>Add Tenant</Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           {tenants.length === 0 ? (
@@ -147,8 +137,6 @@ export default function PropertyDetailScreen() {
               icon="account-plus"
               title="No tenants yet"
               subtitle={isOwner ? "Tap 'Add Tenant' to get started" : 'No tenants in this property'}
-              actionLabel={isOwner ? 'Add Tenant' : undefined}
-              onAction={isOwner ? () => router.push(`/property/${id}/tenant/create`) : undefined}
             />
           ) : (
             tenants.map((tenant) => (
@@ -303,19 +291,6 @@ const styles = StyleSheet.create({
   tenantCountText: {
     fontSize: 12,
     fontWeight: '700',
-  },
-  addTenantBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  addTenantBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
   },
 
   // Notes card
