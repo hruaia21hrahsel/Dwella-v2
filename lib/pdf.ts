@@ -17,7 +17,6 @@ function buildReceiptHtml(
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 32px; color: #1e293b; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-    .brand { font-size: 28px; font-weight: 700; color: #009688; }
     .title { font-size: 14px; color: #64748b; margin-top: 4px; }
     .meta { text-align: right; font-size: 13px; color: #64748b; }
     .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
@@ -40,7 +39,17 @@ function buildReceiptHtml(
 <body>
   <div class="header">
     <div>
-      <div class="brand">Dwella</div>
+      <svg viewBox="10 30 180 115" width="160" height="52" style="display:block;margin-bottom:4px">
+        <text x="18" y="125" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#009688" letter-spacing="1">dwe</text>
+        <rect x="122" y="74" width="6" height="53" rx="1" fill="#009688"/>
+        <rect x="142" y="74" width="6" height="53" rx="1" fill="#009688"/>
+        <path d="M116 76 L135 50 L154 76" fill="none" stroke="#009688" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="154" y="125" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#009688">a</text>
+        <line x1="18" y1="138" x2="185" y2="138" stroke="#009688" stroke-width="1.5" opacity="0.2"/>
+        <path d="M158 42 L160 36 L162 42 L168 44 L162 46 L160 52 L158 46 L152 44 Z" fill="#F59E0B"/>
+        <path d="M168 56 L169 53 L170 56 L173 57 L170 58 L169 61 L168 58 L165 57 Z" fill="#F59E0B" opacity="0.7"/>
+        <path d="M148 36 L149 34 L150 36 L152 37 L150 38 L149 40 L148 38 L146 37 Z" fill="#F59E0B" opacity="0.5"/>
+      </svg>
       <div class="title">Payment Receipt</div>
     </div>
     <div class="meta">
@@ -139,7 +148,6 @@ function buildAnnualSummaryHtml(
   <meta charset="utf-8"/>
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 32px; color: #1e293b; }
-    .brand { font-size: 28px; font-weight: 700; color: #009688; }
     h2 { margin: 4px 0 24px; font-size: 18px; color: #475569; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { background: #f1f5f9; text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; }
@@ -155,7 +163,17 @@ function buildAnnualSummaryHtml(
   </style>
 </head>
 <body>
-  <div class="brand">Dwella</div>
+  <svg viewBox="10 30 180 115" width="160" height="52" style="display:block;margin-bottom:4px">
+    <text x="18" y="125" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#009688" letter-spacing="1">dwe</text>
+    <rect x="122" y="74" width="6" height="53" rx="1" fill="#009688"/>
+    <rect x="142" y="74" width="6" height="53" rx="1" fill="#009688"/>
+    <path d="M116 76 L135 50 L154 76" fill="none" stroke="#009688" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="154" y="125" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#009688">a</text>
+    <line x1="18" y1="138" x2="185" y2="138" stroke="#009688" stroke-width="1.5" opacity="0.2"/>
+    <path d="M158 42 L160 36 L162 42 L168 44 L162 46 L160 52 L158 46 L152 44 Z" fill="#F59E0B"/>
+    <path d="M168 56 L169 53 L170 56 L173 57 L170 58 L169 61 L168 58 L165 57 Z" fill="#F59E0B" opacity="0.7"/>
+    <path d="M148 36 L149 34 L150 36 L152 37 L150 38 L149 40 L148 38 L146 37 Z" fill="#F59E0B" opacity="0.5"/>
+  </svg>
   <h2>Annual Payment Summary — ${year}</h2>
   <p style="font-size:13px;color:#64748b;margin-bottom:16px">
     <strong>${tenant.tenant_name}</strong> · Flat ${tenant.flat_no} · ${property.name}, ${property.city}

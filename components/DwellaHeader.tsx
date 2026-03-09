@@ -1,11 +1,10 @@
 import { ReactNode } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Rect, Line, Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
-import { DwellaHeaderTitle } from '@/components/DwellaHeaderTitle';
 import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
 
 const SCREEN_W = Dimensions.get('window').width;
@@ -68,7 +67,7 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
 
       <ProfileHeaderButton dark />
       <View style={{ flex: 1, alignItems: 'center' }}>
-        <DwellaHeaderTitle dark />
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Dwella</Text>
       </View>
       {right ?? defaultRight}
     </LinearGradient>
@@ -84,5 +83,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 10,
     elevation: 3,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
