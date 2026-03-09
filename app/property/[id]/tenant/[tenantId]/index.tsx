@@ -53,15 +53,11 @@ export default function TenantDetailScreen() {
 
   async function fetchProperty() {
     if (!propertyId) return;
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('properties')
       .select('*')
       .eq('id', propertyId)
       .single<Property>();
-    if (error) {
-      useToastStore.getState().showToast('Failed to load property details.', 'error');
-      return;
-    }
     setProperty(data);
   }
 
@@ -85,10 +81,7 @@ export default function TenantDetailScreen() {
   }
 
   async function handleExportReceipt(payment: Payment) {
-    if (!tenant || !property) {
-      useToastStore.getState().showToast('Property data not loaded. Please try again.', 'error');
-      return;
-    }
+    if (!tenant || !property) return;
     setExportingPdf(true);
     try {
       await sharePaymentReceipt(payment, tenant, property, user?.full_name ?? 'Landlord');
@@ -100,34 +93,17 @@ export default function TenantDetailScreen() {
   }
 
   async function handleExportAnnualForYear(selectedYear: number) {
+    if (!tenant || !property) return;
     setYearPickerVisible(false);
-
-    // Re-fetch property if not loaded
-    let resolvedProperty = property;
-    if (!resolvedProperty && propertyId) {
-      const { data } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', propertyId)
-        .single<Property>();
-      resolvedProperty = data;
-      if (data) setProperty(data);
-    }
-
-    if (!tenant || !resolvedProperty) {
-      useToastStore.getState().showToast('Property data not loaded. Please try again.', 'error');
-      return;
-    }
-
     setExportingPdf(true);
-    const yearPayments = payments.filter((p) => Number(p.year) === selectedYear);
+    const yearPayments = payments.filter((p) => p.year === selectedYear);
     if (yearPayments.length === 0) {
       useToastStore.getState().showToast(`No payments found for ${selectedYear}.`, 'info');
       setExportingPdf(false);
       return;
     }
     try {
-      await shareAnnualSummary(yearPayments, tenant, resolvedProperty, selectedYear);
+      await shareAnnualSummary(yearPayments, tenant, property, selectedYear);
     } catch (err) {
       useToastStore.getState().showToast('Export failed: ' + String(err), 'error');
     } finally {
