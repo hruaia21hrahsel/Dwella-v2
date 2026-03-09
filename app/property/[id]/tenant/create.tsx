@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
@@ -27,7 +28,7 @@ function toISODate(date: Date): string {
 export default function TenantCreateScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId?: string }>();
   const router = useRouter();
-  const { colors, shadows } = useTheme();
+  const { colors, shadows, gradients } = useTheme();
   const isEditing = !!tenantId;
 
   const [flatNo, setFlatNo] = useState('');
@@ -231,7 +232,10 @@ export default function TenantCreateScreen() {
         options={{
           title: isEditing ? 'Edit Tenant' : 'Add Tenant',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerBackground: () => (
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+          ),
+          headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,
           headerShown: true,
           headerLeft: isEditing

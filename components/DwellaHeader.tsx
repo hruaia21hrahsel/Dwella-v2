@@ -16,7 +16,7 @@ interface Props {
 
 export function DwellaHeader({ right, showNotifications = true }: Props) {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
   const defaultRight = showNotifications
     ? <NotificationsHeaderButton dark />
     : <View style={{ width: 56 }} />;
@@ -26,7 +26,7 @@ export function DwellaHeader({ right, showNotifications = true }: Props) {
 
   return (
     <LinearGradient
-      colors={[colors.surface, colors.primarySoft]}
+      colors={[colors.surface, gradients.heroSubtle[1]]}
       start={{ x: 0.35, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={[styles.header, { paddingTop: insets.top, height: 60 + insets.top, shadowColor: colors.primary }]}

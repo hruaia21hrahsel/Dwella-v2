@@ -4,6 +4,7 @@ import { Text, TextInput, Button, ActivityIndicator, IconButton } from 'react-na
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { EXPENSE_CATEGORIES } from '@/lib/expenses';
@@ -13,7 +14,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 export default function EditExpenseScreen() {
   const { id: propertyId, expenseId } = useLocalSearchParams<{ id: string; expenseId: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
 
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory | null>(null);
@@ -112,7 +113,10 @@ export default function EditExpenseScreen() {
           headerShown: true,
           title: 'Edit Expense',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerBackground: () => (
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+          ),
+          headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />

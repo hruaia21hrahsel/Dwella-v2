@@ -16,7 +16,7 @@ import { formatCurrency } from '@/lib/utils';
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors, shadows } = useTheme();
+  const { colors, shadows, gradients } = useTheme();
   const { user } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
@@ -64,7 +64,7 @@ export default function PropertyDetailScreen() {
           headerTintColor: colors.textPrimary,
           headerBackground: () => (
             <LinearGradient
-              colors={[colors.surface, colors.primarySoft]}
+              colors={[colors.surface, gradients.heroSubtle[1]]}
               start={{ x: 0.35, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{ flex: 1 }}

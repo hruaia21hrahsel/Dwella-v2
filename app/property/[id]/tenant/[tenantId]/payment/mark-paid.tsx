@@ -4,6 +4,7 @@ import { Text, TextInput, Button, HelperText } from 'react-native-paper';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Payment } from '@/lib/types';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getMonthName } from '@/lib/utils';
 import { getProofStoragePath } from '@/lib/payments';
@@ -19,7 +20,7 @@ export default function MarkPaidScreen() {
   }>();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
 
   const [payment, setPayment] = useState<Payment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +102,10 @@ export default function MarkPaidScreen() {
           title: 'Mark as Paid',
           headerTitleAlign: 'center',
           headerShown: true,
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerBackground: () => (
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+          ),
+          headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,
           presentation: 'modal',
         }}

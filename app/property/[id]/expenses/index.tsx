@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useExpenses } from '@/hooks/useExpenses';
 import { Expense } from '@/lib/types';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getCategoryLabel, getCategoryIcon, getCategoryColor } from '@/lib/expenses';
@@ -29,7 +30,7 @@ function groupByMonth(expenses: Expense[]): { title: string; data: Expense[] }[]
 export default function ExpensesScreen() {
   const { id: propertyId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
   const { expenses, isLoading, refresh } = useExpenses(propertyId ?? null);
   const { month, year } = getCurrentMonthYear();
 
@@ -126,7 +127,10 @@ export default function ExpensesScreen() {
           headerShown: true,
           title: 'Expenses',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerBackground: () => (
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+          ),
+          headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,
         }}
       />

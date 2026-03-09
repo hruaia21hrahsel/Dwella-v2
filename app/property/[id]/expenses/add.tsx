@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { EXPENSE_CATEGORIES } from '@/lib/expenses';
@@ -15,7 +16,7 @@ export default function AddExpenseScreen() {
   const { id: propertyId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
 
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory | null>(null);
@@ -68,7 +69,10 @@ export default function AddExpenseScreen() {
           headerShown: true,
           title: 'Add Expense',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
+          headerBackground: () => (
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+          ),
+          headerStyle: { height: 64 } as any,
           headerTintColor: colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />

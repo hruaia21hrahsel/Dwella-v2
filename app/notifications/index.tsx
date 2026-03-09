@@ -3,6 +3,7 @@ import { Text, Button } from 'react-native-paper';
 import { Stack, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -89,7 +90,7 @@ export default function NotificationsScreen() {
   const { notifications, unreadCount, loading, markRead, markAllRead } = useNotifications(user?.id);
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, gradients } = useTheme();
 
   async function handlePress(notif: Notification) {
     if (!notif.is_read) await markRead(notif.id);
@@ -106,7 +107,9 @@ export default function NotificationsScreen() {
           headerShown: true,
           presentation: 'modal',
           title: 'Notifications',
-          headerStyle: { backgroundColor: colors.surface },
+          headerBackground: () => (
+            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+          ),
           headerTitleStyle: { color: colors.textPrimary, fontWeight: '700' },
           headerRight: () =>
             unreadCount > 0 ? (
