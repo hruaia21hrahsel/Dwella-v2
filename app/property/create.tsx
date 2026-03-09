@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
-import { TextInput, Button, HelperText, Text, IconButton } from 'react-native-paper';
+import { TextInput, Button, HelperText, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
@@ -27,6 +28,7 @@ const PROPERTY_COLORS = [
 export default function PropertyCreateScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, bumpPropertyRefresh } = useAuthStore();
   const { colors, shadows } = useTheme();
   const isEditing = !!id;
@@ -126,26 +128,25 @@ export default function PropertyCreateScreen() {
   }
 
   if (fetchingProperty) {
-    return <View style={[styles.container, { backgroundColor: colors.background }]} />;
+    return <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]} />;
   }
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: isEditing ? 'Edit Property' : 'New Property',
-          headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.surface, height: 64 } as any,
-          headerTintColor: colors.textPrimary,
-          headerLeft: () => (
-            <IconButton icon="close" size={22} onPress={() => router.back()} />
-          ),
-        }}
-      />
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {/* Top bar */}
+        <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
+            <MaterialCommunityIcons name="close" size={22} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>
+            {isEditing ? 'Edit Property' : 'New Property'}
+          </Text>
+          <View style={styles.topBarBtn} />
+        </View>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {/* Property Details */}
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -275,13 +276,32 @@ export default function PropertyCreateScreen() {
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  topBarBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
   },
   content: {
     padding: 16,

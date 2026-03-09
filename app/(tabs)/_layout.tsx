@@ -20,7 +20,7 @@ function TabsLayout() {
       <Tabs.Screen name="properties"      options={{ title: 'Property' }} />
       <Tabs.Screen name="tools/index"     options={{ title: 'Tools' }} />
       <Tabs.Screen name="bot/index"       options={{ title: 'Assistant' }} />
-      <Tabs.Screen name="profile/index"   options={{ title: 'Profile', href: null, headerShown: false }} />
+      <Tabs.Screen name="profile/index"   options={{ title: 'Profile', href: null }} />
     </Tabs>
   );
 }

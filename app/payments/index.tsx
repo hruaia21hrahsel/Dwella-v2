@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity }
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { useProperties } from '@/hooks/useProperties';
@@ -58,6 +59,7 @@ const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 
 export default function PaymentsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { user } = useAuthStore();
   const { ownedProperties } = useProperties();
@@ -205,12 +207,16 @@ export default function PaymentsScreen() {
   // ── Render ──
 
   if (loading) {
-    return <ListSkeleton count={5} />;
+    return (
+      <View style={{ flex: 1, paddingTop: insets.top }}>
+        <ListSkeleton count={5} />
+      </View>
+    );
   }
 
   if (!isLandlord) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
         <EmptyState
           icon="receipt"
           title="No payments yet"
@@ -221,7 +227,15 @@ export default function PaymentsScreen() {
   }
 
   return (
-    <>
+    <View style={[styles.root, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {/* Top bar */}
+      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>Payment History</Text>
+        <View style={styles.topBarBtn} />
+      </View>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
@@ -229,9 +243,9 @@ export default function PaymentsScreen() {
       >
         {/* ── Filters ── */}
         <View style={styles.filterSection}>
-          {/* Title + period dropdown */}
+          {/* Period dropdown */}
           <View style={styles.titleRow}>
-            <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>Payment History</Text>
+            <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>Filters</Text>
             <TouchableOpacity
               style={[styles.periodBtn, { borderColor: colors.primary, backgroundColor: colors.primarySoft }]}
               onPress={() => setPeriodPickerVisible(true)}
@@ -489,13 +503,33 @@ export default function PaymentsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  topBarBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
+  },
 
   // Filters
   filterSection: {

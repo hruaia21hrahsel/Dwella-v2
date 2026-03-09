@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Text, FAB, ActivityIndicator, Icon } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { useAllExpenses } from '@/hooks/useAllExpenses';
 import { useProperties } from '@/hooks/useProperties';
@@ -40,6 +41,7 @@ function groupByMonth(expenses: Expense[]): { title: string; key: string; data: 
 
 export default function GlobalExpensesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { expenses, isLoading, refresh } = useAllExpenses();
   const { ownedProperties } = useProperties();
@@ -168,7 +170,15 @@ export default function GlobalExpensesScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {/* Top bar */}
+      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text variant="titleMedium" style={[styles.topBarTitle, { color: colors.textPrimary }]}>Expenses</Text>
+        <View style={styles.topBarBtn} />
+      </View>
       <FlatList
         data={listData}
         keyExtractor={(item, index) =>
@@ -271,6 +281,24 @@ export default function GlobalExpensesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  topBarBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontWeight: '700',
+  },
   listContent: { padding: 16, gap: 8, paddingBottom: 88 },
   plCard: {
     borderRadius: 12,

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -41,6 +42,7 @@ interface ReminderItem {
 
 export default function RemindersScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuthStore();
   const { colors } = useTheme();
   const [eligible, setEligible] = useState<ReminderItem[]>([]);
@@ -129,7 +131,7 @@ export default function RemindersScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
+      <View style={[styles.center, { backgroundColor: colors.background, paddingTop: insets.top }]}>
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -138,7 +140,15 @@ export default function RemindersScreen() {
   const allEmpty = eligible.length === 0 && unlinked.length === 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      {/* Top bar */}
+      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <MaterialCommunityIcons name="close" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>Send Reminders</Text>
+        <View style={styles.topBarBtn} />
+      </View>
       {/* Summary banner */}
       <View style={[styles.banner, { backgroundColor: colors.primary + '15', borderBottomColor: colors.border }]}>
         <Text style={[styles.bannerText, { color: colors.primary }]}>
@@ -260,6 +270,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  topBarBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '700',
   },
   banner: {
     paddingHorizontal: 16,
