@@ -95,33 +95,53 @@ export function PropertyCard({ property, isTenantView = false, paidCount, tenant
 
       {/* Tenant list */}
       {tenants && tenants.length > 0 && (
-        <View style={[styles.tenantList, { borderTopColor: colors.border }]}>
+        <View style={[styles.tenantList, { backgroundColor: colors.surface }]}>
           {tenants.map((t, index) => {
             const isPending = t.invite_status === 'pending';
+            const statusColor = isPending ? colors.statusPartial : colors.statusConfirmed;
+            const initials = t.tenant_name.trim().split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
             return (
               <TouchableOpacity
                 key={t.id}
-                style={[styles.tenantRow, index < tenants.length - 1 && [styles.tenantRowBorder, { borderBottomColor: colors.divider }]]}
+                style={[
+                  styles.tenantRow,
+                  index < tenants.length - 1 && [styles.tenantRowBorder, { borderBottomColor: colors.divider }],
+                ]}
                 onPress={() => onTenantPress?.(t.id)}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
-                <View style={[styles.tenantIcon, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-                  <MaterialCommunityIcons
-                    name={isPending ? 'account-clock-outline' : 'account-check-outline'}
-                    size={14}
-                    color={isPending ? colors.statusPartial : colors.statusConfirmed}
-                  />
+                {/* Left accent */}
+                <View style={[styles.tenantAccent, { backgroundColor: statusColor }]} />
+
+                {/* Initials avatar */}
+                <View style={[styles.tenantAvatar, { backgroundColor: statusColor + '20' }]}>
+                  <Text style={[styles.tenantInitial, { color: statusColor }]}>{initials}</Text>
                 </View>
+
+                {/* Name + flat + status */}
                 <View style={styles.tenantInfo}>
-                  <Text style={[styles.tenantName, { color: colors.textPrimary }]} numberOfLines={1}>{t.tenant_name}</Text>
-                  <Text style={[styles.tenantMeta, { color: colors.textSecondary }]}>Flat {t.flat_no} · {formatCurrency(t.monthly_rent)}/mo</Text>
-                </View>
-                <View style={[styles.tenantStatus, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-                  <View style={[styles.tenantStatusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
-                  <Text style={[styles.tenantStatusText, { color: isPending ? colors.statusPartial : colors.statusConfirmed }]}>
-                    {isPending ? 'Pending' : 'Active'}
+                  <Text style={[styles.tenantName, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {t.tenant_name}
                   </Text>
+                  <View style={styles.tenantMetaRow}>
+                    <View style={[styles.flatPill, { backgroundColor: colors.primarySoft }]}>
+                      <Text style={[styles.flatPillText, { color: colors.primary }]}>Flat {t.flat_no}</Text>
+                    </View>
+                    <View style={[styles.tenantStatusDot, { backgroundColor: statusColor }]} />
+                    <Text style={[styles.tenantStatusLabel, { color: statusColor }]}>
+                      {isPending ? 'Pending' : 'Active'}
+                    </Text>
+                  </View>
                 </View>
+
+                {/* Rent + chevron */}
+                <View style={styles.tenantRight}>
+                  <Text style={[styles.tenantRent, { color: colors.primary }]}>
+                    {formatCurrency(t.monthly_rent)}
+                  </Text>
+                  <Text style={[styles.tenantRentSub, { color: colors.textDisabled }]}>/mo</Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={16} color={colors.textDisabled} />
               </TouchableOpacity>
             );
           })}
@@ -236,55 +256,76 @@ const styles = StyleSheet.create({
   },
 
   // Tenant list
-  tenantList: {
-    borderTopWidth: 1,
-    paddingHorizontal: 14,
-    paddingTop: 4,
-    paddingBottom: 8,
-  },
+  tenantList: {},
   tenantRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 11,
+    paddingRight: 14,
+    paddingLeft: 0,
   },
   tenantRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  tenantIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+  tenantAccent: {
+    width: 3,
+    alignSelf: 'stretch',
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  tenantAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  tenantInitial: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
   tenantInfo: {
     flex: 1,
-    gap: 1,
+    gap: 4,
   },
   tenantName: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
-  tenantMeta: {
-    fontSize: 11,
-  },
-  tenantStatus: {
+  tenantMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    gap: 6,
+  },
+  flatPill: {
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  flatPillText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   tenantStatusDot: {
     width: 5,
     height: 5,
     borderRadius: 3,
   },
-  tenantStatusText: {
+  tenantStatusLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  tenantRight: {
+    alignItems: 'flex-end',
+  },
+  tenantRent: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tenantRentSub: {
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   noTenants: {
     flexDirection: 'row',
