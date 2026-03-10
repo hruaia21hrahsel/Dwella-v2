@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack, router, useRouter, useSegments } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
@@ -10,7 +11,10 @@ import { registerPushToken } from '@/lib/notifications';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
+import { SplashScreenOverlay } from '@/components/SplashScreenOverlay';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
+
+ExpoSplashScreen.preventAutoHideAsync();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -161,10 +165,23 @@ function AuthGuard() {
 function InnerLayout() {
   const { colors, isDark } = useTheme();
   const paperTheme = usePaperTheme();
+  const isLoading = useAuthStore((s) => s.isLoading);
+  const [splashVisible, setSplashVisible] = useState(true);
+
+  // Hide the native splash immediately — our overlay has identical background
+  // so the transition is seamless (one continuous dark screen).
+  useEffect(() => { ExpoSplashScreen.hideAsync(); }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      const t = setTimeout(() => setSplashVisible(false), 400);
+      return () => clearTimeout(t);
+    }
+  }, [isLoading]);
 
   return (
     <PaperProvider theme={paperTheme}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar style="light" />
       <AuthGuard />
       <TourGuideCard />
       <ToastProvider />
@@ -187,6 +204,7 @@ function InnerLayout() {
         />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <SplashScreenOverlay visible={splashVisible} />
     </PaperProvider>
   );
 }
