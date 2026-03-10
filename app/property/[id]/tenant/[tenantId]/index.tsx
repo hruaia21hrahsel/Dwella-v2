@@ -5,7 +5,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Tenant, Property, Payment } from '@/lib/types';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, formatDate, getOrdinal } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -21,7 +20,7 @@ export default function TenantDetailScreen() {
   const { id: propertyId, tenantId } = useLocalSearchParams<{ id: string; tenantId: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { colors, gradients } = useTheme();
+  const { colors } = useTheme();
   const { ownedProperties } = useProperties();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -172,30 +171,7 @@ export default function TenantDetailScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerBackTitle: 'Back',
-          headerShown: true,
-          headerBackground: () => (
-            <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
-          ),
-          headerStyle: {} as any,
-          headerTintColor: colors.textPrimary,
-          headerShadowVisible: false,
-          headerRight: isOwner
-            ? () => (
-                <TouchableOpacity
-                  style={styles.moreBtn}
-                  onPress={() => setActionsVisible(true)}
-                  hitSlop={8}
-                >
-                  <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textSecondary} />
-                </TouchableOpacity>
-              )
-            : undefined,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}

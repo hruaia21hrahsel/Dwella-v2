@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from '
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useProperties } from '@/hooks/useProperties';
 import { useTenants } from '@/hooks/useTenants';
 
@@ -16,7 +15,7 @@ import { formatCurrency } from '@/lib/utils';
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors, shadows, gradients } = useTheme();
+  const { colors, shadows } = useTheme();
   const { user } = useAuthStore();
   const { ownedProperties, refresh: refreshProps } = useProperties();
   const { tenants, isLoading, refresh: refreshTenants } = useTenants(id);
@@ -57,21 +56,7 @@ export default function PropertyDetailScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: property.name,
-          headerTitleAlign: 'center',
-          headerTintColor: colors.textPrimary,
-          headerBackground: () => (
-            <LinearGradient
-              colors={[colors.surface, gradients.heroSubtle[1]]}
-              start={{ x: 0.35, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ flex: 1 }}
-            />
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}

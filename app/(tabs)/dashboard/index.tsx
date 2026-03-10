@@ -13,14 +13,9 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Rect, Line, Circle } from 'react-native-svg';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
 import { useAiNudge } from '@/hooks/useAiNudge';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
-import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
-import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { AnimatedCard } from '@/components/AnimatedCard';
@@ -91,7 +86,6 @@ function StatCard({ label, value, color, surfaceBg, secondaryText }: StatCardPro
 }
 
 export default function DashboardScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { colors, gradients, shadows, isDark } = useTheme();
   const { user, setUser } = useAuthStore();
@@ -207,68 +201,6 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
-      {/* Scrollable header — matches DwellaHeader exactly but scrolls with content */}
-      <LinearGradient
-        colors={[colors.surface, colors.primarySoft]}
-        start={{ x: 0.35, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.inlineHeader, { height: 60 + insets.top, paddingTop: insets.top }]}
-      >
-        {/* Property map decoration — kept within [56, SCREEN_W-56] to avoid both buttons */}
-        <View style={{ position: 'absolute', bottom: 0, left: 56, right: 56, height: 60 }}>
-          <Svg width={SCREEN_W - 112} height={60}>
-            {/* Cadastral grid lines — clamped to decoration zone */}
-            {[0.18, 0.34, 0.52, 0.70].map((x, i) => (
-              <Line key={`v${i}`} x1={(SCREEN_W - 112) * x} y1={0} x2={(SCREEN_W - 112) * x} y2={60}
-                stroke={colors.primary} strokeOpacity={0.10} strokeWidth={0.8} strokeDasharray="2,5" />
-            ))}
-            <Line x1={0} y1={20} x2={SCREEN_W - 112} y2={20}
-              stroke={colors.primary} strokeOpacity={0.08} strokeWidth={0.8} strokeDasharray="2,5" />
-            <Line x1={0} y1={40} x2={SCREEN_W - 112} y2={40}
-              stroke={colors.primary} strokeOpacity={0.08} strokeWidth={0.8} strokeDasharray="2,5" />
-
-            {/* Property lot blocks */}
-            {(() => {
-              const W = SCREEN_W - 112;
-              const col = W * 0.16;
-              return (<>
-                <Rect x={W * 0.01} y={2}  width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.07} />
-                <Rect x={W * 0.01} y={21} width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.07} />
-                <Rect x={W * 0.19} y={2}  width={col} height={37} rx={1} fill={colors.primary} fillOpacity={0.07} />
-                <Rect x={W * 0.19} y={41} width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.05} />
-                <Rect x={W * 0.37} y={2}  width={col} height={17} rx={1} fill={colors.primary} fillOpacity={0.05} />
-              </>);
-            })()}
-
-            {/* Pin 1 — large, primary focus */}
-            {(() => {
-              const W = SCREEN_W - 112;
-              const cx = W * 0.62;
-              return (<>
-                <Circle cx={cx} cy={33} r={9} fill={colors.primary} fillOpacity={0.18} />
-                <Circle cx={cx} cy={33} r={4} fill={colors.primary} fillOpacity={0.35} />
-                <Path d={`M${cx - 6},${38} L${cx},${53} L${cx + 6},${38} Z`} fill={colors.primary} fillOpacity={0.18} />
-              </>);
-            })()}
-
-            {/* Pin 2 — medium */}
-            {(() => {
-              const W = SCREEN_W - 112;
-              const cx = W * 0.84;
-              return (<>
-                <Circle cx={cx} cy={27} r={7} fill={colors.primary} fillOpacity={0.13} />
-                <Circle cx={cx} cy={27} r={3} fill={colors.primary} fillOpacity={0.26} />
-                <Path d={`M${cx - 4.5},${32} L${cx},${44} L${cx + 4.5},${32} Z`} fill={colors.primary} fillOpacity={0.13} />
-              </>);
-            })()}
-          </Svg>
-        </View>
-
-        <ProfileHeaderButton dark />
-        <View style={{ flex: 1 }} />
-        <NotificationsHeaderButton dark />
-      </LinearGradient>
-
       <ErrorBanner error={error} onRetry={refresh} />
 
       {/* Overview section */}
@@ -645,13 +577,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 0,
     paddingBottom: 40,
-  },
-  inlineHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: -16,
-    marginBottom: 16,
-    overflow: 'hidden',
   },
   // Overview card (replaces heroCard)
   overviewCard: {
