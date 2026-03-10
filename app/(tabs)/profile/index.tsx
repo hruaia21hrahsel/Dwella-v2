@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Linking, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Linking, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
@@ -13,6 +15,7 @@ import { useTheme, useThemeToggle } from '@/lib/theme-context';
 import { GlassCard } from '@/components/GlassCard';
 import { GradientButton } from '@/components/GradientButton';
 import type { ThemeMode } from '@/lib/store';
+import { DwellaHeader } from '@/components/DwellaHeader';
 
 const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
   { label: 'Light', value: 'light' },
@@ -33,10 +36,122 @@ export default function ProfileScreen() {
   const [unlinkingTelegram, setUnlinkingTelegram] = useState(false);
 
   const [pinReady, setPinReady] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     isPinSet().then(setPinReady);
   }, []);
+
+  async function handlePhotoPress() {
+    const hasPhoto = !!user?.avatar_url;
+    const options = hasPhoto
+      ? ['Change Photo', 'Delete Photo', 'Cancel']
+      : ['Upload Photo', 'Cancel'];
+    const destructiveIndex = hasPhoto ? 1 : -1;
+    const cancelIndex = options.length - 1;
+
+    Alert.alert('Profile Photo', undefined, [
+      {
+        text: hasPhoto ? 'Change Photo' : 'Upload Photo',
+        onPress: pickAndUploadPhoto,
+      },
+      ...(hasPhoto ? [{
+        text: 'Delete Photo',
+        style: 'destructive' as const,
+        onPress: deletePhoto,
+      }] : []),
+      { text: 'Cancel', style: 'cancel' as const },
+    ]);
+  }
+
+  async function pickAndUploadPhoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission required', 'Please allow access to your photo library in Settings.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets[0] || !user) return;
+
+    setUploadingPhoto(true);
+    try {
+      const asset = result.assets[0];
+      const ext = asset.uri.split('.').pop()?.toLowerCase() ?? 'jpg';
+      const path = `${user.id}/avatar.${ext}`;
+
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const arrayBuffer = await new Response(blob).arrayBuffer();
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, arrayBuffer, {
+          contentType: asset.mimeType ?? 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(path);
+
+      // Bust cache with timestamp
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+
+      const { data, error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+      if (data) setUser(data);
+
+      useToastStore.getState().showToast('Profile photo updated.', 'success');
+    } catch (err) {
+      useToastStore.getState().showToast(String(err), 'error');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  async function deletePhoto() {
+    if (!user?.avatar_url || !user) return;
+    setUploadingPhoto(true);
+    try {
+      // Extract the storage path from the URL
+      const url = new URL(user.avatar_url);
+      const pathMatch = url.pathname.match(/avatars\/(.+?)(\?|$)/);
+      if (pathMatch) {
+        await supabase.storage.from('avatars').remove([pathMatch[1]]);
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .update({ avatar_url: null })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) setUser(data);
+
+      useToastStore.getState().showToast('Profile photo removed.', 'success');
+    } catch (err) {
+      useToastStore.getState().showToast(String(err), 'error');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
 
   async function handleSetupPin() {
     router.push('/pin-setup');
@@ -144,6 +259,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <DwellaHeader />
       {/* Avatar gradient header */}
       <LinearGradient
         colors={gradients.hero}
@@ -151,9 +267,21 @@ export default function ProfileScreen() {
         end={{ x: 1, y: 1 }}
         style={styles.avatarGradient}
       >
-        <View style={styles.avatar}>
-          <Text style={[styles.avatarLabel, { color: colors.primary }]}>{initials}</Text>
-        </View>
+        <TouchableOpacity onPress={handlePhotoPress} activeOpacity={0.8} style={styles.avatarWrap}>
+          {user?.avatar_url ? (
+            <Image source={{ uri: user.avatar_url }} style={styles.avatarPhoto} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={[styles.avatarLabel, { color: colors.primary }]}>{initials}</Text>
+            </View>
+          )}
+          <View style={styles.avatarEditBadge}>
+            {uploadingPhoto
+              ? <ActivityIndicator size={12} color="#fff" />
+              : <MaterialCommunityIcons name="camera" size={14} color="#fff" />
+            }
+          </View>
+        </TouchableOpacity>
         <Text style={styles.name}>{user?.full_name ?? 'User'}</Text>
         <Text style={styles.email}>{user?.email}</Text>
       </LinearGradient>
@@ -335,17 +463,40 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
   },
+  avatarWrap: {
+    position: 'relative',
+  },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 10,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarPhoto: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
   avatarLabel: {
     fontSize: 28,
     fontWeight: '700',
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   name: {
     fontSize: 20,
