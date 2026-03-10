@@ -295,29 +295,16 @@ export default function TenantDetailScreen() {
         <View style={styles.paymentSection}>
           <View style={styles.paymentHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Payment History</Text>
-            <View style={styles.paymentHeaderActions}>
-              {isOwner && (
-                <TouchableOpacity
-                  style={[styles.actionChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                  onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons name="plus" size={14} color={colors.primary} />
-                  <Text style={[styles.actionChipText, { color: colors.primary }]}>Log</Text>
-                </TouchableOpacity>
-              )}
-              {payments.length > 0 && (
-                <TouchableOpacity
-                  style={[styles.actionChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
-                  onPress={() => setYearPickerVisible(true)}
-                  disabled={exportingPdf}
-                  activeOpacity={0.7}
-                >
-                  <MaterialCommunityIcons name="file-pdf-box" size={14} color={colors.textSecondary} />
-                  <Text style={[styles.actionChipText, { color: colors.textSecondary }]}>PDF</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            {isOwner && (
+              <TouchableOpacity
+                style={[styles.actionChip, { borderColor: colors.primary + '30', backgroundColor: colors.primary + '12' }]}
+                onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons name="plus" size={14} color={colors.primary} />
+                <Text style={[styles.actionChipText, { color: colors.primary }]}>Log Payment</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <PaymentLedger
             payments={payments}
@@ -326,8 +313,7 @@ export default function TenantDetailScreen() {
             onPressRow={handleViewPayment}
             onMarkPaid={handleMarkPaid}
             onConfirm={handleConfirmPayment}
-            onExportReceipt={handleExportReceipt}
-            onLogPayment={(payment) => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
+            onLogPayment={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
           />
         </View>
 
