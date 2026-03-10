@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { Redirect } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -6,20 +6,15 @@ import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 import { DwellaLogo } from '@/components/DwellaLogo';
 
-const SPLASH_MIN_MS = 2500;
-
 export default function Index() {
   const { session, isLoading } = useAuthStore();
   const { colors } = useTheme();
-  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
     SplashScreen.hideAsync();
-    const timer = setTimeout(() => setSplashDone(true), SPLASH_MIN_MS);
-    return () => clearTimeout(timer);
   }, []);
 
-  if (isLoading || !splashDone) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <DwellaLogo size={120} color={colors.textOnPrimary} />
