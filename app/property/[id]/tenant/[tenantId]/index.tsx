@@ -212,99 +212,106 @@ export default function TenantDetailScreen() {
           />
         }
       >
-        {/* Profile header — horizontal layout */}
-        <View style={[styles.profileRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {photoSignedUrl ? (
-            <Image source={{ uri: photoSignedUrl }} style={[styles.avatarPhoto, { borderColor: colors.primary }]} />
-          ) : (
-            <View style={[styles.avatar, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-              <MaterialCommunityIcons
-                name={isPending ? 'account-clock-outline' : 'account-check-outline'}
-                size={24}
-                color={isPending ? colors.statusPartial : colors.statusConfirmed}
-              />
-            </View>
-          )}
-          <View style={styles.profileInfo}>
+        {/* Unified info card */}
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {/* Name + status */}
+          <View style={styles.infoHeader}>
+            {photoSignedUrl ? (
+              <Image source={{ uri: photoSignedUrl }} style={[styles.avatar, { borderWidth: 2, borderColor: colors.primary }]} />
+            ) : (
+              <View style={[styles.avatar, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
+                <MaterialCommunityIcons
+                  name={isPending ? 'account-clock-outline' : 'account-check-outline'}
+                  size={18}
+                  color={isPending ? colors.statusPartial : colors.statusConfirmed}
+                />
+              </View>
+            )}
             <Text style={[styles.tenantName, { color: colors.textPrimary }]} numberOfLines={1}>
               {tenant.tenant_name}
             </Text>
-            <View style={styles.profileMeta}>
-              <View style={[styles.statusPill, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-                <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
-                <Text style={[styles.statusText, { color: isPending ? colors.warning : colors.success }]}>
-                  {isPending ? 'Invite Pending' : 'Active'}
-                </Text>
-              </View>
-              {property && (
-                <Text style={[styles.propertyLabel, { color: colors.textSecondary }]} numberOfLines={1}>
-                  {property.name} · Flat {tenant.flat_no}
-                </Text>
-              )}
+            <View style={[styles.statusPill, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
+              <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
+              <Text style={[styles.statusText, { color: isPending ? colors.warning : colors.success }]}>
+                {isPending ? 'Pending' : 'Active'}
+              </Text>
             </View>
           </View>
-        </View>
 
-        {/* Key stats */}
-        <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MaterialCommunityIcons name="cash" size={16} color={colors.primary} style={{ marginBottom: 3 }} />
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.monthly_rent)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rent/mo</Text>
+          {/* Stats strip */}
+          <View style={[styles.statsStrip, { borderTopColor: colors.border, borderBottomColor: colors.border }]}>
+            <View style={styles.stat}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.monthly_rent)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>rent / mo</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+            <View style={styles.stat}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{getOrdinal(tenant.due_day)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>due day</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+            <View style={styles.stat}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.security_deposit)}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>deposit</Text>
+            </View>
           </View>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MaterialCommunityIcons name="calendar-clock" size={16} color={colors.statusPartial} style={{ marginBottom: 3 }} />
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{getOrdinal(tenant.due_day)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Due Day</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MaterialCommunityIcons name="shield-lock-outline" size={16} color={colors.statusConfirmed} style={{ marginBottom: 3 }} />
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.security_deposit)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Deposit</Text>
-          </View>
-        </View>
 
-        {/* Details card */}
-        <View style={[styles.detailCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <DetailRow icon="calendar-start" label="Lease Start" value={formatDate(tenant.lease_start)} colors={colors} />
-          {tenant.lease_end && (
-            <DetailRow icon="calendar-end" label="Lease End" value={formatDate(tenant.lease_end)} colors={colors} />
+          {/* Meta rows */}
+          <View style={styles.metaRows}>
+            <InfoRow label="Lease Start" value={formatDate(tenant.lease_start)} colors={colors} last={!tenant.lease_end} />
+            {tenant.lease_end && (
+              <InfoRow label="Lease End" value={formatDate(tenant.lease_end)} colors={colors} last />
+            )}
+          </View>
+
+          {/* Notes (only if present) */}
+          {tenant.notes ? (
+            <View style={[styles.notesRow, { borderTopColor: colors.border }]}>
+              <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Notes</Text>
+              <Text style={[styles.notesText, { color: colors.textPrimary }]}>{tenant.notes}</Text>
+            </View>
+          ) : null}
+
+          {/* Invite link — subtle inline row */}
+          {isPending && (
+            <TouchableOpacity
+              style={[styles.inviteRow, { borderTopColor: colors.border }]}
+              onPress={handleShareInvite}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="share-variant-outline" size={15} color={colors.primary} />
+              <Text style={[styles.inviteText, { color: colors.primary }]}>Share Invite Link</Text>
+            </TouchableOpacity>
           )}
         </View>
-
-        {/* Notes */}
-        {tenant.notes ? (
-          <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.notesHeader}>
-              <MaterialCommunityIcons name="note-text-outline" size={14} color={colors.textSecondary} />
-              <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Notes</Text>
-            </View>
-            <Text style={[styles.notesText, { color: colors.textPrimary }]}>{tenant.notes}</Text>
-          </View>
-        ) : null}
-
-        {/* Invite action */}
-        {isPending && (
-          <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.primary }]} onPress={handleShareInvite} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="share-variant-outline" size={16} color={colors.textOnPrimary} />
-            <Text style={[styles.inviteBtnText, { color: colors.textOnPrimary }]}>Share Invite Link</Text>
-          </TouchableOpacity>
-        )}
 
         {/* Payment History */}
         <View style={styles.paymentSection}>
           <View style={styles.paymentHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Payment History</Text>
-            {isOwner && (
-              <TouchableOpacity
-                style={[styles.actionChip, { borderColor: colors.primary + '30', backgroundColor: colors.primary + '12' }]}
-                onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons name="plus" size={14} color={colors.primary} />
-                <Text style={[styles.actionChipText, { color: colors.primary }]}>Log Payment</Text>
-              </TouchableOpacity>
-            )}
+            <View style={styles.paymentHeaderActions}>
+              {isOwner && (
+                <TouchableOpacity
+                  style={[styles.actionChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                  onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons name="plus" size={14} color={colors.primary} />
+                  <Text style={[styles.actionChipText, { color: colors.primary }]}>Log</Text>
+                </TouchableOpacity>
+              )}
+              {payments.length > 0 && (
+                <TouchableOpacity
+                  style={[styles.actionChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                  onPress={() => setYearPickerVisible(true)}
+                  disabled={exportingPdf}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons name="file-pdf-box" size={14} color={colors.textSecondary} />
+                  <Text style={[styles.actionChipText, { color: colors.textSecondary }]}>PDF</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
           <PaymentLedger
             payments={payments}
@@ -313,7 +320,8 @@ export default function TenantDetailScreen() {
             onPressRow={handleViewPayment}
             onMarkPaid={handleMarkPaid}
             onConfirm={handleConfirmPayment}
-            onLogPayment={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
+            onExportReceipt={handleExportReceipt}
+            onLogPayment={(payment) => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
           />
         </View>
 
@@ -436,34 +444,24 @@ export default function TenantDetailScreen() {
   );
 }
 
-function DetailRow({ icon, label, value, colors }: { icon: string; label: string; value: string; colors: any }) {
+function InfoRow({ label, value, colors, last }: { label: string; value: string; colors: any; last?: boolean }) {
   return (
-    <View style={[detailStyles.row, { borderBottomColor: colors.border }]}>
-      <View style={detailStyles.left}>
-        <MaterialCommunityIcons name={icon as any} size={14} color={colors.textSecondary} />
-        <Text style={[detailStyles.label, { color: colors.textSecondary }]}>{label}</Text>
-      </View>
-      <Text style={[detailStyles.value, { color: colors.textPrimary }]}>{value}</Text>
+    <View style={[infoRowStyles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
+      <Text style={[infoRowStyles.label, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[infoRowStyles.value, { color: colors.textPrimary }]}>{value}</Text>
     </View>
   );
 }
 
-const detailStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 11,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+const infoRowStyles = StyleSheet.create({
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 11 },
   label: { fontSize: 13 },
   value: { fontSize: 13, fontWeight: '600' },
 });
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40, gap: 12 },
+  content: { padding: 16, paddingBottom: 40, gap: 14 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   backBtn: {
@@ -475,58 +473,52 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
 
-  // Profile header — horizontal
-  profileRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 14, borderWidth: 1, padding: 14,
+  // Unified info card
+  infoCard: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+
+  infoHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 14, paddingVertical: 14,
   },
   avatar: {
-    width: 52, height: 52, borderRadius: 14,
+    width: 36, height: 36, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  avatarPhoto: {
-    width: 52, height: 52, borderRadius: 14, borderWidth: 2, flexShrink: 0,
-  },
-  profileInfo: { flex: 1, gap: 6 },
-  tenantName: { fontSize: 17, fontWeight: '800' },
-  profileMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  tenantName: { flex: 1, fontSize: 16, fontWeight: '700' },
   statusPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
   },
   statusDot: { width: 5, height: 5, borderRadius: 3 },
   statusText: { fontSize: 11, fontWeight: '700' },
-  propertyLabel: { fontSize: 12 },
 
-  // Stats
-  statsRow: { flexDirection: 'row', gap: 8 },
-  statCard: {
-    flex: 1, borderRadius: 12, borderWidth: 1,
-    padding: 10, alignItems: 'center',
+  // Stats strip
+  statsStrip: {
+    flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  statValue: { fontSize: 14, fontWeight: '800' },
-  statLabel: {
-    fontSize: 9, marginTop: 1,
-    textTransform: 'uppercase', letterSpacing: 0.3,
-  },
+  stat: { flex: 1, alignItems: 'center', paddingVertical: 12, gap: 2 },
+  statDivider: { width: StyleSheet.hairlineWidth },
+  statValue: { fontSize: 15, fontWeight: '700' },
+  statLabel: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4 },
 
-  // Detail card
-  detailCard: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14 },
+  // Meta rows (lease dates)
+  metaRows: { paddingHorizontal: 14 },
 
-  // Notes card
-  notesCard: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6 },
-  notesHeader: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  notesLabel: {
-    fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5,
+  // Notes
+  notesRow: {
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth, gap: 4,
   },
+  notesLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   notesText: { fontSize: 13, lineHeight: 19 },
 
-  // Invite button
-  inviteBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, borderRadius: 12, paddingVertical: 12,
+  // Invite link row
+  inviteRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 14, paddingVertical: 13,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
-  inviteBtnText: { fontSize: 14, fontWeight: '700' },
+  inviteText: { fontSize: 13, fontWeight: '600' },
 
   // Payment section
   paymentSection: { gap: 8 },

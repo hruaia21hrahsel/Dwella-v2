@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { Text, Button, Divider, ActivityIndicator } from 'react-native-paper';
 import { Payment } from '@/lib/types';
 import { PaymentStatusBadge } from './PaymentStatusBadge';
@@ -14,6 +14,7 @@ interface PaymentLedgerProps {
   onPressRow: (payment: Payment) => void;
   onMarkPaid: (payment: Payment) => void;
   onConfirm: (payment: Payment) => void;
+  onExportReceipt?: (payment: Payment) => void;
   onLogPayment?: (payment: Payment) => void;
 }
 
@@ -23,6 +24,7 @@ function PaymentRow({
   onPress,
   onMarkPaid,
   onConfirm,
+  onExportReceipt,
   onLogPayment,
 }: {
   payment: Payment;
@@ -30,6 +32,7 @@ function PaymentRow({
   onPress: () => void;
   onMarkPaid: () => void;
   onConfirm: () => void;
+  onExportReceipt?: () => void;
   onLogPayment?: () => void;
 }) {
   const { colors } = useTheme();
@@ -37,34 +40,35 @@ function PaymentRow({
   const showMarkPaid = isTenant && canMarkAsPaid(payment.status);
   const showLogPayment = isOwner && onLogPayment && canMarkAsPaid(payment.status);
   const showConfirm = isOwner && canConfirm(payment.status);
+  const showReceipt = onExportReceipt && (payment.status === 'paid' || payment.status === 'confirmed');
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.6}>
+    <View style={styles.row}>
       <View style={styles.rowLeft}>
-        <Text style={[styles.monthLabel, { color: colors.textPrimary }]}>
+        <Text variant="titleSmall" style={[styles.monthLabel, { color: colors.textPrimary }]}>
           {getMonthName(payment.month)} {payment.year}
         </Text>
         <View style={styles.amountsRow}>
-          <Text style={[styles.amountText, { color: colors.textSecondary }]}>
-            {formatCurrency(payment.amount_due)}
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
+            Due: {formatCurrency(payment.amount_due)}
           </Text>
           {payment.amount_paid > 0 && (
-            <Text style={[styles.amountText, { color: colors.statusConfirmed }]}>
-              · {formatCurrency(payment.amount_paid)} paid
+            <Text variant="bodySmall" style={{ color: colors.statusConfirmed }}>
+              · Paid: {formatCurrency(payment.amount_paid)}
             </Text>
           )}
         </View>
+        <PaymentStatusBadge status={payment.status} />
       </View>
 
       <View style={styles.rowRight}>
-        <PaymentStatusBadge status={payment.status} />
         {showMarkPaid && (
-          <Button mode="contained" compact onPress={(e) => { e.stopPropagation?.(); onMarkPaid(); }} style={styles.actionBtn}>
+          <Button mode="contained" compact onPress={onMarkPaid} style={styles.actionBtn}>
             Pay
           </Button>
         )}
         {showLogPayment && (
-          <Button mode="contained" compact onPress={(e) => { e.stopPropagation?.(); onLogPayment!(); }} style={styles.actionBtn}>
+          <Button mode="contained" compact onPress={onLogPayment} style={styles.actionBtn}>
             Log
           </Button>
         )}
@@ -72,15 +76,23 @@ function PaymentRow({
           <Button
             mode="contained"
             compact
-            onPress={(e) => { e.stopPropagation?.(); onConfirm(); }}
-            style={styles.actionBtn}
+            onPress={onConfirm}
+            style={[styles.actionBtn, styles.confirmBtn]}
             buttonColor={colors.statusConfirmed}
           >
             Confirm
           </Button>
         )}
+        {showReceipt && (
+          <Button mode="text" compact onPress={onExportReceipt} textColor={colors.primary} icon="file-pdf-box">
+            PDF
+          </Button>
+        )}
+        <Button mode="text" compact onPress={onPress} textColor={colors.textSecondary}>
+          View
+        </Button>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -91,6 +103,7 @@ export function PaymentLedger({
   onPressRow,
   onMarkPaid,
   onConfirm,
+  onExportReceipt,
   onLogPayment,
 }: PaymentLedgerProps) {
   const { colors } = useTheme();
@@ -123,6 +136,7 @@ export function PaymentLedger({
             onPress={() => onPressRow(payment)}
             onMarkPaid={() => onMarkPaid(payment)}
             onConfirm={() => onConfirm(payment)}
+            onExportReceipt={onExportReceipt ? () => onExportReceipt(payment) : undefined}
             onLogPayment={onLogPayment ? () => onLogPayment(payment) : undefined}
           />
           {index < payments.length - 1 && <Divider />}
@@ -142,32 +156,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 13,
-    paddingHorizontal: 14,
-    gap: 10,
+    padding: 14,
+    gap: 8,
   },
   rowLeft: {
     flex: 1,
-    gap: 3,
+    gap: 8,
   },
   monthLabel: {
-    fontSize: 14,
     fontWeight: '600',
   },
   amountsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  amountText: {
-    fontSize: 12,
-  },
   rowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   actionBtn: {
-    minWidth: 64,
+    minWidth: 60,
+  },
+  confirmBtn: {
+    minWidth: 70,
   },
   centered: {
     padding: 32,
