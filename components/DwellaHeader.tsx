@@ -40,6 +40,7 @@ export function DwellaHeader() {
           {firstName}
         </Text>
       </View>
+
       <View style={{ flex: 1 }} />
       <NotificationsHeaderButton />
     </View>
@@ -53,9 +54,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   greeting: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: 1,
   },
   greetLine: {
     fontSize: 13,
