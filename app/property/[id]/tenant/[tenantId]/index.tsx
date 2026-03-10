@@ -178,6 +178,16 @@ export default function TenantDetailScreen() {
           headerStyle: { backgroundColor: colors.background } as any,
           headerTintColor: colors.textPrimary,
           headerShadowVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              hitSlop={8}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="chevron-left" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          ),
           headerRight: isOwner
             ? () => (
                 <TouchableOpacity
@@ -470,6 +480,15 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40, gap: 16 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -4,
+  },
 
   moreBtn: {
     width: 36,
