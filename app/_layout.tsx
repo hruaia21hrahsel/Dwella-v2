@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack, router, useRouter, useSegments } from 'expo-router';
+
+SplashScreen.preventAutoHideAsync();
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
