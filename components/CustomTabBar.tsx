@@ -78,7 +78,16 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             colors={gradients.button}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.fabCircle}
+            style={[
+              styles.fabCircle,
+              {
+                shadowColor: colors.primary,
+                shadowOpacity: 0.65,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 10,
+              },
+            ]}
           >
             <MaterialCommunityIcons name="plus" size={22} color="#fff" />
           </LinearGradient>
