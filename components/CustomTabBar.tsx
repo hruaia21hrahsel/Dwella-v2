@@ -74,23 +74,25 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           style={styles.tab}
           onPress={() => router.push('/log-payment')}
         >
-          <LinearGradient
-            colors={gradients.button}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[
-              styles.fabCircle,
-              {
-                shadowColor: colors.primary,
-                shadowOpacity: 0.65,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 0 },
-                elevation: 10,
-              },
-            ]}
+          <View
+            style={{
+              borderRadius: 18,
+              shadowColor: colors.primary,
+              shadowOpacity: 0.7,
+              shadowRadius: 14,
+              shadowOffset: { width: 0, height: 0 },
+              elevation: 12,
+            }}
           >
-            <MaterialCommunityIcons name="plus" size={22} color="#fff" />
-          </LinearGradient>
+            <LinearGradient
+              colors={gradients.button}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.fabCircle}
+            >
+              <MaterialCommunityIcons name="plus" size={22} color="#fff" />
+            </LinearGradient>
+          </View>
           <Text style={[styles.fabLabel, { color: colors.primary }]}>Log</Text>
         </Pressable>
 
