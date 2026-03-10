@@ -212,45 +212,53 @@ export default function TenantDetailScreen() {
           />
         }
       >
-        {/* Profile header */}
-        <View style={styles.profileHeader}>
+        {/* Profile header — horizontal layout */}
+        <View style={[styles.profileRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {photoSignedUrl ? (
             <Image source={{ uri: photoSignedUrl }} style={[styles.avatarPhoto, { borderColor: colors.primary }]} />
           ) : (
             <View style={[styles.avatar, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
               <MaterialCommunityIcons
                 name={isPending ? 'account-clock-outline' : 'account-check-outline'}
-                size={28}
+                size={24}
                 color={isPending ? colors.statusPartial : colors.statusConfirmed}
               />
             </View>
           )}
-          <Text style={[styles.tenantName, { color: colors.textPrimary }]}>{tenant.tenant_name}</Text>
-          <View style={[styles.statusPill, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
-            <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
-            <Text style={[styles.statusText, { color: isPending ? colors.warning : colors.success }]}>
-              {isPending ? 'Invite Pending' : 'Active Tenant'}
+          <View style={styles.profileInfo}>
+            <Text style={[styles.tenantName, { color: colors.textPrimary }]} numberOfLines={1}>
+              {tenant.tenant_name}
             </Text>
+            <View style={styles.profileMeta}>
+              <View style={[styles.statusPill, { backgroundColor: isPending ? colors.statusPartialSoft : colors.statusConfirmedSoft }]}>
+                <View style={[styles.statusDot, { backgroundColor: isPending ? colors.statusPartial : colors.statusConfirmed }]} />
+                <Text style={[styles.statusText, { color: isPending ? colors.warning : colors.success }]}>
+                  {isPending ? 'Invite Pending' : 'Active'}
+                </Text>
+              </View>
+              {property && (
+                <Text style={[styles.propertyLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {property.name} · Flat {tenant.flat_no}
+                </Text>
+              )}
+            </View>
           </View>
-          {property && (
-            <Text style={[styles.propertyLabel, { color: colors.textSecondary }]}>{property.name} · Flat {tenant.flat_no}</Text>
-          )}
         </View>
 
         {/* Key stats */}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MaterialCommunityIcons name="cash" size={18} color={colors.primary} style={{ marginBottom: 4 }} />
+            <MaterialCommunityIcons name="cash" size={16} color={colors.primary} style={{ marginBottom: 3 }} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.monthly_rent)}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Monthly Rent</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rent/mo</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MaterialCommunityIcons name="calendar-clock" size={18} color={colors.statusPartial} style={{ marginBottom: 4 }} />
+            <MaterialCommunityIcons name="calendar-clock" size={16} color={colors.statusPartial} style={{ marginBottom: 3 }} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{getOrdinal(tenant.due_day)}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Due Day</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <MaterialCommunityIcons name="shield-lock-outline" size={18} color={colors.statusConfirmed} style={{ marginBottom: 4 }} />
+            <MaterialCommunityIcons name="shield-lock-outline" size={16} color={colors.statusConfirmed} style={{ marginBottom: 3 }} />
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(tenant.security_deposit)}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Deposit</Text>
           </View>
@@ -268,7 +276,7 @@ export default function TenantDetailScreen() {
         {tenant.notes ? (
           <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.notesHeader}>
-              <MaterialCommunityIcons name="note-text-outline" size={16} color={colors.textSecondary} />
+              <MaterialCommunityIcons name="note-text-outline" size={14} color={colors.textSecondary} />
               <Text style={[styles.notesLabel, { color: colors.textSecondary }]}>Notes</Text>
             </View>
             <Text style={[styles.notesText, { color: colors.textPrimary }]}>{tenant.notes}</Text>
@@ -278,7 +286,7 @@ export default function TenantDetailScreen() {
         {/* Invite action */}
         {isPending && (
           <TouchableOpacity style={[styles.inviteBtn, { backgroundColor: colors.primary }]} onPress={handleShareInvite} activeOpacity={0.8}>
-            <MaterialCommunityIcons name="share-variant-outline" size={18} color={colors.textOnPrimary} />
+            <MaterialCommunityIcons name="share-variant-outline" size={16} color={colors.textOnPrimary} />
             <Text style={[styles.inviteBtnText, { color: colors.textOnPrimary }]}>Share Invite Link</Text>
           </TouchableOpacity>
         )}
@@ -290,23 +298,23 @@ export default function TenantDetailScreen() {
             <View style={styles.paymentHeaderActions}>
               {isOwner && (
                 <TouchableOpacity
-                  style={[styles.logPaymentBtn, { borderColor: colors.primary }]}
+                  style={[styles.actionChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => router.push(`/log-payment?propertyId=${propertyId}&tenantId=${tenantId}`)}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons name="plus-circle-outline" size={16} color={colors.primary} />
-                  <Text style={[styles.logPaymentBtnText, { color: colors.primary }]}>Log Payment</Text>
+                  <MaterialCommunityIcons name="plus" size={14} color={colors.primary} />
+                  <Text style={[styles.actionChipText, { color: colors.primary }]}>Log</Text>
                 </TouchableOpacity>
               )}
               {payments.length > 0 && (
                 <TouchableOpacity
-                  style={[styles.exportBtn, { borderColor: colors.primary }]}
+                  style={[styles.actionChip, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => setYearPickerVisible(true)}
                   disabled={exportingPdf}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons name="file-pdf-box" size={16} color={colors.primary} />
-                  <Text style={[styles.exportBtnText, { color: colors.primary }]}>Export</Text>
+                  <MaterialCommunityIcons name="file-pdf-box" size={14} color={colors.textSecondary} />
+                  <Text style={[styles.actionChipText, { color: colors.textSecondary }]}>PDF</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -446,7 +454,7 @@ function DetailRow({ icon, label, value, colors }: { icon: string; label: string
   return (
     <View style={[detailStyles.row, { borderBottomColor: colors.border }]}>
       <View style={detailStyles.left}>
-        <MaterialCommunityIcons name={icon as any} size={16} color={colors.textSecondary} />
+        <MaterialCommunityIcons name={icon as any} size={14} color={colors.textSecondary} />
         <Text style={[detailStyles.label, { color: colors.textSecondary }]}>{label}</Text>
       </View>
       <Text style={[detailStyles.value, { color: colors.textPrimary }]}>{value}</Text>
@@ -459,263 +467,120 @@ const detailStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 11,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  label: {
-    fontSize: 13,
-  },
-  value: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  left: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  label: { fontSize: 13 },
+  value: { fontSize: 13, fontWeight: '600' },
 });
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40, gap: 16 },
+  content: { padding: 16, paddingBottom: 40, gap: 12 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -4,
+    width: 36, height: 36, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center', marginLeft: -4,
   },
-
   moreBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 36, height: 36, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
   },
 
-  // Profile header
-  profileHeader: {
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
+  // Profile header — horizontal
+  profileRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderRadius: 14, borderWidth: 1, padding: 14,
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
+    width: 52, height: 52, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   avatarPhoto: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
-    borderWidth: 2,
-    marginBottom: 4,
+    width: 52, height: 52, borderRadius: 14, borderWidth: 2, flexShrink: 0,
   },
-  tenantName: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
+  profileInfo: { flex: 1, gap: 6 },
+  tenantName: { fontSize: 17, fontWeight: '800' },
+  profileMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  propertyLabel: {
-    fontSize: 13,
-    marginTop: 2,
-  },
+  statusDot: { width: 5, height: 5, borderRadius: 3 },
+  statusText: { fontSize: 11, fontWeight: '700' },
+  propertyLabel: { fontSize: 12 },
 
   // Stats
-  statsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+  statsRow: { flexDirection: 'row', gap: 8 },
   statCard: {
-    flex: 1,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 12,
-    alignItems: 'center',
+    flex: 1, borderRadius: 12, borderWidth: 1,
+    padding: 10, alignItems: 'center',
   },
-  statValue: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
+  statValue: { fontSize: 14, fontWeight: '800' },
   statLabel: {
-    fontSize: 10,
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    fontSize: 9, marginTop: 1,
+    textTransform: 'uppercase', letterSpacing: 0.3,
   },
 
   // Detail card
-  detailCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-  },
+  detailCard: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14 },
 
   // Notes card
-  notesCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    gap: 8,
-  },
-  notesHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+  notesCard: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6 },
+  notesHeader: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   notesLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5,
   },
-  notesText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  notesText: { fontSize: 13, lineHeight: 19 },
 
   // Invite button
   inviteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 12,
-    paddingVertical: 13,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 7, borderRadius: 12, paddingVertical: 12,
   },
-  inviteBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
+  inviteBtnText: { fontSize: 14, fontWeight: '700' },
 
   // Payment section
-  paymentSection: {
-    gap: 10,
-  },
+  paymentSection: { gap: 8 },
   paymentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  paymentHeaderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  paymentHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sectionTitle: { fontSize: 15, fontWeight: '700' },
+  actionChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 9, paddingVertical: 5,
+    borderRadius: 8, borderWidth: 1,
   },
-  logPaymentBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  logPaymentBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  exportBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  exportBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  actionChipText: { fontSize: 12, fontWeight: '600' },
 
   // Modal
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end',
   },
   actionSheet: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-    paddingBottom: 36,
+    borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, paddingBottom: 36,
   },
   sheetHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
+    width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 16,
   },
   actionOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 14, paddingHorizontal: 8, borderRadius: 10,
   },
   actionOptionDanger: {
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderRadius: 0,
-    paddingTop: 18,
+    marginTop: 4, borderTopWidth: 1, borderRadius: 0, paddingTop: 18,
   },
-  actionOptionText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
+  actionOptionText: { fontSize: 15, fontWeight: '500' },
   actionCancel: {
-    paddingVertical: 14,
-    marginTop: 8,
-    borderTopWidth: 1,
-    alignItems: 'center',
+    paddingVertical: 14, marginTop: 8, borderTopWidth: 1, alignItems: 'center',
   },
-  actionCancelText: {
-    fontSize: 14,
-  },
+  actionCancelText: { fontSize: 14 },
   yearPickerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
+    fontSize: 16, fontWeight: '700', textAlign: 'center', marginBottom: 12,
   },
-  yearOption: {
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  yearOptionText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  yearOption: { paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  yearOptionText: { fontSize: 16, fontWeight: '600' },
 });
