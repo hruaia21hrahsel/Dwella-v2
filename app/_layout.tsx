@@ -168,9 +168,13 @@ function InnerLayout() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const [splashVisible, setSplashVisible] = useState(true);
 
+  // Hide the native splash immediately — our custom overlay takes over
+  useEffect(() => {
+    ExpoSplashScreen.hideAsync();
+  }, []);
+
   useEffect(() => {
     if (!isLoading) {
-      ExpoSplashScreen.hideAsync();
       const t = setTimeout(() => setSplashVisible(false), 400);
       return () => clearTimeout(t);
     }
