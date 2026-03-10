@@ -3,7 +3,6 @@ import { Stack, router, useRouter, useSegments } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import * as ExpoSplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
@@ -13,8 +12,6 @@ import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { SplashScreenOverlay } from '@/components/SplashScreenOverlay';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
-
-ExpoSplashScreen.preventAutoHideAsync();
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -167,11 +164,6 @@ function InnerLayout() {
   const paperTheme = usePaperTheme();
   const isLoading = useAuthStore((s) => s.isLoading);
   const [splashVisible, setSplashVisible] = useState(true);
-
-  // Hide the native splash immediately — our custom overlay takes over
-  useEffect(() => {
-    ExpoSplashScreen.hideAsync();
-  }, []);
 
   useEffect(() => {
     if (!isLoading) {
