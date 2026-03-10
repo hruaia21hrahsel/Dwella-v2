@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { savePinSession } from '@/lib/biometric-auth';
+import { useAuthStore } from '@/lib/store';
 import { DwellaLogo } from '@/components/DwellaLogo';
 import { GradientButton } from '@/components/GradientButton';
 import { SocialAuthButtons } from '@/components/SocialAuthButtons';
@@ -47,24 +48,28 @@ export default function SignupScreen() {
       return;
     }
 
+    // Tell AuthGuard to route to pin-setup instead of onboarding so the user
+    // never sees the onboarding screen flash during the auth state change.
+    useAuthStore.getState().setPendingRoute('/pin-setup');
+
     const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
     if (loginError) {
+      useAuthStore.getState().setPendingRoute(null);
       setError('Account created! Please sign in.');
       setLoading(false);
       return;
     }
 
+    // Save the refresh token for biometric unlock (fire-and-forget — fast local write,
+    // completes well before the user finishes entering their PIN).
     if (data.session?.refresh_token) {
-      await savePinSession(data.session.refresh_token);
-      router.replace('/pin-setup');
-      return;
+      savePinSession(data.session.refresh_token);
     }
-
-    setLoading(false);
+    // AuthGuard will navigate to /pin-setup via pendingRoute.
   }
 
   return (

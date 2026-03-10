@@ -23,6 +23,8 @@ interface AuthState {
   isLocked: boolean;
   /** In-memory only (not persisted). Index into TOUR_STEPS, or null when tour is inactive. */
   tourStep: number | null;
+  /** In-memory only. Route AuthGuard should navigate to instead of the default post-auth destination. */
+  pendingRoute: string | null;
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
@@ -35,6 +37,7 @@ interface AuthState {
   setLocked: (locked: boolean) => void;
   setTourStep: (step: number | null) => void;
   setThemeMode: (mode: ThemeMode) => void;
+  setPendingRoute: (route: string | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -48,6 +51,7 @@ export const useAuthStore = create<AuthState>()(
       themeMode: 'dark' as ThemeMode,
       isLocked: true,
       tourStep: null,
+      pendingRoute: null,
       setSession: (session) => set({ session }),
       setUser: (user) => set({ user }),
       setLoading: (isLoading) => set({ isLoading }),
@@ -70,6 +74,7 @@ export const useAuthStore = create<AuthState>()(
       setLocked: (isLocked) => set({ isLocked }),
       setTourStep: (tourStep) => set({ tourStep }),
       setThemeMode: (themeMode) => set({ themeMode }),
+      setPendingRoute: (pendingRoute) => set({ pendingRoute }),
     }),
     {
       name: 'dwella-store',

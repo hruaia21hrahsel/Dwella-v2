@@ -44,7 +44,7 @@ function usePaperTheme() {
 }
 
 function AuthGuard() {
-  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser } = useAuthStore();
+  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, pendingRoute, setPendingRoute } = useAuthStore();
   const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
@@ -137,10 +137,15 @@ function AuthGuard() {
       if (inPinSetup || inOnboarding) return;
       if (inAuthGroup || !initialRedirectDone.current) {
         initialRedirectDone.current = true;
-        router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
+        if (pendingRoute) {
+          setPendingRoute(null);
+          router.replace(pendingRoute as any);
+        } else {
+          router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
+        }
       }
     });
-  }, [session, isLoading, segments, isLocked]);
+  }, [session, isLoading, segments, isLocked, pendingRoute]);
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
