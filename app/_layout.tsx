@@ -44,7 +44,8 @@ function usePaperTheme() {
 }
 
 function AuthGuard() {
-  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompleted } = useAuthStore();
+  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser } = useAuthStore();
+  const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
   const initialRedirectDone = useRef(false);

@@ -18,7 +18,8 @@ interface SocialAuthButtonsProps {
 export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthButtonsProps) {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { onboardingCompleted, setLocked } = useAuthStore();
+  const { onboardingCompletedByUser, setLocked, user } = useAuthStore();
+  const onboardingCompleted = onboardingCompletedByUser[user?.id ?? ''] ?? false;
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(true);

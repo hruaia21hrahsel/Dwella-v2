@@ -26,7 +26,8 @@ export default function PinSetupScreen() {
     } else {
       // New users (email signup) arrive here via router.replace, so canGoBack
       // is false. Send them to onboarding if they haven't seen it yet.
-      const { onboardingCompleted } = useAuthStore.getState();
+      const { onboardingCompletedByUser, user } = useAuthStore.getState();
+      const onboardingCompleted = onboardingCompletedByUser[user?.id ?? ''] ?? false;
       router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
     }
   }

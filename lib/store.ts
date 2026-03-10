@@ -11,7 +11,8 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   propertyRefreshAt: number;
-  onboardingCompleted: boolean;
+  /** Keyed by user ID so onboarding state is per-account, not per-device. */
+  onboardingCompletedByUser: Record<string, boolean>;
   themeMode: ThemeMode;
   /**
    * Whether the app UI is locally locked. Starts true on every cold launch.
@@ -29,6 +30,8 @@ interface AuthState {
   bumpPropertyRefresh: () => void;
   setOnboardingCompleted: () => void;
   resetOnboarding: () => void;
+  /** Derived helper — true when the current user has completed onboarding. */
+  isOnboardingCompleted: () => boolean;
   setLocked: (locked: boolean) => void;
   setTourStep: (step: number | null) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -41,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: true,
       propertyRefreshAt: 0,
-      onboardingCompleted: false,
+      onboardingCompletedByUser: {},
       themeMode: 'dark' as ThemeMode,
       isLocked: true,
       tourStep: null,
@@ -50,8 +53,20 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (isLoading) => set({ isLoading }),
       clearAuth: () => set({ session: null, user: null, isLoading: false }),
       bumpPropertyRefresh: () => set((s) => ({ propertyRefreshAt: s.propertyRefreshAt + 1 })),
-      setOnboardingCompleted: () => set({ onboardingCompleted: true }),
-      resetOnboarding: () => set({ onboardingCompleted: false }),
+      setOnboardingCompleted: () => set((s) => ({
+        onboardingCompletedByUser: {
+          ...s.onboardingCompletedByUser,
+          [s.user?.id ?? '_anon']: true,
+        },
+      })),
+      resetOnboarding: () => set((s) => {
+        const { [s.user?.id ?? '_anon']: _, ...rest } = s.onboardingCompletedByUser;
+        return { onboardingCompletedByUser: rest };
+      }),
+      isOnboardingCompleted: () => {
+        const s = useAuthStore.getState();
+        return s.onboardingCompletedByUser[s.user?.id ?? '_anon'] ?? false;
+      },
       setLocked: (isLocked) => set({ isLocked }),
       setTourStep: (tourStep) => set({ tourStep }),
       setThemeMode: (themeMode) => set({ themeMode }),
@@ -59,9 +74,9 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'dwella-store',
       storage: createJSONStorage(() => AsyncStorage),
-      // Only persist onboardingCompleted. isLocked must reset to true on every
-      // cold launch so the PIN screen is always shown when the app restarts.
-      partialize: (state) => ({ onboardingCompleted: state.onboardingCompleted, themeMode: state.themeMode }),
+      // Only persist onboardingCompletedByUser and themeMode. isLocked must reset
+      // to true on every cold launch so the PIN screen is always shown.
+      partialize: (state) => ({ onboardingCompletedByUser: state.onboardingCompletedByUser, themeMode: state.themeMode }),
     }
   )
 );
