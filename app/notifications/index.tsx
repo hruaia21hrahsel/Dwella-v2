@@ -101,7 +101,17 @@ export default function NotificationsScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false, presentation: 'modal' }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          presentation: 'modal',
+          title: 'Notifications',
+          headerStyle: { backgroundColor: colors.background } as any,
+          headerTintColor: colors.textPrimary,
+          headerTitleStyle: { fontWeight: '700' },
+          headerShadowVisible: false,
+        }}
+      />
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 16 }]}

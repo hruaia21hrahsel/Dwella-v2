@@ -46,18 +46,14 @@ function relativeTime(dateString: string): string {
   return new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-interface Props {
-  dark?: boolean;
-}
-
-export function NotificationsHeaderButton({ dark = false }: Props) {
+export function NotificationsHeaderButton() {
   const { user } = useAuthStore();
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications(user?.id);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
 
-  const iconColor = dark ? colors.primary : '#fff';
+  const iconColor = colors.primary;
   const headerHeight = 60 + insets.top;
   const dropdownTop = headerHeight + 6;
 

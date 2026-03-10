@@ -96,7 +96,17 @@ export default function MarkPaidScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false, presentation: 'modal' }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          presentation: 'modal',
+          title: 'Mark as Paid',
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: colors.background } as any,
+          headerTintColor: colors.textPrimary,
+          headerShadowVisible: false,
+        }}
+      />
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

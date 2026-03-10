@@ -56,7 +56,16 @@ export default function PropertyDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: property.name,
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: colors.background } as any,
+          headerTintColor: colors.textPrimary,
+          headerShadowVisible: false,
+        }}
+      />
 
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}

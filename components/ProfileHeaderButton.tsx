@@ -1,24 +1,22 @@
-import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
+import { TouchableOpacity, View, Image, StyleSheet, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
-import { useNotifications } from '@/hooks/useNotifications';
 
 interface Props {
   style?: ViewStyle;
-  dark?: boolean;
 }
 
-export function ProfileHeaderButton({ style, dark = false }: Props) {
+export function ProfileHeaderButton({ style }: Props) {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { unreadCount } = useNotifications(user?.id);
   const { colors } = useTheme();
 
-  const pillBg = dark ? colors.primarySoft : 'rgba(255,255,255,0.18)';
-  const iconColor = dark ? colors.primary : '#fff';
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : null;
 
   return (
     <TouchableOpacity
@@ -26,12 +24,13 @@ export function ProfileHeaderButton({ style, dark = false }: Props) {
       style={[styles.btn, style]}
       activeOpacity={0.7}
     >
-      <View style={styles.pill}>
-        <MaterialCommunityIcons name="account-circle-outline" size={20} color={iconColor} />
-        {unreadCount > 0 && (
-          <View style={[styles.badge, { backgroundColor: colors.error }]}>
-            <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-          </View>
+      <View style={[styles.avatar, { backgroundColor: colors.primarySoft }]}>
+        {user?.avatar_url ? (
+          <Image source={{ uri: user.avatar_url }} style={styles.avatarImg} />
+        ) : initials ? (
+          <Text style={[styles.initials, { color: colors.primary }]}>{initials}</Text>
+        ) : (
+          <MaterialCommunityIcons name="account-circle-outline" size={22} color={colors.primary} />
         )}
       </View>
     </TouchableOpacity>
@@ -44,28 +43,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pill: {
+  avatar: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  badge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    borderRadius: 8,
-    minWidth: 15,
-    height: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
+  avatarImg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
-  badgeText: {
-    color: '#fff',
-    fontSize: 9,
+  initials: {
+    fontSize: 13,
     fontWeight: '700',
-    lineHeight: 11,
+    lineHeight: 16,
   },
 });

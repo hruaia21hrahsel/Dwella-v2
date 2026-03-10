@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
+import { DwellaHeader } from '@/components/DwellaHeader';
 import { CustomTabBar } from '@/components/CustomTabBar';
 
 function TabsLayout() {
@@ -12,10 +13,10 @@ function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarAllowFontScaling: false,
-        headerShown: false,
+        header: () => <DwellaHeader />,
       }}
     >
-      <Tabs.Screen name="dashboard/index" options={{ title: 'Dashboard', headerShown: false }} />
+      <Tabs.Screen name="dashboard/index" options={{ title: 'Dashboard' }} />
       <Tabs.Screen name="properties"      options={{ title: 'Property' }} />
       <Tabs.Screen name="tools/index"     options={{ title: 'Tools' }} />
       <Tabs.Screen name="bot/index"       options={{ title: 'Assistant' }} />

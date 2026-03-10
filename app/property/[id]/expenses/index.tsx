@@ -121,7 +121,16 @@ export default function ExpensesScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Expenses',
+          headerTitleAlign: 'center',
+          headerStyle: { backgroundColor: colors.background } as any,
+          headerTintColor: colors.textPrimary,
+          headerShadowVisible: false,
+        }}
+      />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <FlatList
           data={listData}

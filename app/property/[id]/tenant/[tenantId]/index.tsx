@@ -171,7 +171,26 @@ export default function TenantDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: '',
+          headerStyle: { backgroundColor: colors.background } as any,
+          headerTintColor: colors.textPrimary,
+          headerShadowVisible: false,
+          headerRight: isOwner
+            ? () => (
+                <TouchableOpacity
+                  style={styles.moreBtn}
+                  onPress={() => setActionsVisible(true)}
+                  hitSlop={8}
+                >
+                  <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )
+            : undefined,
+        }}
+      />
 
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
