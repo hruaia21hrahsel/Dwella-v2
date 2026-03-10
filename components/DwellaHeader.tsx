@@ -1,12 +1,23 @@
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
+import { useAuthStore } from '@/lib/store';
 import { ProfileHeaderButton } from '@/components/ProfileHeaderButton';
 import { NotificationsHeaderButton } from '@/components/NotificationsHeaderButton';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export function DwellaHeader() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { user } = useAuthStore();
+
+  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
 
   return (
     <View
@@ -21,6 +32,14 @@ export function DwellaHeader() {
       ]}
     >
       <ProfileHeaderButton />
+      <View style={styles.greeting}>
+        <Text style={[styles.greetLine, { color: colors.textSecondary }]}>
+          {getGreeting()},
+        </Text>
+        <Text style={[styles.nameLine, { color: colors.textPrimary }]} numberOfLines={1}>
+          {firstName}
+        </Text>
+      </View>
       <View style={{ flex: 1 }} />
       <NotificationsHeaderButton />
     </View>
@@ -32,5 +51,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  greeting: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+  },
+  greetLine: {
+    fontSize: 13,
+    fontWeight: '400',
+  },
+  nameLine: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
