@@ -132,10 +132,10 @@ function AuthGuard() {
       }
 
       // Unlocked — go to the app. Only redirect if coming from auth screens
-      // or on the very first load. Leave pin-setup alone so the user can
-      // finish entering their PIN before we move them anywhere.
-      if (inPinSetup) return;
-      if (inAuthGroup || inOnboarding || !initialRedirectDone.current) {
+      // or on the very first load. Leave pin-setup and onboarding alone so
+      // the user can finish without being bounced by subsequent state updates.
+      if (inPinSetup || inOnboarding) return;
+      if (inAuthGroup || !initialRedirectDone.current) {
         initialRedirectDone.current = true;
         router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
       }
