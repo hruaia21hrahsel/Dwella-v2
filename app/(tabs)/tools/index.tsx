@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/lib/theme-context';
+import { DwellaHeader } from '@/components/DwellaHeader';
 
 export default function ToolsScreen() {
   const router = useRouter();
@@ -47,6 +48,7 @@ export default function ToolsScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
+      <DwellaHeader style={{ marginHorizontal: -16, marginTop: -16 }} />
       {TOOLS.map((tool) => (
         <TouchableOpacity
           key={tool.label}

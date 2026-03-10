@@ -36,6 +36,13 @@ export const TOUR_STEPS: TourStep[] = [
     cta: 'Next',
   },
   {
+    route: '/(tabs)/profile',
+    icon: 'send',
+    title: 'Link Your Telegram Bot',
+    body: "Connect Telegram to chat with Dwella Assistant and receive rent reminders directly in your Telegram app.",
+    cta: 'Next',
+  },
+  {
     route: '/(tabs)/dashboard',
     icon: 'view-dashboard',
     title: 'Your Dashboard',

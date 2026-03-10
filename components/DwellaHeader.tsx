@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
@@ -12,7 +12,11 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-export function DwellaHeader() {
+interface DwellaHeaderProps {
+  style?: StyleProp<ViewStyle>;
+}
+
+export function DwellaHeader({ style }: DwellaHeaderProps = {}) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { user } = useAuthStore();
@@ -29,6 +33,7 @@ export function DwellaHeader() {
           backgroundColor: colors.background,
           borderBottomColor: colors.border,
         },
+        style,
       ]}
     >
       <ProfileHeaderButton />
@@ -51,6 +56,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   greeting: {

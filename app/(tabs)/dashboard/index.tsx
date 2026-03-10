@@ -25,6 +25,7 @@ import { GradientButton } from '@/components/GradientButton';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
+import { DwellaHeader } from '@/components/DwellaHeader';
 
 const HERO_STATUS_COLORS: Record<string, string> = {
   confirmed: '#FDE68A',
@@ -201,6 +202,7 @@ export default function DashboardScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
+      <DwellaHeader style={{ marginHorizontal: -16 }} />
       <ErrorBanner error={error} onRetry={refresh} />
 
       {/* Overview section */}

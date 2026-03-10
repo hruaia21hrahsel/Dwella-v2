@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Property } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+import { DwellaHeader } from '@/components/DwellaHeader';
 
 export default function PropertiesScreen() {
   const router = useRouter();
@@ -104,6 +105,7 @@ export default function PropertiesScreen() {
           <RefreshControl refreshing={isLoading} onRefresh={() => { refresh(); fetchTenants(); }} />
         }
       >
+        <DwellaHeader style={{ marginHorizontal: -16, marginTop: -16 }} />
         <ErrorBanner error={error} onRetry={refresh} />
 
         {/* Portfolio summary — only when there are properties */}
