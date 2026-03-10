@@ -64,14 +64,14 @@ export default function PaymentsScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { user } = useAuthStore();
-  const { ownedProperties } = useProperties();
+  const { ownedProperties, isLoading: propertiesLoading } = useProperties();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const loadedRef = useRef(false);
 
   // Data
   const [allTenants, setAllTenants] = useState<TenantOption[]>([]);
   const [allPayments, setAllPayments] = useState<PaymentRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Filters
   const [filterPropertyId, setFilterPropertyId] = useState<string | null>(null); // null = All
@@ -103,10 +103,13 @@ export default function PaymentsScreen() {
   // ── Data loading ──
 
   useEffect(() => {
-    if (!user?.id || !isLandlord || loadedRef.current) return;
+    // Wait for properties to finish loading before deciding what to do.
+    if (!user?.id || propertiesLoading) return;
+    if (!isLandlord) return; // no properties → nothing to fetch, stay loading=false
+    if (loadedRef.current) return;
     loadedRef.current = true;
     loadData();
-  }, [user?.id, isLandlord]);
+  }, [user?.id, isLandlord, propertiesLoading]);
 
   async function loadData() {
     setLoading(true);
@@ -214,7 +217,7 @@ export default function PaymentsScreen() {
 
   // ── Render ──
 
-  if (loading) {
+  if (propertiesLoading || loading) {
     return (
       <View style={{ flex: 1, paddingTop: insets.top }}>
         <ListSkeleton count={5} />
@@ -252,7 +255,7 @@ export default function PaymentsScreen() {
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={handleRefresh} />}
+        refreshControl={<RefreshControl refreshing={propertiesLoading || loading} onRefresh={handleRefresh} />}
       >
         {/* ── Filters ── */}
         <View style={styles.filterSection}>
