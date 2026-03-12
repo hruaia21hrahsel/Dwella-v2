@@ -17,8 +17,7 @@ function buildReceiptHtml(
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 32px; color: #1e293b; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-    .title { font-size: 14px; color: #64748b; margin-top: 4px; }
-    .meta { text-align: right; font-size: 13px; color: #64748b; }
+.meta { text-align: right; font-size: 13px; color: #64748b; }
     .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
     .section-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
@@ -33,6 +32,9 @@ function buildReceiptHtml(
     .status-partial { background: #fef3c7; color: #92400e; }
     .status-pending { background: #f1f5f9; color: #475569; }
     .status-overdue { background: #fee2e2; color: #991b1b; }
+    .receipt-title-block { margin-bottom: 24px; }
+    .receipt-title { font-size: 22px; font-weight: 700; color: #1e293b; }
+    .receipt-period { font-size: 15px; color: #009688; font-weight: 600; margin-top: 4px; }
     .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; }
   </style>
 </head>
@@ -50,13 +52,15 @@ function buildReceiptHtml(
         <path d="M168 56 L169 53 L170 56 L173 57 L170 58 L169 61 L168 58 L165 57 Z" fill="#F59E0B" opacity="0.7"/>
         <path d="M148 36 L149 34 L150 36 L152 37 L150 38 L149 40 L148 38 L146 37 Z" fill="#F59E0B" opacity="0.5"/>
       </svg>
-      <div class="title">Payment Receipt</div>
     </div>
     <div class="meta">
-      <div>${getMonthName(payment.month)} ${payment.year}</div>
       <div>Generated: ${formatDate(new Date().toISOString())}</div>
       <div>Receipt #${payment.id.slice(0, 8).toUpperCase()}</div>
     </div>
+  </div>
+  <div class="receipt-title-block">
+    <div class="receipt-title">Rent Payment Receipt</div>
+    <div class="receipt-period">${getMonthName(payment.month)} ${payment.year}</div>
   </div>
 
   <hr class="divider"/>
