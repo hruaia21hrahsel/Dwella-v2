@@ -42,7 +42,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       session: null,
       user: null,
       isLoading: true,
@@ -67,8 +67,8 @@ export const useAuthStore = create<AuthState>()(
         const { [s.user?.id ?? '_anon']: _, ...rest } = s.onboardingCompletedByUser;
         return { onboardingCompletedByUser: rest };
       }),
-      isOnboardingCompleted: () => {
-        const s = useAuthStore.getState();
+      isOnboardingCompleted: (): boolean => {
+        const s = get();
         return s.onboardingCompletedByUser[s.user?.id ?? '_anon'] ?? false;
       },
       setLocked: (isLocked) => set({ isLocked }),

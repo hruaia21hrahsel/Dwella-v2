@@ -254,7 +254,7 @@ export default function ProfileScreen() {
   }, [user, setUser]);
 
   const initials = user?.full_name
-    ? user.full_name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    ? user.full_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? '?';
 
   const telegramLinked = !!user?.telegram_chat_id;
