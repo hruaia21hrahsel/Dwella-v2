@@ -145,7 +145,9 @@ export default function PropertiesScreen() {
           <EmptyState
             icon="home-plus"
             title="No properties yet"
-            subtitle="Tap the + button to add your first property"
+            subtitle="Add your first property to start managing your portfolio"
+            actionLabel="Add Property"
+            onAction={handleAddProperty}
           />
         ) : (
           ownedProperties.map((property, index) => (

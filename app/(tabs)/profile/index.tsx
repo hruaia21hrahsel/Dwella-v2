@@ -4,7 +4,7 @@ import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
@@ -38,9 +38,11 @@ export default function ProfileScreen() {
   const [pinReady, setPinReady] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  useEffect(() => {
-    isPinSet().then(setPinReady);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      isPinSet().then(setPinReady);
+    }, [])
+  );
 
   async function handlePhotoPress() {
     const hasPhoto = !!user?.avatar_url;
@@ -210,7 +212,7 @@ export default function ProfileScreen() {
       const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
       if (data) setUser(data);
 
-      const deepLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${token}`;
+      const deepLink = `tg://resolve?domain=${TELEGRAM_BOT_USERNAME}&start=${token}`;
       const canOpen = await Linking.canOpenURL(deepLink);
       if (canOpen) {
         await Linking.openURL(deepLink);
