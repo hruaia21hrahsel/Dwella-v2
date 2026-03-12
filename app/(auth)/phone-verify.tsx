@@ -103,11 +103,12 @@ export default function PhoneVerifyScreen() {
 
     setLocked(false);
 
+    const uid = data.session!.user.id;
     if (data.session?.refresh_token) {
-      savePinSession(data.session.refresh_token);
+      savePinSession(uid, data.session.refresh_token);
     }
 
-    const pinSet = await isPinSet();
+    const pinSet = await isPinSet(uid);
     if (!pinSet) {
       useAuthStore.getState().setPendingRoute('/pin-setup');
     }

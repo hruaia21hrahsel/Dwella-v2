@@ -67,7 +67,7 @@ export default function SignupScreen() {
     // Save the refresh token for biometric unlock (fire-and-forget — fast local write,
     // completes well before the user finishes entering their PIN).
     if (data.session?.refresh_token) {
-      savePinSession(data.session.refresh_token);
+      savePinSession(data.session.user.id, data.session.refresh_token);
     }
     // AuthGuard will navigate to /pin-setup via pendingRoute.
   }

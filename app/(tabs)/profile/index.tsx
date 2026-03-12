@@ -40,7 +40,8 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      isPinSet().then(setPinReady);
+      const uid = useAuthStore.getState().session?.user?.id;
+      if (uid) isPinSet(uid).then(setPinReady);
     }, [])
   );
 
@@ -169,7 +170,8 @@ export default function ProfileScreen() {
           text: 'Remove',
           style: 'destructive',
           onPress: async () => {
-            await disablePin();
+            const uid = useAuthStore.getState().session?.user?.id;
+            if (uid) await disablePin(uid);
             setPinReady(false);
           },
         },

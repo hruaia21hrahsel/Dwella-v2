@@ -144,7 +144,7 @@ function AuthGuard() {
     }
 
     // Session exists. Check if the UI is locally locked.
-    isBiometricEnabled().then((pinEnabled) => {
+    isBiometricEnabled(session.user.id).then((pinEnabled) => {
       // Bail out if the effect has re-fired since we started the async check.
       if (gen !== routingGeneration.current) return;
 

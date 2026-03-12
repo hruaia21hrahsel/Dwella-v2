@@ -22,16 +22,19 @@ export default function LockScreen() {
   const [attempts, setAttempts] = useState(0);
   const [signingOut, setSigningOut] = useState(false);
 
+  const uid = useAuthStore((s) => s.session?.user?.id);
+
   useEffect(() => {
     (async () => {
-      const [enabled, pinReady] = await Promise.all([isBiometricEnabled(), isPinSet()]);
+      if (!uid) { router.replace('/(auth)/login'); return; }
+      const [enabled, pinReady] = await Promise.all([isBiometricEnabled(uid), isPinSet(uid)]);
       if (!enabled || !pinReady) {
         router.replace('/(auth)/login');
         return;
       }
       setReady(true);
     })();
-  }, []);
+  }, [uid]);
 
   async function handlePinDigit(digit: string) {
     const newPin = pin + digit;
@@ -39,7 +42,7 @@ export default function LockScreen() {
     setPinError('');
 
     if (newPin.length === 6) {
-      const correct = await verifyPin(newPin);
+      const correct = await verifyPin(uid!, newPin);
       setPin('');
 
       if (correct) {

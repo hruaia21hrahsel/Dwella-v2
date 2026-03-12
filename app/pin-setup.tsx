@@ -46,7 +46,9 @@ export default function PinSetupScreen() {
         setStep('confirm');
       } else {
         if (newPin === firstPin) {
-          await savePin(newPin);
+          const uid = useAuthStore.getState().session?.user?.id;
+          if (!uid) return;
+          await savePin(uid, newPin);
           useAuthStore.getState().setLocked(false);
           useToastStore.getState().showToast('PIN set up successfully!', 'success');
           finish();

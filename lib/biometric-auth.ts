@@ -2,23 +2,27 @@ import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 
-const KEY_PIN_ENABLED = 'dwella_biometric_enabled'; // key name kept for backwards compat
-const KEY_PIN = 'dwella_pin';
+function pinEnabledKey(userId: string) {
+  return `dwella_biometric_enabled_${userId}`;
+}
+
+function pinKey(userId: string) {
+  return `dwella_pin_${userId}`;
+}
 
 // ── PIN enabled flag ──────────────────────────────────────────────────
 
-export async function isBiometricEnabled(): Promise<boolean> {
-  // expo-secure-store ships an empty stub on web — all methods are undefined.
-  if (Platform.OS === 'web') return false;
-  const val = await SecureStore.getItemAsync(KEY_PIN_ENABLED);
+export async function isBiometricEnabled(userId: string): Promise<boolean> {
+  if (Platform.OS === 'web' || !userId) return false;
+  const val = await SecureStore.getItemAsync(pinEnabledKey(userId));
   return val === 'true';
 }
 
-export async function setPinEnabled(enabled: boolean): Promise<void> {
+export async function setPinEnabled(userId: string, enabled: boolean): Promise<void> {
   if (enabled) {
-    await SecureStore.setItemAsync(KEY_PIN_ENABLED, 'true');
+    await SecureStore.setItemAsync(pinEnabledKey(userId), 'true');
   } else {
-    await SecureStore.deleteItemAsync(KEY_PIN_ENABLED);
+    await SecureStore.deleteItemAsync(pinEnabledKey(userId));
   }
 }
 
@@ -40,15 +44,15 @@ async function hashPin(pin: string, salt: string): Promise<string> {
   return `sha256:${salt}:${digest}`;
 }
 
-export async function savePin(pin: string): Promise<void> {
+export async function savePin(userId: string, pin: string): Promise<void> {
   const salt = Crypto.randomUUID().replace(/-/g, '');
   const stored = await hashPin(pin, salt);
-  await SecureStore.setItemAsync(KEY_PIN, stored);
-  await SecureStore.setItemAsync(KEY_PIN_ENABLED, 'true');
+  await SecureStore.setItemAsync(pinKey(userId), stored);
+  await SecureStore.setItemAsync(pinEnabledKey(userId), 'true');
 }
 
-export async function verifyPin(pin: string): Promise<boolean> {
-  const stored = await SecureStore.getItemAsync(KEY_PIN);
+export async function verifyPin(userId: string, pin: string): Promise<boolean> {
+  const stored = await SecureStore.getItemAsync(pinKey(userId));
   if (!stored) return false;
 
   // New format: sha256:{salt}:{digest}
@@ -72,33 +76,34 @@ export async function verifyPin(pin: string): Promise<boolean> {
     const storedPin = decoded.slice(colonIdx + 1);
     if (storedPin !== pin) return false;
     // Correct — upgrade storage to proper hash
-    await savePin(pin);
+    await savePin(userId, pin);
     return true;
   } catch {
     return false;
   }
 }
 
-export async function isPinSet(): Promise<boolean> {
-  const val = await SecureStore.getItemAsync(KEY_PIN);
+export async function isPinSet(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  const val = await SecureStore.getItemAsync(pinKey(userId));
   return !!val;
 }
 
-export async function disablePin(): Promise<void> {
-  await SecureStore.deleteItemAsync(KEY_PIN);
-  await SecureStore.deleteItemAsync(KEY_PIN_ENABLED);
+export async function disablePin(userId: string): Promise<void> {
+  await SecureStore.deleteItemAsync(pinKey(userId));
+  await SecureStore.deleteItemAsync(pinEnabledKey(userId));
 }
 
 // ── Legacy stubs (callers may still import these) ─────────────────────
 
 /** @deprecated No longer stores a token — PIN is a local lock only. */
-export async function savePinSession(_refreshToken?: string): Promise<void> {
-  await SecureStore.setItemAsync(KEY_PIN_ENABLED, 'true');
+export async function savePinSession(userId: string, _refreshToken?: string): Promise<void> {
+  await SecureStore.setItemAsync(pinEnabledKey(userId), 'true');
 }
 
 /** @deprecated Not used in the new architecture. */
-export async function clearBiometricSession(): Promise<void> {
-  await SecureStore.deleteItemAsync(KEY_PIN_ENABLED);
+export async function clearBiometricSession(userId: string): Promise<void> {
+  await SecureStore.deleteItemAsync(pinEnabledKey(userId));
 }
 
 /** @deprecated Use disablePin() instead. */

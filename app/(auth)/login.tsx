@@ -57,7 +57,7 @@ export default function LoginScreen() {
     }
 
     setLocked(false);
-    const pinSet = await isPinSet();
+    const pinSet = await isPinSet(data.session!.user.id);
     if (!pinSet && data.session) {
       router.replace('/pin-setup');
       return;
