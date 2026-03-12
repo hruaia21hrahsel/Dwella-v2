@@ -21,7 +21,10 @@ export function useProperties(): UsePropertiesResult {
   // propertyRefreshAt is included so that bumping it from the create screen
   // always produces a new fetch reference and triggers the useEffect below.
   const fetch = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
 

@@ -79,22 +79,35 @@ function AuthGuard() {
         }
 
         if (newSession?.user) {
-          await supabase.from('users').upsert(
-            {
-              id: newSession.user.id,
-              email: newSession.user.email ?? '',
-              full_name: newSession.user.user_metadata?.full_name ?? null,
-              phone: newSession.user.user_metadata?.phone ?? null,
-            },
-            { onConflict: 'id', ignoreDuplicates: true }
-          );
-          const { data } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', newSession.user.id)
-            .single();
-          setUser(data);
-          registerPushToken(newSession.user.id);
+          const uid = newSession.user.id;
+          const fallbackUser = {
+            id: uid,
+            email: newSession.user.email ?? '',
+            full_name: newSession.user.user_metadata?.full_name ?? null,
+            phone: newSession.user.user_metadata?.phone ?? null,
+          };
+
+          try {
+            await supabase.from('users').upsert(
+              {
+                id: uid,
+                email: newSession.user.email ?? '',
+                full_name: newSession.user.user_metadata?.full_name ?? null,
+                phone: newSession.user.user_metadata?.phone ?? null,
+              },
+              { onConflict: 'id', ignoreDuplicates: true }
+            );
+            const { data } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', uid)
+              .single();
+            setUser(data ?? fallbackUser);
+          } catch {
+            // If DB queries fail, still provide a minimal user so hooks don't stall
+            setUser(fallbackUser as any);
+          }
+          registerPushToken(uid);
         } else {
           setUser(null);
         }

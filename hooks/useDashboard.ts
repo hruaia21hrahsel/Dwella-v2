@@ -55,7 +55,10 @@ export function useDashboard(year: number, month: number): DashboardData {
   const hasLoadedOnce = useRef(false);
 
   const load = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
     // Only show skeleton on the very first load — subsequent refreshes keep stale data visible
     if (!hasLoadedOnce.current) setIsLoading(true);
     setError(null);

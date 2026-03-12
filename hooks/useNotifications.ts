@@ -9,7 +9,10 @@ export function useNotifications(userId: string | undefined) {
   const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
