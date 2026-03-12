@@ -182,7 +182,6 @@ function InnerLayout() {
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen name="pin-setup" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/phone-verify" options={{ headerShown: false }} />
         <Stack.Screen name="reminders/index" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen
           name="notifications/index"
