@@ -17,10 +17,8 @@
  * TODO before launch: replace the placeholder store URLs below with real ones.
  */
 
-// ── Placeholder store URLs — update these when the app is published ──────────
-const APP_STORE_URL  = 'https://apps.apple.com/app/dwella/id000000000';   // TODO
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella.app'; // TODO
-// ─────────────────────────────────────────────────────────────────────────────
+const APP_STORE_URL  = 'https://apps.apple.com/app/id6760478576';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella.app';
 
 Deno.serve(async (req: Request) => {
   const url   = new URL(req.url);

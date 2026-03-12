@@ -82,7 +82,7 @@ function AuthGuard() {
           await supabase.from('users').upsert(
             {
               id: newSession.user.id,
-              email: newSession.user.email!,
+              email: newSession.user.email ?? '',
               full_name: newSession.user.user_metadata?.full_name ?? null,
               phone: newSession.user.user_metadata?.phone ?? null,
             },

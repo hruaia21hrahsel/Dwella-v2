@@ -43,30 +43,32 @@ export default function PaymentDetailScreen() {
 
   async function fetchPayment() {
     setLoading(true);
-    const [{ data: paymentData }, { data: tenantData }, { data: propertyData }] = await Promise.all([
-      supabase.from('payments').select('*').eq('id', paymentId).single<Payment>(),
-      supabase.from('tenants').select('*').eq('id', tenantId).single<Tenant>(),
-      supabase.from('properties').select('*').eq('id', propertyId).single<Property>(),
-    ]);
-    setPayment(paymentData);
-    setTenant(tenantData);
-    setProperty(propertyData);
+    try {
+      const [{ data: paymentData }, { data: tenantData }, { data: propertyData }] = await Promise.all([
+        supabase.from('payments').select('*').eq('id', paymentId).single<Payment>(),
+        supabase.from('tenants').select('*').eq('id', tenantId).single<Tenant>(),
+        supabase.from('properties').select('*').eq('id', propertyId).single<Property>(),
+      ]);
+      setPayment(paymentData);
+      setTenant(tenantData);
+      setProperty(propertyData);
 
-    if (paymentData?.proof_url) {
-      const url = await getProofSignedUrl(paymentData.proof_url);
-      setProofUrl(url);
+      if (paymentData?.proof_url) {
+        const url = await getProofSignedUrl(paymentData.proof_url);
+        setProofUrl(url);
+      }
+
+      if (propertyData?.owner_id) {
+        const { data: ownerData } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', propertyData.owner_id)
+          .single();
+        setLandlordName(ownerData?.full_name ?? 'Landlord');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    if (propertyData?.owner_id) {
-      const { data: ownerData } = await supabase
-        .from('users')
-        .select('full_name')
-        .eq('id', propertyData.owner_id)
-        .single();
-      setLandlordName(ownerData?.full_name ?? 'Landlord');
-    }
-
-    setLoading(false);
   }
 
   async function handleConfirm() {

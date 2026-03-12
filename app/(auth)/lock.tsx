@@ -20,6 +20,7 @@ export default function LockScreen() {
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [attempts, setAttempts] = useState(0);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -60,7 +61,9 @@ export default function LockScreen() {
   }
 
   async function signOutAndGoToLogin() {
+    setSigningOut(true);
     await supabase.auth.signOut();
+    // AuthGuard will redirect to login once session clears
   }
 
   function handleDelete() {
@@ -69,7 +72,7 @@ export default function LockScreen() {
   }
 
   function handleDigit(d: string) {
-    if (pin.length < 6) handlePinDigit(d);
+    if (!signingOut && pin.length < 6) handlePinDigit(d);
   }
 
   if (!ready) {
@@ -129,8 +132,9 @@ export default function LockScreen() {
                 return (
                   <TouchableOpacity
                     key={di}
-                    style={[styles.numpadKey, styles.numpadKeyBg, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}
+                    style={[styles.numpadKey, styles.numpadKeyBg, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', opacity: signingOut ? 0.4 : 1 }]}
                     onPress={() => handleDigit(d)}
+                    disabled={signingOut}
                     activeOpacity={0.5}
                   >
                     <Text style={[styles.numpadDigit, { color: colors.textPrimary }]}>{d}</Text>
