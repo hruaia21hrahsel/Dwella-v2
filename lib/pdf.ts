@@ -16,7 +16,7 @@ function buildReceiptHtml(
   <meta charset="utf-8"/>
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; color: #1e293b; }
-    .header-band { background: #009688; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header-band { background: #009688; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
     .header-right { text-align: right; }
     .header-title { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.01em; }
     .header-period { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85); margin-top: 4px; }
@@ -152,7 +152,7 @@ function buildAnnualSummaryHtml(
   <meta charset="utf-8"/>
   <style>
     body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; color: #1e293b; }
-    .header-band { background: #009688; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header-band { background: #009688; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
     .header-right { text-align: right; }
     .header-title { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 0.01em; }
     .header-period { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85); margin-top: 4px; }
