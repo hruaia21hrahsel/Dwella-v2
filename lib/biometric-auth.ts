@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 const KEY_PIN_ENABLED = 'dwella_biometric_enabled'; // key name kept for backwards compat
 const KEY_PIN = 'dwella_pin';
@@ -6,6 +7,8 @@ const KEY_PIN = 'dwella_pin';
 // ── PIN enabled flag ──────────────────────────────────────────────────
 
 export async function isBiometricEnabled(): Promise<boolean> {
+  // expo-secure-store ships an empty stub on web — all methods are undefined.
+  if (Platform.OS === 'web') return false;
   const val = await SecureStore.getItemAsync(KEY_PIN_ENABLED);
   return val === 'true';
 }

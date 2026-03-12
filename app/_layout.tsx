@@ -58,7 +58,7 @@ function AuthGuard() {
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
     // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
-    const fallback = setTimeout(() => setLoading(false), 8000);
+    const fallback = setTimeout(() => setLoading(false), 3000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       clearTimeout(fallback);
