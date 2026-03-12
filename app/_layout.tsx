@@ -55,6 +55,13 @@ function AuthGuard() {
   /** Incremented each time the routing effect fires; stale async callbacks bail out. */
   const routingGeneration = useRef(0);
 
+  // Dismiss splash screen once loading finishes (or after a safety timeout)
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
     // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
