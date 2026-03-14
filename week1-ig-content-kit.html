@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dwella — Week 1 Instagram Content Kit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --indigo: #4F46E5;
+    --dark-navy: #1E1B4B;
+    --green: #10B981;
+    --red: #EF4444;
+    --amber: #F59E0B;
+    --dark-bg: #0F172A;
+    --gray: #94A3B8;
+    --light-gray: #64748B;
+    --dark-text: #1E1B4B;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  @media print {
+    body { font-size: 12px; }
+    .page-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+  }
+
+  .cover {
+    background: linear-gradient(135deg, var(--indigo), var(--dark-navy));
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+  }
+  .cover h1 { font-size: 48px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+  .cover .subtitle { font-size: 20px; opacity: 0.85; margin-bottom: 40px; }
+  .cover .meta { font-size: 14px; opacity: 0.6; margin-top: 40px; }
+  .cover .logo-text { font-size: 72px; font-weight: 800; letter-spacing: -2px; margin-bottom: 8px; }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 40px 32px; }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--indigo);
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--indigo);
+  }
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark-navy);
+    margin: 24px 0 12px;
+  }
+  h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-navy);
+    margin: 16px 0 8px;
+  }
+
+  p { margin-bottom: 12px; }
+
+  .badge {
+    display: inline-block;
+    background: var(--indigo);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 6px;
+  }
+  .badge.reel { background: var(--red); }
+  .badge.carousel { background: var(--indigo); }
+  .badge.static { background: var(--green); }
+  .badge.story { background: var(--amber); color: #1a1a2e; }
+
+  .day-header {
+    background: var(--dark-bg);
+    color: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin: 32px 0 20px;
+  }
+  .day-header .day-name { font-size: 14px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
+  .day-header h3 { color: white; margin: 4px 0 0; font-size: 22px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  th {
+    background: var(--dark-navy);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  .caption-box {
+    background: #f1f5f9;
+    border-left: 4px solid var(--indigo);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    white-space: pre-line;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .hashtags {
+    background: #eef2ff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--indigo);
+    word-break: break-word;
+    margin: 12px 0;
+  }
+
+  .design-note {
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .design-note strong { color: #92400e; }
+
+  .canva-steps {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0;
+  }
+  .canva-steps h4 { color: var(--green); margin-top: 0; }
+
+  .slide-spec {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 10px 0;
+    background: #fafbfc;
+  }
+  .slide-spec .slide-num {
+    font-weight: 800;
+    color: var(--indigo);
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+  .slide-spec ul { padding-left: 18px; margin: 6px 0; }
+  .slide-spec li { margin-bottom: 4px; font-size: 13px; }
+
+  .color-swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  .brand-kit-table td:first-child { font-weight: 600; width: 35%; }
+
+  .toc { padding: 20px 0; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 8px 0; font-size: 15px; }
+  .toc a { color: var(--indigo); text-decoration: none; font-weight: 500; }
+
+  .section-divider {
+    height: 4px;
+    background: linear-gradient(90deg, var(--indigo), var(--green));
+    border-radius: 2px;
+    margin: 40px 0;
+  }
+
+  .checklist li { list-style: none; margin: 6px 0; }
+  .checklist li::before { content: ""; margin-right: 0; }
+
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray);
+    font-size: 12px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="logo-text">DWELLA</div>
+  <h1>Week 1 Instagram Content Kit</h1>
+  <div class="subtitle">Complete captions, design briefs, hashtags & posting schedule</div>
+  <div class="meta">
+    @dwella_ai &bull; Pre-launch Campaign<br>
+    Prepared for Instagram Growth Strategy
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="container page-break">
+  <h2>Contents</h2>
+  <div class="toc">
+    <ol>
+      <li><a href="#account">Account Setup — Bio, Name Field & Brand Kit</a></li>
+      <li><a href="#monday">Monday — Carousel: "5 Reasons Landlords Lose Money"</a></li>
+      <li><a href="#tuesday">Tuesday — Reel: App Screen Recording Demo</a></li>
+      <li><a href="#wednesday">Wednesday — Static Post: "Rent Receipt for HRA"</a></li>
+      <li><a href="#thursday">Thursday — Reel: "POV: Landlord on the 5th"</a></li>
+      <li><a href="#friday">Friday — Carousel: "How to Calculate Rental Yield"</a></li>
+      <li><a href="#saturday">Saturday — Reel: "Before Dwella vs After Dwella"</a></li>
+      <li><a href="#sunday">Sunday — Story Series: "Why We Built Dwella"</a></li>
+      <li><a href="#schedule">Posting Schedule & Times</a></li>
+      <li><a href="#brandkit">Brand Kit Reference</a></li>
+      <li><a href="#export">Canva Export Settings</a></li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ACCOUNT SETUP -->
+  <div id="account" class="no-break">
+    <h2>Account Setup</h2>
+
+    <h3>Instagram Bio</h3>
+    <div class="caption-box">India's smartest rental management app
+AI-powered. No spreadsheets. No WhatsApp chasing.
+Landlords & tenants on one platform
+Join the waitlist &#x1F447;</div>
+
+    <h3>Name Field (Searchable)</h3>
+    <p><strong>Dwella | Smart Property Management with AI</strong></p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ===================== MONDAY ===================== -->
+  <div id="monday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Monday</div>
+      <h3><span class="badge carousel">Carousel</span> 5 Reasons Landlords Lose Money on Rental Properties</h3>
+    </div>
+
+    <h3>Slide-by-Slide Content</h3>
+    <table>
+      <thead><tr><th>Slide</th><th>Text</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 (Cover)</strong></td><td><strong>5 Reasons Landlords Lose Money on Rental Properties</strong> — Swipe to stop bleeding cash &rarr;</td></tr>
+        <tr><td><strong>2</strong></td><td><strong>1. No rent tracking system</strong> — You rely on memory or WhatsApp screenshots. Payments slip through the cracks.</td></tr>
+        <tr><td><strong>3</strong></td><td><strong>2. No payment proof on file</strong> — Tenant says they paid. You say they didn't. No receipts = no proof.</td></tr>
+        <tr><td><strong>4</strong></td><td><strong>3. Late rent goes unchallenged</strong> — You feel awkward chasing. So you wait. And lose &#x20B9;1000s every month.</td></tr>
+        <tr><td><strong>5</strong></td><td><strong>4. Tax time is a nightmare</strong> — No organized records = missed deductions + hours wasted with your CA.</td></tr>
+        <tr><td><strong>6</strong></td><td><strong>5. Managing remotely is chaos</strong> — NRI landlords or multi-city owners lose track without a system.</td></tr>
+        <tr><td><strong>7</strong></td><td><strong>The fix?</strong> One app that tracks rent, sends auto-reminders, stores payment proof, and handles it all with AI.</td></tr>
+        <tr><td><strong>8 (CTA)</strong></td><td><strong>Dwella is launching soon.</strong> Join the waitlist — link in bio. Follow @dwella_ai for early access.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Canva Design Brief</h3>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 1 — Cover</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5 (solid indigo)</li>
+        <li><strong>Text 1 (top):</strong> "5 REASONS" — Plus Jakarta Sans Bold, 64px, white, centered</li>
+        <li><strong>Text 2:</strong> "LANDLORDS LOSE MONEY" — 48px, white, centered</li>
+        <li><strong>Text 3:</strong> "ON RENTAL PROPERTIES" — 36px, white, opacity 80%</li>
+        <li><strong>Bottom:</strong> White arrow icon + "SWIPE &rarr;" 18px white</li>
+        <li><strong>Top-right:</strong> Dwella logo, ~80px wide, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slides 2–6 — Reasons 01–05</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A (dark)</li>
+        <li><strong>Top-left:</strong> Large "01"–"05" — 80px, <span class="color-swatch" style="background:#4F46E5"></span> indigo</li>
+        <li><strong>Heading:</strong> Bold, 36px, white</li>
+        <li><strong>Body:</strong> Regular, 22px, white, 85% opacity</li>
+        <li><strong>Decorative icon:</strong> Bottom-right, indigo tint, 30% opacity</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 7 — The Fix</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5 (indigo)</li>
+        <li><strong>Heading:</strong> "The Fix?" — Bold, 48px, white, centered</li>
+        <li><strong>Checklist:</strong> &#x2705; Auto rent tracking / AI-powered reminders / Payment proof storage / One-tap rent receipts / Landlord + Tenant on one app — Regular 24px, white</li>
+        <li><strong>Bottom:</strong> "One app. Zero hassle." — Bold, 28px, white 90%</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 8 — CTA</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A</li>
+        <li><strong>Center:</strong> Dwella logo (large)</li>
+        <li><strong>"Launching Soon"</strong> — Bold, 40px, white</li>
+        <li><strong>"Join the waitlist — Link in bio"</strong> — Regular, 24px, <span class="color-swatch" style="background:#10B981"></span> green</li>
+        <li><strong>"@dwella_ai"</strong> — 20px, white 70%</li>
+      </ul>
+    </div>
+
+    <h3>Caption (Copy-Paste Ready)</h3>
+    <div class="caption-box">Stop managing your rental properties on WhatsApp &#x1F6D1;
+
+Most Indian landlords lose money — not because of bad tenants, but because they have no system.
+
+No payment tracking.
+No rent reminders.
+No proper records for tax season.
+
+We built Dwella to fix this — an AI-powered app that puts landlords and tenants on one platform.
+
+Auto rent reminders. Payment proof storage. Smart tracking.
+All from your phone.
+
+Swipe through to see the 5 biggest money leaks &#x1F449;
+
+Save this for every landlord you know &#x1F516;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">#LandlordLife #LandlordProblems #RentalProperty #PropertyManagement #IndianLandlord #RentCollection #PassiveIncomeIndia #RealEstateIndia #PropertyInvestment #RentalIncome #LandlordTips #TenantManagement #PropertyOwner #RealEstateInvesting #HouseOwner #RentTracker #PropTech #SmartLandlord #RealEstateIndia2025 #DwellaApp</div>
+  </div>
+
+  <!-- ===================== TUESDAY ===================== -->
+  <div id="tuesday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Tuesday</div>
+      <h3><span class="badge reel">Reel</span> App Screen Recording Demo</h3>
+    </div>
+
+    <h3>Reel Script</h3>
+    <div class="design-note"><strong>Format:</strong> Screen recording + text overlays + trending audio. No face needed.</div>
+
+    <table>
+      <thead><tr><th>Timestamp</th><th>On-Screen Text</th><th>What to Record</th></tr></thead>
+      <tbody>
+        <tr><td>0–3s</td><td>"Track 3 months of rent in 30 seconds &#x26A1;"</td><td>Black screen or app logo splash</td></tr>
+        <tr><td>3–8s</td><td>"Step 1: Add your property"</td><td>Screen-record adding a property in Dwella</td></tr>
+        <tr><td>8–14s</td><td>"Step 2: Add your tenant"</td><td>Screen-record adding tenant details</td></tr>
+        <tr><td>14–22s</td><td>"Step 3: Rent auto-tracked every month"</td><td>Show payment ledger with status badges</td></tr>
+        <tr><td>22–27s</td><td>"AI reminders. Payment proof. Zero effort."</td><td>Quick scroll through features</td></tr>
+        <tr><td>27–30s</td><td>"Dwella — Waitlist open. Link in bio."</td><td>End card with logo</td></tr>
+      </tbody>
+    </table>
+
+    <div class="design-note"><strong>Audio:</strong> Use any trending upbeat/tech audio — search "productivity" or "tech" in the Reels audio library.</div>
+
+    <h3>Canva Design Brief</h3>
+
+    <div class="slide-spec">
+      <div class="slide-num">Title Card (1080 &times; 1920)</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5</li>
+        <li><strong>Center text:</strong> "Track 3 months of rent in 30 seconds &#x26A1;" — Bold, 48px, white, centered</li>
+        <li><strong>Bottom:</strong> "@dwella_ai" — 20px, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">End Card (1080 &times; 1920)</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A</li>
+        <li><strong>Center:</strong> Dwella logo</li>
+        <li><strong>"AI-Powered Property Management"</strong> — Bold, 32px, white</li>
+        <li><strong>"Waitlist open — Link in bio"</strong> — 24px, <span class="color-swatch" style="background:#10B981"></span> green</li>
+        <li><strong>"@dwella_ai"</strong></li>
+      </ul>
+    </div>
+
+    <div class="design-note"><strong>How to assemble:</strong> Screen-record the Dwella app (add property &rarr; add tenant &rarr; view ledger). Use CapCut or IG editor to add title card + text overlays + end card + trending audio.</div>
+
+    <h3>Caption (Copy-Paste Ready)</h3>
+    <div class="caption-box">Property management in 2025 shouldn't look like this:
+&#x1F4F1; WhatsApp groups
+&#x1F4DD; Excel sheets
+&#x1F92F; "Bhaiya rent bheja kya?"
+
+Dwella handles it all — AI-powered rent tracking, auto-reminders, and payment proof in one app.
+
+Built for Indian landlords who value their time.
+
+Waitlist is open — link in bio &#x1F517;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">#PropertyManagement #RentTracker #PropTechIndia #LandlordLife #SmartProperty #AIApp #RentalProperty #IndianLandlord #TechForGood #DigitalIndia #RealEstateIndia #PassiveIncome #StartupIndia #DwellaApp #RentCollection</div>
+  </div>
+
+  <!-- ===================== WEDNESDAY ===================== -->
+  <div id="wednesday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Wednesday</div>
+      <h3><span class="badge static">Static Post</span> Rent Receipt for HRA Exemption</h3>
+    </div>
+
+    <h3>On-Image Content</h3>
+    <div class="design-note"><strong>Format:</strong> Single infographic-style image (1080 &times; 1080)</div>
+
+    <div class="canva-steps">
+      <h4>Canva Design Specifications</h4>
+      <ul style="padding-left:18px; font-size:13px;">
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#fff; border:1px solid #ccc;"></span> #FFFFFF (white)</li>
+        <li><strong>Top bar:</strong> Thin indigo bar (#4F46E5), 40px height</li>
+        <li><strong>Heading:</strong> "RENT RECEIPT FOR HRA" — Bold, 40px, #1E1B4B, centered</li>
+        <li><strong>Subheading:</strong> "What your tenant actually needs from you" — Regular, 22px, #64748B</li>
+      </ul>
+    </div>
+
+    <h4>Checklist Section (green checkmarks, #10B981)</h4>
+    <table>
+      <tbody>
+        <tr><td>&#x2705;</td><td>Landlord's full name</td></tr>
+        <tr><td>&#x2705;</td><td>Landlord's PAN (if rent &gt; &#x20B9;1L/year)</td></tr>
+        <tr><td>&#x2705;</td><td>Property address</td></tr>
+        <tr><td>&#x2705;</td><td>Rent amount per month</td></tr>
+        <tr><td>&#x2705;</td><td>Payment period (from — to)</td></tr>
+        <tr><td>&#x2705;</td><td>Revenue stamp (for cash payments)</td></tr>
+        <tr><td>&#x2705;</td><td>Landlord's signature</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Common Mistakes Box</h4>
+    <div style="background:#FEF2F2; border:1px solid #FECACA; padding:12px 16px; border-radius:8px; margin:12px 0;">
+      <strong style="color:#EF4444;">&#x274C; Common Mistakes</strong>
+      <ul style="padding-left:18px; margin-top:8px; font-size:13px; color:#991B1B;">
+        <li>No PAN = tenant's HRA claim rejected</li>
+        <li>Missing address = invalid receipt</li>
+        <li>No date range = CA sends it back</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Footer Bar</div>
+      <ul>
+        <li>Rounded rectangle, <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5 background</li>
+        <li>Text: "&#x1F4A1; Dwella auto-generates compliant rent receipts" — Bold, 18px, white</li>
+        <li>Right side: Dwella logo (small, white)</li>
+      </ul>
+    </div>
+
+    <h3>Caption (Copy-Paste Ready)</h3>
+    <div class="caption-box">Tax season is coming. Your tenant will ask for rent receipts.
+
+Most landlords either:
+&rarr; Don't know what to include
+&rarr; Send a random PDF from Google
+&rarr; Make the tenant figure it out themselves
+
+Here's exactly what a valid rent receipt needs for HRA exemption &#x1F446;
+
+Pro tip: If annual rent exceeds &#x20B9;1,00,000 — your PAN is mandatory. Miss this and your tenant's HRA claim gets rejected. They'll blame you.
+
+Dwella generates compliant rent receipts automatically — correct format, every field filled, downloadable as PDF.
+
+Save this post. You'll need it in March &#x1F516;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">#HRAExemption #RentReceipt #TaxSavingTips #ITRFiling #PersonalFinanceIndia #FinanceTips #IncomeTax #TaxPlanning #RentingInIndia #TenantLife #LandlordTips #PropertyManagement #IndianTaxTips #SalaryTaxSaving #PropTech #DwellaApp #RealEstateIndia #SmartLandlord #FinTechIndia #MoneyManagement</div>
+  </div>
+
+  <!-- ===================== THURSDAY ===================== -->
+  <div id="thursday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Thursday</div>
+      <h3><span class="badge reel">Reel</span> POV: Landlord on the 5th</h3>
+    </div>
+
+    <h3>Reel Script</h3>
+    <div class="design-note"><strong>Format:</strong> Text-on-screen meme format, no face needed. Comedic/dramatic trending audio.</div>
+
+    <table>
+      <thead><tr><th>Timestamp</th><th>On-Screen Text</th><th>Visual</th></tr></thead>
+      <tbody>
+        <tr><td>0–3s</td><td>"POV: You're a landlord and it's the 5th of the month"</td><td>Phone screen with WhatsApp chat mockup</td></tr>
+        <tr><td>3–6s</td><td>Chat: "Hi, rent due tha 1st ko"</td><td>Typing animation or static chat bubble</td></tr>
+        <tr><td>6–9s</td><td>Reply: "Haan bhaiya, kal bhejta hoon &#x1F64F;"</td><td>Blue tick, reply bubble</td></tr>
+        <tr><td>9–11s</td><td>"Day 7..."</td><td>Same chat, no reply</td></tr>
+        <tr><td>11–14s</td><td>You: "Bhai rent?" &rarr; "Seen &#x2713;&#x2713;"</td><td>Message left on read</td></tr>
+        <tr><td>14–17s</td><td>"Day 15... still waiting &#x1FAE0;"</td><td>Calendar showing 15th</td></tr>
+        <tr><td>17–20s</td><td>TRANSITION: "Or... you could use Dwella &#x1F916;"</td><td>App screen showing auto-reminder sent</td></tr>
+        <tr><td>20–23s</td><td>"AI-powered reminders. Auto-sent. No awkward texts."</td><td>Feature highlight</td></tr>
+        <tr><td>23–25s</td><td>"Waitlist open — @dwella_ai"</td><td>Logo + CTA</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Canva Frames (1080 &times; 1920 each)</h3>
+
+    <div class="slide-spec">
+      <div class="slide-num">Frame 1 — Title</div>
+      <ul>
+        <li><strong>Background:</strong> Dark / fake WhatsApp mockup</li>
+        <li><strong>Text:</strong> "POV: You're a landlord and it's the 5th of the month" — Bold, 36px, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Frames 2–5 — Chat Mockup Sequence</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A</li>
+        <li>Create fake chat layout with rounded rectangle bubbles (green = you, gray = tenant)</li>
+        <li>Frame 2: Your message + tenant reply</li>
+        <li>Frame 3: "Day 7..." — Bold, 64px, white center</li>
+        <li>Frame 4: "Bhai rent?" + "Seen &#x2713;&#x2713;" (no reply)</li>
+        <li>Frame 5: "Day 15... &#x1FAE0;&#x1FAE0;&#x1FAE0;"</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Frames 6–8 — Solution + CTA</div>
+      <ul>
+        <li>Frame 6: <span class="color-swatch" style="background:#4F46E5"></span> Indigo bg — "Or... you could use Dwella &#x1F916;" — Bold, 40px, white</li>
+        <li>Frame 7: Indigo bg — AI auto-reminders details (before, on, after due date)</li>
+        <li>Frame 8: Standard end card</li>
+      </ul>
+    </div>
+
+    <div class="design-note"><strong>Assembly:</strong> Import frames into CapCut (2–3 sec each), add transitions, add trending comedic/dramatic audio ("plot twist" or "expectation vs reality").</div>
+
+    <h3>Caption (Copy-Paste Ready)</h3>
+    <div class="caption-box">Every Indian landlord on the 5th of the month: &#x1FAE0;
+
+"Bhai rent?"
+"Haan kal bhejta hoon"
+*proceeds to vanish for 2 weeks*
+
+Sound familiar?
+
+Dwella sends auto-reminders to your tenants — 3 days before, on due date, and after.
+
+AI-powered. Polite but persistent.
+So you don't have to be the "annoying landlord."
+
+Tag a landlord who needs this &#x1F447;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">#LandlordProblems #LandlordLife #RentCollection #IndianLandlord #PropertyManagement #TenantManagement #RentalProperty #LandlordMemes #RelatableContent #IndianMemes #RentDue #WhatsAppChats #PropTech #DwellaApp #SmartLandlord</div>
+  </div>
+
+  <!-- ===================== FRIDAY ===================== -->
+  <div id="friday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Friday</div>
+      <h3><span class="badge carousel">Carousel</span> How to Calculate Rental Yield</h3>
+    </div>
+
+    <h3>Slide-by-Slide Content</h3>
+    <table>
+      <thead><tr><th>Slide</th><th>Text</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 (Cover)</strong></td><td><strong>How to Calculate Rental Yield on Your Property</strong> &#x1F4CA; — A landlord's most important number</td></tr>
+        <tr><td><strong>2</strong></td><td><strong>What is rental yield?</strong> The annual return you earn from rent, as a % of property value. It tells you if your property is a good investment or dead money.</td></tr>
+        <tr><td><strong>3</strong></td><td><strong>The Formula:</strong> Gross Rental Yield = (Annual Rent &divide; Property Value) &times; 100</td></tr>
+        <tr><td><strong>4</strong></td><td><strong>Example:</strong> Property: &#x20B9;80,00,000 — Monthly rent: &#x20B9;25,000 — Annual: &#x20B9;3,00,000 — Yield: 3.75%</td></tr>
+        <tr><td><strong>5</strong></td><td><strong>Good yield in India?</strong> 2-3% Below avg &#x1F534; | 3-4% Average &#x1F7E1; | 4-5% Good &#x1F7E2; | 5%+ Excellent &#x2B50;</td></tr>
+        <tr><td><strong>6</strong></td><td><strong>Net yield:</strong> Subtract maintenance, property tax, insurance, vacancy months, repairs. Net = (Rent - Expenses) &divide; Value &times; 100</td></tr>
+        <tr><td><strong>7</strong></td><td><strong>Improve your yield:</strong> Price at market rate &bull; Reduce vacancy &bull; Furnish to charge premium &bull; Track every payment</td></tr>
+        <tr><td><strong>8 (CTA)</strong></td><td><strong>Dwella tracks your rent automatically</strong> so you never lose yield to missed payments. Waitlist — link in bio.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Canva Design Brief</h3>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 1 — Cover</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A</li>
+        <li>Decorative chart/graph icon, <span class="color-swatch" style="background:#4F46E5"></span> indigo, top-center</li>
+        <li><strong>"HOW TO CALCULATE RENTAL YIELD"</strong> — Bold, 44px, white, centered</li>
+        <li><strong>"A landlord's most important number &#x1F4CA;"</strong> — Regular, 24px, #94A3B8</li>
+        <li>Bottom: "SWIPE &rarr;" — 18px, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 2 — What Is It</div>
+      <ul>
+        <li><strong>Background:</strong> #0F172A</li>
+        <li><strong>Heading:</strong> "What is rental yield?" — Bold, 36px, indigo</li>
+        <li><strong>Body:</strong> Regular, 24px, white</li>
+        <li>Rounded box (#1E293B) with callout text in italic #94A3B8</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 3 — The Formula</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5</li>
+        <li><strong>"THE FORMULA"</strong> — Bold, 32px, white</li>
+        <li>White rounded rectangle with formula: Bold, 28px, #1E1B4B centered</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 4 — Example</div>
+      <ul>
+        <li><strong>Background:</strong> #0F172A</li>
+        <li>Card/table layout with rounded rectangles (#1E293B)</li>
+        <li>Final "3.75%" — large, <span class="color-swatch" style="background:#10B981"></span> green</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slide 5 — Yield Benchmarks</div>
+      <ul>
+        <li><strong>Background:</strong> #0F172A</li>
+        <li>Color-coded horizontal bars:
+          <span class="color-swatch" style="background:#EF4444"></span> 2-3% Below avg |
+          <span class="color-swatch" style="background:#F59E0B"></span> 3-4% Average |
+          <span class="color-swatch" style="background:#10B981"></span> 4-5% Good |
+          <span class="color-swatch" style="background:#10B981"></span> 5%+ Excellent</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Slides 6–8</div>
+      <ul>
+        <li>Slide 6: #0F172A bg — "Net yield" with deduction list (minus icons)</li>
+        <li>Slide 7: #4F46E5 bg — "How to improve your yield" with tips</li>
+        <li>Slide 8: #0F172A bg — CTA with Dwella logo + "Waitlist open" in green</li>
+      </ul>
+    </div>
+
+    <h3>Caption (Copy-Paste Ready)</h3>
+    <div class="caption-box">Your rental property might be losing you money — and you don't even know it.
+
+Most Indian landlords have no idea what their rental yield is.
+
+They bought a flat, found a tenant, and hope for the best.
+
+But here's the thing:
+If your yield is below 3%, a fixed deposit is outperforming your &#x20B9;80 lakh property.
+
+Swipe through to learn:
+&rarr; The exact rental yield formula
+&rarr; What's a "good" yield in Indian metros
+&rarr; How to improve it starting today
+
+Save this. Run the numbers on your property tonight &#x1F4CA;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">#RentalYield #RealEstateInvesting #PropertyInvestment #RealEstateIndia #PassiveIncomeIndia #InvestmentProperty #PropertyROI #IndianRealEstate #WealthBuilding #NRIInvestment #PropertyMarket #RealEstateTrends #SmartInvesting #FinancialFreedom #MoneyTips #PropTech #DwellaApp #LandlordTips #RentTracker #PropertyManagement</div>
+  </div>
+
+  <!-- ===================== SATURDAY ===================== -->
+  <div id="saturday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Saturday</div>
+      <h3><span class="badge reel">Reel</span> Before Dwella vs After Dwella</h3>
+    </div>
+
+    <h3>Reel Script</h3>
+    <div class="design-note"><strong>Format:</strong> Split-screen / transition format. Trending "glow up" or transformation audio.</div>
+
+    <table>
+      <thead><tr><th>Timestamp</th><th>On-Screen</th><th>Visual</th></tr></thead>
+      <tbody>
+        <tr><td>0–3s</td><td>"Managing rent BEFORE Dwella" &#x1F630;</td><td>Title frame</td></tr>
+        <tr><td>3–6s</td><td>WhatsApp — 47 unread messages</td><td>Phone notification mockup</td></tr>
+        <tr><td>6–9s</td><td>"Last updated: 3 months ago"</td><td>Messy Excel sheet</td></tr>
+        <tr><td>9–11s</td><td>"Bhai rent bheja tha na?"</td><td>Searching old chats</td></tr>
+        <tr><td>11–13s</td><td>TRANSITION: "AFTER DWELLA &#x26A1;"</td><td>Indigo transition frame</td></tr>
+        <tr><td>13–16s</td><td>"All properties. One screen."</td><td>Clean dashboard screenshot</td></tr>
+        <tr><td>16–19s</td><td>"Every payment. Tracked."</td><td>Payment ledger with green &#x2705; badges</td></tr>
+        <tr><td>19–22s</td><td>"Reminders sent automatically. Zero effort."</td><td>Auto-reminder notification</td></tr>
+        <tr><td>22–25s</td><td>"One-tap rent receipt generated as PDF"</td><td>Receipt screen</td></tr>
+        <tr><td>25–28s</td><td>"AI-powered property management. Waitlist open."</td><td>Logo + @dwella_ai</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Canva Frames (1080 &times; 1920 each)</h3>
+
+    <div class="slide-spec">
+      <div class="slide-num">Frames 1–4 — "Before" (Dark, chaotic)</div>
+      <ul>
+        <li><strong>Background:</strong> #0F172A throughout</li>
+        <li>Frame 1: Title "Managing rent BEFORE Dwella" — Bold, 44px, white + &#x1F630;</li>
+        <li>Frame 2: WhatsApp notification mockup — "47 unread" with red text overlay</li>
+        <li>Frame 3: Fake messy spreadsheet with "???" and errors — red overlays</li>
+        <li>Frame 4: "Bhai rent bheja tha na?" — Italic, 36px, center + gray subtext</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Frame 5 — Transition</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5</li>
+        <li>"AFTER DWELLA &#x26A1;" — Bold, 56px, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Frames 6–9 — "After" (Clean, polished)</div>
+      <ul>
+        <li>Frame 6: Dwella dashboard screenshot + "All properties. One screen." overlay</li>
+        <li>Frame 7: Payment ledger screenshot + "Every payment. Tracked." overlay</li>
+        <li>Frame 8: Reminder notification screenshot + overlay</li>
+        <li>Frame 9: Standard end card</li>
+      </ul>
+    </div>
+
+    <h3>Caption (Copy-Paste Ready)</h3>
+    <div class="caption-box">This is what property management looks like without a system:
+
+&#x1F4F1; 47 unread WhatsApp messages
+&#x1F4CA; Excel sheet you last updated 3 months ago
+&#x1F914; "Did they pay in June or not?"
+
+Now imagine:
+&#x2705; Every payment tracked automatically
+&#x2705; Reminders sent without you lifting a finger
+&#x2705; Rent receipts generated in one tap
+&#x2705; AI that answers your property questions
+
+That's Dwella.
+
+We're in beta and opening the waitlist soon.
+Follow @dwella_ai so you don't miss it &#x1F514;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">#PropertyManagement #BeforeAndAfter #PropTechIndia #RentTracker #LandlordLife #SmartProperty #AIApp #RentalProperty #TechStartup #IndianStartup #DigitalIndia #ProductivityHack #RealEstateTech #DwellaApp #SmartLandlord</div>
+  </div>
+
+  <!-- ===================== SUNDAY ===================== -->
+  <div id="sunday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Sunday</div>
+      <h3><span class="badge story">Stories</span> Story Series: "Why We Built Dwella"</h3>
+    </div>
+
+    <div class="design-note"><strong>Format:</strong> 7 Story slides (1080 &times; 1920). Text on brand-colored backgrounds — no face needed. Add interactive stickers after uploading to Instagram.</div>
+
+    <h3>Story-by-Story Content</h3>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 1</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5 (Indigo)</li>
+        <li><strong>Center text:</strong> "We built Dwella because we were tired of this &#x1F447;" — Bold, 40px, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 2</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A (Dark)</li>
+        <li><strong>Text:</strong> "Chasing tenants on WhatsApp every month for rent." — Bold, 32px, white</li>
+        <li>"Getting left on read." — Regular, 28px, #94A3B8</li>
+        <li>"Feeling awkward about asking for your own money." — Regular, 28px, #94A3B8</li>
+        <li><strong>Poll sticker:</strong> "Do you chase tenants for rent?" &rarr; "Yes &#x1F629;" / "Every month &#x1FAE0;"</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 3</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A</li>
+        <li><strong>Text:</strong> "Keeping track of payments in Excel sheets that nobody updates." — Bold, 32px, white</li>
+        <li>"Tax season = panic." — Bold, 28px, <span class="color-swatch" style="background:#EF4444"></span> #EF4444 (red)</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 4</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5</li>
+        <li><strong>Text:</strong> "What if one app handled ALL of this?" — Bold, 36px, white</li>
+        <li>Stacked checklist: Rent tracking &#x2713; / Auto-reminders &#x2713; / Payment proof &#x2713; / Receipts &#x2713; / AI-powered &#x2713; — Regular, 26px, white</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 5</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5</li>
+        <li><strong>"So we built Dwella."</strong> — Bold, 44px, white</li>
+        <li>"For Indian landlords and tenants." — Regular, 28px, white 85%</li>
+        <li>"Simple. Smart. Built for how renting actually works here." — Regular, 24px, white 70%</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 6</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A</li>
+        <li><strong>Center:</strong> Dwella logo (large)</li>
+        <li>"We're in beta right now." — Bold, 32px, white</li>
+        <li>"Early access opening soon." — Regular, 26px, <span class="color-swatch" style="background:#10B981"></span> green</li>
+      </ul>
+    </div>
+
+    <div class="slide-spec">
+      <div class="slide-num">Story 7</div>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#4F46E5"></span> #4F46E5</li>
+        <li><strong>"Follow @dwella_ai"</strong> — Bold, 36px, white</li>
+        <li>"DM us 'EARLY' to get first access &#x1F680;" — Bold, 28px, white</li>
+        <li><strong>Question sticker:</strong> "What's your biggest landlord headache?"</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===================== POSTING SCHEDULE ===================== -->
+  <div id="schedule" class="page-break">
+    <h2>Posting Schedule & Times (IST)</h2>
+    <p>Optimized for Indian metro audience peak engagement windows.</p>
+
+    <table>
+      <thead><tr><th>Day</th><th>Content</th><th>Format</th><th>Post Time</th><th>Why This Time</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Monday</strong></td><td>5 Reasons Landlords Lose Money</td><td><span class="badge carousel">Carousel</span></td><td>12:30 PM</td><td>Lunch break scrolling</td></tr>
+        <tr><td><strong>Tuesday</strong></td><td>App Screen Recording Demo</td><td><span class="badge reel">Reel</span></td><td>7:00 PM</td><td>Post-work wind-down</td></tr>
+        <tr><td><strong>Wednesday</strong></td><td>Rent Receipt for HRA</td><td><span class="badge static">Static</span></td><td>12:30 PM</td><td>Lunch break scrolling</td></tr>
+        <tr><td><strong>Thursday</strong></td><td>POV: Landlord on the 5th</td><td><span class="badge reel">Reel</span></td><td>7:00 PM</td><td>Post-work wind-down</td></tr>
+        <tr><td><strong>Friday</strong></td><td>How to Calculate Rental Yield</td><td><span class="badge carousel">Carousel</span></td><td>12:30 PM</td><td>Lunch break scrolling</td></tr>
+        <tr><td><strong>Saturday</strong></td><td>Before vs After Dwella</td><td><span class="badge reel">Reel</span></td><td>10:00 AM</td><td>Weekend morning leisure</td></tr>
+        <tr><td><strong>Sunday</strong></td><td>Why We Built Dwella</td><td><span class="badge story">Stories</span></td><td>Throughout day</td><td>Casual engagement</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-divider"></div>
+
+    <!-- BRAND KIT -->
+    <div id="brandkit">
+      <h2>Brand Kit Reference</h2>
+
+      <table class="brand-kit-table">
+        <thead><tr><th>Element</th><th>Specification</th></tr></thead>
+        <tbody>
+          <tr><td>Primary Color</td><td><span class="color-swatch" style="background:#4F46E5"></span> Indigo #4F46E5</td></tr>
+          <tr><td>Secondary Color</td><td><span class="color-swatch" style="background:#1E1B4B"></span> Dark Navy #1E1B4B</td></tr>
+          <tr><td>Accent (Success)</td><td><span class="color-swatch" style="background:#10B981"></span> Green #10B981</td></tr>
+          <tr><td>Accent (Alert)</td><td><span class="color-swatch" style="background:#EF4444"></span> Red #EF4444</td></tr>
+          <tr><td>Background Light</td><td><span class="color-swatch" style="background:#FFFFFF; border:1px solid #ccc;"></span> White #FFFFFF</td></tr>
+          <tr><td>Background Dark</td><td><span class="color-swatch" style="background:#0F172A"></span> Dark #0F172A</td></tr>
+          <tr><td>Font (Headings)</td><td>Plus Jakarta Sans Bold (alt: Inter Bold, Poppins Bold)</td></tr>
+          <tr><td>Font (Body)</td><td>Plus Jakarta Sans Regular</td></tr>
+          <tr><td>Style Direction</td><td>Clean, minimal, fintech aesthetic — think CRED, Jupiter, Fi</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- EXPORT SETTINGS -->
+    <div id="export">
+      <h2>Canva Export Settings</h2>
+
+      <table>
+        <thead><tr><th>Content Type</th><th>Canva Size</th><th>Export Format</th><th>Pages</th></tr></thead>
+        <tbody>
+          <tr><td>Carousels</td><td>1080 &times; 1080 px</td><td>PNG</td><td>All pages</td></tr>
+          <tr><td>Static Posts</td><td>1080 &times; 1080 px</td><td>PNG</td><td>Single</td></tr>
+          <tr><td>Reel Frames</td><td>1080 &times; 1920 px</td><td>PNG</td><td>All pages</td></tr>
+          <tr><td>Stories</td><td>1080 &times; 1920 px</td><td>PNG</td><td>All pages</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><strong>DWELLA</strong> &mdash; Week 1 Instagram Content Kit</p>
+    <p>@dwella_ai &bull; India's Smartest Rental Management App</p>
+  </div>
+
+</div>
+</body>
+</html>
