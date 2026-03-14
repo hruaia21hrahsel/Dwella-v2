@@ -3,8 +3,9 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const htmlPath = path.resolve(__dirname, '..', 'week1-ig-content-kit.html');
-const pdfPath = path.resolve(__dirname, '..', 'week1-ig-content-kit.pdf');
+const baseName = process.argv[2] || 'week1-ig-content-kit';
+const htmlPath = path.resolve(__dirname, '..', `${baseName}.html`);
+const pdfPath = path.resolve(__dirname, '..', `${baseName}.pdf`);
 
 const browser = await puppeteer.launch({ headless: true });
 const page = await browser.newPage();

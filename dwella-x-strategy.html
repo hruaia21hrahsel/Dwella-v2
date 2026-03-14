@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dwella — X/Twitter Strategy & Week 1 Content Kit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --indigo: #4F46E5;
+    --dark-navy: #1E1B4B;
+    --green: #10B981;
+    --red: #EF4444;
+    --amber: #F59E0B;
+    --dark-bg: #0F172A;
+    --gray: #94A3B8;
+    --light-gray: #64748B;
+    --dark-text: #1E1B4B;
+    --x-blue: #1D9BF0;
+    --x-dark: #15202B;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1a1a2e;
+    background: #fff;
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  @media print {
+    body { font-size: 12px; }
+    .page-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+  }
+
+  .cover {
+    background: linear-gradient(135deg, var(--indigo), var(--dark-navy));
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 60px 40px;
+  }
+  .cover h1 { font-size: 44px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+  .cover .subtitle { font-size: 20px; opacity: 0.85; margin-bottom: 40px; }
+  .cover .meta { font-size: 14px; opacity: 0.6; margin-top: 40px; }
+  .cover .logo-text { font-size: 72px; font-weight: 800; letter-spacing: -2px; margin-bottom: 8px; }
+  .cover .x-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.9; }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 40px 32px; }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--indigo);
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--indigo);
+  }
+  h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark-navy);
+    margin: 24px 0 12px;
+  }
+  h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dark-navy);
+    margin: 16px 0 8px;
+  }
+
+  p { margin-bottom: 12px; }
+
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; font-size: 13px; }
+
+  .badge {
+    display: inline-block;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 6px;
+  }
+  .badge.tweet { background: var(--x-blue); }
+  .badge.thread { background: var(--indigo); }
+  .badge.poll { background: var(--amber); color: #1a1a2e; }
+  .badge.engagement { background: var(--green); }
+  .badge.quote { background: var(--dark-navy); }
+
+  .day-header {
+    background: var(--dark-bg);
+    color: white;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin: 32px 0 20px;
+  }
+  .day-header .day-name { font-size: 14px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 1px; }
+  .day-header h3 { color: white; margin: 4px 0 0; font-size: 22px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  th {
+    background: var(--dark-navy);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  .tweet-box {
+    background: #f1f5f9;
+    border-left: 4px solid var(--x-blue);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    white-space: pre-line;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .thread-box {
+    background: #f1f5f9;
+    border-left: 4px solid var(--indigo);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    white-space: pre-line;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .thread-num {
+    display: inline-block;
+    background: var(--indigo);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+
+  .hashtags {
+    background: #eef2ff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--indigo);
+    word-break: break-word;
+    margin: 12px 0;
+  }
+
+  .tip-box {
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .tip-box strong { color: #92400e; }
+
+  .strategy-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 12px 0;
+  }
+  .strategy-box h4 { color: var(--green); margin-top: 0; }
+
+  .char-count {
+    display: inline-block;
+    background: #e2e8f0;
+    color: var(--light-gray);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+  }
+
+  .section-divider {
+    height: 4px;
+    background: linear-gradient(90deg, var(--indigo), var(--green));
+    border-radius: 2px;
+    margin: 40px 0;
+  }
+
+  .toc { padding: 20px 0; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 8px 0; font-size: 15px; }
+  .toc a { color: var(--indigo); text-decoration: none; font-weight: 500; }
+
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .color-swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray);
+    font-size: 12px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="logo-text">DWELLA</div>
+  <div class="x-icon">&#x1D54F;</div>
+  <h1>X/Twitter Strategy &<br>Week 1 Content Kit</h1>
+  <div class="subtitle">Complete strategy, pre-written tweets, threads & posting schedule</div>
+  <div class="meta">
+    @dwella_ai &bull; Pre-launch Campaign<br>
+    Prepared for X/Twitter Growth Strategy
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="container page-break">
+  <h2>Contents</h2>
+  <div class="toc">
+    <ol>
+      <li><a href="#part1">Part 1: X/Twitter Strategy</a></li>
+      <li><a href="#account">Account Setup &mdash; Handle, Bio, Header & Pinned Tweet</a></li>
+      <li><a href="#pillars">Content Pillars for X</a></li>
+      <li><a href="#cadence">Posting Cadence & Best Times</a></li>
+      <li><a href="#hashtags">Hashtag Strategy</a></li>
+      <li><a href="#threads">Thread Strategy</a></li>
+      <li><a href="#growth">Growth Tactics</a></li>
+      <li><a href="#voice">Brand Voice Guide for X</a></li>
+      <li><a href="#part2">Part 2: Week 1 Content (7 Days)</a></li>
+      <li><a href="#monday">Monday &mdash; Thread: "Why Indian Landlords Are Losing Money Silently"</a></li>
+      <li><a href="#tuesday">Tuesday &mdash; Single Tweet: Relatable Pain Point</a></li>
+      <li><a href="#wednesday">Wednesday &mdash; Thread: "Rent Receipt for HRA &mdash; What You Need"</a></li>
+      <li><a href="#thursday">Thursday &mdash; Poll: Rent Collection Method</a></li>
+      <li><a href="#friday">Friday &mdash; Thread: "How to Calculate Rental Yield"</a></li>
+      <li><a href="#saturday">Saturday &mdash; Product Teaser Tweet + Image</a></li>
+      <li><a href="#sunday">Sunday &mdash; Engagement Tweet + Quote Tweet Template</a></li>
+      <li><a href="#schedule">Posting Schedule Overview</a></li>
+    </ol>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ===================== PART 1: STRATEGY ===================== -->
+  <div id="part1">
+    <h2>Part 1: X/Twitter Strategy</h2>
+    <p>X is a text-first, conversational platform. Unlike Instagram's visual focus, X rewards sharp writing, hot takes, and threads that deliver value fast. For Dwella's pre-launch, X is where you build authority and start conversations with landlords, real estate investors, and fintech enthusiasts.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ACCOUNT SETUP -->
+  <div id="account" class="no-break">
+    <h2>Account Setup</h2>
+
+    <h3>Handle Recommendations</h3>
+    <table>
+      <thead><tr><th>Priority</th><th>Handle</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1st choice</strong></td><td>@dwella_ai</td><td>Matches Instagram handle &mdash; consistent across platforms</td></tr>
+        <tr><td><strong>2nd choice</strong></td><td>@DwellaApp</td><td>Clear product branding</td></tr>
+        <tr><td><strong>3rd choice</strong></td><td>@trydwella</td><td>Action-oriented, CTA built into handle</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Display Name</h3>
+    <p><strong>Dwella &mdash; AI Property Management</strong></p>
+    <p style="font-size:12px; color:var(--light-gray);">Display name is searchable on X. Include your key differentiator.</p>
+
+    <h3>Bio (160 characters)</h3>
+    <div class="tweet-box">AI-powered rental management for Indian landlords & tenants. No WhatsApp chasing. No spreadsheets. Just smart property management. Waitlist open &#x1F447;</div>
+    <p class="char-count">159 characters</p>
+
+    <h3>Header Image Specs</h3>
+    <div class="strategy-box">
+      <h4>Header Banner (1500 &times; 500 px)</h4>
+      <ul>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A (dark)</li>
+        <li><strong>Left side:</strong> Tagline &mdash; "India's Smartest Rental Management App" in white, Plus Jakarta Sans Bold</li>
+        <li><strong>Right side:</strong> App mockup screenshot or abstract property illustration</li>
+        <li><strong>Bottom-right:</strong> "Waitlist Open" badge in <span class="color-swatch" style="background:#10B981"></span> green</li>
+        <li><strong>Do NOT include:</strong> Handle (already visible), small text, busy patterns</li>
+      </ul>
+    </div>
+
+    <h3>Profile Picture</h3>
+    <p>Use the Dwella logo (same as Instagram). X displays it at 400&times;400 px. Ensure the logo reads clearly at 48&times;48 (timeline thumbnail size).</p>
+
+    <h3>Pinned Tweet</h3>
+    <div class="tweet-box">We're building Dwella &mdash; an AI-powered app that makes rental management effortless for Indian landlords and tenants.
+
+&#x2705; Auto rent tracking
+&#x2705; AI-powered reminders
+&#x2705; Payment proof storage
+&#x2705; One-tap rent receipts
+&#x2705; Landlord + Tenant on one platform
+
+No more WhatsApp chasing. No more Excel sheets.
+
+Waitlist is open &mdash; link in bio.
+
+Follow along as we build in public &#x1F680;</div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- CONTENT PILLARS -->
+  <div id="pillars" class="page-break">
+    <h2>Content Pillars for X</h2>
+    <p>X content needs to be faster, punchier, and more opinionated than Instagram. Here are the 5 pillars adapted for the platform:</p>
+
+    <table>
+      <thead><tr><th>Pillar</th><th>What It Is</th><th>X Format</th><th>Frequency</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Education</strong></td>
+          <td>Rental yield, HRA, tax tips, property management knowledge</td>
+          <td>Threads (5-10 tweets), single value tweets</td>
+          <td>2&times;/week</td>
+        </tr>
+        <tr>
+          <td><strong>Pain Points</strong></td>
+          <td>Relatable landlord/tenant struggles, "this you?" moments</td>
+          <td>Single tweets, quote tweets, meme-format text</td>
+          <td>2&times;/week</td>
+        </tr>
+        <tr>
+          <td><strong>Product</strong></td>
+          <td>Feature previews, build-in-public updates, waitlist CTAs</td>
+          <td>Screenshot tweets, short threads, single tweets</td>
+          <td>1&times;/week</td>
+        </tr>
+        <tr>
+          <td><strong>Engagement</strong></td>
+          <td>Polls, questions, hot takes that invite replies</td>
+          <td>Polls, open-ended questions, "unpopular opinion" format</td>
+          <td>1&times;/week</td>
+        </tr>
+        <tr>
+          <td><strong>Authority</strong></td>
+          <td>Indian real estate data, market insights, founder perspective</td>
+          <td>Quote tweets with commentary, data tweets</td>
+          <td>1&times;/week</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- POSTING CADENCE -->
+  <div id="cadence" class="no-break">
+    <h2>Posting Cadence & Best Times</h2>
+
+    <h3>Optimal Cadence</h3>
+    <table>
+      <thead><tr><th>Type</th><th>Frequency</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Original tweets</strong></td><td>1&ndash;2 per day</td><td>At least 1 per day to stay visible in feeds</td></tr>
+        <tr><td><strong>Threads</strong></td><td>2&ndash;3 per week</td><td>X's highest-engagement format. Treat like IG carousels.</td></tr>
+        <tr><td><strong>Replies/engagement</strong></td><td>10&ndash;15 per day</td><td>Reply to big accounts, participate in conversations</td></tr>
+        <tr><td><strong>Quote tweets</strong></td><td>2&ndash;3 per week</td><td>Add your take to trending topics or relevant tweets</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Best Posting Times (IST) for Indian Audience</h3>
+    <table>
+      <thead><tr><th>Time Slot</th><th>Window</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Morning</strong></td><td>8:00 &ndash; 9:30 AM</td><td>Commute scrolling, morning catch-up. Great for single tweets.</td></tr>
+        <tr><td><strong>Lunch</strong></td><td>12:00 &ndash; 1:30 PM</td><td>Lunch break browsing. Best for threads (people have time to read).</td></tr>
+        <tr><td><strong>Evening</strong></td><td>6:30 &ndash; 8:00 PM</td><td>Post-work wind-down. Best for engagement tweets and polls.</td></tr>
+        <tr><td><strong>Late Night</strong></td><td>9:30 &ndash; 11:00 PM</td><td>Late-night scrollers. Good for relatable/funny tweets.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip-box"><strong>Pro Tip:</strong> Post threads between 12:00 &ndash; 1:00 PM IST. Indian professionals scroll Twitter during lunch &mdash; threads get the most saves and retweets during this window.</div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- HASHTAG STRATEGY -->
+  <div id="hashtags" class="page-break">
+    <h2>Hashtag Strategy</h2>
+    <p>X hashtags work differently from Instagram. Less is more &mdash; 1-3 hashtags maximum per tweet. Overusing hashtags looks spammy on X and actually decreases engagement.</p>
+
+    <h3>Rules</h3>
+    <ul>
+      <li><strong>Threads:</strong> 0&ndash;1 hashtags. Let the content speak. Add one hashtag on the last tweet if any.</li>
+      <li><strong>Single tweets:</strong> 1&ndash;2 hashtags maximum. Integrate naturally into the sentence when possible.</li>
+      <li><strong>Polls:</strong> 1 hashtag max, or none.</li>
+      <li><strong>Never:</strong> Stack hashtags at the end like Instagram. Never use more than 3.</li>
+    </ul>
+
+    <h3>Primary Hashtags (Use Regularly)</h3>
+    <div class="hashtags">#PropTech #RealEstateIndia #LandlordLife</div>
+
+    <h3>Secondary Hashtags (Rotate)</h3>
+    <div class="hashtags">#PropertyManagement #RentalProperty #IndianRealEstate #PassiveIncome #StartupIndia #BuildInPublic #AIStartup</div>
+
+    <h3>Trending/Event Hashtags (Use When Relevant)</h3>
+    <div class="hashtags">#TaxSeason #ITRFiling #HRA #BudgetIndia #NRIInvesting</div>
+
+    <div class="tip-box"><strong>Key difference from IG:</strong> On Instagram, you use 15&ndash;25 hashtags for reach. On X, tweets with 1&ndash;2 hashtags get 21% more engagement than those with 3+. Quality over quantity.</div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- THREAD STRATEGY -->
+  <div id="threads" class="no-break">
+    <h2>Thread Strategy</h2>
+    <p>Threads are X's highest-engagement format &mdash; they're the equivalent of Instagram carousels. A well-crafted thread can go viral and drive hundreds of profile visits.</p>
+
+    <h3>Thread Structure</h3>
+    <table>
+      <thead><tr><th>Tweet #</th><th>Purpose</th><th>What to Write</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 (Hook)</strong></td><td>Stop the scroll</td><td>Bold claim, surprising stat, or relatable pain point. End with "&#x1F9F5; Thread" or "A thread &#x1F447;"</td></tr>
+        <tr><td><strong>2&ndash;7 (Body)</strong></td><td>Deliver value</td><td>One idea per tweet. Keep each under 240 chars. Use line breaks for readability.</td></tr>
+        <tr><td><strong>Last (CTA)</strong></td><td>Convert</td><td>Soft CTA: "Follow @dwella_ai for more" or "Link in bio for waitlist"</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Thread Best Practices</h3>
+    <ul>
+      <li><strong>Hook is everything.</strong> 80% of your effort should go into tweet #1. If the hook doesn't stop the scroll, nobody reads the rest.</li>
+      <li><strong>One idea per tweet.</strong> Never cram two points into one tweet.</li>
+      <li><strong>Use line breaks.</strong> Dense paragraphs get skipped. White space = readability.</li>
+      <li><strong>Number your points.</strong> "1/ ", "2/ " etc. makes threads scannable.</li>
+      <li><strong>End with value, not just a CTA.</strong> Your last tweet should give something (a summary, a takeaway) before asking for a follow.</li>
+      <li><strong>Self-reply immediately.</strong> Post the entire thread at once (write in drafts, then post). Don't drip-feed over hours.</li>
+      <li><strong>Add an image to tweet #1.</strong> Threads with a hook image get 2x more impressions.</li>
+    </ul>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- GROWTH TACTICS -->
+  <div id="growth" class="page-break">
+    <h2>Growth Tactics</h2>
+
+    <h3>Daily Engagement Routine (20 mins/day)</h3>
+    <table>
+      <thead><tr><th>Activity</th><th>Time</th><th>What to Do</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Reply to big accounts</strong></td><td>10 mins</td><td>Find 5 tweets from accounts with 10K+ followers in real estate, fintech, or startup space. Leave thoughtful, value-adding replies (not "great post!"). Your reply appears under their tweet &mdash; free impressions.</td></tr>
+        <tr><td><strong>Engage with peers</strong></td><td>5 mins</td><td>Like and RT 3&ndash;5 tweets from accounts your size. Build relationships, not just reach.</td></tr>
+        <tr><td><strong>Respond to your replies</strong></td><td>5 mins</td><td>Reply to every comment on your tweets within 1 hour. The algorithm rewards active conversations.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Accounts to Follow & Engage With</h3>
+    <table>
+      <thead><tr><th>Category</th><th>Types of Accounts</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Indian Real Estate</strong></td><td>Property consultants, real estate YouTubers, housing news handles</td><td>Your target audience follows these. Your replies reach their followers.</td></tr>
+        <tr><td><strong>Indian Fintech</strong></td><td>CRED, Jupiter, Fi, Zerodha &mdash; and their founders</td><td>Aspirational brand association. Similar audience demographics.</td></tr>
+        <tr><td><strong>Personal Finance India</strong></td><td>CA/tax influencers, investment educators</td><td>HRA, rental yield, tax content resonates with this overlap.</td></tr>
+        <tr><td><strong>Startup/Builder</strong></td><td>#BuildInPublic community, indie hackers, startup founders</td><td>Community support, retweets, early adopters.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>X Spaces Strategy</h3>
+    <div class="strategy-box">
+      <h4>Hosting a Space (Start in Week 3&ndash;4)</h4>
+      <ul>
+        <li><strong>Topic:</strong> "Landlord Problems in Indian Metros &mdash; Let's Talk Solutions"</li>
+        <li><strong>Format:</strong> 30-min casual conversation. Invite 2&ndash;3 landlords as co-hosts.</li>
+        <li><strong>Frequency:</strong> Bi-weekly (Saturdays 11 AM IST)</li>
+        <li><strong>Promotion:</strong> Tweet about it 24 hours before + 1 hour before. Pin a tweet with the Space link.</li>
+      </ul>
+    </div>
+
+    <h3>Reply Strategy: How to Write High-Value Replies</h3>
+    <div class="tip-box">
+      <strong>The "Add, Don't Agree" Rule:</strong> Never just say "so true" or "great thread." Instead, add a data point, a personal experience, a counterpoint, or a follow-up question. High-value replies get likes independently &mdash; and people click through to your profile.
+    </div>
+    <p><strong>Example:</strong> If someone tweets about rising rents in Bangalore &rarr;</p>
+    <div class="tweet-box">This is exactly why landlords need systems to track yields.
+
+Most Indian landlords don't know their actual rental yield. They bought a flat, found a tenant, and hope for the best.
+
+We ran the numbers &mdash; average yield in Indian metros is 2&ndash;3%. That's worse than an FD.
+
+(Building @dwella_ai to fix this)</div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- BRAND VOICE -->
+  <div id="voice" class="no-break">
+    <h2>Brand Voice Guide for X</h2>
+    <p>X voice is <strong>shorter, punchier, and more conversational</strong> than Instagram. Think "smart friend who knows real estate" not "brand marketing team."</p>
+
+    <table>
+      <thead><tr><th>Dimension</th><th>Instagram</th><th>X/Twitter</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Tone</strong></td><td>Polished, informative, visual-first</td><td>Casual, witty, text-first. Like texting a smart friend.</td></tr>
+        <tr><td><strong>Length</strong></td><td>Long captions (150&ndash;300 words)</td><td>Short &amp; punchy. Single tweets under 200 chars ideal.</td></tr>
+        <tr><td><strong>Emojis</strong></td><td>Liberal use (bullet points, emphasis)</td><td>Minimal. 1&ndash;2 per tweet max. Let words do the work.</td></tr>
+        <tr><td><strong>Hashtags</strong></td><td>15&ndash;25 per post</td><td>1&ndash;2 per tweet (or zero)</td></tr>
+        <tr><td><strong>CTA style</strong></td><td>"Link in bio" / "Save this post"</td><td>"Follow for more" / "RT if you agree" / "Link in bio"</td></tr>
+        <tr><td><strong>Personality</strong></td><td>Trustworthy expert</td><td>Opinionated builder. Slightly edgy, always helpful.</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Voice Examples</h4>
+    <table>
+      <thead><tr><th>Scenario</th><th>Instagram Version</th><th>X Version</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Rent chasing</td>
+          <td>"Stop managing your rental properties on WhatsApp. There's a better way."</td>
+          <td>"You're texting 'bhai rent?' for the 4th time this month. There's gotta be a better way. (There is.)"</td>
+        </tr>
+        <tr>
+          <td>Product tease</td>
+          <td>"Dwella handles it all &mdash; AI-powered rent tracking, auto-reminders, and payment proof in one app."</td>
+          <td>"What if your tenants got auto-reminders before rent was due, and you never had to send an awkward text again? Building this."</td>
+        </tr>
+        <tr>
+          <td>Education</td>
+          <td>"Here's exactly what a valid rent receipt needs for HRA exemption (swipe for checklist)"</td>
+          <td>"Your tenant's HRA claim just got rejected because you forgot your PAN on the rent receipt. Here's the fix (thread):"</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ===================== PART 2: WEEK 1 CONTENT ===================== -->
+  <div id="part2" class="page-break">
+    <h2>Part 2: Week 1 Content Kit</h2>
+    <p>7 days of pre-written, ready-to-post content. Copy, paste, post. Each day includes the tweet/thread text, format type, optimal posting time, and hashtags.</p>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ===================== MONDAY ===================== -->
+  <div id="monday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Monday</div>
+      <h3><span class="badge thread">Thread</span> Why Indian Landlords Are Losing Money Silently</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 12:30 PM IST &bull; <strong>Format:</strong> Thread (8 tweets) &bull; <strong>Image:</strong> Add a hook image to tweet 1 (dark bg + bold text: "5 ways landlords bleed money")</div>
+
+    <h3>Thread (Copy-Paste Ready)</h3>
+
+    <div class="thread-box"><span class="thread-num">1</span> <strong>HOOK</strong>
+
+Most Indian landlords are losing money every single month.
+
+Not because of bad tenants.
+Not because of low rent.
+
+Because they have no system.
+
+Here are 5 silent money leaks killing your rental income &#x1F9F5;&#x1F447;</div>
+
+    <div class="thread-box"><span class="thread-num">2</span>
+
+<strong>1. No rent tracking system</strong>
+
+You rely on memory or WhatsApp screenshots.
+
+"Usne June mein bheja tha na?"
+"Wait, let me scroll up..."
+
+Payments slip through the cracks. You forget. They forget. Money disappears.</div>
+
+    <div class="thread-box"><span class="thread-num">3</span>
+
+<strong>2. No payment proof on file</strong>
+
+Tenant says they paid.
+You say they didn't.
+
+No receipts = no proof = arguments every quarter.
+
+This is how landlord-tenant relationships break down.</div>
+
+    <div class="thread-box"><span class="thread-num">4</span>
+
+<strong>3. Late rent goes unchallenged</strong>
+
+You feel awkward chasing.
+So you wait.
+And wait.
+
+"Kal bhejta hoon bhaiya" turns into 2 weeks of silence.
+
+That's &#x20B9;1000s lost every month to avoidable delays.</div>
+
+    <div class="thread-box"><span class="thread-num">5</span>
+
+<strong>4. Tax season is a nightmare</strong>
+
+Your CA asks for 12 months of rent records.
+
+You have:
+&bull; 3 UPI screenshots
+&bull; A WhatsApp message from August
+&bull; Vibes
+
+Missed deductions. Wasted hours. Unnecessary stress.</div>
+
+    <div class="thread-box"><span class="thread-num">6</span>
+
+<strong>5. No visibility across properties</strong>
+
+Own 2&ndash;3 flats in different cities?
+
+Each one managed differently:
+&bull; One on WhatsApp
+&bull; One on Excel
+&bull; One on "I'll remember"
+
+Total chaos.</div>
+
+    <div class="thread-box"><span class="thread-num">7</span>
+
+<strong>The fix isn't complicated.</strong>
+
+You need ONE app that:
+&bull; Tracks every payment automatically
+&bull; Sends rent reminders for you
+&bull; Stores payment proof
+&bull; Generates receipts in one tap
+&bull; Works for landlord AND tenant
+
+We're building exactly this.</div>
+
+    <div class="thread-box"><span class="thread-num">8</span> <strong>CTA</strong>
+
+It's called Dwella &mdash; AI-powered rental management built for India.
+
+Waitlist is open.
+
+Follow @dwella_ai for updates.
+Link in bio to join.
+
+RT tweet 1 if you know a landlord who needs this &#x1F504;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Add to tweet 8 only: #PropTech #LandlordLife</div>
+  </div>
+
+  <!-- ===================== TUESDAY ===================== -->
+  <div id="tuesday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Tuesday</div>
+      <h3><span class="badge tweet">Single Tweet</span> Relatable Landlord Pain Point</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 8:30 AM IST &bull; <strong>Format:</strong> Single tweet &bull; <strong>Goal:</strong> Maximum relatability &rarr; likes, RTs, profile visits</div>
+
+    <h3>Main Tweet (Copy-Paste Ready)</h3>
+
+    <div class="tweet-box">Indian landlord starter pack:
+
+&bull; WhatsApp group named "Flat 3B Rent"
+&bull; Last updated Excel sheet: 2023
+&bull; "Bhaiya kal bhejta hoon" on repeat since March
+&bull; Zero idea what your actual rental yield is
+&bull; Tax season = panic mode
+
+This is exactly why we're building @dwella_ai</div>
+
+    <h3>Follow-Up Tweet (Post 2 hours later)</h3>
+
+    <div class="tweet-box">Genuinely curious &mdash;
+
+How do you currently track rent from your tenants?
+
+Reply below. No judgment. We're building something to fix this.</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Main tweet: #LandlordLife #RealEstateIndia (integrated or at end)</div>
+
+    <div class="tip-box"><strong>Engagement tip:</strong> Reply to every response on the follow-up tweet. Ask follow-up questions. This signals to the algorithm that your tweets spark conversations, boosting future reach.</div>
+  </div>
+
+  <!-- ===================== WEDNESDAY ===================== -->
+  <div id="wednesday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Wednesday</div>
+      <h3><span class="badge thread">Thread</span> Rent Receipt for HRA &mdash; The Complete Checklist</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 12:30 PM IST &bull; <strong>Format:</strong> Thread (7 tweets) &bull; <strong>Image:</strong> Checklist infographic on tweet 1</div>
+
+    <h3>Thread (Copy-Paste Ready)</h3>
+
+    <div class="thread-box"><span class="thread-num">1</span> <strong>HOOK</strong>
+
+Your tenant's HRA claim just got rejected.
+
+Reason? Your rent receipt was missing 3 fields.
+
+Here's exactly what a valid rent receipt needs in India (save this) &#x1F447;</div>
+
+    <div class="thread-box"><span class="thread-num">2</span>
+
+A valid rent receipt MUST include:
+
+&#x2705; Landlord's full name
+&#x2705; Landlord's PAN (if rent > &#x20B9;1,00,000/year)
+&#x2705; Complete property address
+&#x2705; Rent amount per month
+&#x2705; Payment period (from &mdash; to dates)
+&#x2705; Revenue stamp (for cash payments)
+&#x2705; Landlord's signature
+
+Miss any of these? Receipt is invalid.</div>
+
+    <div class="thread-box"><span class="thread-num">3</span>
+
+<strong>The PAN rule most landlords miss:</strong>
+
+If annual rent exceeds &#x20B9;1,00,000 &mdash; your PAN is MANDATORY on the receipt.
+
+No PAN = tenant's HRA claim gets rejected by their employer.
+
+They'll blame you. And they'd be right.</div>
+
+    <div class="thread-box"><span class="thread-num">4</span>
+
+<strong>Common mistakes that get receipts rejected:</strong>
+
+&#x274C; No PAN when rent > &#x20B9;1L/year
+&#x274C; Missing property address (just "Pune" isn't enough)
+&#x274C; No date range mentioned
+&#x274C; Handwritten receipts without revenue stamp
+&#x274C; Generic format downloaded from random website</div>
+
+    <div class="thread-box"><span class="thread-num">5</span>
+
+<strong>What format should you use?</strong>
+
+PDF is best. Include:
+&bull; Your letterhead or name at top
+&bull; All 7 fields from tweet 2
+&bull; Month-wise breakup if giving for full year
+&bull; Your signature (digital is accepted)
+
+Your CA will thank you.</div>
+
+    <div class="thread-box"><span class="thread-num">6</span>
+
+<strong>Pro tip for landlords:</strong>
+
+Don't wait for your tenant to ask.
+
+Send the receipt proactively in January (for the previous year). It shows professionalism, avoids last-minute panic, and keeps the relationship healthy.
+
+Tenants remember landlords who make their life easy.</div>
+
+    <div class="thread-box"><span class="thread-num">7</span> <strong>CTA</strong>
+
+We're building @dwella_ai to auto-generate compliant rent receipts.
+
+Correct format. Every field filled. Downloadable as PDF. One tap.
+
+No more Googling "rent receipt format India."
+
+Waitlist open &mdash; link in bio.
+
+Bookmark this thread for tax season &#x1F516;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Add to tweet 7 only: #HRA #TaxSeason</div>
+  </div>
+
+  <!-- ===================== THURSDAY ===================== -->
+  <div id="thursday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Thursday</div>
+      <h3><span class="badge poll">Poll</span> How Do You Collect Rent?</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 7:00 PM IST &bull; <strong>Format:</strong> Poll (24-hour) &bull; <strong>Goal:</strong> Engagement + audience research</div>
+
+    <h3>Poll Tweet (Copy-Paste Ready)</h3>
+
+    <div class="tweet-box">Landlords &mdash; how do you currently collect rent from your tenants?
+
+&#x1F4CA; Poll below &#x1F447;</div>
+
+    <h3>Poll Options</h3>
+    <table>
+      <thead><tr><th>Option</th><th>Text</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>UPI + WhatsApp screenshot</td></tr>
+        <tr><td>2</td><td>Bank transfer + hope they paid</td></tr>
+        <tr><td>3</td><td>Cash (and I forget sometimes)</td></tr>
+        <tr><td>4</td><td>I have a proper system</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Follow-Up Tweet (Post after poll ends, 24 hours later)</h3>
+
+    <div class="tweet-box">Poll results are in.
+
+[X]% of landlords are tracking rent via WhatsApp screenshots or "hope."
+
+This is exactly the problem we're solving at @dwella_ai.
+
+Auto-tracking. Auto-reminders. Payment proof stored permanently.
+
+No more guesswork.
+
+Waitlist is open &mdash; link in bio.</div>
+    <p style="font-size:12px; color:var(--light-gray);">Replace [X]% with actual poll result.</p>
+
+    <h3>Bonus: Engagement Thread After Poll</h3>
+    <div class="tweet-box">Replying to my own poll because the responses are wild.
+
+If you voted "Cash (and I forget sometimes)" &mdash; you're literally paying a tax on disorganization.
+
+At &#x20B9;15,000/month rent, forgetting ONE month = &#x20B9;15,000 gone.
+
+Across 5 years = &#x20B9;75,000+ lost.
+
+Still think you don't need a system?</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Poll tweet: #LandlordLife (no other hashtags on polls &mdash; keep it clean)</div>
+  </div>
+
+  <!-- ===================== FRIDAY ===================== -->
+  <div id="friday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Friday</div>
+      <h3><span class="badge thread">Thread</span> How to Calculate Rental Yield on Your Property</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 12:30 PM IST &bull; <strong>Format:</strong> Thread (8 tweets) &bull; <strong>Image:</strong> Formula graphic on tweet 3</div>
+
+    <h3>Thread (Copy-Paste Ready)</h3>
+
+    <div class="thread-box"><span class="thread-num">1</span> <strong>HOOK</strong>
+
+Your &#x20B9;80 lakh flat in Bangalore is earning you 2.5% rental yield.
+
+An FD gives you 7%.
+
+You're literally losing money by renting it out. Unless you fix this.
+
+Here's how to calculate (and improve) your rental yield &#x1F447;</div>
+
+    <div class="thread-box"><span class="thread-num">2</span>
+
+<strong>What is rental yield?</strong>
+
+The annual return you earn from rent, expressed as a % of your property's market value.
+
+It's the single most important number every landlord should know.
+
+Yet most Indian landlords have never calculated it.</div>
+
+    <div class="thread-box"><span class="thread-num">3</span>
+
+<strong>The Formula:</strong>
+
+Gross Rental Yield = (Annual Rent &divide; Property Value) &times; 100
+
+That's it. Simple math that most property owners never do.</div>
+
+    <div class="thread-box"><span class="thread-num">4</span>
+
+<strong>Let's run a real example:</strong>
+
+Property value: &#x20B9;80,00,000
+Monthly rent: &#x20B9;25,000
+Annual rent: &#x20B9;3,00,000
+
+Yield = (3,00,000 &divide; 80,00,000) &times; 100
+Yield = <strong>3.75%</strong>
+
+Is that good? Let's check &#x1F447;</div>
+
+    <div class="thread-box"><span class="thread-num">5</span>
+
+<strong>Rental yield benchmarks in India:</strong>
+
+&#x1F534; Below 2% &mdash; Terrible. Sell or restructure.
+&#x1F7E1; 2&ndash;3% &mdash; Below average. Most Indian metros sit here.
+&#x1F7E2; 3&ndash;4% &mdash; Average. Decent but improvable.
+&#x2B50; 4&ndash;5% &mdash; Good. You're doing better than most.
+&#x1F680; 5%+ &mdash; Excellent. Commercial or premium locations.</div>
+
+    <div class="thread-box"><span class="thread-num">6</span>
+
+<strong>But wait &mdash; that's GROSS yield.</strong>
+
+Net yield = (Rent &minus; Expenses) &divide; Property Value &times; 100
+
+Subtract:
+&bull; Maintenance charges
+&bull; Property tax
+&bull; Insurance
+&bull; Vacancy months
+&bull; Repair costs
+
+Your net yield is always lower. Often painfully lower.</div>
+
+    <div class="thread-box"><span class="thread-num">7</span>
+
+<strong>How to actually improve your yield:</strong>
+
+1. Price at current market rate (not 2019 rent)
+2. Reduce vacancy &mdash; respond to enquiries fast
+3. Furnish to charge 20&ndash;30% premium
+4. Track every single payment (don't let money slip)
+5. Send timely reminders &mdash; reduce late payments
+
+Most of these are just discipline + the right tools.</div>
+
+    <div class="thread-box"><span class="thread-num">8</span> <strong>CTA</strong>
+
+We're building @dwella_ai to help landlords stop losing yield to missed payments and disorganized tracking.
+
+AI-powered. Built for India.
+
+Waitlist is open &mdash; link in bio.
+
+If this was useful, RT tweet 1 so other landlords see it too &#x1F504;</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Add to tweet 8 only: #RealEstateIndia #RentalYield</div>
+  </div>
+
+  <!-- ===================== SATURDAY ===================== -->
+  <div id="saturday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Saturday</div>
+      <h3><span class="badge tweet">Single Tweet</span> Product Teaser + App Screenshot</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 10:00 AM IST &bull; <strong>Format:</strong> Single tweet + image &bull; <strong>Image:</strong> App screenshot showing the dashboard or payment ledger (clean, polished)</div>
+
+    <h3>Main Tweet (Copy-Paste Ready)</h3>
+
+    <div class="tweet-box">Been building this for months and it's finally taking shape.
+
+Dwella &mdash; AI-powered rental management for Indian landlords and tenants.
+
+What you're looking at:
+&bull; Every property on one screen
+&bull; Every payment tracked automatically
+&bull; AI that reminds tenants so you don't have to
+
+No WhatsApp groups. No Excel sheets.
+
+Waitlist is open. Ship date coming soon.
+
+Follow @dwella_ai for the journey &#x1F680;</div>
+
+    <h3>Image Specifications</h3>
+    <div class="strategy-box">
+      <h4>App Screenshot (1200 &times; 675 px &mdash; X optimal)</h4>
+      <ul>
+        <li><strong>Option A:</strong> Clean screenshot of Dwella dashboard (properties tab) on a phone mockup</li>
+        <li><strong>Option B:</strong> Payment ledger screenshot showing status badges (green confirmed, gray pending)</li>
+        <li><strong>Background:</strong> <span class="color-swatch" style="background:#0F172A"></span> #0F172A with subtle gradient</li>
+        <li><strong>Phone frame:</strong> Modern iPhone/Android mockup, centered</li>
+        <li><strong>Bottom text:</strong> "Dwella &mdash; AI Property Management" in white, small</li>
+      </ul>
+    </div>
+
+    <h3>Follow-Up Tweet (4 hours later)</h3>
+
+    <div class="tweet-box">The problem with managing rental properties in India isn't the tenants.
+
+It's the tools.
+
+WhatsApp wasn't built for rent tracking.
+Excel wasn't built for auto-reminders.
+Your memory isn't a payment system.
+
+Dwella is built for exactly this. Coming soon.</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Main tweet: #BuildInPublic #PropTech</div>
+  </div>
+
+  <!-- ===================== SUNDAY ===================== -->
+  <div id="sunday" class="page-break">
+    <div class="day-header">
+      <div class="day-name">Sunday</div>
+      <h3><span class="badge engagement">Engagement</span> Conversation Starter + Quote Tweet Template</h3>
+    </div>
+
+    <div class="tip-box"><strong>Post at:</strong> 10:00 AM IST (main) + throughout the day (quote tweets) &bull; <strong>Format:</strong> Engagement tweet + QT template &bull; <strong>Goal:</strong> Community building, replies, profile visits</div>
+
+    <h3>Main Tweet (Copy-Paste Ready)</h3>
+
+    <div class="tweet-box">Honest question for landlords in India:
+
+What's the ONE thing about managing your rental property that drives you absolutely crazy?
+
+Don't hold back. Reply below &#x1F447;
+
+(Building something to fix all of these. Seriously.)</div>
+
+    <h3>Engagement Strategy for Replies</h3>
+    <table>
+      <thead><tr><th>If They Say...</th><th>Reply With...</th></tr></thead>
+      <tbody>
+        <tr><td>"Chasing tenants for rent"</td><td>"This one came up the most. What if reminders went out automatically &mdash; 3 days before, on due date, and 3 days after? No awkward texts from you."</td></tr>
+        <tr><td>"Tracking payments across properties"</td><td>"Especially if you have 2&ndash;3 flats in different cities. One dashboard to see everything &mdash; that's what we're building."</td></tr>
+        <tr><td>"Tax receipts / HRA"</td><td>"We wrote a whole thread about this (pinned on our profile). Dwella will auto-generate compliant receipts in one tap."</td></tr>
+        <tr><td>"Finding good tenants"</td><td>"Verification + better communication goes a long way. We're thinking about this for a future version."</td></tr>
+        <tr><td>"Maintenance requests"</td><td>"Noted. This is on our roadmap. What would your ideal system look like for handling maintenance?"</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Quote Tweet Template</h3>
+    <p>Find a tweet from a real estate account, fintech brand, or landlord sharing a pain point. Quote tweet with your angle:</p>
+
+    <div class="tweet-box"><strong>[Quote tweet a relevant post about renting/property management]</strong>
+
+This is exactly why we're building @dwella_ai.
+
+Indian landlords deserve better tools than WhatsApp + Excel.
+
+AI-powered rental management. Waitlist open &mdash; link in bio.</div>
+
+    <h3>Afternoon Tweet (3:00 PM IST)</h3>
+
+    <div class="tweet-box">Sunday thought:
+
+The average Indian landlord spends 3&ndash;5 hours/month just chasing rent and managing records.
+
+That's 60 hours a year.
+
+On something an app could handle in seconds.
+
+We're building that app. It's called Dwella. Waitlist open.</div>
+
+    <h3>Hashtags</h3>
+    <div class="hashtags">Main tweet: no hashtags (pure engagement play). Afternoon tweet: #PropTech</div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ===================== POSTING SCHEDULE ===================== -->
+  <div id="schedule" class="page-break">
+    <h2>Week 1 Posting Schedule (IST)</h2>
+
+    <table>
+      <thead><tr><th>Day</th><th>Content</th><th>Format</th><th>Post Time</th><th>Goal</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Monday</strong></td><td>5 Money Leaks for Landlords</td><td><span class="badge thread">Thread</span></td><td>12:30 PM</td><td>Educate + establish authority</td></tr>
+        <tr><td><strong>Tuesday</strong></td><td>Landlord Starter Pack</td><td><span class="badge tweet">Tweet</span></td><td>8:30 AM</td><td>Relatability + virality</td></tr>
+        <tr><td><strong>Wednesday</strong></td><td>Rent Receipt HRA Checklist</td><td><span class="badge thread">Thread</span></td><td>12:30 PM</td><td>High-save, evergreen value</td></tr>
+        <tr><td><strong>Thursday</strong></td><td>Rent Collection Poll</td><td><span class="badge poll">Poll</span></td><td>7:00 PM</td><td>Engagement + audience insight</td></tr>
+        <tr><td><strong>Friday</strong></td><td>How to Calculate Rental Yield</td><td><span class="badge thread">Thread</span></td><td>12:30 PM</td><td>Authority + saves</td></tr>
+        <tr><td><strong>Saturday</strong></td><td>Product Teaser + Screenshot</td><td><span class="badge tweet">Tweet</span></td><td>10:00 AM</td><td>Product awareness + waitlist</td></tr>
+        <tr><td><strong>Sunday</strong></td><td>Engagement + Quote Tweet</td><td><span class="badge engagement">Engage</span></td><td>10:00 AM</td><td>Community + conversations</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip-box"><strong>Remember:</strong> In addition to these scheduled posts, aim for 10&ndash;15 replies/day on other accounts' tweets. Engagement compounds &mdash; your replies are seen by their followers.</div>
+
+    <div class="section-divider"></div>
+
+    <h2>Quick Reference: X vs Instagram Cheat Sheet</h2>
+
+    <table>
+      <thead><tr><th>Element</th><th>Instagram</th><th>X/Twitter</th></tr></thead>
+      <tbody>
+        <tr><td>Primary format</td><td>Reels, Carousels</td><td>Threads, Single Tweets</td></tr>
+        <tr><td>Hashtags</td><td>15&ndash;25 per post</td><td>1&ndash;2 per tweet (max 3)</td></tr>
+        <tr><td>Posting frequency</td><td>1 post/day</td><td>1&ndash;2 tweets/day + 10&ndash;15 replies</td></tr>
+        <tr><td>Best engagement driver</td><td>Reels (algorithm push)</td><td>Threads + replies (conversation-based)</td></tr>
+        <tr><td>CTA</td><td>"Link in bio" / "Save"</td><td>"Follow" / "RT" / "Reply"</td></tr>
+        <tr><td>Tone</td><td>Polished, visual</td><td>Casual, punchy, opinionated</td></tr>
+        <tr><td>Growth lever</td><td>Explore page + Reels</td><td>Replies on big accounts + viral threads</td></tr>
+        <tr><td>Content lifespan</td><td>24&ndash;48 hrs (then archive value)</td><td>4&ndash;8 hrs (unless it goes viral)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p><strong>DWELLA</strong> &mdash; X/Twitter Strategy & Week 1 Content Kit</p>
+    <p>@dwella_ai &bull; India's Smartest Rental Management App</p>
+  </div>
+
+</div>
+</body>
+</html>
