@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thursday — POV: Landlord on the 5th</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #1a1a2e; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; justify-content: center; }
+  .frame {
+    width: 1080px; height: 1920px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .label {
+    text-align: center; color: #94A3B8; font-size: 14px; margin-bottom: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* Frame 1 — POV Title */
+  .frame-1 {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .frame-1 .pov {
+    font-size: 52px; font-weight: 800; color: white;
+    line-height: 1.3;
+  }
+
+  /* Frame 2 — Chat */
+  .chat-frame {
+    background: #0F172A;
+    padding: 80px 120px;
+    align-items: stretch;
+    justify-content: center;
+  }
+  .chat-bubble {
+    max-width: 70%;
+    padding: 28px 36px;
+    border-radius: 24px;
+    font-size: 28px;
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+  .chat-right {
+    background: #1B5E3A;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 6px;
+    margin-left: auto;
+  }
+  .chat-left {
+    background: #2D3748;
+    color: white;
+    align-self: flex-start;
+    border-bottom-left-radius: 6px;
+  }
+  .chat-time {
+    font-size: 16px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 40px;
+    text-align: right;
+  }
+  .chat-seen {
+    font-size: 18px;
+    color: #60A5FA;
+    text-align: right;
+    margin-top: -16px;
+    margin-bottom: 24px;
+  }
+
+  /* Day Counter Frames */
+  .day-frame {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .day-frame .big-text {
+    font-size: 80px; font-weight: 800; color: white;
+  }
+  .day-frame .sub-text {
+    font-size: 40px; color: rgba(255,255,255,0.6);
+    margin-top: 16px;
+  }
+
+  /* Transition */
+  .transition-frame {
+    background: #4F46E5;
+    padding: 100px;
+  }
+  .transition-frame .text {
+    font-size: 52px; font-weight: 800; color: white;
+    line-height: 1.3;
+  }
+
+  /* Features */
+  .features-frame {
+    background: #4F46E5;
+    padding: 100px;
+    text-align: left;
+    align-items: flex-start;
+    padding-left: 160px;
+  }
+  .features-frame .heading {
+    font-size: 44px; font-weight: 800; color: white;
+    margin-bottom: 48px;
+  }
+  .features-frame .feature {
+    font-size: 32px; font-weight: 500; color: white;
+    margin-bottom: 24px;
+    line-height: 1.4;
+  }
+  .features-frame .bottom-note {
+    font-size: 36px; font-weight: 700; color: white;
+    margin-top: 48px;
+  }
+
+  /* End Card */
+  .end-card {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .end-card .logo {
+    font-size: 80px; font-weight: 800; color: white;
+    letter-spacing: -2px; margin-bottom: 40px;
+  }
+  .end-card .tagline {
+    font-size: 40px; font-weight: 700; color: white;
+    margin-bottom: 24px;
+  }
+  .end-card .waitlist {
+    font-size: 30px; font-weight: 500; color: #10B981;
+    margin-bottom: 48px;
+  }
+  .end-card .handle {
+    font-size: 26px; font-weight: 400; color: rgba(255,255,255,0.6);
+  }
+</style>
+</head>
+<body>
+
+<!-- Frame 1: POV Title -->
+<div>
+  <div class="label">Frame 1 — Title (0–3s)</div>
+  <div class="frame frame-1">
+    <div class="pov">POV: You're a landlord<br>and it's the 5th<br>of the month</div>
+  </div>
+</div>
+
+<!-- Frame 2: Chat — Your Message + Reply -->
+<div>
+  <div class="label">Frame 2 — Chat (3–9s)</div>
+  <div class="frame chat-frame">
+    <div class="chat-bubble chat-right">Hi, rent due tha 1st ko &#x1F642;</div>
+    <div class="chat-time">4:32 PM &#x2713;&#x2713;</div>
+    <div class="chat-bubble chat-left">Haan bhaiya, kal bhejta hoon &#x1F64F;</div>
+    <div class="chat-time" style="text-align:left;">4:45 PM</div>
+  </div>
+</div>
+
+<!-- Frame 3: Day 7 -->
+<div>
+  <div class="label">Frame 3 — Day 7 (9–11s)</div>
+  <div class="frame day-frame">
+    <div class="big-text">Day 7...</div>
+    <div class="sub-text">Still waiting &#x1FAE0;</div>
+  </div>
+</div>
+
+<!-- Frame 4: Seen -->
+<div>
+  <div class="label">Frame 4 — Left on Read (11–14s)</div>
+  <div class="frame chat-frame">
+    <div class="chat-bubble chat-right">Bhai rent?</div>
+    <div class="chat-seen">Seen &#x2713;&#x2713;</div>
+    <div style="height: 200px;"></div>
+    <div style="font-size: 48px; color: rgba(255,255,255,0.3); text-align: center; width: 100%;">No reply...</div>
+  </div>
+</div>
+
+<!-- Frame 5: Day 15 -->
+<div>
+  <div class="label">Frame 5 — Day 15 (14–17s)</div>
+  <div class="frame day-frame">
+    <div class="big-text">Day 15...</div>
+    <div class="sub-text">&#x1FAE0;&#x1FAE0;&#x1FAE0;</div>
+  </div>
+</div>
+
+<!-- Frame 6: Transition -->
+<div>
+  <div class="label">Frame 6 — Transition (17–20s)</div>
+  <div class="frame transition-frame">
+    <div class="text">Or... you could<br>use Dwella &#x1F916;</div>
+  </div>
+</div>
+
+<!-- Frame 7: Features -->
+<div>
+  <div class="label">Frame 7 — Features (20–23s)</div>
+  <div class="frame features-frame">
+    <div class="heading">AI Auto-Reminders</div>
+    <div class="feature">&#x1F4E9; Sent 3 days before due date</div>
+    <div class="feature">&#x1F4E9; Sent on due date</div>
+    <div class="feature">&#x1F4E9; Sent 3 days after</div>
+    <div class="bottom-note">No awkward texts. Ever.</div>
+  </div>
+</div>
+
+<!-- Frame 8: End Card -->
+<div>
+  <div class="label">Frame 8 — End Card (23–25s)</div>
+  <div class="frame end-card">
+    <div class="logo">DWELLA</div>
+    <div class="tagline">AI-Powered Property Management</div>
+    <div class="waitlist">Waitlist open — Link in bio</div>
+    <div class="handle">@dwella_ai</div>
+  </div>
+</div>
+
+</body>
+</html>

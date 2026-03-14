@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tuesday — App Screen Recording Reel Cards</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #1a1a2e; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; justify-content: center; }
+  .frame {
+    width: 1080px; height: 1920px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .label {
+    text-align: center; color: #94A3B8; font-size: 14px; margin-bottom: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* Title Card */
+  .title-card {
+    background: #4F46E5;
+    padding: 100px;
+  }
+  .title-card .text {
+    font-size: 64px; font-weight: 800; color: white;
+    line-height: 1.2;
+  }
+  .title-card .handle {
+    position: absolute; bottom: 80px;
+    font-size: 28px; font-weight: 500; color: rgba(255,255,255,0.8);
+  }
+
+  /* Text Overlay Cards */
+  .overlay-card {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .overlay-card .step-label {
+    font-size: 20px; font-weight: 600; color: #4F46E5;
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+  .overlay-card .step-text {
+    font-size: 56px; font-weight: 700; color: white;
+    line-height: 1.3;
+  }
+  .overlay-card .sub {
+    font-size: 28px; font-weight: 400; color: #94A3B8;
+    margin-top: 24px;
+  }
+  .overlay-card .mockup-area {
+    width: 800px; height: 600px;
+    border: 2px dashed rgba(79,70,229,0.4);
+    border-radius: 24px;
+    display: flex; justify-content: center; align-items: center;
+    color: #4F46E5; font-size: 24px; font-weight: 500;
+    margin-top: 60px;
+  }
+
+  /* End Card */
+  .end-card {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .end-card .logo {
+    font-size: 80px; font-weight: 800; color: white;
+    letter-spacing: -2px; margin-bottom: 40px;
+  }
+  .end-card .tagline {
+    font-size: 40px; font-weight: 700; color: white;
+    margin-bottom: 24px;
+  }
+  .end-card .waitlist {
+    font-size: 30px; font-weight: 500; color: #10B981;
+    margin-bottom: 48px;
+  }
+  .end-card .handle {
+    font-size: 26px; font-weight: 400; color: rgba(255,255,255,0.6);
+  }
+</style>
+</head>
+<body>
+
+<!-- Title Card -->
+<div>
+  <div class="label">Title Card (1080 x 1920) — First 3 seconds</div>
+  <div class="frame title-card">
+    <div class="text">Track 3 months of rent in 30 seconds &#x26A1;</div>
+    <div class="handle">@dwella_ai</div>
+  </div>
+</div>
+
+<!-- Step 1 Overlay -->
+<div>
+  <div class="label">Text Overlay — Step 1 (3–8s)</div>
+  <div class="frame overlay-card">
+    <div class="step-label">Step 1</div>
+    <div class="step-text">Add your property</div>
+    <div class="sub">Name, address, rent amount — 30 seconds</div>
+    <div class="mockup-area">&#x1F4F1; Screen-record adding a property in Dwella</div>
+  </div>
+</div>
+
+<!-- Step 2 Overlay -->
+<div>
+  <div class="label">Text Overlay — Step 2 (8–14s)</div>
+  <div class="frame overlay-card">
+    <div class="step-label">Step 2</div>
+    <div class="step-text">Add your tenant</div>
+    <div class="sub">Name, phone, rent details — done</div>
+    <div class="mockup-area">&#x1F4F1; Screen-record adding tenant details</div>
+  </div>
+</div>
+
+<!-- Step 3 Overlay -->
+<div>
+  <div class="label">Text Overlay — Step 3 (14–22s)</div>
+  <div class="frame overlay-card">
+    <div class="step-label">Step 3</div>
+    <div class="step-text">Rent auto-tracked every month</div>
+    <div class="sub">Payment ledger with status badges</div>
+    <div class="mockup-area">&#x1F4F1; Show payment ledger with status badges</div>
+  </div>
+</div>
+
+<!-- Features Overlay -->
+<div>
+  <div class="label">Text Overlay — Features (22–27s)</div>
+  <div class="frame overlay-card">
+    <div class="step-text" style="font-size:48px;">AI reminders.<br>Payment proof.<br>Zero effort.</div>
+    <div class="sub" style="margin-top:40px;">Quick scroll through features</div>
+  </div>
+</div>
+
+<!-- End Card -->
+<div>
+  <div class="label">End Card (1080 x 1920) — Last 3 seconds</div>
+  <div class="frame end-card">
+    <div class="logo">DWELLA</div>
+    <div class="tagline">AI-Powered Property Management</div>
+    <div class="waitlist">Waitlist open — Link in bio</div>
+    <div class="handle">@dwella_ai</div>
+  </div>
+</div>
+
+</body>
+</html>

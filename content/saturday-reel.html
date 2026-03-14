@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saturday — Before Dwella vs After Dwella</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #1a1a2e; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; justify-content: center; }
+  .frame {
+    width: 1080px; height: 1920px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .label {
+    text-align: center; color: #94A3B8; font-size: 14px; margin-bottom: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* Frame 1: Title */
+  .frame-title {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .frame-title .text {
+    font-size: 56px; font-weight: 800; color: white;
+    line-height: 1.2;
+  }
+  .frame-title .emoji { font-size: 80px; margin-top: 32px; }
+
+  /* Frame 2: WhatsApp chaos */
+  .frame-whatsapp {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .notif-bar {
+    background: #1E293B;
+    border-radius: 20px;
+    padding: 32px 40px;
+    width: 800px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  .notif-icon {
+    width: 64px; height: 64px;
+    background: #25D366; border-radius: 16px;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 32px; color: white; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .notif-text {
+    flex: 1; text-align: left;
+  }
+  .notif-text .app-name {
+    font-size: 22px; font-weight: 700; color: white;
+  }
+  .notif-text .preview {
+    font-size: 20px; color: #94A3B8; margin-top: 4px;
+  }
+  .notif-badge {
+    background: #EF4444;
+    color: white;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 22px; font-weight: 700;
+  }
+  .chaos-label {
+    font-size: 24px; color: #EF4444; font-weight: 600;
+    margin-top: 24px;
+  }
+
+  /* Frame 3: Excel mess */
+  .frame-excel {
+    background: #0F172A;
+    padding: 80px;
+  }
+  .excel-grid {
+    width: 840px;
+    border: 2px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+  .excel-row {
+    display: flex;
+    border-bottom: 1px solid #1E293B;
+  }
+  .excel-row:last-child { border-bottom: none; }
+  .excel-cell {
+    flex: 1;
+    padding: 20px 16px;
+    font-size: 20px;
+    color: white;
+    border-right: 1px solid #1E293B;
+    text-align: center;
+  }
+  .excel-cell:last-child { border-right: none; }
+  .excel-header {
+    background: #334155;
+    font-weight: 700;
+    font-size: 18px;
+    color: #94A3B8;
+  }
+  .excel-error { color: #EF4444; font-weight: 700; }
+  .excel-unknown { color: #F59E0B; }
+  .excel-label {
+    font-size: 24px; color: #EF4444; font-weight: 600;
+  }
+
+  /* Frame 4: Searching chats */
+  .frame-search {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .frame-search .quote {
+    font-size: 44px; font-style: italic; color: white;
+    line-height: 1.4; margin-bottom: 24px;
+  }
+  .frame-search .sub {
+    font-size: 28px; color: #94A3B8;
+  }
+
+  /* Frame 5: Transition */
+  .frame-transition {
+    background: #4F46E5;
+    padding: 100px;
+  }
+  .frame-transition .text {
+    font-size: 72px; font-weight: 800; color: white;
+  }
+
+  /* Frames 6–8: After */
+  .frame-after {
+    background: #0F172A;
+    padding: 80px;
+  }
+  .frame-after .screenshot-area {
+    width: 800px; height: 1200px;
+    border: 2px dashed rgba(79,70,229,0.4);
+    border-radius: 32px;
+    display: flex; justify-content: center; align-items: center;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .frame-after .screenshot-area .placeholder {
+    font-size: 28px; color: #4F46E5; font-weight: 500;
+  }
+  .frame-after .screenshot-area .hint {
+    font-size: 20px; color: #94A3B8;
+  }
+  .frame-after .overlay-text {
+    background: rgba(0,0,0,0.7);
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-size: 32px; font-weight: 700; color: white;
+    position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  /* End Card */
+  .end-card {
+    background: #0F172A;
+    padding: 100px;
+  }
+  .end-card .logo {
+    font-size: 80px; font-weight: 800; color: white;
+    letter-spacing: -2px; margin-bottom: 40px;
+  }
+  .end-card .tagline {
+    font-size: 40px; font-weight: 700; color: white;
+    margin-bottom: 24px;
+  }
+  .end-card .waitlist {
+    font-size: 30px; font-weight: 500; color: #10B981;
+    margin-bottom: 48px;
+  }
+  .end-card .handle {
+    font-size: 26px; font-weight: 400; color: rgba(255,255,255,0.6);
+  }
+</style>
+</head>
+<body>
+
+<!-- Frame 1: Before Title -->
+<div>
+  <div class="label">Frame 1 — "Before" Title (0–3s)</div>
+  <div class="frame frame-title">
+    <div class="text">Managing rent<br>BEFORE Dwella</div>
+    <div class="emoji">&#x1F630;</div>
+  </div>
+</div>
+
+<!-- Frame 2: WhatsApp Chaos -->
+<div>
+  <div class="label">Frame 2 — WhatsApp Chaos (3–6s)</div>
+  <div class="frame frame-whatsapp">
+    <div class="notif-bar">
+      <div class="notif-icon">W</div>
+      <div class="notif-text">
+        <div class="app-name">WhatsApp</div>
+        <div class="preview">Tenant Group: "Bhaiya rent..."</div>
+      </div>
+      <div class="notif-badge">47</div>
+    </div>
+    <div class="notif-bar">
+      <div class="notif-icon">W</div>
+      <div class="notif-text">
+        <div class="app-name">Building Maintenance</div>
+        <div class="preview">"Society charges due..."</div>
+      </div>
+      <div class="notif-badge">12</div>
+    </div>
+    <div class="notif-bar">
+      <div class="notif-icon">W</div>
+      <div class="notif-text">
+        <div class="app-name">Flat 302 - Sharma</div>
+        <div class="preview">"Sir kal bhejta hoon..."</div>
+      </div>
+      <div class="notif-badge">8</div>
+    </div>
+    <div class="chaos-label">The group chat nobody wants</div>
+  </div>
+</div>
+
+<!-- Frame 3: Excel Mess -->
+<div>
+  <div class="label">Frame 3 — Excel Mess (6–9s)</div>
+  <div class="frame frame-excel">
+    <div class="excel-grid">
+      <div class="excel-row">
+        <div class="excel-cell excel-header">Tenant</div>
+        <div class="excel-cell excel-header">Jan</div>
+        <div class="excel-cell excel-header">Feb</div>
+        <div class="excel-cell excel-header">Mar</div>
+        <div class="excel-cell excel-header">Apr</div>
+        <div class="excel-cell excel-header">May</div>
+      </div>
+      <div class="excel-row">
+        <div class="excel-cell">Sharma</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell excel-unknown">???</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell excel-error">MISSING</div>
+        <div class="excel-cell excel-unknown">???</div>
+      </div>
+      <div class="excel-row">
+        <div class="excel-cell">Patel</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell excel-error">LATE</div>
+        <div class="excel-cell excel-unknown">???</div>
+        <div class="excel-cell excel-unknown">???</div>
+      </div>
+      <div class="excel-row">
+        <div class="excel-cell">Reddy</div>
+        <div class="excel-cell excel-unknown">???</div>
+        <div class="excel-cell excel-error">15K??</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell excel-error">DID HE PAY?</div>
+      </div>
+      <div class="excel-row">
+        <div class="excel-cell">Kumar</div>
+        <div class="excel-cell excel-error">NO</div>
+        <div class="excel-cell">&#x2713;</div>
+        <div class="excel-cell excel-unknown">PARTIAL?</div>
+        <div class="excel-cell excel-error">&#x274C;</div>
+        <div class="excel-cell excel-unknown">???</div>
+      </div>
+    </div>
+    <div class="excel-label">Last updated: 3 months ago</div>
+  </div>
+</div>
+
+<!-- Frame 4: Searching Chats -->
+<div>
+  <div class="label">Frame 4 — Searching Chats (9–11s)</div>
+  <div class="frame frame-search">
+    <div class="quote">"Bhai rent bheja tha na?"</div>
+    <div class="sub">Scrolling through 6 months of chats...</div>
+  </div>
+</div>
+
+<!-- Frame 5: Transition -->
+<div>
+  <div class="label">Frame 5 — Transition (11–13s)</div>
+  <div class="frame frame-transition">
+    <div class="text">AFTER DWELLA &#x26A1;</div>
+  </div>
+</div>
+
+<!-- Frame 6: Clean Dashboard -->
+<div>
+  <div class="label">Frame 6 — Dashboard (13–16s)</div>
+  <div class="frame frame-after">
+    <div class="overlay-text">All properties. One screen.</div>
+    <div class="screenshot-area">
+      <div class="placeholder">&#x1F4F1; Insert Dwella dashboard screenshot here</div>
+      <div class="hint">Properties list view with cards</div>
+    </div>
+  </div>
+</div>
+
+<!-- Frame 7: Payment Tracking -->
+<div>
+  <div class="label">Frame 7 — Payment Ledger (16–19s)</div>
+  <div class="frame frame-after">
+    <div class="overlay-text">Every payment. Tracked.</div>
+    <div class="screenshot-area">
+      <div class="placeholder">&#x1F4F1; Insert payment ledger screenshot here</div>
+      <div class="hint">Green confirmed badges visible</div>
+    </div>
+  </div>
+</div>
+
+<!-- Frame 8: Auto Reminders -->
+<div>
+  <div class="label">Frame 8 — Auto Reminders (19–22s)</div>
+  <div class="frame frame-after">
+    <div class="overlay-text">Reminders sent automatically. Zero effort.</div>
+    <div class="screenshot-area">
+      <div class="placeholder">&#x1F4F1; Insert reminder notification screenshot here</div>
+      <div class="hint">Auto-reminder sent notification</div>
+    </div>
+  </div>
+</div>
+
+<!-- Frame 9: End Card -->
+<div>
+  <div class="label">Frame 9 — End Card (25–28s)</div>
+  <div class="frame end-card">
+    <div class="logo">DWELLA</div>
+    <div class="tagline">AI-Powered Property Management</div>
+    <div class="waitlist">Waitlist open — Link in bio</div>
+    <div class="handle">@dwella_ai</div>
+  </div>
+</div>
+
+</body>
+</html>

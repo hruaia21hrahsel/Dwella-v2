@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wednesday — Rent Receipt for HRA</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #1a1a2e; display: flex; justify-content: center; padding: 40px; }
+  .label {
+    text-align: center; color: #94A3B8; font-size: 14px; margin-bottom: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .slide {
+    width: 1080px; height: 1080px;
+    background: #FFFFFF;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  /* Top bar */
+  .top-bar {
+    height: 50px; background: #4F46E5; width: 100%;
+  }
+
+  /* Header */
+  .header {
+    text-align: center; padding: 40px 60px 20px;
+  }
+  .header h1 {
+    font-size: 48px; font-weight: 800; color: #1E1B4B;
+    letter-spacing: -0.5px;
+  }
+  .header p {
+    font-size: 24px; font-weight: 400; color: #64748B;
+    margin-top: 8px;
+  }
+
+  /* Checklist */
+  .checklist {
+    padding: 20px 80px;
+    flex-grow: 1;
+  }
+  .check-item {
+    display: flex; align-items: center; gap: 16px;
+    font-size: 24px; font-weight: 500; color: #1E1B4B;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .check-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #10B981; color: white;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 20px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Mistakes box */
+  .mistakes {
+    margin: 16px 80px;
+    background: #FEF2F2;
+    border-radius: 16px;
+    padding: 24px 32px;
+  }
+  .mistakes .title {
+    font-size: 24px; font-weight: 700; color: #EF4444;
+    margin-bottom: 12px;
+  }
+  .mistakes .item {
+    font-size: 20px; color: #991B1B;
+    padding: 6px 0;
+    padding-left: 20px;
+    position: relative;
+  }
+  .mistakes .item::before {
+    content: "•";
+    position: absolute; left: 0;
+  }
+
+  /* Footer */
+  .footer-bar {
+    background: #4F46E5;
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+  }
+  .footer-bar .text {
+    font-size: 22px; font-weight: 700; color: white;
+  }
+  .footer-bar .logo {
+    font-size: 24px; font-weight: 800; color: white;
+    letter-spacing: -0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <div class="label">Static Post (1080 x 1080)</div>
+  <div class="slide">
+    <div class="top-bar"></div>
+
+    <div class="header">
+      <h1>RENT RECEIPT FOR HRA</h1>
+      <p>What your tenant actually needs from you &#x2B07;</p>
+    </div>
+
+    <div class="checklist">
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Landlord's full name</div>
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Landlord's PAN (if rent &gt; &#x20B9;1L/year)</div>
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Property address</div>
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Rent amount per month</div>
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Payment period (from — to)</div>
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Revenue stamp (for cash payments)</div>
+      <div class="check-item"><div class="check-icon">&#x2713;</div> Landlord's signature</div>
+    </div>
+
+    <div class="mistakes">
+      <div class="title">&#x274C; Common Mistakes</div>
+      <div class="item">No PAN = tenant's HRA claim rejected</div>
+      <div class="item">Missing address = invalid receipt</div>
+      <div class="item">No date range = CA sends it back</div>
+    </div>
+
+    <div class="footer-bar">
+      <div class="text">&#x1F4A1; Dwella auto-generates compliant rent receipts</div>
+      <div class="logo">DWELLA</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
