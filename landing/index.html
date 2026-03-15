@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dwella — The AI that runs your rentals</title>
+  <meta name="description" content="Track rent, manage tenants, and let AI handle the rest. Download Dwella for iOS and Android.">
+
+  <!-- OG / Twitter -->
+  <meta property="og:title" content="Dwella — The AI that runs your rentals">
+  <meta property="og:description" content="Track rent, manage tenants, and let AI handle the rest.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dwella.app">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dwella — The AI that runs your rentals">
+  <meta name="twitter:description" content="Track rent, manage tenants, and let AI handle the rest.">
+
+  <meta name="theme-color" content="#009688">
+  <link rel="icon" href="../assets/favicon.png" type="image/png">
+
+  <style>
+    /* ── Reset & Tokens ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #009688;
+      --primary-dark: #004D40;
+      --primary-mid: #00897B;
+      --accent: #F59E0B;
+      --text: #0F172A;
+      --text-secondary: #64748B;
+      --surface: #FFFFFF;
+      --bg: #F5F5F7;
+      --radius: 16px;
+      --max-w: 1120px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--surface);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-wordmark {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 22px;
+      color: var(--text);
+      letter-spacing: 0.5px;
+    }
+    .nav-cta {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-cta:hover { background: var(--primary-mid); }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      background: linear-gradient(135deg, var(--primary-mid), var(--primary-dark));
+      padding: 100px 24px 120px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 60px);
+      color: #fff;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero p {
+      font-size: clamp(17px, 2.5vw, 20px);
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 40px;
+    }
+    .store-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .store-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      color: var(--text);
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .store-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .store-btn svg { flex-shrink: 0; }
+
+    /* Sparkles */
+    .sparkle {
+      position: absolute;
+      z-index: 1;
+      opacity: 0;
+      animation: sparkle-float 4s ease-in-out infinite;
+    }
+    .sparkle:nth-child(1) { top: 15%; left: 8%; animation-delay: 0s; }
+    .sparkle:nth-child(2) { top: 25%; right: 10%; animation-delay: 1.2s; }
+    .sparkle:nth-child(3) { bottom: 20%; left: 15%; animation-delay: 2.4s; }
+    .sparkle:nth-child(4) { top: 40%; right: 20%; animation-delay: 0.6s; }
+    .sparkle:nth-child(5) { bottom: 30%; right: 8%; animation-delay: 1.8s; }
+
+    @keyframes sparkle-float {
+      0%, 100% { opacity: 0; transform: scale(0.6) translateY(0); }
+      50% { opacity: 0.8; transform: scale(1) translateY(-10px); }
+    }
+
+    /* ── Section shared ── */
+    .section {
+      padding: 100px 24px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 18px;
+      margin-bottom: 60px;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Features ── */
+    .features { background: var(--bg); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: var(--radius);
+      padding: 36px 28px;
+      transition: transform 0.25s, box-shadow 0.25s;
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    .feature-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 22px;
+    }
+    .feature-card h3 {
+      font-size: 19px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── How It Works ── */
+    .how-it-works { background: var(--surface); }
+    .steps {
+      display: flex;
+      gap: 40px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .step {
+      flex: 1;
+      min-width: 240px;
+      max-width: 320px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    .step.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .step-number {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-mid));
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .step h3 {
+      font-size: 19px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .step p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    /* ── Final CTA ── */
+    .final-cta {
+      background: linear-gradient(135deg, var(--primary-dark), #0F172A);
+      padding: 100px 24px;
+      text-align: center;
+    }
+    .final-cta h2 {
+      font-size: clamp(28px, 4vw, 40px);
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .final-cta p {
+      color: rgba(255,255,255,0.7);
+      font-size: 18px;
+      margin-bottom: 40px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: #0F172A;
+      padding: 32px 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: #fff; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; max-width: 480px; }
+      .hero { padding: 72px 20px 88px; }
+      .section { padding: 72px 20px; }
+      .steps { flex-direction: column; align-items: center; }
+    }
+    @media (max-width: 480px) {
+      .store-btn { width: 100%; justify-content: center; }
+      .store-buttons { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ── -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <svg viewBox="10 30 180 115" width="36" height="36">
+          <text x="18" y="125" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#1E293B" letter-spacing="1">dwe</text>
+          <rect x="122" y="74" width="6" height="53" rx="1" fill="#1E293B"/>
+          <rect x="142" y="74" width="6" height="53" rx="1" fill="#1E293B"/>
+          <path d="M116 76 L135 50 L154 76" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="154" y="125" font-family="Georgia, serif" font-size="54" font-weight="400" fill="#1E293B">a</text>
+          <line x1="18" y1="138" x2="185" y2="138" stroke="#1E293B" stroke-width="1.5" opacity="0.2"/>
+          <path d="M158 42 L160 36 L162 42 L168 44 L162 46 L160 52 L158 46 L152 44 Z" fill="#F59E0B"/>
+          <path d="M168 56 L169 53 L170 56 L173 57 L170 58 L169 61 L168 58 L165 57 Z" fill="#F59E0B" opacity="0.7"/>
+          <path d="M148 36 L149 34 L150 36 L152 37 L150 38 L149 40 L148 38 L146 37 Z" fill="#F59E0B" opacity="0.5"/>
+        </svg>
+        <span class="nav-wordmark">dwella</span>
+      </a>
+      <button class="nav-cta" onclick="document.getElementById('download').scrollIntoView({behavior:'smooth'})">Download</button>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <!-- Sparkles -->
+    <svg class="sparkle" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2 L14 8 L20 10 L14 12 L12 18 L10 12 L4 10 L10 8 Z" fill="#F59E0B"/></svg>
+    <svg class="sparkle" width="20" height="20" viewBox="0 0 24 24"><path d="M12 2 L14 8 L20 10 L14 12 L12 18 L10 12 L4 10 L10 8 Z" fill="#F59E0B"/></svg>
+    <svg class="sparkle" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L14 8 L20 10 L14 12 L12 18 L10 12 L4 10 L10 8 Z" fill="#F59E0B"/></svg>
+    <svg class="sparkle" width="28" height="28" viewBox="0 0 24 24"><path d="M12 2 L14 8 L20 10 L14 12 L12 18 L10 12 L4 10 L10 8 Z" fill="#F59E0B"/></svg>
+    <svg class="sparkle" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2 L14 8 L20 10 L14 12 L12 18 L10 12 L4 10 L10 8 Z" fill="#F59E0B"/></svg>
+
+    <div class="hero-content">
+      <h1>The AI that runs your rentals.</h1>
+      <p>Track rent, manage tenants, and let AI handle the rest.</p>
+      <div class="store-buttons">
+        <a href="https://apps.apple.com/app/id6760478576" class="store-btn" target="_blank" rel="noopener">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#0F172A">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          Download on the App Store
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=com.dwella.app" class="store-btn" target="_blank" rel="noopener">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#0F172A">
+            <path d="M3.18 23.76c.3.17.64.22.98.15l12.18-12.18L12.93 8.3 3.18 23.76zM20.65 9.57l-2.62-1.52-3.54 3.54 3.54 3.54 2.64-1.54c.75-.44.75-1.59-.02-2.02zM2.02.46C1.75.7 1.6 1.08 1.6 1.58v20.9c0 .5.15.88.43 1.12l.07.06L13.36 12.5v-.28L2.09.4l-.07.06zM16.12 13.13L12.93 9.93 3.18.46c-.34-.07-.68-.02-.98.15l12.92 12.52z"/>
+          </svg>
+          Get it on Google Play
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ── -->
+  <section class="section features">
+    <h2 class="section-title">Everything you need to manage rentals</h2>
+    <p class="section-sub">Powerful features wrapped in a simple, intuitive experience.</p>
+    <div class="features-grid">
+      <div class="feature-card" data-animate>
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h3>Rent Tracking</h3>
+        <p>Auto-generated monthly payment rows with real-time status — pending, partial, paid, confirmed, or overdue.</p>
+      </div>
+      <div class="feature-card" data-animate>
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>Tenant Management</h3>
+        <p>Add tenants, send invite links, and manage leases across all your properties in one place.</p>
+      </div>
+      <div class="feature-card" data-animate>
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <h3>AI Assistant</h3>
+        <p>Chat with Dwella's AI to log payments, add properties, draft reminders, and get instant insights.</p>
+      </div>
+      <div class="feature-card" data-animate>
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+        <h3>Payment Proofs</h3>
+        <p>Tenants upload screenshots or receipts. Landlords see proof attached to every payment record.</p>
+      </div>
+      <div class="feature-card" data-animate>
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <h3>Smart Reminders</h3>
+        <p>Automatic reminders 3 days before, on, and after rent is due — so no one forgets.</p>
+      </div>
+      <div class="feature-card" data-animate>
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <h3>PDF Reports</h3>
+        <p>Generate professional receipts and annual summaries on demand — ready to download or share.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ── -->
+  <section class="section how-it-works">
+    <h2 class="section-title">Up and running in minutes</h2>
+    <p class="section-sub">Three simple steps to smarter rental management.</p>
+    <div class="steps">
+      <div class="step" data-animate>
+        <div class="step-number">1</div>
+        <h3>Download Dwella</h3>
+        <p>Get the app from the App Store or Google Play and create your free account in seconds.</p>
+      </div>
+      <div class="step" data-animate>
+        <div class="step-number">2</div>
+        <h3>Add Your Properties</h3>
+        <p>Enter your rental properties, set rent amounts, due dates, and customize each unit.</p>
+      </div>
+      <div class="step" data-animate>
+        <div class="step-number">3</div>
+        <h3>Invite Your Tenants</h3>
+        <p>Send invite links. Tenants join instantly and start logging payments right away.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Final CTA ── -->
+  <section class="final-cta" id="download">
+    <h2>Start managing smarter today</h2>
+    <p>Join landlords and tenants who trust Dwella to keep their rentals organized.</p>
+    <div class="store-buttons">
+      <a href="https://apps.apple.com/app/id6760478576" class="store-btn" target="_blank" rel="noopener">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#0F172A">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+        Download on the App Store
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=com.dwella.app" class="store-btn" target="_blank" rel="noopener">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#0F172A">
+          <path d="M3.18 23.76c.3.17.64.22.98.15l12.18-12.18L12.93 8.3 3.18 23.76zM20.65 9.57l-2.62-1.52-3.54 3.54 3.54 3.54 2.64-1.54c.75-.44.75-1.59-.02-2.02zM2.02.46C1.75.7 1.6 1.08 1.6 1.58v20.9c0 .5.15.88.43 1.12l.07.06L13.36 12.5v-.28L2.09.4l-.07.06zM16.12 13.13L12.93 9.93 3.18.46c-.34-.07-.68-.02-.98.15l12.92 12.52z"/>
+        </svg>
+        Get it on Google Play
+      </a>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+    <p>&copy; 2025 Dwella. All rights reserved.</p>
+  </footer>
+
+  <!-- ── Scroll Animations ── -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+
+      document.querySelectorAll('[data-animate]').forEach(function(el) {
+        observer.observe(el);
+      });
+    });
+  </script>
+
+</body>
+</html>
