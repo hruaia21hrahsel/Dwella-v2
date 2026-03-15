@@ -240,7 +240,7 @@ export default function RootLayout() {
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
       options={{ host: POSTHOG_HOST }}
-      autocapture={{ captureTouches: true, captureLifecycleEvents: true, captureScreens: true }}
+      autocapture={{ captureTouches: true, captureScreens: true }}
     >
       <ThemeProvider>
         <InnerLayout />
