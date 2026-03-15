@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import { supabase } from './supabase';
 
 const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/process-bot-message`;
@@ -36,17 +37,18 @@ export async function sendBotMessage(userId: string, message: string): Promise<B
   return res.json() as Promise<BotResponse>;
 }
 
-function randomUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+function secureRandomDigits(length: number): string {
+  const bytes = Crypto.getRandomBytes(length);
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += (bytes[i] % 10).toString();
+  }
+  return result;
 }
 
 /** Generate a one-time telegram link token for the current user */
 export async function generateTelegramLinkToken(userId: string): Promise<string> {
-  const token = randomUUID();
+  const token = Crypto.randomUUID();
 
   const { error } = await supabase
     .from('users')
@@ -76,7 +78,7 @@ function normalizePhoneE164(phone: string): string {
 /** Initiate WhatsApp account linking — generates a 6-digit code and sends it via template message */
 export async function initiateWhatsAppLink(userId: string, phoneNumber: string): Promise<string> {
   const phone = normalizePhoneE164(phoneNumber);
-  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code = secureRandomDigits(6);
 
   // Store the verification code on the user row
   const { error: updateError } = await supabase
