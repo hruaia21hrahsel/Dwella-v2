@@ -6,12 +6,14 @@ import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { usePostHog } from '@/lib/posthog';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { registerPushToken } from '@/lib/notifications';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
+import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,6 +53,7 @@ function AuthGuard() {
   const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
+  const posthog = usePostHog();
   const initialRedirectDone = useRef(false);
   /** Incremented each time the routing effect fires; stale async callbacks bail out. */
   const routingGeneration = useRef(0);
@@ -108,8 +111,13 @@ function AuthGuard() {
             setUser(fallbackUser as any);
           }
           registerPushToken(uid);
+          posthog.identify(uid, {
+            email: newSession.user.email,
+            name: newSession.user.user_metadata?.full_name,
+          });
         } else {
           setUser(null);
+          posthog.reset();
         }
       } finally {
         setLoading(false);
@@ -215,8 +223,14 @@ function InnerLayout() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <InnerLayout />
-    </ThemeProvider>
+    <PostHogProvider
+      apiKey={POSTHOG_API_KEY}
+      options={{ host: POSTHOG_HOST }}
+      autocapture={{ captureTouches: true, captureLifecycleEvents: true, captureScreens: true }}
+    >
+      <ThemeProvider>
+        <InnerLayout />
+      </ThemeProvider>
+    </PostHogProvider>
   );
 }
