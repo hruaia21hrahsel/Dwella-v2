@@ -64,33 +64,53 @@ export function useDashboard(year: number, month: number): DashboardData {
     setError(null);
 
     try {
-    // Query 1: properties + tenants + payments for current year
-    const { data: propertiesData, error: propError } = await supabase
+    // Query 1: properties + tenants (lightweight — no payments)
+    // Query 2: payments for selected year only (filtered server-side)
+    // Query 3: recent transactions
+    // All three run in parallel to minimize round-trips.
+
+    const propertiesPromise = supabase
       .from('properties')
-      .select('id, name, tenants(id, tenant_name, flat_no, monthly_rent, is_archived, payments(*))')
+      .select('id, name, tenants(id, tenant_name, flat_no, monthly_rent, is_archived)')
       .eq('owner_id', user.id)
       .eq('is_archived', false);
 
-    if (propError) throw propError;
+    const paymentsPromise = supabase
+      .from('payments')
+      .select('*, tenants!inner(id, property_id, is_archived)')
+      .eq('year', year)
+      .eq('tenants.is_archived', false);
+
+    const recentPromise = supabase
+      .from('payments')
+      .select('*, tenants(tenant_name, flat_no, properties(name, id))')
+      .in('status', ['paid', 'confirmed'])
+      .not('paid_at', 'is', null)
+      .order('paid_at', { ascending: false })
+      .limit(5);
+
+    const [propResult, payResult, recentResult] = await Promise.all([
+      propertiesPromise,
+      paymentsPromise,
+      recentPromise,
+    ]);
+
+    if (propResult.error) throw propResult.error;
+    if (payResult.error) throw payResult.error;
+
+    // Index payments by tenant_id + month for O(1) lookup
+    const paymentIndex = new Map<string, Record<number, Payment>>();
+    for (const p of (payResult.data ?? []) as any[]) {
+      const key = p.tenant_id as string;
+      if (!paymentIndex.has(key)) paymentIndex.set(key, {});
+      paymentIndex.get(key)![p.month] = p as Payment;
+    }
 
     const rows: TenantRow[] = [];
-    const allTenantIds: string[] = [];
-
-    for (const property of propertiesData ?? []) {
+    for (const property of propResult.data ?? []) {
       const tenants = (property.tenants as any[]) ?? [];
       for (const tenant of tenants) {
         if (tenant.is_archived) continue;
-        allTenantIds.push(tenant.id);
-
-        const payments: Payment[] = (tenant.payments ?? []).filter(
-          (p: Payment) => p.year === year,
-        );
-
-        const paymentsByMonth: Record<number, Payment | undefined> = {};
-        for (const p of payments) {
-          paymentsByMonth[p.month] = p;
-        }
-
         rows.push({
           tenantId: tenant.id,
           tenantName: tenant.tenant_name,
@@ -98,40 +118,29 @@ export function useDashboard(year: number, month: number): DashboardData {
           propertyName: property.name,
           propertyId: property.id,
           monthlyRent: tenant.monthly_rent,
-          paymentsByMonth,
+          paymentsByMonth: paymentIndex.get(tenant.id) ?? {},
         });
       }
     }
 
-    // Query 2 runs in parallel with processing — start it as soon as we have tenant IDs
-    let recentPromise: Promise<RecentTx[]> = Promise.resolve([]);
-    if (allTenantIds.length > 0) {
-      recentPromise = Promise.resolve(supabase
-        .from('payments')
-        .select('*, tenants(tenant_name, flat_no, properties(name, id))')
-        .in('tenant_id', allTenantIds)
-        .in('status', ['paid', 'confirmed'])
-        .not('paid_at', 'is', null)
-        .order('paid_at', { ascending: false })
-        .limit(5)
-        .then(({ data }) =>
-          (data ?? []).map((p: any) => ({
-            paymentId: p.id,
-            tenantName: p.tenants?.tenant_name ?? '',
-            flatNo: p.tenants?.flat_no ?? '',
-            propertyName: p.tenants?.properties?.name ?? '',
-            propertyId: p.tenants?.properties?.id ?? '',
-            tenantId: p.tenant_id,
-            amountPaid: p.amount_paid,
-            month: p.month,
-            year: p.year,
-            status: p.status,
-            paidAt: p.paid_at,
-          })),
-        ));
-    }
+    // Filter recent transactions to only the user's properties
+    const ownedPropertyIds = new Set((propResult.data ?? []).map((p: any) => p.id));
+    const txs: RecentTx[] = (recentResult.data ?? [])
+      .filter((p: any) => ownedPropertyIds.has(p.tenants?.properties?.id))
+      .map((p: any) => ({
+        paymentId: p.id,
+        tenantName: p.tenants?.tenant_name ?? '',
+        flatNo: p.tenants?.flat_no ?? '',
+        propertyName: p.tenants?.properties?.name ?? '',
+        propertyId: p.tenants?.properties?.id ?? '',
+        tenantId: p.tenant_id,
+        amountPaid: p.amount_paid,
+        month: p.month,
+        year: p.year,
+        status: p.status,
+        paidAt: p.paid_at,
+      }));
 
-    const txs = await recentPromise;
     setTenantRows(rows);
     setRecentTransactions(txs);
 
