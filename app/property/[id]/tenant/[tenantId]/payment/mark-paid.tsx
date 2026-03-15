@@ -10,6 +10,7 @@ import { getProofStoragePath } from '@/lib/payments';
 import { ProofUploader } from '@/components/ProofUploader';
 import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 export default function MarkPaidScreen() {
   const { id: propertyId, tenantId, paymentId } = useLocalSearchParams<{
@@ -20,6 +21,7 @@ export default function MarkPaidScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { colors } = useTheme();
+  const track = useTrack();
 
   const [payment, setPayment] = useState<Payment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +83,14 @@ export default function MarkPaidScreen() {
     if (error) {
       useToastStore.getState().showToast(error.message, 'error');
     } else {
+      track(EVENTS.PAYMENT_MARKED_PAID, {
+        payment_id: payment.id,
+        tenant_id: tenantId,
+        has_proof: !!proofPath,
+      });
+      if (proofPath) {
+        track(EVENTS.PAYMENT_PROOF_UPLOADED, { payment_id: payment.id });
+      }
       router.back();
     }
 

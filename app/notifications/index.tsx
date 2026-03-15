@@ -7,6 +7,7 @@ import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Notification } from '@/lib/types';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 function relativeTime(dateString: string): string {
   const diff = Date.now() - new Date(dateString).getTime();
@@ -90,8 +91,10 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const track = useTrack();
 
   async function handlePress(notif: Notification) {
+    track(EVENTS.NOTIFICATION_TAPPED, { type: notif.type });
     if (!notif.is_read) await markRead(notif.id);
     // Navigate based on available context
     if (notif.payment_id && notif.tenant_id) {

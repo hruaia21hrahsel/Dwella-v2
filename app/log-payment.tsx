@@ -23,6 +23,7 @@ import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { getDueDate } from '@/lib/payments';
 import { formatCurrency, getCurrentMonthYear } from '@/lib/utils';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -48,6 +49,7 @@ export default function LogPaymentScreen() {
   const { user, session } = useAuthStore();
   const userId = user?.id ?? session?.user?.id;
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const params = useLocalSearchParams<{ propertyId?: string; tenantId?: string }>();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
 
@@ -176,6 +178,14 @@ export default function LogPaymentScreen() {
         });
         if (error) throw error;
       }
+      track(EVENTS.PAYMENT_LOGGED, {
+        property_id: selectedPropertyId,
+        tenant_id: selectedTenant.id,
+        amount: parsed,
+        month: selectedMonth,
+        year: currentYear,
+        source: 'quick_log',
+      });
       router.back();
     } catch (err: any) {
       useToastStore.getState().showToast(err.message ?? 'Could not save payment.', 'error');

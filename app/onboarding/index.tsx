@@ -17,19 +17,23 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setOnboardingCompleted, setTourStep } = useAuthStore();
   const { colors, gradients } = useTheme();
+  const track = useTrack();
 
   function handleExplore() {
+    track(EVENTS.ONBOARDING_COMPLETED, { skipped: false });
     setTourStep(0);
     router.replace(TOUR_STEPS[0].route as any);
   }
 
   function handleSkip() {
+    track(EVENTS.ONBOARDING_COMPLETED, { skipped: true });
     setOnboardingCompleted();
     router.replace('/(tabs)/dashboard');
   }

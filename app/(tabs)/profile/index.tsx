@@ -16,6 +16,7 @@ import { GlassCard } from '@/components/GlassCard';
 import { GradientButton } from '@/components/GradientButton';
 import type { ThemeMode } from '@/lib/store';
 import { DwellaHeader } from '@/components/DwellaHeader';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 const THEME_OPTIONS: { label: string; value: ThemeMode }[] = [
   { label: 'Light', value: 'light' },
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { colors, gradients, shadows, isDark } = useTheme();
   const { mode: themeMode, setMode: setThemeMode } = useThemeToggle();
+  const track = useTrack();
   const { user, setUser, resetOnboarding } = useAuthStore();
   const [fullName, setFullName] = useState(user?.full_name ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -217,6 +219,7 @@ export default function ProfileScreen() {
       const deepLink = `tg://resolve?domain=${TELEGRAM_BOT_USERNAME}&start=${token}`;
       const canOpen = await Linking.canOpenURL(deepLink);
       if (canOpen) {
+        track(EVENTS.TELEGRAM_LINKED);
         await Linking.openURL(deepLink);
       } else {
         useToastStore.getState().showToast('Please install Telegram, then try again.', 'error');
@@ -226,7 +229,7 @@ export default function ProfileScreen() {
     } finally {
       setLinkingTelegram(false);
     }
-  }, [user, setUser]);
+  }, [user, setUser, track]);
 
   const handleUnlinkTelegram = useCallback(() => {
     Alert.alert(
@@ -240,6 +243,7 @@ export default function ProfileScreen() {
           onPress: async () => {
             if (!user) return;
             setUnlinkingTelegram(true);
+            track(EVENTS.TELEGRAM_UNLINKED);
             try {
               await unlinkTelegram(user.id);
               const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
@@ -405,7 +409,7 @@ export default function ProfileScreen() {
                   { borderColor: colors.border, backgroundColor: colors.surface },
                   active && { borderColor: colors.primary, backgroundColor: colors.primarySoft },
                 ]}
-                onPress={() => setThemeMode(opt.value)}
+                onPress={() => { setThemeMode(opt.value); track(EVENTS.THEME_CHANGED, { mode: opt.value }); }}
                 activeOpacity={0.7}
               >
                 <Text style={[
@@ -428,6 +432,7 @@ export default function ProfileScreen() {
           mode="outlined"
           icon="play-circle-outline"
           onPress={() => {
+            track(EVENTS.APP_TOUR_REPLAYED);
             resetOnboarding();
             router.push('/onboarding');
           }}

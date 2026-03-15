@@ -13,6 +13,7 @@ import { formatCurrency, formatDate, getMonthName } from '@/lib/utils';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { canConfirm, getProofSignedUrl } from '@/lib/payments';
 import { useProperties } from '@/hooks/useProperties';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 export default function PaymentDetailScreen() {
   const { id: propertyId, tenantId, paymentId } = useLocalSearchParams<{
@@ -23,6 +24,7 @@ export default function PaymentDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const track = useTrack();
   const { ownedProperties } = useProperties();
   const isOwner = ownedProperties.some((p) => p.id === propertyId);
 
@@ -82,8 +84,12 @@ export default function PaymentDetailScreen() {
         auto_confirmed: false,
       })
       .eq('id', payment.id);
-    if (error) useToastStore.getState().showToast(error.message, 'error');
-    else fetchPayment();
+    if (error) {
+      useToastStore.getState().showToast(error.message, 'error');
+    } else {
+      track(EVENTS.PAYMENT_CONFIRMED, { payment_id: payment.id, auto: false });
+      fetchPayment();
+    }
     setConfirming(false);
   }
 
@@ -92,6 +98,7 @@ export default function PaymentDetailScreen() {
     setSharing(true);
     try {
       await sharePaymentReceipt(payment, tenant, property, landlordName);
+      track(EVENTS.PAYMENT_RECEIPT_EXPORTED, { payment_id: payment.id, format: 'pdf' });
     } catch (err) {
       useToastStore.getState().showToast('Export failed: ' + String(err), 'error');
     } finally {

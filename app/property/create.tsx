@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { Property } from '@/lib/types';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 const PROPERTY_COLORS = [
   { value: '#009688', label: 'Teal' },
@@ -31,6 +32,7 @@ export default function PropertyCreateScreen() {
   const insets = useSafeAreaInsets();
   const { user, bumpPropertyRefresh } = useAuthStore();
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const isEditing = !!id;
 
   const [name, setName] = useState('');
@@ -108,6 +110,12 @@ export default function PropertyCreateScreen() {
         router.back();
       }
     } else {
+      // Check if this is the user's first property (before inserting)
+      const { count: existingCount } = await supabase
+        .from('properties')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+
       const { data: created, error } = await supabase
         .from('properties')
         .insert({ ...payload, owner_id: user.id })
@@ -119,6 +127,14 @@ export default function PropertyCreateScreen() {
       } else if (!created) {
         useToastStore.getState().showToast('Property was not saved. Check your connection and try again.', 'error');
       } else {
+        track(EVENTS.PROPERTY_CREATED, {
+          property_id: created.id,
+          has_address: !!address.trim(),
+          units: parseInt(totalUnits, 10),
+        });
+        if ((existingCount ?? 0) === 0) {
+          track(EVENTS.FIRST_PROPERTY_CREATED, { property_id: created.id });
+        }
         bumpPropertyRefresh();
         router.dismiss();
       }

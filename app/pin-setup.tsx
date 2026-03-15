@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
 import { useTheme } from '@/lib/theme-context';
 import { DwellaLogo } from '@/components/DwellaLogo';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 type Step = 'enter' | 'confirm';
 
@@ -18,6 +19,7 @@ export default function PinSetupScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { colors, isDark } = useTheme();
+  const track = useTrack();
   const [step, setStep] = useState<Step>('enter');
   const [pin, setPin] = useState('');
   const [firstPin, setFirstPin] = useState('');
@@ -50,6 +52,7 @@ export default function PinSetupScreen() {
           if (!uid) return;
           await savePin(uid, newPin);
           useAuthStore.getState().setLocked(false);
+          track(EVENTS.PIN_SETUP_COMPLETED, { biometric_type: 'pin_only' });
           useToastStore.getState().showToast('PIN set up successfully!', 'success');
           finish();
         } else {

@@ -10,10 +10,12 @@ import { DwellaLogo } from '@/components/DwellaLogo';
 import { GradientButton } from '@/components/GradientButton';
 import { SocialAuthButtons } from '@/components/SocialAuthButtons';
 import { useTheme } from '@/lib/theme-context';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 export default function SignupScreen() {
   const router = useRouter();
   const { colors, gradients } = useTheme();
+  const track = useTrack();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -47,6 +49,8 @@ export default function SignupScreen() {
       setLoading(false);
       return;
     }
+
+    track(EVENTS.SIGNUP_COMPLETED, { method: 'email' });
 
     // Tell AuthGuard to route to pin-setup instead of onboarding so the user
     // never sees the onboarding screen flash during the auth state change.

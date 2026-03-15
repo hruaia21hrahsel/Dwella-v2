@@ -7,6 +7,7 @@ import { getInviteDetails, acceptInvite } from '@/lib/invite';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, getOrdinal } from '@/lib/utils';
 import { Tenant, Property } from '@/lib/types';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 type InviteData = Tenant & { properties: Property };
 
@@ -15,6 +16,7 @@ export default function InviteScreen() {
   const router = useRouter();
   const { user, session } = useAuthStore();
   const { colors } = useTheme();
+  const track = useTrack();
 
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,10 @@ export default function InviteScreen() {
     if (!result.success) {
       setError(result.error ?? 'Failed to accept invite.');
     } else {
+      track(EVENTS.INVITE_ACCEPTED, {
+        token,
+        property_id: inviteData?.property_id,
+      });
       setAccepted(true);
       // Navigate to properties tab after short delay
       setTimeout(() => router.replace('/(tabs)/properties'), 1500);

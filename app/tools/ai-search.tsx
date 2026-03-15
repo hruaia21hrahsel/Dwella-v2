@@ -9,6 +9,7 @@ import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { formatCurrency, getMonthName } from '@/lib/utils';
+import { useTrack, EVENTS } from '@/lib/analytics';
 import type { PaymentStatus } from '@/lib/types';
 
 interface SearchResult {
@@ -29,6 +30,7 @@ export default function AiSearchScreen() {
   const { user } = useAuthStore();
   const router = useRouter();
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const [query, setQuery] = useState('');
   const [data, setData] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,6 +59,7 @@ export default function AiSearchScreen() {
       if (!res.ok) throw new Error(`Error: ${res.status}`);
       const result = await res.json();
       setData(result);
+      track(EVENTS.AI_SEARCH_PERFORMED, { query_length: text.length });
     } catch (err) {
       setError(String(err));
     } finally {

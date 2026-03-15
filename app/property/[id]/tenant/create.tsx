@@ -11,6 +11,7 @@ import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 import { Tenant } from '@/lib/types';
 import { getInviteLink } from '@/lib/invite';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 const PHOTO_BUCKET = 'tenant-photos';
 
@@ -30,6 +31,7 @@ export default function TenantCreateScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const isEditing = !!tenantId;
 
   const [flatNo, setFlatNo] = useState('');
@@ -210,6 +212,31 @@ export default function TenantCreateScreen() {
               .eq('id', data.id);
           }
         }
+
+        // Track tenant creation
+        track(EVENTS.TENANT_ADDED, {
+          property_id: propertyId,
+          tenant_id: data.id,
+          rent_amount: parseFloat(monthlyRent),
+        });
+
+        // Check if this is the user's first tenant
+        const { count: tenantCount } = await supabase
+          .from('tenants')
+          .select('id', { count: 'exact', head: true })
+          .eq('property_id', propertyId);
+        if ((tenantCount ?? 0) === 1) {
+          track(EVENTS.FIRST_TENANT_ADDED, {
+            property_id: propertyId,
+            tenant_id: data.id,
+          });
+        }
+
+        // Track invite sent
+        track(EVENTS.FIRST_INVITE_SENT, {
+          property_id: propertyId,
+          tenant_id: data.id,
+        });
 
         const inviteLink = getInviteLink(data.invite_token);
         await Share.share({

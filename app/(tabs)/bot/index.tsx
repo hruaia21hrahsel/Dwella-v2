@@ -18,9 +18,11 @@ import { EmptyState } from '@/components/EmptyState';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { useTheme } from '@/lib/theme-context';
 import { BotConversation } from '@/lib/types';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 export default function BotScreen() {
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const { user } = useAuthStore();
   const { messages, loading, clearHistory } = useBotConversations(user?.id);
   const [input, setInput] = useState('');
@@ -45,6 +47,11 @@ export default function BotScreen() {
     setInput('');
     setSending(true);
 
+    track(EVENTS.BOT_MESSAGE_SENT, {
+      source: 'in_app',
+      message_length: text.trim().length,
+    });
+
     try {
       await sendBotMessage(user.id, text.trim());
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 200);
@@ -60,12 +67,14 @@ export default function BotScreen() {
   }, [input, sendMessage]);
 
   const handleConfirm = useCallback(() => {
+    track(EVENTS.BOT_ACTION_CONFIRMED, { intent: 'user_confirmed' });
     sendMessage('yes');
-  }, [sendMessage]);
+  }, [sendMessage, track]);
 
   const handleCancel = useCallback(() => {
+    track(EVENTS.BOT_ACTION_CANCELLED, { intent: 'user_cancelled' });
     sendMessage('cancel');
-  }, [sendMessage]);
+  }, [sendMessage, track]);
 
   // Find the last assistant message index for showing action buttons
   const lastAssistantIndex = messages.length > 0

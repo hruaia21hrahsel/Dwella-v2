@@ -90,6 +90,7 @@ function AuthGuard() {
             phone: newSession.user.user_metadata?.phone ?? null,
           };
 
+          let resolvedUser: any = fallbackUser;
           try {
             await supabase.from('users').upsert(
               {
@@ -105,15 +106,28 @@ function AuthGuard() {
               .select('*')
               .eq('id', uid)
               .single();
-            setUser(data ?? fallbackUser);
+            resolvedUser = data ?? fallbackUser;
+            setUser(resolvedUser);
           } catch {
             // If DB queries fail, still provide a minimal user so hooks don't stall
             setUser(fallbackUser as any);
           }
           registerPushToken(uid);
+
+          // Enrich PostHog user profile with segmentation properties
+          const [{ count: propCount }, { count: tenantCount }] = await Promise.all([
+            supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', uid).eq('is_archived', false),
+            supabase.from('tenants').select('id', { count: 'exact', head: true }).eq('user_id', uid),
+          ]);
           posthog.identify(uid, {
-            email: newSession.user.email,
-            name: newSession.user.user_metadata?.full_name,
+            email: newSession.user.email ?? '',
+            name: newSession.user.user_metadata?.full_name ?? '',
+            property_count: propCount ?? 0,
+            tenant_count: tenantCount ?? 0,
+            is_landlord: (propCount ?? 0) > 0,
+            is_tenant: (tenantCount ?? 0) > 0,
+            has_telegram: !!resolvedUser.telegram_chat_id,
+            theme: useAuthStore.getState().themeMode,
           });
         } else {
           setUser(null);

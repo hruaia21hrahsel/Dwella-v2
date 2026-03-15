@@ -10,6 +10,7 @@ import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { formatCurrency } from '@/lib/utils';
+import { useTrack, EVENTS } from '@/lib/analytics';
 import type { PaymentStatus } from '@/lib/types';
 
 interface ReminderDraft {
@@ -29,6 +30,7 @@ const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai-dr
 export default function SmartRemindersScreen() {
   const { user } = useAuthStore();
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const [reminders, setReminders] = useState<ReminderDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export default function SmartRemindersScreen() {
       if (!res.ok) throw new Error(`Error: ${res.status}`);
       const result = await res.json();
       setReminders(result.reminders ?? []);
+      track(EVENTS.AI_REMINDERS_DRAFTED, { count: (result.reminders ?? []).length });
     } catch (err) {
       setError(String(err));
     } finally {

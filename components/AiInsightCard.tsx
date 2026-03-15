@@ -4,6 +4,7 @@ import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 interface Props {
   nudge: string | null;
@@ -13,6 +14,7 @@ interface Props {
 export function AiInsightCard({ nudge, loading }: Props) {
   const { colors, shadows, isDark } = useTheme();
   const router = useRouter();
+  const track = useTrack();
 
   if (!nudge && !loading) return null;
 
@@ -26,7 +28,7 @@ export function AiInsightCard({ nudge, loading }: Props) {
   return (
     <TouchableOpacity
       style={[styles.card, shadows.sm, { backgroundColor: aiBg, borderColor: aiBorder }]}
-      onPress={() => router.push('/tools/ai-insights')}
+      onPress={() => { track(EVENTS.AI_NUDGE_TAPPED, { nudge_type: 'dashboard' }); router.push('/tools/ai-insights'); }}
       activeOpacity={0.8}
     >
       <View style={[styles.iconWrap, { backgroundColor: aiIconBg }]}>

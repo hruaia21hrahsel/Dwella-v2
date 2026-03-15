@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { formatCurrency, getCurrentMonthYear, getMonthName } from '@/lib/utils';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 interface InsightsData {
   summary: string;
@@ -26,6 +27,7 @@ const FUNCTION_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai-in
 export default function AiInsightsScreen() {
   const { user } = useAuthStore();
   const { colors, shadows } = useTheme();
+  const track = useTrack();
   const { month: currentMonth, year: currentYear } = getCurrentMonthYear();
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -56,6 +58,7 @@ export default function AiInsightsScreen() {
       if (!res.ok) throw new Error(`Error: ${res.status}`);
       const result = await res.json();
       setData(result);
+      track(EVENTS.AI_INSIGHTS_VIEWED, { period: isYearly ? 'yearly' : 'monthly' });
     } catch (err) {
       setError(String(err));
     } finally {

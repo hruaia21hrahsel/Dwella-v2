@@ -11,12 +11,14 @@ import { useToastStore } from '@/lib/toast';
 import { EXPENSE_CATEGORIES } from '@/lib/expenses';
 import { ExpenseCategory } from '@/lib/types';
 import { TouchableOpacity } from 'react-native';
+import { useTrack, EVENTS } from '@/lib/analytics';
 
 export default function AddExpenseScreen() {
   const { id: propertyId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
   const { colors, gradients } = useTheme();
+  const track = useTrack();
 
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory | null>(null);
@@ -51,6 +53,11 @@ export default function AddExpenseScreen() {
     if (error) {
       useToastStore.getState().showToast(error.message, 'error');
     } else {
+      track(EVENTS.EXPENSE_LOGGED, {
+        property_id: propertyId,
+        category,
+        amount: parsedAmount,
+      });
       router.back();
     }
     setSaving(false);
