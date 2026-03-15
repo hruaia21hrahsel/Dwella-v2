@@ -40,6 +40,8 @@ export const EVENTS = {
   THEME_CHANGED: 'theme_changed',
   TELEGRAM_LINKED: 'telegram_linked',
   TELEGRAM_UNLINKED: 'telegram_unlinked',
+  WHATSAPP_LINKED: 'whatsapp_linked',
+  WHATSAPP_UNLINKED: 'whatsapp_unlinked',
   APP_TOUR_REPLAYED: 'app_tour_replayed',
 } as const;
 

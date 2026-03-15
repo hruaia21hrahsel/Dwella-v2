@@ -5,6 +5,7 @@ export const STORAGE_BUCKET = 'payment-proofs';
 
 // Set this to your Telegram bot's @username (without the @)
 export const TELEGRAM_BOT_USERNAME = process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME ?? '';
+export const WHATSAPP_BOT_PHONE = process.env.EXPO_PUBLIC_WHATSAPP_BOT_PHONE ?? '';
 
 export const BOT_MODEL = 'claude-sonnet-4-20250514';
 

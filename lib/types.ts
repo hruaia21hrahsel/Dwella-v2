@@ -9,6 +9,8 @@ export interface User {
   avatar_url: string | null;
   telegram_chat_id: number | null;
   telegram_link_token: string | null;
+  whatsapp_phone: string | null;
+  whatsapp_verify_code: string | null;
   push_token: string | null;
   created_at: string;
   updated_at: string;

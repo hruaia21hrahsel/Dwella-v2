@@ -83,6 +83,51 @@ Deno.serve(async (_req) => {
   if (notifications.length > 0) {
     await supabase.from('notifications').insert(notifications);
 
+    // Send WhatsApp messages to users who have linked WhatsApp
+    const waUserIds = [...new Set(notifications.map((n) => n.user_id))];
+    const { data: waUsers } = await supabase
+      .from('users')
+      .select('id, whatsapp_phone')
+      .in('id', waUserIds)
+      .not('whatsapp_phone', 'is', null);
+
+    if (waUsers && waUsers.length > 0) {
+      const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
+      const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
+
+      if (WHATSAPP_ACCESS_TOKEN && WHATSAPP_PHONE_NUMBER_ID) {
+        const waPhoneMap: Record<string, string> = Object.fromEntries(
+          waUsers.map((u: any) => [u.id, u.whatsapp_phone]),
+        );
+
+        for (const n of notifications) {
+          const waPhone = waPhoneMap[n.user_id];
+          if (!waPhone) continue;
+
+          try {
+            await fetch(
+              `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+                },
+                body: JSON.stringify({
+                  messaging_product: 'whatsapp',
+                  to: waPhone,
+                  type: 'text',
+                  text: { body: `${n.title}\n\n${n.body}` },
+                }),
+              },
+            );
+          } catch (err) {
+            console.error(`WhatsApp send failed for ${waPhone}:`, err);
+          }
+        }
+      }
+    }
+
     // Send push notifications
     const userIds = [...new Set(notifications.map((n) => n.user_id))];
     const { data: users } = await supabase

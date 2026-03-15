@@ -11,7 +11,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 interface BotRequest {
   user_id: string;
   message: string;
-  source: 'app' | 'telegram';
+  source: 'app' | 'telegram' | 'whatsapp';
   telegram_chat_id?: number;
 }
 

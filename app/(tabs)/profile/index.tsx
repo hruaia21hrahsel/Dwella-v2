@@ -5,11 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
+import { TELEGRAM_BOT_USERNAME, WHATSAPP_BOT_PHONE } from '@/constants/config';
 import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
 import { supabase } from '@/lib/supabase';
-import { generateTelegramLinkToken, unlinkTelegram } from '@/lib/bot';
+import { generateTelegramLinkToken, unlinkTelegram, initiateWhatsAppLink, unlinkWhatsApp } from '@/lib/bot';
 import { isPinSet, disablePin } from '@/lib/biometric-auth';
 import { useTheme, useThemeToggle } from '@/lib/theme-context';
 import { GlassCard } from '@/components/GlassCard';
@@ -36,6 +36,9 @@ export default function ProfileScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [linkingTelegram, setLinkingTelegram] = useState(false);
   const [unlinkingTelegram, setUnlinkingTelegram] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState('');
+  const [sendingWhatsAppCode, setSendingWhatsAppCode] = useState(false);
+  const [unlinkingWhatsApp, setUnlinkingWhatsApp] = useState(false);
 
   const [pinReady, setPinReady] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -259,11 +262,86 @@ export default function ProfileScreen() {
     );
   }, [user, setUser]);
 
+  const handleLinkWhatsApp = useCallback(async () => {
+    if (!user || !whatsappPhone.trim()) return;
+    setSendingWhatsAppCode(true);
+    try {
+      await initiateWhatsAppLink(user.id, whatsappPhone.trim());
+      useToastStore.getState().showToast(
+        'Verification code sent! Open WhatsApp and send the code to our number.',
+        'success',
+      );
+    } catch (err) {
+      useToastStore.getState().showToast(String(err), 'error');
+    } finally {
+      setSendingWhatsAppCode(false);
+    }
+  }, [user, whatsappPhone]);
+
+  const handleUnlinkWhatsApp = useCallback(() => {
+    Alert.alert(
+      'Unlink WhatsApp',
+      'Disconnect your WhatsApp account from Dwella?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unlink',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user) return;
+            setUnlinkingWhatsApp(true);
+            track(EVENTS.WHATSAPP_UNLINKED);
+            try {
+              await unlinkWhatsApp(user.id);
+              const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+              if (data) setUser(data);
+            } catch (err) {
+              useToastStore.getState().showToast(String(err), 'error');
+            } finally {
+              setUnlinkingWhatsApp(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [user, setUser, track]);
+
+  // Realtime: detect when whatsapp_phone is set (after user sends code on WhatsApp)
+  useEffect(() => {
+    if (!user || user.whatsapp_phone) return;
+
+    const channel = supabase
+      .channel('whatsapp-link')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          if (updated.whatsapp_phone) {
+            setUser(updated);
+            track(EVENTS.WHATSAPP_LINKED);
+            useToastStore.getState().showToast('WhatsApp linked successfully!', 'success');
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, user?.whatsapp_phone, setUser, track]);
+
   const initials = user?.full_name
     ? user.full_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? '?';
 
   const telegramLinked = !!user?.telegram_chat_id;
+  const whatsappLinked = !!user?.whatsapp_phone;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
@@ -369,6 +447,69 @@ export default function ProfileScreen() {
           >
             Link Telegram
           </Button>
+        )}
+      </GlassCard>
+
+      {/* WhatsApp Bot section */}
+      <GlassCard style={styles.sectionCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>WhatsApp Bot</Text>
+        <View style={styles.telegramRow}>
+          <Text variant="bodyMedium" style={{ color: colors.textPrimary }}>Status</Text>
+          <Chip
+            compact
+            style={{ backgroundColor: whatsappLinked ? colors.statusConfirmedSoft : colors.border }}
+            textStyle={{ color: whatsappLinked ? colors.statusConfirmed : colors.textSecondary, fontSize: 12 }}
+          >
+            {whatsappLinked ? 'Linked' : 'Not linked'}
+          </Chip>
+        </View>
+        {whatsappLinked ? (
+          <>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary, fontSize: 13 }}>
+              Linked to {user?.whatsapp_phone}. You can chat with Dwella Assistant on WhatsApp.
+            </Text>
+            <Button
+              mode="outlined"
+              icon="link-off"
+              onPress={handleUnlinkWhatsApp}
+              loading={unlinkingWhatsApp}
+              disabled={unlinkingWhatsApp}
+              textColor={colors.error}
+              style={{ marginTop: 4, borderColor: colors.error }}
+            >
+              Unlink WhatsApp
+            </Button>
+          </>
+        ) : (
+          <>
+            <Text variant="bodySmall" style={{ color: colors.textSecondary, fontSize: 13 }}>
+              Link your WhatsApp to chat with Dwella Assistant and receive rent reminders.
+            </Text>
+            <TextInput
+              label="WhatsApp Phone Number"
+              value={whatsappPhone}
+              onChangeText={setWhatsappPhone}
+              keyboardType="phone-pad"
+              placeholder="+91 98765 43210"
+              mode="outlined"
+              style={{ backgroundColor: colors.surface }}
+            />
+            <Button
+              mode="contained-tonal"
+              icon="whatsapp"
+              onPress={handleLinkWhatsApp}
+              loading={sendingWhatsAppCode}
+              disabled={sendingWhatsAppCode || !whatsappPhone.trim()}
+              style={{ marginTop: 4 }}
+            >
+              Send Verification Code
+            </Button>
+            {WHATSAPP_BOT_PHONE ? (
+              <Text variant="bodySmall" style={{ color: colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                Send the code you receive to {WHATSAPP_BOT_PHONE} on WhatsApp.
+              </Text>
+            ) : null}
+          </>
         )}
       </GlassCard>
 

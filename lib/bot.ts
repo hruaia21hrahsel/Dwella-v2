@@ -66,3 +66,56 @@ export async function unlinkTelegram(userId: string): Promise<void> {
 
   if (error) throw error;
 }
+
+/** Normalize a phone number to E.164 format */
+function normalizePhoneE164(phone: string): string {
+  const digits = phone.replace(/[^\d+]/g, '');
+  return digits.startsWith('+') ? digits : `+${digits}`;
+}
+
+/** Initiate WhatsApp account linking — generates a 6-digit code and sends it via template message */
+export async function initiateWhatsAppLink(userId: string, phoneNumber: string): Promise<string> {
+  const phone = normalizePhoneE164(phoneNumber);
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+
+  // Store the verification code on the user row
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ whatsapp_verify_code: code })
+    .eq('id', userId);
+
+  if (updateError) throw updateError;
+
+  // Call the server-side Edge Function to send the template message
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const res = await fetch(
+    `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/whatsapp-send-code`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ phone, code }),
+    },
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Failed to send verification code: ${err}`);
+  }
+
+  return code;
+}
+
+/** Unlink WhatsApp from the current user */
+export async function unlinkWhatsApp(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('users')
+    .update({ whatsapp_phone: null, whatsapp_verify_code: null })
+    .eq('id', userId);
+
+  if (error) throw error;
+}
