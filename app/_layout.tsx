@@ -72,25 +72,30 @@ function AuthGuard() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       clearTimeout(fallback);
-      try {
-        setSession(newSession);
 
-        // When the user actively signs in (email/password, Google, Apple),
-        // unlock the app so AuthGuard skips the PIN screen.
-        if (event === 'SIGNED_IN') {
-          setLocked(false);
-        }
+      setSession(newSession);
 
-        if (newSession?.user) {
-          const uid = newSession.user.id;
-          const fallbackUser = {
-            id: uid,
-            email: newSession.user.email ?? '',
-            full_name: newSession.user.user_metadata?.full_name ?? null,
-            phone: newSession.user.user_metadata?.phone ?? null,
-          };
+      // When the user actively signs in (email/password, Google, Apple),
+      // unlock the app so AuthGuard skips the PIN screen.
+      if (event === 'SIGNED_IN') {
+        setLocked(false);
+      }
 
-          let resolvedUser: any = fallbackUser;
+      if (newSession?.user) {
+        const uid = newSession.user.id;
+        const fallbackUser = {
+          id: uid,
+          email: newSession.user.email ?? '',
+          full_name: newSession.user.user_metadata?.full_name ?? null,
+          phone: newSession.user.user_metadata?.phone ?? null,
+        };
+
+        // Set a minimal user immediately so the app can render
+        setUser(fallbackUser as any);
+        setLoading(false);
+
+        // Enrich user data and PostHog in the background (non-blocking)
+        (async () => {
           try {
             await supabase.from('users').upsert(
               {
@@ -106,34 +111,30 @@ function AuthGuard() {
               .select('*')
               .eq('id', uid)
               .single();
-            resolvedUser = data ?? fallbackUser;
-            setUser(resolvedUser);
+            if (data) setUser(data);
+
+            const [{ count: propCount }, { count: tenantCount }] = await Promise.all([
+              supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', uid).eq('is_archived', false),
+              supabase.from('tenants').select('id', { count: 'exact', head: true }).eq('user_id', uid),
+            ]);
+            posthog.identify(uid, {
+              email: newSession.user.email ?? '',
+              name: newSession.user.user_metadata?.full_name ?? '',
+              property_count: propCount ?? 0,
+              tenant_count: tenantCount ?? 0,
+              is_landlord: (propCount ?? 0) > 0,
+              is_tenant: (tenantCount ?? 0) > 0,
+              has_telegram: !!(data ?? fallbackUser as any).telegram_chat_id,
+              theme: useAuthStore.getState().themeMode,
+            });
           } catch {
-            // If DB queries fail, still provide a minimal user so hooks don't stall
-            setUser(fallbackUser as any);
+            // Enrichment failed — app still works with fallback user
           }
           registerPushToken(uid);
-
-          // Enrich PostHog user profile with segmentation properties
-          const [{ count: propCount }, { count: tenantCount }] = await Promise.all([
-            supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', uid).eq('is_archived', false),
-            supabase.from('tenants').select('id', { count: 'exact', head: true }).eq('user_id', uid),
-          ]);
-          posthog.identify(uid, {
-            email: newSession.user.email ?? '',
-            name: newSession.user.user_metadata?.full_name ?? '',
-            property_count: propCount ?? 0,
-            tenant_count: tenantCount ?? 0,
-            is_landlord: (propCount ?? 0) > 0,
-            is_tenant: (tenantCount ?? 0) > 0,
-            has_telegram: !!resolvedUser.telegram_chat_id,
-            theme: useAuthStore.getState().themeMode,
-          });
-        } else {
-          setUser(null);
-          posthog.reset();
-        }
-      } finally {
+        })();
+      } else {
+        setUser(null);
+        posthog.reset();
         setLoading(false);
       }
     });
