@@ -19,7 +19,6 @@ interface BotResponse {
   reply: string;
   intent?: string;
   action_taken?: string;
-  pending_action?: PendingAction | null;
 }
 
 interface ClaudeIntent {
@@ -28,12 +27,6 @@ interface ClaudeIntent {
   action_description: string;
   needs_confirmation: boolean;
   reply: string;
-}
-
-interface PendingAction {
-  action: string;
-  entities: Record<string, unknown>;
-  description: string;
 }
 
 type ActionHandler = (
@@ -332,13 +325,6 @@ const ACTION_HANDLERS: Record<string, ActionHandler> = {
   confirm_payment: handleConfirmPayment,
 };
 
-// Intents that require confirmation before execution
-const CONFIRM_REQUIRED_INTENTS = new Set([
-  'log_payment',
-  'confirm_payment',
-  'add_property',
-  'add_tenant',
-]);
 
 // ----------------------------------------------------------------
 // Build context string from user's properties/tenants/payments
@@ -422,18 +408,6 @@ async function getHistory(supabase: ReturnType<typeof createClient>, userId: str
   return (data ?? []).reverse() as { role: 'user' | 'assistant'; content: string; metadata?: any }[];
 }
 
-// ----------------------------------------------------------------
-// Check if user is confirming/canceling a pending action
-// ----------------------------------------------------------------
-function isConfirmation(message: string): boolean {
-  const normalized = message.toLowerCase().trim();
-  return ['yes', 'confirm', 'do it', 'go ahead', 'sure', 'yep', 'yeah', 'ok', 'okay', 'proceed'].includes(normalized);
-}
-
-function isCancellation(message: string): boolean {
-  const normalized = message.toLowerCase().trim();
-  return ['no', 'cancel', 'nope', 'stop', 'nevermind', 'never mind', 'nah', 'dont', "don't"].includes(normalized);
-}
 
 // ----------------------------------------------------------------
 // Call Claude API
@@ -461,8 +435,8 @@ RESPONSE FORMAT: Always respond with valid JSON matching this schema:
   "intent": "<one of the action or query intents above>",
   "entities": { <relevant key-value pairs for the action> },
   "action_description": "<what you understood the user wants>",
-  "needs_confirmation": <true for financial/destructive actions (log_payment, confirm_payment, add_property, add_tenant), false for queries and send_reminder>,
-  "reply": "<friendly natural language reply — for actions needing confirmation, summarize what you'll do and ask 'Should I go ahead?'>"
+  "needs_confirmation": false,
+  "reply": "<friendly natural language reply — for actions, briefly describe what you're doing. The system will execute and append the result automatically.>"
 }
 
 RULES:
@@ -470,8 +444,8 @@ RULES:
 - If the user says a tenant name, match it to the tenant list in context. Use the exact name from context.
 - If month/year is not specified for payment actions, default to the current month/year.
 - If amount is not specified for log_payment, default to the tenant's monthly_rent.
-- Set needs_confirmation: true for log_payment, confirm_payment, add_property, add_tenant.
-- Set needs_confirmation: false for queries and send_reminder.
+- Always set needs_confirmation: false. Actions are executed immediately.
+- Do NOT ask "Should I go ahead?" — just describe what you're doing. The result will be appended automatically.
 - Keep replies concise and conversational. Use ₹ for Indian Rupees. Format dates as DD MMM YYYY.`;
 
   const messages = [
@@ -567,55 +541,17 @@ serve(async (req) => {
       getHistory(supabase, user_id),
     ]);
 
-    // Check if last assistant message has a pending action
-    const lastAssistantMsg = [...history].reverse().find((m) => m.role === 'assistant');
-    const pendingAction: PendingAction | null = lastAssistantMsg?.metadata?.pending_action ?? null;
-
-    // Handle confirmation/cancellation of pending action
-    if (pendingAction) {
-      if (isConfirmation(message)) {
-        const handler = ACTION_HANDLERS[pendingAction.action];
-        if (handler) {
-          const actionResult = await handler(supabase, user_id, pendingAction.entities);
-          await saveMessages(supabase, user_id, message, actionResult);
-          return jsonResponse({ reply: actionResult, intent: pendingAction.action, action_taken: pendingAction.description });
-        }
-      } else if (isCancellation(message)) {
-        const cancelReply = 'No problem, I\'ve cancelled that action.';
-        await saveMessages(supabase, user_id, message, cancelReply);
-        return jsonResponse({ reply: cancelReply, intent: 'cancelled' });
-      }
-      // If neither confirm nor cancel, treat as a new message (fall through to Claude)
-    }
-
-    // Call Claude
+    // Call Claude to understand intent
     const result = await callClaude(context, history, message);
 
     const handler = ACTION_HANDLERS[result.intent];
 
     if (handler) {
-      // Action intent
-      if (result.needs_confirmation || CONFIRM_REQUIRED_INTENTS.has(result.intent)) {
-        // Save with pending action metadata, ask for confirmation
-        const actionMetadata = {
-          pending_action: {
-            action: result.intent,
-            entities: result.entities,
-            description: result.action_description,
-          },
-        };
-        await saveMessages(supabase, user_id, message, result.reply, actionMetadata);
-        return jsonResponse({
-          reply: result.reply,
-          intent: result.intent,
-          pending_action: actionMetadata.pending_action,
-        });
-      } else {
-        // Execute immediately (e.g. send_reminder)
-        const actionResult = await handler(supabase, user_id, result.entities);
-        await saveMessages(supabase, user_id, message, actionResult);
-        return jsonResponse({ reply: actionResult, intent: result.intent, action_taken: result.action_description });
-      }
+      // Execute the action immediately and return the real result
+      const actionResult = await handler(supabase, user_id, result.entities);
+      const reply = `${result.reply}\n\n${actionResult}`;
+      await saveMessages(supabase, user_id, message, reply);
+      return jsonResponse({ reply, intent: result.intent, action_taken: result.action_description });
     } else {
       // Query intent — return reply as-is
       await saveMessages(supabase, user_id, message, result.reply);
