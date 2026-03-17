@@ -128,6 +128,8 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
       .single();
 
     if (!payment) {
+      const dueDay = Math.min(tenant.due_day ?? 1, 28);
+      const dueDate = `${payYear}-${String(payMonth).padStart(2, '0')}-${String(dueDay).padStart(2, '0')}`;
       const { data: newPayment, error: createErr } = await supabase
         .from('payments')
         .insert({
@@ -135,6 +137,7 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
           property_id: property.id,
           month: payMonth,
           year: payYear,
+          due_date: dueDate,
           amount_due: tenant.monthly_rent ?? 0,
           amount_paid: 0,
           status: 'pending',
