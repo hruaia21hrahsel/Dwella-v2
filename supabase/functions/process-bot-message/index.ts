@@ -88,13 +88,15 @@ async function findTenantByName(
 }
 
 const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
-  const { tenant_name, month, year, amount, status } = entities as {
+  const { tenant_name, amount, status } = entities as {
     tenant_name?: string;
-    month?: number;
-    year?: number;
-    amount?: number;
+    amount?: number | string;
     status?: string;
   };
+  // Support both single month and multiple months
+  const rawMonth = entities.month as number | string | undefined;
+  const rawMonths = entities.months as (number | string)[] | undefined;
+  const rawYear = entities.year as number | string | undefined;
 
   if (!tenant_name) return 'I need the tenant name to log a payment.';
 
@@ -107,67 +109,84 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
   }
 
   const now = new Date();
-  const payMonth = month ?? (now.getMonth() + 1);
-  const payYear = year ?? now.getFullYear();
-  const payAmount = amount ?? tenant.monthly_rent;
+  const payYear = rawYear ? Number(rawYear) : now.getFullYear();
+  const payAmount = amount ? Number(amount) : (tenant.monthly_rent ?? 0);
 
-  // Find existing payment row, or create one if it doesn't exist
-  let { data: payment } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('tenant_id', tenant.id)
-    .eq('month', payMonth)
-    .eq('year', payYear)
-    .single();
+  // Build list of months to process
+  let monthsList: number[] = [];
+  if (rawMonths && Array.isArray(rawMonths)) {
+    monthsList = rawMonths.map((m) => Number(m));
+  } else if (rawMonth) {
+    monthsList = [Number(rawMonth)];
+  } else {
+    monthsList = [now.getMonth() + 1];
+  }
 
-  if (!payment) {
-    // Auto-create the payment row
-    const { data: newPayment, error: createErr } = await supabase
+  const results: string[] = [];
+
+  for (const payMonth of monthsList) {
+    // Find existing payment row, or create one if it doesn't exist
+    let { data: payment } = await supabase
       .from('payments')
-      .insert({
-        tenant_id: tenant.id,
-        month: payMonth,
-        year: payYear,
-        amount_due: tenant.monthly_rent ?? 0,
-        amount_paid: 0,
-        status: 'pending',
-      })
-      .select()
+      .select('*')
+      .eq('tenant_id', tenant.id)
+      .eq('month', payMonth)
+      .eq('year', payYear)
       .single();
 
-    if (createErr || !newPayment) {
-      return `Failed to create payment record for ${tenant.tenant_name} (${payMonth}/${payYear}): ${createErr?.message ?? 'unknown error'}`;
+    if (!payment) {
+      const { data: newPayment, error: createErr } = await supabase
+        .from('payments')
+        .insert({
+          tenant_id: tenant.id,
+          month: payMonth,
+          year: payYear,
+          amount_due: tenant.monthly_rent ?? 0,
+          amount_paid: 0,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (createErr || !newPayment) {
+        results.push(`${payMonth}/${payYear}: Failed to create record — ${createErr?.message ?? 'unknown error'}`);
+        continue;
+      }
+      payment = newPayment;
     }
-    payment = newPayment;
+
+    if (payment.status === 'confirmed') {
+      results.push(`${payMonth}/${payYear}: Already confirmed`);
+      continue;
+    }
+
+    const newAmountPaid = payAmount;
+    const newStatus = status === 'paid' || newAmountPaid >= payment.amount_due ? 'paid' : 'partial';
+
+    const { error } = await supabase
+      .from('payments')
+      .update({
+        amount_paid: newAmountPaid,
+        status: newStatus,
+        paid_at: new Date().toISOString(),
+        notes: 'Logged via AI assistant',
+      })
+      .eq('id', payment.id);
+
+    if (error) {
+      results.push(`${payMonth}/${payYear}: Failed — ${error.message}`);
+    } else {
+      results.push(`${payMonth}/${payYear}: ✅ Marked as ${newStatus} (₹${newAmountPaid})`);
+    }
   }
 
-  if (payment.status === 'confirmed') {
-    return `Payment for ${tenant.tenant_name} (${payMonth}/${payYear}) is already confirmed.`;
-  }
-
-  const newAmountPaid = payAmount;
-  const newStatus = status === 'paid' || newAmountPaid >= payment.amount_due ? 'paid' : 'partial';
-
-  const { error } = await supabase
-    .from('payments')
-    .update({
-      amount_paid: newAmountPaid,
-      status: newStatus,
-      paid_at: new Date().toISOString(),
-      notes: 'Logged via AI assistant',
-    })
-    .eq('id', payment.id);
-
-  if (error) return `Failed to update payment: ${error.message}`;
-  return `Done! Marked ${tenant.tenant_name}'s ${payMonth}/${payYear} payment as ${newStatus} (₹${newAmountPaid}).`;
+  return `Payment update for ${tenant.tenant_name}:\n${results.join('\n')}`;
 };
 
 const handleConfirmPayment: ActionHandler = async (supabase, userId, entities) => {
-  const { tenant_name, month, year } = entities as {
-    tenant_name?: string;
-    month?: number;
-    year?: number;
-  };
+  const { tenant_name } = entities as { tenant_name?: string };
+  const rawMonth = entities.month as number | string | undefined;
+  const rawYear = entities.year as number | string | undefined;
 
   if (!tenant_name) return 'I need the tenant name to confirm a payment.';
 
@@ -180,8 +199,8 @@ const handleConfirmPayment: ActionHandler = async (supabase, userId, entities) =
   }
 
   const now = new Date();
-  const payMonth = month ?? (now.getMonth() + 1);
-  const payYear = year ?? now.getFullYear();
+  const payMonth = rawMonth ? Number(rawMonth) : (now.getMonth() + 1);
+  const payYear = rawYear ? Number(rawYear) : now.getFullYear();
 
   let { data: payment } = await supabase
     .from('payments')
@@ -428,7 +447,7 @@ PROPERTY/TENANT CONTEXT (refreshed for this request):
 ${context}
 
 AVAILABLE ACTIONS — You can perform these for the user:
-- log_payment: Log a tenant's rent payment. Entities: { tenant_name, month?, year?, amount?, status? }
+- log_payment: Log a tenant's rent payment. Entities: { tenant_name, month?, months? (array of month numbers for multiple months e.g. [1,2,3]), year?, amount?, status? }
 - confirm_payment: Confirm a paid payment. Entities: { tenant_name, month?, year? }
 - add_property: Add a new property. Entities: { name, address?, city?, total_units? }
 - add_tenant: Add a tenant to a property. Entities: { property_name, tenant_name, flat_no?, monthly_rent?, due_day? }
