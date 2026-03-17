@@ -132,6 +132,7 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
         .from('payments')
         .insert({
           tenant_id: tenant.id,
+          property_id: property.id,
           month: payMonth,
           year: payYear,
           amount_due: tenant.monthly_rent ?? 0,
