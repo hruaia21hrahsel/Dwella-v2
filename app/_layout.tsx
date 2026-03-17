@@ -4,6 +4,7 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { usePostHog } from '@/lib/posthog';
@@ -64,6 +65,22 @@ function AuthGuard() {
       SplashScreen.hideAsync();
     }
   }, [isLoading]);
+
+  // Check for OTA updates on launch
+  useEffect(() => {
+    if (__DEV__) return; // Skip in development
+    (async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch {
+        // Silent fail — update check is best-effort
+      }
+    })();
+  }, []);
 
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
