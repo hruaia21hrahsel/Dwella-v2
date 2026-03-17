@@ -111,8 +111,8 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
   const payYear = year ?? now.getFullYear();
   const payAmount = amount ?? tenant.monthly_rent;
 
-  // Find existing payment row
-  const { data: payment } = await supabase
+  // Find existing payment row, or create one if it doesn't exist
+  let { data: payment } = await supabase
     .from('payments')
     .select('*')
     .eq('tenant_id', tenant.id)
@@ -121,7 +121,24 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
     .single();
 
   if (!payment) {
-    return `No payment record found for ${tenant.tenant_name} for ${payMonth}/${payYear}. The payment row may not exist yet — open the tenant in the app first.`;
+    // Auto-create the payment row
+    const { data: newPayment, error: createErr } = await supabase
+      .from('payments')
+      .insert({
+        tenant_id: tenant.id,
+        month: payMonth,
+        year: payYear,
+        amount_due: tenant.monthly_rent ?? 0,
+        amount_paid: 0,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (createErr || !newPayment) {
+      return `Failed to create payment record for ${tenant.tenant_name} (${payMonth}/${payYear}): ${createErr?.message ?? 'unknown error'}`;
+    }
+    payment = newPayment;
   }
 
   if (payment.status === 'confirmed') {
@@ -166,7 +183,7 @@ const handleConfirmPayment: ActionHandler = async (supabase, userId, entities) =
   const payMonth = month ?? (now.getMonth() + 1);
   const payYear = year ?? now.getFullYear();
 
-  const { data: payment } = await supabase
+  let { data: payment } = await supabase
     .from('payments')
     .select('*')
     .eq('tenant_id', tenant.id)
@@ -174,7 +191,7 @@ const handleConfirmPayment: ActionHandler = async (supabase, userId, entities) =
     .eq('year', payYear)
     .single();
 
-  if (!payment) return `No payment record found for ${tenant.tenant_name} (${payMonth}/${payYear}).`;
+  if (!payment) return `No payment record found for ${tenant.tenant_name} (${payMonth}/${payYear}). Try logging the payment first.`;
   if (payment.status !== 'paid') return `Payment is currently "${payment.status}" — only "paid" payments can be confirmed.`;
 
   const { error } = await supabase

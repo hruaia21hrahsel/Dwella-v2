@@ -109,6 +109,11 @@ serve(async (req) => {
     });
 
     const botData = await botRes.json() as { reply?: string; error?: string };
+    if (!botRes.ok) {
+      console.error('process-bot-message failed:', botRes.status, botData.error);
+      await sendTelegram(chatId, 'Sorry, I encountered an error processing your message. Please try again.');
+      return new Response('OK', { status: 200 });
+    }
     const reply = botData.reply ?? 'Sorry, I encountered an error. Please try again.';
     await sendTelegram(chatId, reply);
   } catch (err) {
