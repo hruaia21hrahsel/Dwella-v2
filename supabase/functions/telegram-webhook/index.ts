@@ -5,6 +5,7 @@ const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const PROCESS_BOT_URL = `${SUPABASE_URL}/functions/v1/process-bot-message`;
+const TELEGRAM_WEBHOOK_SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET');
 
 async function sendTelegram(chatId: number, text: string) {
   await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -17,6 +18,15 @@ async function sendTelegram(chatId: number, text: string) {
 serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response('OK', { status: 200 });
+  }
+
+  // Validate webhook secret before processing (SEC-04)
+  if (TELEGRAM_WEBHOOK_SECRET) {
+    const secretHeader = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
+    if (!secretHeader || secretHeader !== TELEGRAM_WEBHOOK_SECRET) {
+      console.warn('Telegram webhook: invalid or missing secret token');
+      return new Response('Unauthorized', { status: 401 });
+    }
   }
 
   let update: Record<string, unknown>;
