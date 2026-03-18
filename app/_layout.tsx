@@ -16,7 +16,9 @@ import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
+import { initSentry } from '@/lib/sentry';
 
+initSentry();
 SplashScreen.preventAutoHideAsync();
 
 Notifications.setNotificationHandler({

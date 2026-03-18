@@ -12,3 +12,5 @@ export const BOT_MODEL = 'claude-sonnet-4-20250514';
 export const AUTO_CONFIRM_HOURS = 48;
 export const REMINDER_DAYS_BEFORE = 3;
 export const REMINDER_DAYS_AFTER = 3;
+
+export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
