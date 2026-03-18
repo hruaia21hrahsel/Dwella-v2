@@ -109,7 +109,7 @@ export default function NotificationsScreen() {
           headerShown: true,
           presentation: 'modal',
           title: 'Notifications',
-          headerStyle: { backgroundColor: colors.background } as any,
+          headerStyle: { backgroundColor: colors.background } as object,
           headerTintColor: colors.textPrimary,
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,

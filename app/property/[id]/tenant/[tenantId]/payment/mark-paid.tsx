@@ -112,7 +112,7 @@ export default function MarkPaidScreen() {
           presentation: 'modal',
           title: 'Mark as Paid',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.background } as any,
+          headerStyle: { backgroundColor: colors.background } as object,
           headerTintColor: colors.textPrimary,
           headerShadowVisible: false,
         }}

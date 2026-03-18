@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, type NativeSyntheticEvent, type TextInputKeyPressEventData } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -73,7 +73,7 @@ export default function PhoneVerifyScreen() {
     }
   }
 
-  function handleKeyPress(e: any, index: number) {
+  function handleKeyPress(e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) {
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       const next = [...otp];
       next[index - 1] = '';

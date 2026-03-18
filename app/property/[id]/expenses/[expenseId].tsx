@@ -116,7 +116,7 @@ export default function EditExpenseScreen() {
           headerBackground: () => (
             <LinearGradient colors={[colors.surface, gradients.heroSubtle[1]]} start={{ x: 0.35, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
           ),
-          headerStyle: { height: 64 } as any,
+          headerStyle: { height: 64 } as object,
           headerTintColor: colors.textPrimary,
           headerLeft: () => (
             <IconButton icon="close" size={22} onPress={() => router.back()} />

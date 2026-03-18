@@ -60,7 +60,7 @@ export default function PropertyDetailScreen() {
           headerShown: true,
           title: property.name,
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.background } as any,
+          headerStyle: { backgroundColor: colors.background } as object,
           headerTintColor: colors.textPrimary,
           headerShadowVisible: false,
           headerLeft: () => (

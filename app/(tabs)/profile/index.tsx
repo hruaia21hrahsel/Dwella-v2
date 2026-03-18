@@ -321,9 +321,9 @@ export default function ProfileScreen() {
           filter: `id=eq.${user.id}`,
         },
         (payload) => {
-          const updated = payload.new as any;
+          const updated = payload.new as Record<string, unknown>;
           if (updated.whatsapp_phone) {
-            setUser(updated);
+            setUser(updated as unknown as import('@/lib/types').User);
             track(EVENTS.WHATSAPP_LINKED);
             useToastStore.getState().showToast('WhatsApp linked successfully!', 'success');
           }

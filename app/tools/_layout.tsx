@@ -8,7 +8,7 @@ export default function ToolsLayout() {
     <Stack
       screenOptions={{
         headerShown: true,
-        headerStyle: { backgroundColor: colors.background } as any,
+        headerStyle: { backgroundColor: colors.background } as object,
         headerTintColor: colors.textPrimary,
         headerTitleAlign: 'center',
         headerShadowVisible: false,

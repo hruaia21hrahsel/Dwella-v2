@@ -1,5 +1,6 @@
+import type { ComponentProps } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/lib/theme-context';
 import { DwellaHeader } from '@/components/DwellaHeader';
@@ -53,11 +54,11 @@ export default function ToolsScreen() {
         <TouchableOpacity
           key={tool.label}
           style={[styles.card, { backgroundColor: colors.surface, ...shadows.sm }]}
-          onPress={() => router.push(tool.route as any)}
+          onPress={() => router.push(tool.route as Href)}
           activeOpacity={0.8}
         >
           <View style={[styles.iconWrap, { backgroundColor: tool.color + '18' }]}>
-            <MaterialCommunityIcons name={tool.icon as any} size={24} color={tool.color} />
+            <MaterialCommunityIcons name={tool.icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={24} color={tool.color} />
           </View>
           <View style={styles.cardText}>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{tool.label}</Text>

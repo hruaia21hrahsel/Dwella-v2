@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-rou
 import { supabase } from '@/lib/supabase';
 import { Tenant, Property, Payment } from '@/lib/types';
 import { useTheme } from '@/lib/theme-context';
+import type { ThemeColors } from '@/constants/theme';
 import { formatCurrency, formatDate, getOrdinal } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { PaymentLedger } from '@/components/PaymentLedger';
@@ -175,7 +176,7 @@ export default function TenantDetailScreen() {
         options={{
           headerShown: true,
           title: '',
-          headerStyle: { backgroundColor: colors.background } as any,
+          headerStyle: { backgroundColor: colors.background } as object,
           headerTintColor: colors.textPrimary,
           headerShadowVisible: false,
           headerLeft: () => (
@@ -444,7 +445,7 @@ export default function TenantDetailScreen() {
   );
 }
 
-function InfoRow({ label, value, colors, last }: { label: string; value: string; colors: any; last?: boolean }) {
+function InfoRow({ label, value, colors, last }: { label: string; value: string; colors: ThemeColors; last?: boolean }) {
   return (
     <View style={[infoRowStyles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
       <Text style={[infoRowStyles.label, { color: colors.textSecondary }]}>{label}</Text>

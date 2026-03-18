@@ -13,7 +13,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
@@ -29,7 +29,7 @@ export default function OnboardingScreen() {
   function handleExplore() {
     track(EVENTS.ONBOARDING_COMPLETED, { skipped: false });
     setTourStep(0);
-    router.replace(TOUR_STEPS[0].route as any);
+    router.replace(TOUR_STEPS[0].route as Href);
   }
 
   function handleSkip() {
