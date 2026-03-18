@@ -54,7 +54,7 @@ export function useProperties(): UsePropertiesResult {
     } finally {
       setIsLoading(false);
     }
-  }, [user, propertyRefreshAt]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, propertyRefreshAt]);
 
   // Runs on mount and whenever fetch changes (i.e. when propertyRefreshAt bumps)
   useEffect(() => {
