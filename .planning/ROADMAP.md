@@ -41,7 +41,13 @@ Plans:
   3. Telegram and WhatsApp webhooks reject requests that fail secret/HMAC validation with a 401 response before any processing occurs
   4. A DB migration enforces payment state machine transitions via a `BEFORE UPDATE` trigger — invalid transitions are rejected at the Postgres level
   5. Soft-delete filtering (`is_archived = FALSE`) is confirmed present in all hooks, screens, and Edge Function DB queries via audit; archived records cannot appear in any user-facing view
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — RLS migration (split FOR ALL into per-operation policies with WITH CHECK) + payment state machine trigger
+- [ ] 02-02-PLAN.md — Telegram webhook secret validation + WhatsApp webhook HMAC-SHA256 validation
+- [ ] 02-03-PLAN.md — Prompt injection mitigation in bot context + invite flow soft-delete fix
+- [ ] 02-04-PLAN.md — Crypto-secure token verification pass + payment transition audit
 
 ### Phase 3: Edge Functions & Backend
 **Goal**: All 13 deployed Edge Functions are verified against the Phase 2 confirmed DB contracts — each returns correct HTTP status codes, filters archived data, and executes its intended action reliably; scheduled cron jobs run on the correct schedules; the bot message flow completes end-to-end
@@ -84,7 +90,7 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Compilation & Tooling Baseline | 4/4 | Complete   | 2026-03-18 |
-| 2. Security & Data Integrity | 0/TBD | Not started | - |
+| 2. Security & Data Integrity | 0/4 | Not started | - |
 | 3. Edge Functions & Backend | 0/TBD | Not started | - |
 | 4. Client Code & UX | 0/TBD | Not started | - |
 | 5. Launch Configuration & Store Gate | 0/TBD | Not started | - |
