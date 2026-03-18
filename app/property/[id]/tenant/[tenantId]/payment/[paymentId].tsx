@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, TouchableOpacity, Modal } from 'react-native';
 import { Text, Button, Divider, ActivityIndicator } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -35,7 +35,6 @@ export default function PaymentDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [resetting, setResetting] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [proofFullscreen, setProofFullscreen] = useState(false);
 
@@ -104,39 +103,6 @@ export default function PaymentDetailScreen() {
     } finally {
       setSharing(false);
     }
-  }
-
-  async function handleReset() {
-    if (!payment) return;
-    Alert.alert(
-      'Reset to Pending',
-      'This will clear the payment record and proof. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            setResetting(true);
-            const { error } = await supabase
-              .from('payments')
-              .update({
-                status: 'pending',
-                amount_paid: 0,
-                paid_at: null,
-                confirmed_at: null,
-                proof_url: null,
-                notes: null,
-                auto_confirmed: false,
-              })
-              .eq('id', payment.id);
-            if (error) useToastStore.getState().showToast(error.message, 'error');
-            else fetchPayment();
-            setResetting(false);
-          },
-        },
-      ]
-    );
   }
 
   if (loading) {
@@ -301,19 +267,6 @@ export default function PaymentDetailScreen() {
           </Button>
         )}
 
-        {isOwner && (payment.status === 'paid' || payment.status === 'partial') && (
-          <Button
-            mode="outlined"
-            icon="refresh"
-            onPress={handleReset}
-            loading={resetting}
-            disabled={resetting}
-            textColor={colors.error}
-            style={[styles.actionBtn, { borderColor: colors.error }]}
-          >
-            Mark as Unpaid (Disputed)
-          </Button>
-        )}
       </ScrollView>
 
       {/* Fullscreen proof modal */}
