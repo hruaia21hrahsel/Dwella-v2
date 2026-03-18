@@ -1,5 +1,24 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+interface TenantWithProperty {
+  id: string;
+  tenant_name: string;
+  due_day: number;
+  user_id: string | null;
+  property_id: string;
+  properties: { name: string } | null;
+}
+
+interface UserWithPhone {
+  id: string;
+  whatsapp_phone: string | null;
+}
+
+interface UserWithPushToken {
+  id: string;
+  push_token: string | null;
+}
+
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -16,7 +35,7 @@ Deno.serve(async (_req) => {
     .from('tenants')
     .select('id, tenant_name, due_day, user_id, property_id, properties(name)')
     .eq('is_archived', false)
-    .not('user_id', 'is', null);
+    .not('user_id', 'is', null) as { data: TenantWithProperty[] | null; error: unknown };
 
   if (error) {
     console.error('send-reminders error:', error);
@@ -32,7 +51,7 @@ Deno.serve(async (_req) => {
   }[] = [];
 
   for (const tenant of tenants ?? []) {
-    const daysUntilDue = (tenant as any).due_day - todayDay;
+    const daysUntilDue = tenant.due_day - todayDay;
 
     // Fetch this month's payment
     const { data: payment } = await supabase
@@ -44,7 +63,7 @@ Deno.serve(async (_req) => {
       .single();
 
     const status = payment?.status ?? 'pending';
-    const propertyName = (tenant as any).properties?.name ?? 'your property';
+    const propertyName = tenant.properties?.name ?? 'your property';
 
     // 3 days before due
     if (daysUntilDue === 3 && ['pending', 'partial'].includes(status)) {
@@ -97,7 +116,7 @@ Deno.serve(async (_req) => {
 
       if (WHATSAPP_ACCESS_TOKEN && WHATSAPP_PHONE_NUMBER_ID) {
         const waPhoneMap: Record<string, string> = Object.fromEntries(
-          waUsers.map((u: any) => [u.id, u.whatsapp_phone]),
+          (waUsers as UserWithPhone[]).map((u) => [u.id, u.whatsapp_phone]),
         );
 
         for (const n of notifications) {
@@ -135,7 +154,7 @@ Deno.serve(async (_req) => {
       .select('id, push_token')
       .in('id', userIds);
     const tokenMap: Record<string, string | null> = Object.fromEntries(
-      (users ?? []).map((u: any) => [u.id, u.push_token]),
+      (users ?? [] as UserWithPushToken[]).map((u: UserWithPushToken) => [u.id, u.push_token]),
     );
 
     const pushMessages = notifications
