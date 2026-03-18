@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ScrollView,
@@ -75,7 +76,7 @@ function StatCard({ label, value, color, surfaceBg, secondaryText }: StatCardPro
     <View style={[styles.statCard, { backgroundColor: surfaceBg }]}>
       <View style={[styles.statAccent, { backgroundColor: color }]} />
       <MaterialCommunityIcons
-        name={STAT_ICONS[label] as any}
+        name={STAT_ICONS[label] as ComponentProps<typeof MaterialCommunityIcons>['name']}
         size={18}
         color={color}
         style={styles.statIcon}
@@ -153,7 +154,7 @@ export default function DashboardScreen() {
         .select('amount')
         .gte('expense_date', startDate)
         .lt('expense_date', endDate);
-      const total = (data ?? []).reduce((s: number, e: any) => s + (e.amount ?? 0), 0);
+      const total = (data ?? []).reduce((s: number, e: { amount?: number }) => s + (e.amount ?? 0), 0);
       setMonthlyExpenses(total);
     }
     fetchMonthlyExpenses();

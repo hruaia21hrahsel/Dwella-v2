@@ -91,7 +91,7 @@ export default function LogPaymentScreen() {
 
       for (const p of data ?? []) {
         props.push({ id: p.id, name: p.name });
-        const active = ((p.tenants as any[]) ?? []).filter((t: any) => !t.is_archived);
+        const active = ((p.tenants as Array<{ is_archived: boolean } & TenantOption>) ?? []).filter((t) => !t.is_archived);
         allTenants.push(...active);
       }
 
@@ -109,8 +109,8 @@ export default function LogPaymentScreen() {
         const t = allTenants.find((x) => x.id === params.tenantId);
         if (t) setAmount(String(t.monthly_rent));
       }
-    } catch (err: any) {
-      useToastStore.getState().showToast(err.message ?? 'Failed to load properties.', 'error');
+    } catch (err: unknown) {
+      useToastStore.getState().showToast(err instanceof Error ? err.message : 'Failed to load properties.', 'error');
     } finally {
       setLoadingData(false);
     }
@@ -187,8 +187,8 @@ export default function LogPaymentScreen() {
         source: 'quick_log',
       });
       router.back();
-    } catch (err: any) {
-      useToastStore.getState().showToast(err.message ?? 'Could not save payment.', 'error');
+    } catch (err: unknown) {
+      useToastStore.getState().showToast(err instanceof Error ? err.message : 'Could not save payment.', 'error');
     } finally {
       setSubmitting(false);
     }

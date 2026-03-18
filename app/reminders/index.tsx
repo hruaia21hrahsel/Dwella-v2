@@ -83,8 +83,19 @@ export default function RemindersScreen() {
     }
 
     // Filter: only this landlord's tenants, not archived, invite accepted
-    const items = (data ?? []).filter((item: any) => {
-      const t = item.tenants;
+    // Supabase infers tenants as array but the query returns a single nested object;
+    // we cast through unknown to the expected ReminderItem shape after filtering.
+    type RawTenants = {
+      id: string;
+      tenant_name: string;
+      flat_no: string;
+      user_id: string | null;
+      is_archived: boolean;
+      invite_status: string;
+      properties: { id: string; name: string; owner_id: string };
+    };
+    const items = (data ?? []).filter((item) => {
+      const t = (item.tenants as unknown as RawTenants | null);
       if (!t) return false;
       if (t.is_archived) return false;
       if (t.invite_status !== 'accepted') return false;

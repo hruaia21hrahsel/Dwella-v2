@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Modal, TouchableOpacity } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
@@ -135,7 +136,15 @@ export default function PaymentsScreen() {
 
       if (paymentError) throw paymentError;
 
-      const payments: PaymentRow[] = (paymentData ?? []).map((p: any) => ({
+      type RawPaymentRow = Payment & {
+        tenants?: {
+          tenant_name?: string;
+          flat_no?: string;
+          property_id?: string;
+          properties?: { name?: string };
+        };
+      };
+      const payments: PaymentRow[] = (paymentData ?? []).map((p: RawPaymentRow) => ({
         ...p,
         tenant_name: p.tenants?.tenant_name ?? '—',
         flat_no: p.tenants?.flat_no ?? '—',
@@ -144,8 +153,8 @@ export default function PaymentsScreen() {
       }));
 
       setAllPayments(payments);
-    } catch (err: any) {
-      useToastStore.getState().showToast(err.message ?? 'Failed to load payments.', 'error');
+    } catch (err: unknown) {
+      useToastStore.getState().showToast(err instanceof Error ? err.message : 'Failed to load payments.', 'error');
     } finally {
       setLoading(false);
     }
@@ -428,7 +437,7 @@ export default function PaymentsScreen() {
                   activeOpacity={0.7}
                 >
                   <MaterialCommunityIcons
-                    name={opt.icon as any}
+                    name={opt.icon as ComponentProps<typeof MaterialCommunityIcons>['name']}
                     size={18}
                     color={active ? colors.primary : colors.textSecondary}
                   />

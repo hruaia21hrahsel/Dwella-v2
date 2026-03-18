@@ -18,6 +18,38 @@ interface SearchResult {
   [key: string]: unknown;
 }
 
+interface PaymentSearchResult {
+  id: string;
+  tenant_id: string;
+  property_id: string;
+  tenant_name: string;
+  flat_no: string;
+  property_name: string;
+  status: string;
+  month: number;
+  year: number;
+  amount_paid: number;
+  amount_due: number;
+}
+
+interface TenantSearchResult {
+  id: string;
+  tenant_name: string;
+  flat_no: string;
+  property_name: string;
+  monthly_rent: number;
+  due_day: number;
+  property_id: string;
+}
+
+interface PropertySearchResult {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  total_units: number;
+}
+
 interface SearchResponse {
   explanation: string;
   results: SearchResult[];
@@ -68,6 +100,7 @@ export default function AiSearchScreen() {
   }, [query, user]);
 
   function renderPaymentResult(item: SearchResult, index: number) {
+    const result = item as unknown as PaymentSearchResult;
     return (
       <AnimatedCard key={item.id} index={index}>
         <TouchableOpacity
@@ -75,28 +108,26 @@ export default function AiSearchScreen() {
           activeOpacity={0.8}
           onPress={() => {
             // Navigate to payment detail if we have the needed IDs
-            const tenantId = (item as any).tenant_id;
-            const propertyId = (item as any).property_id;
-            if (tenantId && propertyId) {
-              router.push(`/property/${propertyId}/tenant/${tenantId}/payment/${item.id}`);
+            if (result.tenant_id && result.property_id) {
+              router.push(`/property/${result.property_id}/tenant/${result.tenant_id}/payment/${item.id}`);
             }
           }}
         >
           <View style={styles.resultHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{(item as any).tenant_name}</Text>
+              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{result.tenant_name}</Text>
               <Text style={[styles.resultSub, { color: colors.textSecondary }]}>
-                Flat {(item as any).flat_no} · {(item as any).property_name}
+                Flat {result.flat_no} · {result.property_name}
               </Text>
             </View>
-            <PaymentStatusBadge status={(item as any).status as PaymentStatus} />
+            <PaymentStatusBadge status={result.status as PaymentStatus} />
           </View>
           <View style={styles.resultMeta}>
             <Text style={[styles.resultMetaText, { color: colors.textSecondary }]}>
-              {getMonthName((item as any).month)} {(item as any).year}
+              {getMonthName(result.month)} {result.year}
             </Text>
             <Text style={[styles.resultAmount, { color: colors.textPrimary }]}>
-              {formatCurrency((item as any).amount_paid)} / {formatCurrency((item as any).amount_due)}
+              {formatCurrency(result.amount_paid)} / {formatCurrency(result.amount_due)}
             </Text>
           </View>
         </TouchableOpacity>
@@ -105,21 +136,22 @@ export default function AiSearchScreen() {
   }
 
   function renderTenantResult(item: SearchResult, index: number) {
+    const result = item as unknown as TenantSearchResult;
     return (
       <AnimatedCard key={item.id} index={index}>
         <View style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
           <View style={styles.resultHeader}>
             <MaterialCommunityIcons name="account" size={20} color={colors.primary} style={{ marginRight: 8 }} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{(item as any).tenant_name}</Text>
+              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{result.tenant_name}</Text>
               <Text style={[styles.resultSub, { color: colors.textSecondary }]}>
-                Flat {(item as any).flat_no} · {(item as any).property_name}
+                Flat {result.flat_no} · {result.property_name}
               </Text>
             </View>
           </View>
           <View style={styles.resultMeta}>
             <Text style={[styles.resultMetaText, { color: colors.textSecondary }]}>
-              Rent: {formatCurrency((item as any).monthly_rent)} · Due day: {(item as any).due_day}
+              Rent: {formatCurrency(result.monthly_rent)} · Due day: {result.due_day}
             </Text>
           </View>
         </View>
@@ -128,18 +160,19 @@ export default function AiSearchScreen() {
   }
 
   function renderPropertyResult(item: SearchResult, index: number) {
+    const result = item as unknown as PropertySearchResult;
     return (
       <AnimatedCard key={item.id} index={index}>
         <View style={[styles.resultCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
           <View style={styles.resultHeader}>
             <MaterialCommunityIcons name="home-city" size={20} color={colors.primary} style={{ marginRight: 8 }} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{(item as any).name}</Text>
-              <Text style={[styles.resultSub, { color: colors.textSecondary }]}>{(item as any).address}, {(item as any).city}</Text>
+              <Text style={[styles.resultTitle, { color: colors.textPrimary }]}>{result.name}</Text>
+              <Text style={[styles.resultSub, { color: colors.textSecondary }]}>{result.address}, {result.city}</Text>
             </View>
           </View>
           <Text style={[styles.resultMetaText, { color: colors.textSecondary }]}>
-            {(item as any).total_units} unit(s)
+            {result.total_units} unit(s)
           </Text>
         </View>
       </AnimatedCard>

@@ -54,7 +54,7 @@ export default function InviteScreen() {
     } else {
       track(EVENTS.INVITE_ACCEPTED, {
         token,
-        property_id: inviteData?.property_id,
+        property_id: inviteData?.property_id ?? null,
       });
       setAccepted(true);
       // Navigate to properties tab after short delay

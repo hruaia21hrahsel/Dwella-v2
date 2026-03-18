@@ -43,7 +43,7 @@ export default function ExpensesScreen() {
       .eq('property_id', propertyId)
       .eq('month', month)
       .eq('year', year);
-    const total = (data ?? []).reduce((s: number, p: any) => s + (p.amount_paid ?? 0), 0);
+    const total = (data ?? []).reduce((s: number, p: { amount_paid?: number }) => s + (p.amount_paid ?? 0), 0);
     setMonthlyIncome(total);
   }, [propertyId, month, year]);
 
@@ -126,7 +126,7 @@ export default function ExpensesScreen() {
           headerShown: true,
           title: 'Expenses',
           headerTitleAlign: 'center',
-          headerStyle: { backgroundColor: colors.background } as any,
+          headerStyle: { backgroundColor: colors.background } as object,
           headerTintColor: colors.textPrimary,
           headerShadowVisible: false,
         }}

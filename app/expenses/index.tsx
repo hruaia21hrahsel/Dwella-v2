@@ -64,7 +64,7 @@ export default function GlobalExpensesScreen() {
       .in('property_id', selectedPropertyId ? [selectedPropertyId] : propIds);
 
     const { data } = await query;
-    const total = (data ?? []).reduce((s: number, p: any) => s + (p.amount_paid ?? 0), 0);
+    const total = (data ?? []).reduce((s: number, p: { amount_paid?: number }) => s + (p.amount_paid ?? 0), 0);
     setMonthlyIncome(total);
   }, [ownedProperties, selectedPropertyId, month, year]);
 

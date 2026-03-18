@@ -4,6 +4,42 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { Payment, PaymentStatus } from '@/lib/types';
 
+interface DashboardPayment {
+  tenant_id: string;
+  status: string;
+  amount_paid: number;
+  amount_due: number;
+  month: number;
+  [key: string]: unknown;
+}
+
+interface DashboardTenant {
+  id: string;
+  is_archived: boolean;
+  tenant_name: string;
+  due_day: number;
+  flat_no: string;
+  monthly_rent: number;
+}
+
+interface RecentPaymentRow {
+  id: string;
+  tenant_id: string;
+  amount_paid: number;
+  month: number;
+  year: number;
+  status: string;
+  paid_at: string;
+  tenants?: {
+    tenant_name?: string;
+    flat_no?: string;
+    properties?: {
+      name?: string;
+      id?: string;
+    };
+  };
+}
+
 
 export interface TenantRow {
   tenantId: string;
@@ -100,15 +136,15 @@ export function useDashboard(year: number, month: number): DashboardData {
 
     // Index payments by tenant_id + month for O(1) lookup
     const paymentIndex = new Map<string, Record<number, Payment>>();
-    for (const p of (payResult.data ?? []) as any[]) {
-      const key = p.tenant_id as string;
+    for (const p of (payResult.data ?? []) as DashboardPayment[]) {
+      const key = p.tenant_id;
       if (!paymentIndex.has(key)) paymentIndex.set(key, {});
-      paymentIndex.get(key)![p.month] = p as Payment;
+      paymentIndex.get(key)![p.month] = p as unknown as Payment;
     }
 
     const rows: TenantRow[] = [];
     for (const property of propResult.data ?? []) {
-      const tenants = (property.tenants as any[]) ?? [];
+      const tenants = (property.tenants as DashboardTenant[]) ?? [];
       for (const tenant of tenants) {
         if (tenant.is_archived) continue;
         rows.push({
@@ -124,10 +160,10 @@ export function useDashboard(year: number, month: number): DashboardData {
     }
 
     // Filter recent transactions to only the user's properties
-    const ownedPropertyIds = new Set((propResult.data ?? []).map((p: any) => p.id));
+    const ownedPropertyIds = new Set((propResult.data ?? []).map((p) => p.id));
     const txs: RecentTx[] = (recentResult.data ?? [])
-      .filter((p: any) => ownedPropertyIds.has(p.tenants?.properties?.id))
-      .map((p: any) => ({
+      .filter((p: RecentPaymentRow) => ownedPropertyIds.has(p.tenants?.properties?.id))
+      .map((p: RecentPaymentRow) => ({
         paymentId: p.id,
         tenantName: p.tenants?.tenant_name ?? '',
         flatNo: p.tenants?.flat_no ?? '',
@@ -137,15 +173,15 @@ export function useDashboard(year: number, month: number): DashboardData {
         amountPaid: p.amount_paid,
         month: p.month,
         year: p.year,
-        status: p.status,
+        status: p.status as PaymentStatus,
         paidAt: p.paid_at,
       }));
 
     setTenantRows(rows);
     setRecentTransactions(txs);
 
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load dashboard');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
     } finally {
       hasLoadedOnce.current = true;
       setIsLoading(false);
