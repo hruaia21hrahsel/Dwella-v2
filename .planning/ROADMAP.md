@@ -23,7 +23,11 @@ The app is feature-complete and in TestFlight beta. This roadmap sequences a bot
   2. ESLint with `@typescript-eslint` and `eslint-plugin-security` runs without reported security or type errors in critical paths
   3. All `as any` casts in auth, payments, and Edge Function critical paths are replaced with typed alternatives
   4. `@sentry/react-native` is initialized with a DSN and captures unhandled errors in the production build
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Verify TS compilation baseline and replace all `as any` casts in critical paths
+- [ ] 01-02-PLAN.md — Configure ESLint with TS + security rules and integrate Sentry crash monitoring
 
 ### Phase 2: Security & Data Integrity
 **Goal**: Every security-class vulnerability is closed at the root cause layer — RLS policies protect all tables, tokens are cryptographically secure, webhooks reject unauthenticated callers, and payment state transitions are enforced at the DB level so no downstream code can corrupt financial data
@@ -77,7 +81,7 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Compilation & Tooling Baseline | 0/TBD | Not started | - |
+| 1. Compilation & Tooling Baseline | 0/2 | Planning complete | - |
 | 2. Security & Data Integrity | 0/TBD | Not started | - |
 | 3. Edge Functions & Backend | 0/TBD | Not started | - |
 | 4. Client Code & UX | 0/TBD | Not started | - |
