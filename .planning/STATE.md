@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-18T17:18:45.126Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-03-18T17:23:01.768Z"
 last_activity: 2026-03-18 — Completed ESLint + Sentry integration (plan 01-02)
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 10
 ---
 
@@ -56,6 +56,7 @@ Progress: [█░░░░░░░░░] 10%
 | Phase 02 P02 | 12 | 2 tasks | 2 files |
 | Phase 02 P03 | 8 | 2 tasks | 2 files |
 | Phase 02 P01 | 2 | 2 tasks | 2 files |
+| Phase 02 P04 | 15 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Retain public.is_property_owner() SECURITY DEFINER for tenants RLS policies to avoid reintroducing recursion fixed in migration 005
 - [Phase 02]: Payment state machine trigger uses WHEN (OLD.status IS DISTINCT FROM NEW.status) — same-status updates allowed, trigger fires only on actual status changes
 - [Phase 02]: confirmed->paid reversal included as valid transition — enables landlord correction of auto-confirmed payments
+- [Phase 02]: Reset-to-pending button removed from payment detail: paid->pending and partial->pending are invalid per migration 017 state machine trigger — DB would always reject with RAISE EXCEPTION
+- [Phase 02]: Deno global crypto.randomUUID() in process-bot-message accepted as crypto-secure equivalent to expo-crypto.Crypto.randomUUID() — both use Web Crypto API / RFC 4122 UUID v4
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T17:18:45.123Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-18T17:23:01.765Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
