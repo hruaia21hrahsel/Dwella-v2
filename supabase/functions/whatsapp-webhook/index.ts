@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN')!;
 const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')!;
 const WHATSAPP_VERIFY_TOKEN = Deno.env.get('WHATSAPP_VERIFY_TOKEN')!;
+const WHATSAPP_APP_SECRET = Deno.env.get('WHATSAPP_APP_SECRET');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const PROCESS_BOT_URL = `${SUPABASE_URL}/functions/v1/process-bot-message`;
@@ -39,6 +40,27 @@ async function sendWhatsApp(to: string, text: string) {
   }
 }
 
+/** Validate Meta X-Hub-Signature-256 HMAC-SHA256 (SEC-05) */
+async function validateMetaSignature(req: Request, rawBody: string): Promise<boolean> {
+  if (!WHATSAPP_APP_SECRET) return true; // Skip validation in dev when secret not configured
+
+  const signature = req.headers.get('X-Hub-Signature-256');
+  if (!signature || !signature.startsWith('sha256=')) return false;
+
+  const expectedHex = signature.slice('sha256='.length);
+  const keyData = new TextEncoder().encode(WHATSAPP_APP_SECRET);
+  const key = await crypto.subtle.importKey(
+    'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const bodyBytes = new TextEncoder().encode(rawBody);
+  const sigBytes = await crypto.subtle.sign('HMAC', key, bodyBytes);
+  const computedHex = Array.from(new Uint8Array(sigBytes))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return computedHex === expectedHex;
+}
+
 serve(async (req) => {
   const url = new URL(req.url);
 
@@ -61,9 +83,23 @@ serve(async (req) => {
     return new Response('OK', { status: 200 });
   }
 
+  // Read raw body for HMAC validation before parsing (SEC-05)
+  let rawBody: string;
+  try {
+    rawBody = await req.text();
+  } catch {
+    return new Response('Bad request', { status: 400 });
+  }
+
+  // Validate HMAC signature
+  if (!(await validateMetaSignature(req, rawBody))) {
+    console.warn('WhatsApp webhook: HMAC validation failed');
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
-    body = await req.json();
+    body = JSON.parse(rawBody);
   } catch {
     return new Response('Bad request', { status: 400 });
   }
