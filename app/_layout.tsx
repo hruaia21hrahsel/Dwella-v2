@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Stack, router, useRouter, useSegments } from 'expo-router';
+import { Stack, router, useRouter, useSegments, type Href } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
+import { User } from '@/lib/types';
 import { usePostHog } from '@/lib/posthog';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { registerPushToken } from '@/lib/notifications';
@@ -100,15 +101,23 @@ function AuthGuard() {
 
       if (newSession?.user) {
         const uid = newSession.user.id;
-        const fallbackUser = {
+        const fallbackUser: User = {
           id: uid,
           email: newSession.user.email ?? '',
           full_name: newSession.user.user_metadata?.full_name ?? null,
           phone: newSession.user.user_metadata?.phone ?? null,
+          avatar_url: newSession.user.user_metadata?.avatar_url ?? null,
+          telegram_chat_id: null,
+          telegram_link_token: null,
+          whatsapp_phone: null,
+          whatsapp_verify_code: null,
+          push_token: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
 
         // Set a minimal user immediately so the app can render
-        setUser(fallbackUser as any);
+        setUser(fallbackUser);
         setLoading(false);
 
         // Enrich user data and PostHog in the background (non-blocking)
@@ -141,7 +150,7 @@ function AuthGuard() {
               tenant_count: tenantCount ?? 0,
               is_landlord: (propCount ?? 0) > 0,
               is_tenant: (tenantCount ?? 0) > 0,
-              has_telegram: !!(data ?? fallbackUser as any).telegram_chat_id,
+              has_telegram: !!(data ?? fallbackUser).telegram_chat_id,
               theme: useAuthStore.getState().themeMode,
             });
           } catch {
@@ -202,7 +211,7 @@ function AuthGuard() {
         initialRedirectDone.current = true;
         if (pendingRoute) {
           setPendingRoute(null);
-          router.replace(pendingRoute as any);
+          router.replace(pendingRoute as Href);
         } else {
           router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
         }
@@ -212,8 +221,10 @@ function AuthGuard() {
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const screen = (response.notification.request.content.data as any)?.screen;
-      if (screen) router.push(screen);
+      interface NotificationData { screen?: string; }
+      const notifData = response.notification.request.content.data as NotificationData;
+      const screen = notifData?.screen;
+      if (screen) router.push(screen as Href);
     });
     return () => sub.remove();
   }, []);
