@@ -13,6 +13,7 @@ export async function getInviteDetails(token: string) {
     .select('*, properties(*)')
     .eq('invite_token', token)
     .eq('invite_status', 'pending')
+    .eq('is_archived', false)  // DATA-01 + DATA-04: reject archived tenant invites
     .single();
 
   if (error || !data) return null;
@@ -22,8 +23,9 @@ export async function getInviteDetails(token: string) {
 export async function acceptInvite(token: string, userId: string): Promise<{ success: boolean; error?: string }> {
   const { data: tenant, error: fetchError } = await supabase
     .from('tenants')
-    .select('id, invite_status')
+    .select('id, invite_status, is_archived')
     .eq('invite_token', token)
+    .eq('is_archived', false)  // DATA-04: reject archived tenant invites
     .single();
 
   if (fetchError || !tenant) {
