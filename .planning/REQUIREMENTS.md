@@ -9,8 +9,8 @@ Requirements for launch readiness. Each maps to roadmap phases.
 
 ### Compilation & Type Safety
 
-- [ ] **TS-01**: App compiles with zero errors via `npx tsc --noEmit` (fix PostHog captureLifecycleEvents)
-- [ ] **TS-02**: All `as any` type casts in critical paths (auth, payments, Edge Functions) resolved with proper types
+- [x] **TS-01**: App compiles with zero errors via `npx tsc --noEmit` (fix PostHog captureLifecycleEvents)
+- [x] **TS-02**: All `as any` type casts in critical paths (auth, payments, Edge Functions) resolved with proper types
 - [ ] **TS-03**: ESLint with `eslint-plugin-security` and `@typescript-eslint` configured and passing
 
 ### Security & Cryptography
@@ -93,8 +93,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TS-01 | Phase 1 | Pending |
-| TS-02 | Phase 1 | Pending |
+| TS-01 | Phase 1 | Complete |
+| TS-02 | Phase 1 | Complete |
 | TS-03 | Phase 1 | Pending |
 | EDGE-04 | Phase 1 | Pending |
 | SEC-01 | Phase 2 | Pending |
