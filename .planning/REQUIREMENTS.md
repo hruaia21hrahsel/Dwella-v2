@@ -18,8 +18,8 @@ Requirements for launch readiness. Each maps to roadmap phases.
 - [ ] **SEC-01**: `Math.random()` UUID generation in `lib/bot.ts` replaced with `expo-crypto` randomUUID()
 - [ ] **SEC-02**: `Math.random()` verification code generation replaced with crypto-secure alternative
 - [ ] **SEC-03**: RLS policies audited on all tables with correct `USING` + `WITH CHECK` clauses on UPDATE
-- [ ] **SEC-04**: Telegram webhook validates bot secret/signature before processing
-- [ ] **SEC-05**: WhatsApp webhook validates HMAC/shared secret before processing
+- [x] **SEC-04**: Telegram webhook validates bot secret/signature before processing
+- [x] **SEC-05**: WhatsApp webhook validates HMAC/shared secret before processing
 - [ ] **SEC-06**: User-controlled strings (tenant names, property names) sanitized in Claude bot context to prevent prompt injection
 
 ### Data Integrity
@@ -100,8 +100,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-01 | Phase 2 | Pending |
 | SEC-02 | Phase 2 | Pending |
 | SEC-03 | Phase 2 | Pending |
-| SEC-04 | Phase 2 | Pending |
-| SEC-05 | Phase 2 | Pending |
+| SEC-04 | Phase 2 | Complete |
+| SEC-05 | Phase 2 | Complete |
 | SEC-06 | Phase 2 | Pending |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
