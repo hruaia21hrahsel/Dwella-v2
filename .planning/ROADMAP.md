@@ -8,7 +8,7 @@ The app is feature-complete and in TestFlight beta. This roadmap sequences a bot
 
 - [x] **Phase 1: Compilation & Tooling Baseline** - App compiles clean, ESLint enforces rules, error monitoring in place (completed 2026-03-18)
 - [x] **Phase 2: Security & Data Integrity** - RLS hardened, crypto-secure tokens, webhook validation, state machine enforced at DB (completed 2026-03-18)
-- [ ] **Phase 3: Edge Functions & Backend** - All 13 Edge Functions verified for soft-delete, error codes, and correct cron schedules
+- [ ] **Phase 3: Edge Functions & Backend** - All 12 Edge Functions verified for soft-delete, error codes, and correct cron schedules
 - [ ] **Phase 4: Client Code & UX** - Hooks verified, subscription cleanup confirmed, auth errors visible, env validation in place
 - [ ] **Phase 5: Launch Configuration & Store Gate** - App Store privacy, AI disclosure, EAS config, and OTA policy ready for submission
 
@@ -50,7 +50,7 @@ Plans:
 - [ ] 02-04-PLAN.md — Crypto-secure token verification pass + payment transition audit
 
 ### Phase 3: Edge Functions & Backend
-**Goal**: All 13 deployed Edge Functions are verified against the Phase 2 confirmed DB contracts — each returns correct HTTP status codes, filters archived data, and executes its intended action reliably; scheduled cron jobs run on the correct schedules; the bot message flow completes end-to-end
+**Goal**: All 12 deployed Edge Functions are verified against the Phase 2 confirmed DB contracts — each returns correct HTTP status codes, filters archived data, and executes its intended action reliably; scheduled cron jobs run on the correct schedules; the bot message flow completes end-to-end
 **Depends on**: Phase 2
 **Requirements**: EDGE-01, EDGE-02, EDGE-03, EDGE-05
 **Success Criteria** (what must be TRUE):
@@ -58,7 +58,11 @@ Plans:
   2. `auto-confirm-payments`, `mark-overdue`, and `send-reminders` are confirmed active with correct pg_cron schedules in the Supabase dashboard; archived tenants do not appear in their query results
   3. A bot message sent via Telegram results in a confirmed DB action and a reply — the full chain (webhook → Claude → structured JSON → DB mutation → reply) completes without error
   4. Real App Store and Play Store URLs are live in `invite-redirect/index.ts` and the deep link routes a device correctly to the app store listing
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Harden send-push, invite-redirect, and cron functions (auto-confirm, mark-overdue, send-reminders)
+- [ ] 03-02-PLAN.md — Add Claude response validation to process-bot-message and harden AI tool functions
 
 ### Phase 4: Client Code & UX
 **Goal**: The client layer is observable and resilient — hooks clean up Realtime subscriptions, auth failures are visible to the user, the app refuses to start without required environment variables, and push notifications deliver to a physical device
@@ -91,6 +95,6 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Compilation & Tooling Baseline | 4/4 | Complete   | 2026-03-18 |
 | 2. Security & Data Integrity | 4/4 | Complete   | 2026-03-18 |
-| 3. Edge Functions & Backend | 0/TBD | Not started | - |
+| 3. Edge Functions & Backend | 0/2 | Not started | - |
 | 4. Client Code & UX | 0/TBD | Not started | - |
 | 5. Launch Configuration & Store Gate | 0/TBD | Not started | - |
