@@ -11,7 +11,7 @@ Requirements for launch readiness. Each maps to roadmap phases.
 
 - [x] **TS-01**: App compiles with zero errors via `npx tsc --noEmit` (fix PostHog captureLifecycleEvents)
 - [x] **TS-02**: All `as any` type casts in critical paths (auth, payments, Edge Functions) resolved with proper types
-- [ ] **TS-03**: ESLint with `eslint-plugin-security` and `@typescript-eslint` configured and passing
+- [x] **TS-03**: ESLint with `eslint-plugin-security` and `@typescript-eslint` configured and passing
 
 ### Security & Cryptography
 
@@ -34,7 +34,7 @@ Requirements for launch readiness. Each maps to roadmap phases.
 - [ ] **EDGE-01**: All Edge Functions return appropriate HTTP status codes (400/404/500/503, not generic 500)
 - [ ] **EDGE-02**: Scheduled functions (auto-confirm, mark-overdue, send-reminders) verified working with correct cron schedules
 - [ ] **EDGE-03**: Bot action flow traced end-to-end (message → Claude → structured JSON → DB action → reply)
-- [ ] **EDGE-04**: Sentry (`@sentry/react-native`) integrated for production error tracking
+- [x] **EDGE-04**: Sentry (`@sentry/react-native`) integrated for production error tracking
 - [ ] **EDGE-05**: App Store / Play Store placeholder URLs replaced with real values in invite-redirect
 
 ### Client & UX
@@ -95,8 +95,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | TS-01 | Phase 1 | Complete |
 | TS-02 | Phase 1 | Complete |
-| TS-03 | Phase 1 | Pending |
-| EDGE-04 | Phase 1 | Pending |
+| TS-03 | Phase 1 | Complete |
+| EDGE-04 | Phase 1 | Complete |
 | SEC-01 | Phase 2 | Pending |
 | SEC-02 | Phase 2 | Pending |
 | SEC-03 | Phase 2 | Pending |

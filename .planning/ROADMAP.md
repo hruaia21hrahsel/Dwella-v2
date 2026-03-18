@@ -6,7 +6,7 @@ The app is feature-complete and in TestFlight beta. This roadmap sequences a bot
 
 ## Phases
 
-- [ ] **Phase 1: Compilation & Tooling Baseline** - App compiles clean, ESLint enforces rules, error monitoring in place
+- [x] **Phase 1: Compilation & Tooling Baseline** - App compiles clean, ESLint enforces rules, error monitoring in place (completed 2026-03-18)
 - [ ] **Phase 2: Security & Data Integrity** - RLS hardened, crypto-secure tokens, webhook validation, state machine enforced at DB
 - [ ] **Phase 3: Edge Functions & Backend** - All 13 Edge Functions verified for soft-delete, error codes, and correct cron schedules
 - [ ] **Phase 4: Client Code & UX** - Hooks verified, subscription cleanup confirmed, auth errors visible, env validation in place
@@ -81,7 +81,7 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Compilation & Tooling Baseline | 1/2 | In Progress|  |
+| 1. Compilation & Tooling Baseline | 2/2 | Complete   | 2026-03-18 |
 | 2. Security & Data Integrity | 0/TBD | Not started | - |
 | 3. Edge Functions & Backend | 0/TBD | Not started | - |
 | 4. Client Code & UX | 0/TBD | Not started | - |
