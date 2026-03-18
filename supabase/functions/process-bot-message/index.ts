@@ -74,7 +74,7 @@ async function findTenantByName(
     .select('*, properties(*)')
     .in('property_id', propertyIds)
     .eq('is_archived', false)
-    .ilike('tenant_name', `%${tenantName}%`);
+    .ilike('tenant_name', `%${tenantName.slice(0, 200)}%`);
 
   if (!tenants || tenants.length === 0) return null;
   return { tenant: tenants[0], property: tenants[0].properties };
@@ -331,6 +331,22 @@ const ACTION_HANDLERS: Record<string, ActionHandler> = {
 
 
 // ----------------------------------------------------------------
+// Sanitize user-controlled strings for Claude context (SEC-06)
+// ----------------------------------------------------------------
+/**
+ * XML-escape user-controlled strings and truncate to prevent prompt injection
+ * and context stuffing. Preserves apostrophes, accented chars, #, etc.
+ * Only escapes XML metacharacters: &, <, > (SEC-06)
+ */
+function sanitizeForContext(value: string, maxLength = 200): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .slice(0, maxLength);
+}
+
+// ----------------------------------------------------------------
 // Build context string from user's properties/tenants/payments
 // ----------------------------------------------------------------
 async function buildContext(supabase: ReturnType<typeof createClient>, userId: string): Promise<string> {
@@ -358,13 +374,13 @@ async function buildContext(supabase: ReturnType<typeof createClient>, userId: s
     ctx += `LANDLORD CONTEXT — You own ${properties.length} property/properties:\n`;
     for (const p of properties) {
       const tenants = (p as Record<string, unknown[]>).tenants ?? [];
-      ctx += `\nProperty: "${p.name}" (ID: ${p.id}), ${p.address}, ${p.city}. Total units: ${p.total_units}. Active tenants: ${tenants.length}.\n`;
+      ctx += `\nProperty: <property_name>${sanitizeForContext(p.name)}</property_name> (ID: ${p.id}), <property_address>${sanitizeForContext(p.address)}</property_address>, <property_city>${sanitizeForContext(p.city)}</property_city>. Total units: ${p.total_units}. Active tenants: ${tenants.length}.\n`;
       for (const t of tenants as Record<string, unknown>[]) {
         const payments = (t['payments'] as Record<string, unknown>[]) ?? [];
         const currentPayment = payments.find(
           (pay) => pay['month'] === currentMonth && pay['year'] === currentYear
         );
-        ctx += `  Tenant: "${t['tenant_name']}" (ID: ${t['id']}), Flat ${t['flat_no']}, Rent: ₹${t['monthly_rent']}/mo, Due day: ${t['due_day']}.\n`;
+        ctx += `  Tenant: <tenant_name>${sanitizeForContext(t['tenant_name'] as string)}</tenant_name> (ID: ${t['id']}), Flat <flat_no>${sanitizeForContext(String(t['flat_no']))}</flat_no>, Rent: ₹${t['monthly_rent']}/mo, Due day: ${t['due_day']}.\n`;
         if (currentPayment) {
           ctx += `    This month payment: status=${currentPayment['status']}, due=₹${currentPayment['amount_due']}, paid=₹${currentPayment['amount_paid']}.\n`;
         } else {
@@ -383,7 +399,7 @@ async function buildContext(supabase: ReturnType<typeof createClient>, userId: s
       const currentPayment = payments.find(
         (pay) => pay['month'] === currentMonth && pay['year'] === currentYear
       );
-      ctx += `\nProperty: "${prop?.['name']}" (${prop?.['address']}). Flat ${t.flat_no}. Rent: ₹${t.monthly_rent}/mo, Due day: ${t.due_day}.\n`;
+      ctx += `\nProperty: <property_name>${sanitizeForContext(String(prop?.['name'] ?? ''))}</property_name> (<property_address>${sanitizeForContext(String(prop?.['address'] ?? ''))}</property_address>). Flat <flat_no>${sanitizeForContext(String(t.flat_no))}</flat_no>. Rent: ₹${t.monthly_rent}/mo, Due day: ${t.due_day}.\n`;
       if (currentPayment) {
         ctx += `  This month payment: status=${currentPayment['status']}, due=₹${currentPayment['amount_due']}, paid=₹${currentPayment['amount_paid']}.\n`;
       }
