@@ -1,3 +1,4 @@
+import { type ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,7 +18,7 @@ export function EmptyState({ icon, title, subtitle, actionLabel, onAction }: Emp
   return (
     <View style={styles.container}>
       <View style={[styles.iconWrapper, { backgroundColor: colors.primarySoft, ...shadows.sm }]}>
-        <MaterialCommunityIcons name={icon as any} size={40} color={colors.primary} />
+        <MaterialCommunityIcons name={icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={40} color={colors.primary} />
       </View>
       <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
       {subtitle && (

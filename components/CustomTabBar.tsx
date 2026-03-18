@@ -1,3 +1,4 @@
+import { type ComponentProps } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -44,7 +45,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     return (
       <Pressable style={styles.tab} onPress={onPress}>
         <MaterialCommunityIcons
-          name={(isFocused ? cfg.icon : cfg.iconOutline) as any}
+          name={(isFocused ? cfg.icon : cfg.iconOutline) as ComponentProps<typeof MaterialCommunityIcons>['name']}
           size={22}
           color={isFocused ? colors.primary : colors.textSecondary}
         />

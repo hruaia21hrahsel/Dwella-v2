@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, type ComponentProps } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 import { Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
 import { useAuthStore } from '@/lib/store';
 import { TOUR_STEPS } from '@/lib/tour';
@@ -52,7 +52,7 @@ export function TourGuideCard() {
     } else {
       const next = tourStep! + 1;
       setTourStep(next);
-      router.replace(TOUR_STEPS[next].route as any);
+      router.replace(TOUR_STEPS[next].route as Href);
     }
   }
 
@@ -79,7 +79,7 @@ export function TourGuideCard() {
         <View style={styles.topRow}>
           <View style={[styles.iconPill, { backgroundColor: colors.primarySoft }]}>
             <MaterialCommunityIcons
-              name={step.icon as any}
+              name={step.icon as ComponentProps<typeof MaterialCommunityIcons>['name']}
               size={22}
               color={colors.primary}
             />

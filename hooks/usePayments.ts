@@ -33,8 +33,8 @@ export function usePayments(tenant: Tenant | null): UsePaymentsResult {
 
       if (fetchError) throw fetchError;
       setPayments((data as Payment[]) ?? []);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load payments');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load payments');
     } finally {
       setIsLoading(false);
     }

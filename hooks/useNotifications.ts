@@ -26,8 +26,8 @@ export function useNotifications(userId: string | undefined) {
       const list = data ?? [];
       setNotifications(list);
       setUnreadCount(list.filter((n) => !n.is_read).length);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load notifications');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load notifications');
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import { type ComponentProps } from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -37,7 +38,7 @@ export function GradientButton({
         ) : (
           <View style={styles.row}>
             {icon && (
-              <MaterialCommunityIcons name={icon as any} size={18} color={colors.primary} style={styles.icon} />
+              <MaterialCommunityIcons name={icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={18} color={colors.primary} style={styles.icon} />
             )}
             <Text style={[styles.secondaryText, { color: colors.primary }]}>{title}</Text>
           </View>
@@ -66,7 +67,7 @@ export function GradientButton({
         ) : (
           <View style={styles.row}>
             {icon && (
-              <MaterialCommunityIcons name={icon as any} size={18} color="#fff" style={styles.icon} />
+              <MaterialCommunityIcons name={icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={18} color="#fff" style={styles.icon} />
             )}
             <Text style={styles.text}>{title}</Text>
           </View>

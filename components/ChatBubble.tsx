@@ -16,7 +16,7 @@ interface Props {
 export function ChatBubble({ message, onConfirm, onCancel, isLatestAssistant }: Props) {
   const { colors, isDark } = useTheme();
   const isUser = message.role === 'user';
-  const hasPendingAction = !!(message.metadata as any)?.pending_action && isLatestAssistant;
+  const hasPendingAction = !!(message.metadata as Record<string, unknown>)?.pending_action && isLatestAssistant;
 
   const actionBorderColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
 

@@ -1,3 +1,4 @@
+import { type ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -35,7 +36,7 @@ export function PaymentStatusBadge({ status }: PaymentStatusBadgeProps) {
 
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
-      <MaterialCommunityIcons name={icon as any} size={12} color={color} />
+      <MaterialCommunityIcons name={icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={12} color={color} />
       <Text style={[styles.text, { color }]}>{getStatusLabel(status)}</Text>
     </View>
   );

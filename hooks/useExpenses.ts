@@ -32,8 +32,8 @@ export function useExpenses(propertyId: string | null): UseExpensesResult {
 
       if (fetchError) throw fetchError;
       setExpenses((data as Expense[]) ?? []);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load expenses');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load expenses');
     } finally {
       setIsLoading(false);
     }

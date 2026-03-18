@@ -49,8 +49,8 @@ export function useProperties(): UsePropertiesResult {
 
       setOwnedProperties((ownedRes.data as Property[]) ?? []);
       setTenantProperties((tenantRes.data as (Tenant & { properties: Property })[]) ?? []);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load properties');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load properties');
     } finally {
       setIsLoading(false);
     }

@@ -23,8 +23,8 @@ export function useBotConversations(userId: string | undefined) {
         .limit(100);
       if (fetchError) throw fetchError;
       setMessages(data ?? []);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load conversations');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load conversations');
     } finally {
       setLoading(false);
     }

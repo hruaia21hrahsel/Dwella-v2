@@ -32,8 +32,8 @@ export function useTenants(propertyId: string | undefined): UseTenantResult {
 
       if (fetchError) throw fetchError;
       setTenants((data as Tenant[]) ?? []);
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to load tenants');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load tenants');
     } finally {
       setIsLoading(false);
     }

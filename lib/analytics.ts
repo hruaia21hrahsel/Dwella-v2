@@ -1,4 +1,5 @@
 import { usePostHog } from 'posthog-react-native';
+import { type PostHogEventProperties } from '@posthog/core';
 import { useCallback } from 'react';
 
 // ── Event Names ────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ export const EVENTS = {
 export function useTrack() {
   const posthog = usePostHog();
   return useCallback(
-    (event: string, properties?: Record<string, any>) => {
+    (event: string, properties?: PostHogEventProperties) => {
       posthog.capture(event, properties);
     },
     [posthog],

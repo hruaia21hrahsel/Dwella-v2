@@ -50,8 +50,8 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
         return;
       }
       // User cancelled — not an error
-    } catch (err: any) {
-      onError(err.message || 'Google sign-in failed');
+    } catch (err: unknown) {
+      onError(err instanceof Error ? err.message : 'Google sign-in failed');
     } finally {
       setGoogleLoading(false);
       onLoading?.(false);
@@ -69,10 +69,11 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
         navigateAfterAuth();
         return;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Error code 1001 = user cancelled on iOS
-      if (err.code === 'ERR_REQUEST_CANCELED' || err.code === '1001') return;
-      onError(err.message || 'Apple sign-in failed');
+      const code = (err as { code?: string }).code;
+      if (code === 'ERR_REQUEST_CANCELED' || code === '1001') return;
+      onError(err instanceof Error ? err.message : 'Apple sign-in failed');
     } finally {
       setAppleLoading(false);
       onLoading?.(false);
