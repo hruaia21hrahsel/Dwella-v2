@@ -17,17 +17,17 @@ Requirements for launch readiness. Each maps to roadmap phases.
 
 - [ ] **SEC-01**: `Math.random()` UUID generation in `lib/bot.ts` replaced with `expo-crypto` randomUUID()
 - [ ] **SEC-02**: `Math.random()` verification code generation replaced with crypto-secure alternative
-- [ ] **SEC-03**: RLS policies audited on all tables with correct `USING` + `WITH CHECK` clauses on UPDATE
+- [x] **SEC-03**: RLS policies audited on all tables with correct `USING` + `WITH CHECK` clauses on UPDATE
 - [x] **SEC-04**: Telegram webhook validates bot secret/signature before processing
 - [x] **SEC-05**: WhatsApp webhook validates HMAC/shared secret before processing
-- [ ] **SEC-06**: User-controlled strings (tenant names, property names) sanitized in Claude bot context to prevent prompt injection
+- [x] **SEC-06**: User-controlled strings (tenant names, property names) sanitized in Claude bot context to prevent prompt injection
 
 ### Data Integrity
 
-- [ ] **DATA-01**: Soft-delete filtering (`is_archived = FALSE`) verified across all hooks, screens, and Edge Functions
+- [x] **DATA-01**: Soft-delete filtering (`is_archived = FALSE`) verified across all hooks, screens, and Edge Functions
 - [ ] **DATA-02**: Payment state machine transitions audited for correctness (no invalid state changes)
-- [ ] **DATA-03**: Payment state machine enforced at DB level via trigger migration
-- [ ] **DATA-04**: Invite flow verified end-to-end (token generation → deep link → acceptance → edge cases)
+- [x] **DATA-03**: Payment state machine enforced at DB level via trigger migration
+- [x] **DATA-04**: Invite flow verified end-to-end (token generation → deep link → acceptance → edge cases)
 
 ### Edge Functions & Backend
 
@@ -99,14 +99,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EDGE-04 | Phase 1 | Complete |
 | SEC-01 | Phase 2 | Pending |
 | SEC-02 | Phase 2 | Pending |
-| SEC-03 | Phase 2 | Pending |
+| SEC-03 | Phase 2 | Complete |
 | SEC-04 | Phase 2 | Complete |
 | SEC-05 | Phase 2 | Complete |
-| SEC-06 | Phase 2 | Pending |
-| DATA-01 | Phase 2 | Pending |
+| SEC-06 | Phase 2 | Complete |
+| DATA-01 | Phase 2 | Complete |
 | DATA-02 | Phase 2 | Pending |
-| DATA-03 | Phase 2 | Pending |
-| DATA-04 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Complete |
+| DATA-04 | Phase 2 | Complete |
 | EDGE-01 | Phase 3 | Pending |
 | EDGE-02 | Phase 3 | Pending |
 | EDGE-03 | Phase 3 | Pending |
