@@ -71,10 +71,10 @@ completed: 2026-03-18
 
 Each task was committed atomically:
 
-1. **Task 1: RLS per-operation policies with WITH CHECK** - `5bafa97` (feat)
+1. **Task 1: RLS per-operation policies with WITH CHECK** - `be573a7` (feat)
 2. **Task 2: Payment state machine trigger** - `dac255f` (feat)
 
-**Plan metadata:** (docs commit to follow)
+**Plan metadata:** `bd47c3f` (docs)
 
 ## Files Created/Modified
 
