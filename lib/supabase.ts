@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupportedStorage } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/constants/config';
 
@@ -12,16 +12,18 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 // On web browser use localStorage; during SSR (no window) pass undefined so
 // Supabase skips persistence and avoids "window is not defined" crashes.
-const authStorage =
+// Both localStorage and AsyncStorage satisfy the SupportedStorage contract
+// (getItem / setItem / removeItem returning string | null).
+const authStorage: SupportedStorage | undefined =
   Platform.OS === 'web'
     ? typeof window !== 'undefined'
-      ? window.localStorage
+      ? (window.localStorage as unknown as SupportedStorage)
       : undefined
-    : AsyncStorage;
+    : (AsyncStorage as unknown as SupportedStorage);
 
 export const supabase = createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON_KEY || 'placeholder', {
   auth: {
-    storage: authStorage as any,
+    storage: authStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
