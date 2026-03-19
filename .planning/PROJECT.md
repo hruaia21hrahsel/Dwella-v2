@@ -44,12 +44,12 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) must wo
 - [ ] Audit and fix RLS policies across all tables
 - [ ] Verify soft-delete filtering is consistent across all queries and Edge Functions
 - [ ] Audit payment state machine transitions for correctness
-- [ ] Review and harden Edge Function error handling (proper HTTP status codes)
+- [x] Review and harden Edge Function error handling (proper HTTP status codes) — Validated in Phase 3
 - [ ] Fix silent auth state failures (show user-facing error on profile sync fail)
 - [ ] Validate .env / startup checks (fail fast on missing critical vars)
-- [ ] Audit invite flow end-to-end (token generation → deep link → acceptance)
-- [ ] Audit bot action flow end-to-end (message → Claude → DB action → reply)
-- [ ] Verify all scheduled Edge Functions work correctly
+- [x] Audit invite flow end-to-end (token generation → deep link → acceptance) — Validated in Phase 3
+- [x] Audit bot action flow end-to-end (message → Claude → DB action → reply) — Validated in Phase 3
+- [x] Verify all scheduled Edge Functions work correctly — Validated in Phase 3 (pg_cron migration 018)
 - [ ] Check Realtime subscription cleanup (memory leaks)
 - [ ] Review type safety issues (as any casts, untyped metadata)
 - [ ] Security review: token leakage, log exposure, code predictability
@@ -91,4 +91,4 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) must wo
 | Audit all 4 dimensions | Code quality + features + DB/API + launch readiness covers full surface | — Pending |
 
 ---
-*Last updated: 2026-03-17 after initialization*
+*Last updated: 2026-03-19 after Phase 3 completion — Edge Functions hardened, cron jobs registered*
