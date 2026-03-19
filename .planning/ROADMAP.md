@@ -88,7 +88,11 @@ Plans:
   2. An in-app disclosure is shown to users before AI features process their data, meeting Apple's November 2025 guideline requirement for AI data sharing
   3. `app.json` version and build number are set correctly for the production release; EAS `production` profile validates via dry-run without errors
   4. `runtimeVersion` policy in `app.json` / `eas.json` is configured so that a native dependency change triggers a required update rather than silently crashing OTA users
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Privacy checklist + AI disclosure modal (Zustand field, component, 5 AI screen integrations)
+- [ ] 05-02-PLAN.md — Fingerprint OTA policy + UpdateGate component + EAS config validation
 
 ## Progress
 
@@ -101,4 +105,4 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 | 2. Security & Data Integrity | 4/4 | Complete   | 2026-03-18 |
 | 3. Edge Functions & Backend | 2/2 | Complete   | 2026-03-19 |
 | 4. Client Code & UX | 2/2 | Complete   | 2026-03-19 |
-| 5. Launch Configuration & Store Gate | 0/TBD | Not started | - |
+| 5. Launch Configuration & Store Gate | 0/2 | Not started | - |
