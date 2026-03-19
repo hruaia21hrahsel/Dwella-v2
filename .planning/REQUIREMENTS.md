@@ -31,9 +31,9 @@ Requirements for launch readiness. Each maps to roadmap phases.
 
 ### Edge Functions & Backend
 
-- [ ] **EDGE-01**: All Edge Functions return appropriate HTTP status codes (400/404/500/503, not generic 500)
+- [x] **EDGE-01**: All Edge Functions return appropriate HTTP status codes (400/404/500/503, not generic 500)
 - [ ] **EDGE-02**: Scheduled functions (auto-confirm, mark-overdue, send-reminders) verified working with correct cron schedules
-- [ ] **EDGE-03**: Bot action flow traced end-to-end (message → Claude → structured JSON → DB action → reply)
+- [x] **EDGE-03**: Bot action flow traced end-to-end (message → Claude → structured JSON → DB action → reply)
 - [x] **EDGE-04**: Sentry (`@sentry/react-native`) integrated for production error tracking
 - [ ] **EDGE-05**: App Store / Play Store placeholder URLs replaced with real values in invite-redirect
 
@@ -107,9 +107,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-02 | Phase 2 | Complete |
 | DATA-03 | Phase 2 | Complete |
 | DATA-04 | Phase 2 | Complete |
-| EDGE-01 | Phase 3 | Pending |
+| EDGE-01 | Phase 3 | Complete |
 | EDGE-02 | Phase 3 | Pending |
-| EDGE-03 | Phase 3 | Pending |
+| EDGE-03 | Phase 3 | Complete |
 | EDGE-05 | Phase 3 | Pending |
 | CLIENT-01 | Phase 4 | Pending |
 | CLIENT-02 | Phase 4 | Pending |
