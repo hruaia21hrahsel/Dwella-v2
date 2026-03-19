@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-19T16:58:01.741Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-19T16:58:18.762Z"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -105,6 +105,9 @@ Recent decisions affecting current work:
 - [Phase 04-02]: Dual-path projectId lookup: Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId — handles both app.json extra.eas field and EAS CLI newer path
 - [Phase 05]: AiDisclosureModal placed per-AI-screen (not _layout.tsx) — non-AI users never see disclosure
 - [Phase 05]: aiDisclosureAccepted added to Zustand partialize — persists across restarts via AsyncStorage
+- [Phase 05-02]: Two-component UpdateGate/UpdateGateInner pattern: outer guards with Updates.isEnabled, inner calls useUpdates() unconditionally — avoids React conditional hook violation
+- [Phase 05-02]: iOS App Store URL uses [APP_ID] placeholder — real ID not yet assigned; pre-launch checklist item to update before first store submission
+- [Phase 05-02]: EAS production config validated via eas config (not --dry-run which does not exist) — fingerprint policy resolves correctly for both iOS and Android
 
 ### Pending Todos
 
@@ -118,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T16:57:53.766Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-19T16:58:18.759Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
