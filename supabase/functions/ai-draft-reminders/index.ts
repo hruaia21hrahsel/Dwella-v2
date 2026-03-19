@@ -132,7 +132,19 @@ Use ₹ for currency. Keep messages concise and professional.`;
     const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawContent.match(/(\[[\s\S]*\])/);
     const jsonStr = jsonMatch ? jsonMatch[1] : rawContent;
 
-    const drafts = JSON.parse(jsonStr.trim()) as { tenant_name: string; draft_message: string }[];
+    let drafts: { tenant_name: string; draft_message: string }[];
+    try {
+      const parsed = JSON.parse(jsonStr.trim());
+      if (!Array.isArray(parsed)) {
+        console.error('ai-draft-reminders: Claude response is not an array:', jsonStr);
+        drafts = [];
+      } else {
+        drafts = parsed;
+      }
+    } catch {
+      console.error('ai-draft-reminders: failed to parse Claude response:', jsonStr);
+      drafts = [];
+    }
 
     // Merge drafts with tenant data
     const reminders = tenantsNeedingReminder.map((t) => {

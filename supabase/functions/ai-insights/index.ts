@@ -147,7 +147,16 @@ Use ₹ for currency. Be concise and actionable.`;
     const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawContent.match(/(\{[\s\S]*\})/);
     const jsonStr = jsonMatch ? jsonMatch[1] : rawContent;
 
-    const result = JSON.parse(jsonStr.trim());
+    let result: Record<string, unknown>;
+    try {
+      result = JSON.parse(jsonStr.trim());
+    } catch {
+      console.error('ai-insights: failed to parse Claude response:', jsonStr);
+      return new Response(JSON.stringify({ error: 'Failed to parse AI response' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },

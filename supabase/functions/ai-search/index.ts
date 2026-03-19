@@ -81,7 +81,25 @@ Only include fields that are relevant to the query.`;
     const rawContent: string = parseData.content?.[0]?.text ?? '{}';
     const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/) ?? rawContent.match(/(\{[\s\S]*\})/);
     const jsonStr = jsonMatch ? jsonMatch[1] : rawContent;
-    const filters: SearchFilters = JSON.parse(jsonStr.trim());
+    let filters: SearchFilters;
+    try {
+      const parsed = JSON.parse(jsonStr.trim());
+      // Validate type field is one of the expected values
+      const validTypes = ['payments', 'tenants', 'properties'];
+      if (!parsed || typeof parsed !== 'object' || !validTypes.includes(parsed.type)) {
+        console.error('ai-search: invalid filter type from Claude:', parsed?.type);
+        // Default to properties search as safest fallback
+        filters = { type: 'properties', explanation: 'Could not parse search query' };
+      } else {
+        filters = parsed as SearchFilters;
+      }
+    } catch {
+      console.error('ai-search: failed to parse Claude response:', jsonStr);
+      return new Response(JSON.stringify({ error: 'Failed to parse search query' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
 
     // Step 2: Execute the structured query
     // First get user's property IDs for scoping
