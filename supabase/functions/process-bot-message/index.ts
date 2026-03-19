@@ -29,6 +29,22 @@ interface ClaudeIntent {
   reply: string;
 }
 
+/**
+ * Validates that Claude's parsed JSON has all required fields for intent dispatch.
+ * Prevents malformed AI output from reaching action handlers (EDGE-03).
+ */
+function isValidClaudeIntent(obj: unknown): obj is ClaudeIntent {
+  if (typeof obj !== 'object' || obj === null) return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.intent === 'string' &&
+    typeof o.entities === 'object' && o.entities !== null &&
+    typeof o.action_description === 'string' &&
+    typeof o.needs_confirmation === 'boolean' &&
+    typeof o.reply === 'string'
+  );
+}
+
 type ActionHandler = (
   supabase: ReturnType<typeof createClient>,
   userId: string,
@@ -501,7 +517,18 @@ RULES:
   const jsonStr = jsonMatch ? jsonMatch[1] : rawContent;
 
   try {
-    return JSON.parse(jsonStr.trim()) as ClaudeIntent;
+    const parsed = JSON.parse(jsonStr.trim());
+    if (!isValidClaudeIntent(parsed)) {
+      // Fall back to general_chat — never execute DB action on invalid shape
+      return {
+        intent: 'general_chat',
+        entities: {},
+        action_description: 'general response',
+        needs_confirmation: false,
+        reply: typeof parsed?.reply === 'string' ? parsed.reply : rawContent,
+      };
+    }
+    return parsed;
   } catch {
     return {
       intent: 'general_chat',
