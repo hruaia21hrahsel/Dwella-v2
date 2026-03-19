@@ -14,18 +14,21 @@ Deno.serve(async (_req) => {
   // Fetch pending payments for the current month where today > due_day
   const { data: payments, error: fetchError } = await supabase
     .from('payments')
-    .select('id, tenant_id, tenants(due_day, user_id, tenant_name, properties(owner_id))')
+    .select('id, tenant_id, tenants(due_day, user_id, tenant_name, is_archived, properties(owner_id))')
     .eq('status', 'pending')
     .eq('month', currentMonth)
     .eq('year', currentYear);
 
   if (fetchError) {
     console.error('mark-overdue fetch error:', fetchError);
-    return new Response(JSON.stringify({ error: fetchError.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: fetchError.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const overduePayments = (payments ?? []).filter(
-    (p: any) => p.tenants?.due_day < currentDay,
+    (p: any) => p.tenants?.due_day < currentDay && !p.tenants?.is_archived,
   );
   const overdueIds = overduePayments.map((p: any) => p.id);
 
@@ -42,7 +45,10 @@ Deno.serve(async (_req) => {
 
   if (updateError) {
     console.error('mark-overdue update error:', updateError);
-    return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: updateError.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   // Send push notifications to tenants and landlords

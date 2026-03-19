@@ -16,19 +16,23 @@ Deno.serve(async (_req) => {
     .eq('status', 'paid')
     .is('confirmed_at', null)
     .lt('paid_at', new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString())
-    .select('id, tenant_id, tenants(tenant_name, properties(owner_id))');
+    .select('id, tenant_id, tenants(tenant_name, is_archived, properties(owner_id))');
 
   if (error) {
     console.error('auto-confirm error:', error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const count = data?.length ?? 0;
+  const activePayments = (data ?? []).filter((p: any) => !p.tenants?.is_archived);
 
   // Send push to landlord for each confirmed payment
   if (count > 0) {
     const ownerIds = [...new Set(
-      (data ?? []).map((p: any) => p.tenants?.properties?.owner_id).filter(Boolean),
+      activePayments.map((p: any) => p.tenants?.properties?.owner_id).filter(Boolean),
     )] as string[];
 
     if (ownerIds.length > 0) {
@@ -41,7 +45,7 @@ Deno.serve(async (_req) => {
       );
 
       const pushMessages: any[] = [];
-      for (const p of data ?? []) {
+      for (const p of activePayments) {
         const ownerId = (p as any).tenants?.properties?.owner_id;
         const tenantName = (p as any).tenants?.tenant_name ?? 'Tenant';
         if (ownerId && tokenMap[ownerId]) {

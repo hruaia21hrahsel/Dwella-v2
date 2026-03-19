@@ -39,7 +39,11 @@ Deno.serve(async (_req) => {
 
   if (error) {
     console.error('send-reminders error:', error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const notifications: {
@@ -51,51 +55,56 @@ Deno.serve(async (_req) => {
   }[] = [];
 
   for (const tenant of tenants ?? []) {
-    const daysUntilDue = tenant.due_day - todayDay;
+    try {
+      const daysUntilDue = tenant.due_day - todayDay;
 
-    // Fetch this month's payment
-    const { data: payment } = await supabase
-      .from('payments')
-      .select('status')
-      .eq('tenant_id', tenant.id)
-      .eq('month', currentMonth)
-      .eq('year', currentYear)
-      .single();
+      // Fetch this month's payment
+      const { data: payment } = await supabase
+        .from('payments')
+        .select('status')
+        .eq('tenant_id', tenant.id)
+        .eq('month', currentMonth)
+        .eq('year', currentYear)
+        .single();
 
-    const status = payment?.status ?? 'pending';
-    const propertyName = tenant.properties?.name ?? 'your property';
+      const status = payment?.status ?? 'pending';
+      const propertyName = tenant.properties?.name ?? 'your property';
 
-    // 3 days before due
-    if (daysUntilDue === 3 && ['pending', 'partial'].includes(status)) {
-      notifications.push({
-        user_id: tenant.user_id!,
-        tenant_id: tenant.id,
-        type: 'reminder',
-        title: 'Rent Due Soon',
-        body: `Your rent for ${propertyName} is due in 3 days.`,
-      });
-    }
+      // 3 days before due
+      if (daysUntilDue === 3 && ['pending', 'partial'].includes(status)) {
+        notifications.push({
+          user_id: tenant.user_id!,
+          tenant_id: tenant.id,
+          type: 'reminder',
+          title: 'Rent Due Soon',
+          body: `Your rent for ${propertyName} is due in 3 days.`,
+        });
+      }
 
-    // On due day
-    if (daysUntilDue === 0 && ['pending', 'partial'].includes(status)) {
-      notifications.push({
-        user_id: tenant.user_id!,
-        tenant_id: tenant.id,
-        type: 'reminder',
-        title: 'Rent Due Today',
-        body: `Your rent for ${propertyName} is due today.`,
-      });
-    }
+      // On due day
+      if (daysUntilDue === 0 && ['pending', 'partial'].includes(status)) {
+        notifications.push({
+          user_id: tenant.user_id!,
+          tenant_id: tenant.id,
+          type: 'reminder',
+          title: 'Rent Due Today',
+          body: `Your rent for ${propertyName} is due today.`,
+        });
+      }
 
-    // 3 days overdue
-    if (daysUntilDue === -3 && ['pending', 'partial', 'overdue'].includes(status)) {
-      notifications.push({
-        user_id: tenant.user_id!,
-        tenant_id: tenant.id,
-        type: 'overdue',
-        title: 'Rent Overdue',
-        body: `Your rent for ${propertyName} is 3 days overdue. Please pay as soon as possible.`,
-      });
+      // 3 days overdue
+      if (daysUntilDue === -3 && ['pending', 'partial', 'overdue'].includes(status)) {
+        notifications.push({
+          user_id: tenant.user_id!,
+          tenant_id: tenant.id,
+          type: 'overdue',
+          title: 'Rent Overdue',
+          body: `Your rent for ${propertyName} is 3 days overdue. Please pay as soon as possible.`,
+        });
+      }
+    } catch (err) {
+      console.error(`send-reminders: failed for tenant ${tenant.id}:`, err);
+      // continue to next tenant
     }
   }
 
