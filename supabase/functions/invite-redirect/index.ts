@@ -17,15 +17,20 @@
  * TODO before launch: replace the placeholder store URLs below with real ones.
  */
 
-const APP_STORE_URL  = 'https://apps.apple.com/app/id6760478576';
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella.app';
+const APP_STORE_URL = Deno.env.get('APPLE_APP_STORE_URL')
+  ?? 'https://apps.apple.com/app/id6760478576';
+const PLAY_STORE_URL = Deno.env.get('GOOGLE_PLAY_STORE_URL')
+  ?? 'https://play.google.com/store/apps/details?id=com.dwella.app';
 
 Deno.serve(async (req: Request) => {
   const url   = new URL(req.url);
   const token = url.searchParams.get('token')?.trim();
 
   if (!token) {
-    return new Response('Missing invite token.', { status: 400 });
+    return new Response(JSON.stringify({ error: 'Missing invite token' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const ua = req.headers.get('user-agent') ?? '';
