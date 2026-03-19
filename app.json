@@ -45,7 +45,7 @@
       ]
     },
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "fingerprint"
     },
     "updates": {
       "url": "https://u.expo.dev/3bc7de51-47e7-4c4e-92e3-e6e1a40ae71b"
@@ -68,7 +68,8 @@
           "defaultChannel": "default",
           "sounds": []
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true
