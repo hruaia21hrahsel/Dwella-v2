@@ -4,7 +4,6 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Updates from 'expo-updates';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { User } from '@/lib/types';
@@ -15,6 +14,7 @@ import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
+import { UpdateGate } from '@/components/UpdateGate';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { initSentry } from '@/lib/sentry';
 import * as Sentry from '@sentry/react-native';
@@ -70,22 +70,6 @@ function AuthGuard() {
       SplashScreen.hideAsync();
     }
   }, [isLoading]);
-
-  // Check for OTA updates on launch
-  useEffect(() => {
-    if (__DEV__) return; // Skip in development
-    (async () => {
-      try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
-        }
-      } catch {
-        // Silent fail — update check is best-effort
-      }
-    })();
-  }, []);
 
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
@@ -278,7 +262,9 @@ export default function RootLayout() {
       autocapture={{ captureTouches: true, captureScreens: true }}
     >
       <ThemeProvider>
-        <InnerLayout />
+        <UpdateGate>
+          <InnerLayout />
+        </UpdateGate>
       </ThemeProvider>
     </PostHogProvider>
   );
