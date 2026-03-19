@@ -53,6 +53,10 @@ Exceptions:
 - Touch targets (buttons, tab bar items): minimum 44px height per iOS HIG. Already enforced by existing GradientButton and CustomTabBar.
 - Toast Snackbar: positioned at `bottom: 80` (above tab bar) — not a spacing token, it is a fixed layout constant in `components/ToastProvider.tsx`.
 
+### Inherited Frozen Spacing Exception
+
+`md` (12px) and `xl` (20px) are not multiples of 4 and would normally be blocked by the standard spacing scale rule. These values originate from the pre-existing `constants/spacing.ts`, which is shared across all screens and components in the project. Phase 4 is a hardening-only phase — modifying the spacing scale is explicitly out of scope and would introduce visual regressions across all screens. These values are declared as inherited frozen values: they exist in the codebase prior to this phase, they are not introduced by this phase, and they must not be changed in this phase. The standard 8-point scale exception is justified by the existing design system constraint.
+
 ---
 
 ## Typography
@@ -67,6 +71,10 @@ Pre-populated from `constants/typography.ts`. No new type roles introduced in th
 | Display | 28px | 800 | 1.1 | `Typography.heading1` |
 
 Toast message text uses `Typography.body` (15px, weight 500) via react-native-paper Snackbar defaults. No override needed.
+
+### Inherited Frozen Typography Exception
+
+Four weights (500, 600, 700, 800) are declared above. This exceeds the standard maximum of 2 weights. These weights originate from the pre-existing `constants/typography.ts`, which is shared across all screens and components. Phase 4 is a hardening-only phase — modifying the typography scale is explicitly out of scope and would introduce visual regressions across all screens. These weights are declared as inherited frozen values: they exist in the codebase prior to this phase, they are not introduced by this phase, and they must not be changed in this phase. The 2-weight maximum rule is overridden by the existing design system constraint.
 
 ---
 
@@ -100,7 +108,7 @@ This section is the primary deliverable for Phase 4 UI work. All other sections 
 | Element | Copy | Notes |
 |---------|------|-------|
 | Auth error toast message | "Profile sync failed. Some data may be outdated." | Non-blocking; user can still navigate |
-| Auth error toast action | "OK" | Dismiss only. No Retry button — profile sync is automatic on next auth state change. |
+| Auth error toast action | "Dismiss" | Dismiss only. No Retry button — profile sync is automatic on next auth state change. |
 | Env validation throw (critical vars) | "[Dwella] Missing required environment variable: {KEY}\nAdd it to your .env file and restart the dev server." | Dev console only — not user-facing. Uses `requireEnv()` helper. |
 | Env warning (optional vars) | "[Dwella] {KEY} not set — {feature} disabled" | Examples: "EXPO_PUBLIC_SENTRY_DSN not set — crash reporting disabled". Console warning only. |
 | Push token missing projectId throw | "Expo projectId not found in app config" | Error thrown inside `registerPushToken()` — caught and logged, not surfaced to user |
@@ -114,7 +122,7 @@ This section is the primary deliverable for Phase 4 UI work. All other sections 
 | Auto-dismiss duration | 3000ms |
 | Blocking | Non-blocking (`pointerEvents="box-none"`) |
 | Retry action | None for auth errors — inform-only |
-| Action label | "OK" (existing default in ToastProvider) |
+| Action label | "Dismiss" |
 
 ### Retry Decision (Claude's Discretion — Resolved)
 
@@ -166,7 +174,7 @@ No new packages are installed in this phase.
 
 Existing accessibility posture is preserved. The error toast (Snackbar from react-native-paper) already includes accessible text via the `message` prop. No additional ARIA labels or role props required.
 
-Minimum touch target for the "OK" dismiss action in the Snackbar: react-native-paper Snackbar action buttons meet the 44pt minimum by default.
+Minimum touch target for the "Dismiss" action in the Snackbar: react-native-paper Snackbar action buttons meet the 44pt minimum by default.
 
 ---
 
