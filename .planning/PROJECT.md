@@ -56,7 +56,7 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) must wo
 - [ ] Verify PDF generation works (receipts, annual summaries)
 - [x] Audit push notification flow (registration → delivery) — Validated in Phase 4
 - [ ] Performance check: N+1 queries in dashboard, PostHog autocapture impact
-- [ ] Launch config: app.json version, EAS build config, store metadata readiness
+- [x] Launch config: app.json version, EAS build config, store metadata readiness — Validated in Phase 5
 
 ### Out of Scope
 
@@ -91,4 +91,4 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) must wo
 | Audit all 4 dimensions | Code quality + features + DB/API + launch readiness covers full surface | — Pending |
 
 ---
-*Last updated: 2026-03-19 after Phase 4 completion — client hardening: auth error toast, env fail-fast, subscription cleanup verified, push token fix*
+*Last updated: 2026-03-19 after Phase 5 completion — launch config: privacy checklist, AI disclosure modal, fingerprint OTA policy, UpdateGate component*
