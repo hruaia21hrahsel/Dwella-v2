@@ -73,7 +73,11 @@ Plans:
   2. Starting the app without a required environment variable (e.g., `EXPO_PUBLIC_SUPABASE_URL`) throws an explicit error with a clear message rather than crashing silently later
   3. Realtime subscription channels are confirmed to call `unsubscribe()` and `removeChannel()` on cleanup — no channel accumulation observed across navigation in React Native DevTools
   4. A push notification sent from the Supabase Edge Function delivers and appears on a physical test device
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Auth error toast + Sentry capture in _layout.tsx and fail-fast env validation in config.ts
+- [ ] 04-02-PLAN.md — Subscription cleanup audit (all 10 hooks) and push token registration fix (projectId + DB error handling)
 
 ### Phase 5: Launch Configuration & Store Gate
 **Goal**: The app is ready for App Store and Play Store submission — metadata is correct, AI data sharing is disclosed per Apple November 2025 guidelines, EAS build config is validated, and OTA runtime version policy prevents existing users from crashing after a native dependency update
@@ -96,5 +100,5 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 | 1. Compilation & Tooling Baseline | 4/4 | Complete   | 2026-03-18 |
 | 2. Security & Data Integrity | 4/4 | Complete   | 2026-03-18 |
 | 3. Edge Functions & Backend | 2/2 | Complete   | 2026-03-19 |
-| 4. Client Code & UX | 0/TBD | Not started | - |
+| 4. Client Code & UX | 0/2 | Not started | - |
 | 5. Launch Configuration & Store Gate | 0/TBD | Not started | - |
