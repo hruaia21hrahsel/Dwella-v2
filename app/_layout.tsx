@@ -17,6 +17,8 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { initSentry } from '@/lib/sentry';
+import * as Sentry from '@sentry/react-native';
+import { useToastStore } from '@/lib/toast';
 
 initSentry();
 SplashScreen.preventAutoHideAsync();
@@ -155,8 +157,10 @@ function AuthGuard() {
               has_telegram: !!(data ?? fallbackUser).telegram_chat_id,
               theme: useAuthStore.getState().themeMode,
             });
-          } catch {
-            // Enrichment failed — app still works with fallback user
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to load profile';
+            useToastStore.getState().showToast('Profile sync failed. Some data may be outdated.', 'error');
+            Sentry.captureException(err);
           }
           registerPushToken(uid);
         })();
