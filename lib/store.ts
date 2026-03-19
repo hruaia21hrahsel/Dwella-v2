@@ -14,6 +14,8 @@ interface AuthState {
   /** Keyed by user ID so onboarding state is per-account, not per-device. */
   onboardingCompletedByUser: Record<string, boolean>;
   themeMode: ThemeMode;
+  aiDisclosureAccepted: boolean;
+  setAiDisclosureAccepted: (accepted: boolean) => void;
   /**
    * Whether the app UI is locally locked. Starts true on every cold launch.
    * Set to false when the user enters a correct PIN or logs in with email/password.
@@ -49,6 +51,8 @@ export const useAuthStore = create<AuthState>()(
       propertyRefreshAt: 0,
       onboardingCompletedByUser: {},
       themeMode: 'dark' as ThemeMode,
+      aiDisclosureAccepted: false,
+      setAiDisclosureAccepted: (aiDisclosureAccepted) => set({ aiDisclosureAccepted }),
       isLocked: true,
       tourStep: null,
       pendingRoute: null,
@@ -81,7 +85,11 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => AsyncStorage),
       // Only persist onboardingCompletedByUser and themeMode. isLocked must reset
       // to true on every cold launch so the PIN screen is always shown.
-      partialize: (state) => ({ onboardingCompletedByUser: state.onboardingCompletedByUser, themeMode: state.themeMode }),
+      partialize: (state) => ({
+        onboardingCompletedByUser: state.onboardingCompletedByUser,
+        themeMode: state.themeMode,
+        aiDisclosureAccepted: state.aiDisclosureAccepted,
+      }),
     }
   )
 );
