@@ -43,6 +43,8 @@ Declared values from `constants/spacing.ts` (project source of truth):
 | xxxl | 32 | Major section breaks |
 
 Exceptions:
+- **md: 12** — pre-existing token from `constants/spacing.ts`, established before this phase and used throughout ~55 components. 12 is a multiple of 4 but falls outside the standard set {4, 8, 16, 24, 32, 48, 64}. Changing this value would require a full design system audit across all existing components. Exception approved as legacy project token.
+- **xl: 20** — pre-existing token from `constants/spacing.ts`, established before this phase and used throughout ~55 components. 20 is a multiple of 4 but falls outside the standard set {4, 8, 16, 24, 32, 48, 64}. Changing this value would require a full design system audit across all existing components. Exception approved as legacy project token.
 - Modal container margin: 24 (matches `ConfirmDialog.tsx` established pattern — `margin: 24` in `contentContainerStyle`)
 - Modal `borderRadius`: 16 (matches `ConfirmDialog.tsx` `borderRadius: 16`)
 - Touch targets for CTA buttons: minimum 44 height (React Native accessibility standard)
@@ -67,6 +69,8 @@ Phase 5 new components use exactly 2 weights:
 - **Bold (700)**: Modal titles, button labels
 
 Line height for body copy in modals: 22px explicit (matches `ConfirmDialog.tsx` `lineHeight: 22` pattern).
+
+Note: Body (15px) and Label/Subtitle (16px) are 1px apart — pre-existing project tokens, non-blocking.
 
 Source: `constants/typography.ts` (project file, pre-existing)
 
