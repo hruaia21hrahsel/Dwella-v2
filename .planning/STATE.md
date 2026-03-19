@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-19T13:52:00.351Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-19T13:53:31.121Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -54,6 +54,7 @@ Plan: 1 of 2
 | Phase 02 P01 | 2 | 2 tasks | 2 files |
 | Phase 02 P04 | 15 | 1 tasks | 1 files |
 | Phase 03 P02 | 2 | 2 tasks | 4 files |
+| Phase 03 P01 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,10 @@ Recent decisions affecting current work:
 - [Phase 03]: isValidClaudeIntent() type guard validates all 5 ClaudeIntent fields before action dispatch — prevents malformed AI output from reaching DB action handlers (EDGE-03)
 - [Phase 03]: ai-draft-reminders uses drafts=[] fallback on parse failure — graceful degradation sends default reminder messages instead of 502
 - [Phase 03]: ai-search falls back to properties query on invalid type — safest branch reads only user-owned non-archived rows
+- [Phase 03-01]: is_archived added to tenants sub-select in auto-confirm-payments and mark-overdue queries so the field is available for application-layer filtering
+- [Phase 03-01]: send-push hardened with full try/catch: 400 for missing/invalid messages array, 502 for Expo API failure, 500 for unexpected errors
+- [Phase 03-01]: invite-redirect store URLs moved to Deno.env.get with hardcoded fallbacks to avoid redeployment for URL updates
+- [Phase 03-01]: send-reminders per-tenant loop wrapped in try/catch so one tenant failure does not abort the entire daily cron batch
 
 ### Pending Todos
 
@@ -102,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T13:52:00.347Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-19T13:53:31.118Z
+Stopped at: Completed 03-01-PLAN.md
 Resume file: None
