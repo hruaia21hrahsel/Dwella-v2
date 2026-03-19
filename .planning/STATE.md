@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-19T14:18:16.114Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-19T14:51:31.287Z"
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 12
+  completed_plans: 11
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Every user-facing workflow (auth, property CRUD, payments, invites, bot) must work correctly and securely before the app goes live.
-**Current focus:** Phase 03 — edge-functions-backend
+**Current focus:** Phase 04 — client-code-ux
 
 ## Current Position
 
-Phase: 03 (edge-functions-backend) — EXECUTING
+Phase: 04 (client-code-ux) — EXECUTING
 Plan: 1 of 2
 
 ## Performance Metrics
@@ -55,6 +55,7 @@ Plan: 1 of 2
 | Phase 02 P04 | 15 | 1 tasks | 1 files |
 | Phase 03 P02 | 2 | 2 tasks | 4 files |
 | Phase 03 P01 | 4 | 2 tasks | 5 files |
+| Phase 04 P01 | 4 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 03-01]: send-push hardened with full try/catch: 400 for missing/invalid messages array, 502 for Expo API failure, 500 for unexpected errors
 - [Phase 03-01]: invite-redirect store URLs moved to Deno.env.get with hardcoded fallbacks to avoid redeployment for URL updates
 - [Phase 03-01]: send-reminders per-tenant loop wrapped in try/catch so one tenant failure does not abort the entire daily cron batch
+- [Phase 04]: requireEnv() throws at import time for critical Supabase vars — fail-fast before client init
+- [Phase 04]: useToastStore.getState().showToast() used imperatively in async IIFE (not React render)
 
 ### Pending Todos
 
@@ -107,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T14:18:16.111Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-client-code-ux/04-CONTEXT.md
+Last session: 2026-03-19T14:51:31.284Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

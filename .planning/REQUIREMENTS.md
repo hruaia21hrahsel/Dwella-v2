@@ -39,8 +39,8 @@ Requirements for launch readiness. Each maps to roadmap phases.
 
 ### Client & UX
 
-- [ ] **CLIENT-01**: Auth sync failure shows user-facing error/toast instead of silent fallback
-- [ ] **CLIENT-02**: Missing critical environment variables throw error on app startup (fail fast)
+- [x] **CLIENT-01**: Auth sync failure shows user-facing error/toast instead of silent fallback
+- [x] **CLIENT-02**: Missing critical environment variables throw error on app startup (fail fast)
 - [ ] **CLIENT-03**: Realtime subscription cleanup verified (no memory leaks from uncleaned channels)
 - [ ] **CLIENT-04**: Push notification flow verified end-to-end (token registration → delivery on device)
 
@@ -111,8 +111,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EDGE-02 | Phase 3 | Complete |
 | EDGE-03 | Phase 3 | Complete |
 | EDGE-05 | Phase 3 | Complete |
-| CLIENT-01 | Phase 4 | Pending |
-| CLIENT-02 | Phase 4 | Pending |
+| CLIENT-01 | Phase 4 | Complete |
+| CLIENT-02 | Phase 4 | Complete |
 | CLIENT-03 | Phase 4 | Pending |
 | CLIENT-04 | Phase 4 | Pending |
 | LAUNCH-01 | Phase 5 | Pending |
