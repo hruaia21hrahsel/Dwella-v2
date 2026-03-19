@@ -12,6 +12,7 @@ import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { useTrack, EVENTS } from '@/lib/analytics';
 import type { PaymentStatus } from '@/lib/types';
+import { AiDisclosureModal } from '@/components/AiDisclosureModal';
 
 interface ReminderDraft {
   tenant_id: string;
@@ -125,6 +126,7 @@ export default function SmartRemindersScreen() {
 
   return (
     <>
+      <AiDisclosureModal />
       <Stack.Screen options={{ title: 'Smart Reminders' }} />
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>

@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
 import { useTrack, EVENTS } from '@/lib/analytics';
+import { AiDisclosureModal } from '@/components/AiDisclosureModal';
 
 interface Props {
   nudge: string | null;
@@ -26,11 +27,13 @@ export function AiInsightCard({ nudge, loading }: Props) {
   const aiLoadingColor = isDark ? '#A78BFA' : '#7C3AED';
 
   return (
-    <TouchableOpacity
-      style={[styles.card, shadows.sm, { backgroundColor: aiBg, borderColor: aiBorder }]}
-      onPress={() => { track(EVENTS.AI_NUDGE_TAPPED, { nudge_type: 'dashboard' }); router.push('/tools/ai-insights'); }}
-      activeOpacity={0.8}
-    >
+    <>
+      <AiDisclosureModal />
+      <TouchableOpacity
+        style={[styles.card, shadows.sm, { backgroundColor: aiBg, borderColor: aiBorder }]}
+        onPress={() => { track(EVENTS.AI_NUDGE_TAPPED, { nudge_type: 'dashboard' }); router.push('/tools/ai-insights'); }}
+        activeOpacity={0.8}
+      >
       <View style={[styles.iconWrap, { backgroundColor: aiIconBg }]}>
         <MaterialCommunityIcons name="robot-outline" size={18} color={aiIconColor} />
       </View>
@@ -43,6 +46,7 @@ export function AiInsightCard({ nudge, loading }: Props) {
       </View>
       <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
     </TouchableOpacity>
+    </>
   );
 }
 

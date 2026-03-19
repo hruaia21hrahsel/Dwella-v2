@@ -9,6 +9,7 @@ import { useTheme } from '@/lib/theme-context';
 import { AnimatedCard } from '@/components/AnimatedCard';
 import { formatCurrency, getCurrentMonthYear, getMonthName } from '@/lib/utils';
 import { useTrack, EVENTS } from '@/lib/analytics';
+import { AiDisclosureModal } from '@/components/AiDisclosureModal';
 
 interface InsightsData {
   summary: string;
@@ -72,6 +73,7 @@ export default function AiInsightsScreen() {
 
   return (
     <>
+      <AiDisclosureModal />
       <Stack.Screen options={{ title: 'AI Insights' }} />
       <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
         {/* Period selector */}

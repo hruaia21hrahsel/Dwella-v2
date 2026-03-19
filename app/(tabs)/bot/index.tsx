@@ -19,6 +19,7 @@ import { DwellaHeader } from '@/components/DwellaHeader';
 import { useTheme } from '@/lib/theme-context';
 import { BotConversation } from '@/lib/types';
 import { useTrack, EVENTS } from '@/lib/analytics';
+import { AiDisclosureModal } from '@/components/AiDisclosureModal';
 
 export default function BotScreen() {
   const { colors, shadows } = useTheme();
@@ -95,6 +96,7 @@ export default function BotScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
+      <AiDisclosureModal />
       <DwellaHeader />
     <KeyboardAvoidingView
       style={styles.flex}
