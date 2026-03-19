@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-19T16:27:58.060Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-19T16:58:01.741Z"
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-17)
 
 **Core value:** Every user-facing workflow (auth, property CRUD, payments, invites, bot) must work correctly and securely before the app goes live.
-**Current focus:** Phase 04 — client-code-ux
+**Current focus:** Phase 05 — launch-configuration-store-gate
 
 ## Current Position
 
-Phase: 04 (client-code-ux) — EXECUTING
-Plan: 2 of 2
+Phase: 05 (launch-configuration-store-gate) — EXECUTING
+Plan: 1 of 2
 
 ## Performance Metrics
 
@@ -57,6 +57,8 @@ Plan: 2 of 2
 | Phase 03 P01 | 4 | 2 tasks | 5 files |
 | Phase 04 P01 | 4 | 2 tasks | 2 files |
 | Phase 04 P02 | 6 | 2 tasks | 1 files |
+| Phase 05 P01 | 3 | 2 tasks | 8 files |
+| Phase 05 P02 | 15 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -101,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 04-02]: Graceful degradation for missing projectId in registerPushToken: warn + return early rather than throw — runs in background IIFE from _layout.tsx, throwing would be swallowed
 - [Phase 04-02]: Best-effort push token DB write: console.warn on updateError rather than throw — push registration failure is non-fatal, app remains functional
 - [Phase 04-02]: Dual-path projectId lookup: Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId — handles both app.json extra.eas field and EAS CLI newer path
+- [Phase 05]: AiDisclosureModal placed per-AI-screen (not _layout.tsx) — non-AI users never see disclosure
+- [Phase 05]: aiDisclosureAccepted added to Zustand partialize — persists across restarts via AsyncStorage
 
 ### Pending Todos
 
@@ -114,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T16:27:58.057Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-launch-configuration-store-gate/05-CONTEXT.md
+Last session: 2026-03-19T16:57:53.766Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None

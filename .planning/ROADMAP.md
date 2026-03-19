@@ -10,7 +10,7 @@ The app is feature-complete and in TestFlight beta. This roadmap sequences a bot
 - [x] **Phase 2: Security & Data Integrity** - RLS hardened, crypto-secure tokens, webhook validation, state machine enforced at DB (completed 2026-03-18)
 - [x] **Phase 3: Edge Functions & Backend** - All 12 Edge Functions verified for soft-delete, error codes, and correct cron schedules (completed 2026-03-19)
 - [x] **Phase 4: Client Code & UX** - Hooks verified, subscription cleanup confirmed, auth errors visible, env validation in place (completed 2026-03-19)
-- [ ] **Phase 5: Launch Configuration & Store Gate** - App Store privacy, AI disclosure, EAS config, and OTA policy ready for submission
+- [x] **Phase 5: Launch Configuration & Store Gate** - App Store privacy, AI disclosure, EAS config, and OTA policy ready for submission (completed 2026-03-19)
 
 ## Phase Details
 
@@ -105,4 +105,4 @@ Phases execute sequentially: 1 → 2 → 3 → 4 → 5
 | 2. Security & Data Integrity | 4/4 | Complete   | 2026-03-18 |
 | 3. Edge Functions & Backend | 2/2 | Complete   | 2026-03-19 |
 | 4. Client Code & UX | 2/2 | Complete   | 2026-03-19 |
-| 5. Launch Configuration & Store Gate | 0/2 | Not started | - |
+| 5. Launch Configuration & Store Gate | 2/2 | Complete   | 2026-03-19 |

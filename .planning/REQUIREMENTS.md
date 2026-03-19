@@ -46,8 +46,8 @@ Requirements for launch readiness. Each maps to roadmap phases.
 
 ### Launch Configuration
 
-- [ ] **LAUNCH-01**: App Store Connect privacy section updated with all third-party data destinations (Supabase, PostHog, Claude API, Telegram, WhatsApp)
-- [ ] **LAUNCH-02**: In-app AI data sharing disclosure added (Apple November 2025 guideline requirement)
+- [x] **LAUNCH-01**: App Store Connect privacy section updated with all third-party data destinations (Supabase, PostHog, Claude API, Telegram, WhatsApp)
+- [x] **LAUNCH-02**: In-app AI data sharing disclosure added (Apple November 2025 guideline requirement)
 - [ ] **LAUNCH-03**: app.json version and build number correct for production release
 - [ ] **LAUNCH-04**: OTA `runtimeVersion` policy configured to prevent post-update crashes on native dependency changes
 
@@ -115,8 +115,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLIENT-02 | Phase 4 | Complete |
 | CLIENT-03 | Phase 4 | Complete |
 | CLIENT-04 | Phase 4 | Complete |
-| LAUNCH-01 | Phase 5 | Pending |
-| LAUNCH-02 | Phase 5 | Pending |
+| LAUNCH-01 | Phase 5 | Complete |
+| LAUNCH-02 | Phase 5 | Complete |
 | LAUNCH-03 | Phase 5 | Pending |
 | LAUNCH-04 | Phase 5 | Pending |
 
