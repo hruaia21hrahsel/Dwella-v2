@@ -2,14 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
-status: ready_to_plan
-stopped_at: null
-last_updated: "2026-03-20T00:00:00.000Z"
+status: planning
+stopped_at: Phase 6 context gathered
+last_updated: "2026-03-20T17:44:46.318Z"
+last_activity: 2026-03-20 — Roadmap created for v1.1
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -33,6 +35,7 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity (v1.0 reference):**
+
 - Total plans completed: 14
 - Average duration: ~10 min
 - Total execution time: ~2.3 hours
@@ -56,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 See PROJECT.md Key Decisions table for full list.
 
 Recent decisions affecting v1.1:
+
 - Remove AI tools first (no dependencies, frees navigation slots for new screens)
 - Single migration 019 creates both new tables + both storage buckets (audit RLS once together)
 - No new Edge Functions — document CRUD, maintenance CRUD, and reports are direct Supabase client calls protected by RLS; existing `send-push` handles maintenance notifications
@@ -68,18 +72,20 @@ None.
 ### Blockers/Concerns
 
 Pre-launch items (not GSD blockers, carry over from v1.0):
+
 - Replace iOS App Store `[APP_ID]` placeholder in UpdateGate.tsx
 - Configure Sentry DSN in .env
 - Verify pg_cron schedule registration in Supabase dashboard
 - Replace placeholder store URLs in invite-redirect (env vars configured, need real values)
 
 Research flags for v1.1 implementation:
+
 - Phase 7: Validate `react-native-webview` + Google Docs Viewer against a real Supabase signed URL on device before committing; PDF.js HTML string is documented fallback
 - Phase 7: `expo-document-picker` requires `usesIcloudStorage: true` in app.json for iOS iCloud Drive — requires EAS build to validate
 - Phase 9: Run `EXPLAIN ANALYZE` on report aggregate queries against production data; composite index added in migration 019 is primary mitigation but production plan may differ
 
 ## Session Continuity
 
-Last session: 2026-03-20
-Stopped at: Roadmap created — v1.1 phases 6-9 defined, ready to plan Phase 6
-Resume file: None
+Last session: 2026-03-20T17:44:46.316Z
+Stopped at: Phase 6 context gathered
+Resume file: .planning/phases/06-ai-tools-removal/06-CONTEXT.md
