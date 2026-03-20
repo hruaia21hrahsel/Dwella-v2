@@ -76,33 +76,33 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-01 | — | Pending |
-| CLEAN-02 | — | Pending |
-| DOC-01 | — | Pending |
-| DOC-02 | — | Pending |
-| DOC-03 | — | Pending |
-| DOC-04 | — | Pending |
-| DOC-05 | — | Pending |
-| DOC-06 | — | Pending |
-| DOC-07 | — | Pending |
-| DOC-08 | — | Pending |
-| MAINT-01 | — | Pending |
-| MAINT-02 | — | Pending |
-| MAINT-03 | — | Pending |
-| MAINT-04 | — | Pending |
-| MAINT-05 | — | Pending |
-| MAINT-06 | — | Pending |
-| RPT-01 | — | Pending |
-| RPT-02 | — | Pending |
-| RPT-03 | — | Pending |
-| RPT-04 | — | Pending |
-| RPT-05 | — | Pending |
+| CLEAN-01 | Phase 6 | Pending |
+| CLEAN-02 | Phase 6 | Pending |
+| DOC-01 | Phase 7 | Pending |
+| DOC-02 | Phase 7 | Pending |
+| DOC-03 | Phase 7 | Pending |
+| DOC-04 | Phase 7 | Pending |
+| DOC-05 | Phase 7 | Pending |
+| DOC-06 | Phase 7 | Pending |
+| DOC-07 | Phase 7 | Pending |
+| DOC-08 | Phase 7 | Pending |
+| MAINT-01 | Phase 8 | Pending |
+| MAINT-02 | Phase 8 | Pending |
+| MAINT-03 | Phase 8 | Pending |
+| MAINT-04 | Phase 8 | Pending |
+| MAINT-05 | Phase 8 | Pending |
+| MAINT-06 | Phase 8 | Pending |
+| RPT-01 | Phase 9 | Pending |
+| RPT-02 | Phase 9 | Pending |
+| RPT-03 | Phase 9 | Pending |
+| RPT-04 | Phase 9 | Pending |
+| RPT-05 | Phase 9 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 ⚠️
+- Mapped to phases: 21
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-20*
-*Last updated: 2026-03-20 after initial definition*
+*Last updated: 2026-03-20 after roadmap creation*
