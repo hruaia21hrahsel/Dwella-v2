@@ -24,7 +24,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 **Milestone Goal:** Replace deprecated AI tools screens with Document Storage, Maintenance Requests, and Reporting Dashboards; remove AI tools backend artifacts.
 
-- [ ] **Phase 6: AI Tools Removal** - Delete deprecated screens, Edge Functions, and route references; free navigation slots
+- [x] **Phase 6: AI Tools Removal** - Delete deprecated screens, Edge Functions, and route references; free navigation slots (completed 2026-03-20)
 - [ ] **Phase 7: Document Storage** - Migration 019 + storage buckets + full upload/view/download/delete UI for property and tenant documents
 - [ ] **Phase 8: Maintenance Requests** - Tenant submission, landlord status management, photos, expense linking, push notifications
 - [ ] **Phase 9: Reporting Dashboards** - P&L, expense breakdown, payment reliability, occupancy, and portfolio summary charts
@@ -40,7 +40,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   2. Tapping any former AI tool route does not produce a navigation crash or blank screen
   3. `npx tsc --noEmit` passes with zero errors after all screen files are deleted
   4. `process-bot-message` Edge Function no longer references removed Claude tool definitions
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
 - [ ] 06-01-PLAN.md — Delete AI files, update tools menu with Coming Soon cards, clean dashboard
 
@@ -89,7 +89,7 @@ Plans:
 | 3. Edge Functions & Backend | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 4. Client Code & UX | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 5. Launch Configuration & Store Gate | v1.0 | 2/2 | Complete | 2026-03-19 |
-| 6. AI Tools Removal | v1.1 | 0/1 | Not started | - |
+| 6. AI Tools Removal | 1/1 | Complete   | 2026-03-20 | - |
 | 7. Document Storage | v1.1 | 0/TBD | Not started | - |
 | 8. Maintenance Requests | v1.1 | 0/TBD | Not started | - |
 | 9. Reporting Dashboards | v1.1 | 0/TBD | Not started | - |

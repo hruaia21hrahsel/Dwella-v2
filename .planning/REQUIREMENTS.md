@@ -9,8 +9,8 @@ Requirements for v1.1 Tools Expansion. Each maps to roadmap phases.
 
 ### AI Cleanup
 
-- [ ] **CLEAN-01**: AI insights, smart reminders, and AI search screens are removed from the tools menu
-- [ ] **CLEAN-02**: Corresponding Edge Functions and Claude tool definitions are removed from the backend
+- [x] **CLEAN-01**: AI insights, smart reminders, and AI search screens are removed from the tools menu
+- [x] **CLEAN-02**: Corresponding Edge Functions and Claude tool definitions are removed from the backend
 
 ### Document Storage
 
@@ -76,8 +76,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-01 | Phase 6 | Pending |
-| CLEAN-02 | Phase 6 | Pending |
+| CLEAN-01 | Phase 6 | Complete |
+| CLEAN-02 | Phase 6 | Complete |
 | DOC-01 | Phase 7 | Pending |
 | DOC-02 | Phase 7 | Pending |
 | DOC-03 | Phase 7 | Pending |
