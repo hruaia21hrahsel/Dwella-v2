@@ -40,7 +40,9 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
   2. Tapping any former AI tool route does not produce a navigation crash or blank screen
   3. `npx tsc --noEmit` passes with zero errors after all screen files are deleted
   4. `process-bot-message` Edge Function no longer references removed Claude tool definitions
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 06-01-PLAN.md — Delete AI files, update tools menu with Coming Soon cards, clean dashboard
 
 ### Phase 7: Document Storage
 **Goal**: Landlords and tenants can upload, view, download, and delete documents scoped to properties or individual tenancies, with correct visibility and atomic deletes
@@ -87,7 +89,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 | 3. Edge Functions & Backend | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 4. Client Code & UX | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 5. Launch Configuration & Store Gate | v1.0 | 2/2 | Complete | 2026-03-19 |
-| 6. AI Tools Removal | v1.1 | 0/TBD | Not started | - |
+| 6. AI Tools Removal | v1.1 | 0/1 | Not started | - |
 | 7. Document Storage | v1.1 | 0/TBD | Not started | - |
 | 8. Maintenance Requests | v1.1 | 0/TBD | Not started | - |
 | 9. Reporting Dashboards | v1.1 | 0/TBD | Not started | - |
