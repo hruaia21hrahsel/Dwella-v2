@@ -1,400 +1,539 @@
 # Architecture Research
 
-**Domain:** Multi-layer React Native + Supabase audit (property management app)
-**Researched:** 2026-03-18
-**Confidence:** HIGH
+**Domain:** Property management mobile app — v1.1 feature expansion
+**Researched:** 2026-03-20
+**Confidence:** HIGH (based on direct codebase analysis, all patterns verified from source)
+
+## Context: What Already Exists
+
+This is an additive milestone on a complete, shipped codebase. The existing architecture must not be broken.
+
+```
+Existing tables:   users → properties → tenants → payments
+                                       ↘ expenses (property-level)
+                                       ↘ notifications
+                                       ↘ bot_conversations
+
+Existing storage:  payment-proofs/{property_id}/{tenant_id}/{year}-{month}.jpg
+
+Existing hooks:    useProperties, useTenants, usePayments, useExpenses,
+                   useAllExpenses, useDashboard, useNotifications,
+                   useBotConversations, useAiNudge
+
+Existing screens:  app/(tabs)/tools/index.tsx  <- menu hub (MODIFY)
+                   app/tools/ai-insights.tsx   <- REMOVE
+                   app/tools/ai-search.tsx     <- REMOVE
+                   app/tools/smart-reminders.tsx <- REMOVE
+
+Existing Edge Fns: ai-insights, ai-search, ai-draft-reminders <- DELETE
+                   auto-confirm-payments, mark-overdue, send-reminders,
+                   send-push, invite-redirect, process-bot-message,
+                   telegram-webhook, whatsapp-webhook, whatsapp-send-code
+                   (all retained unchanged)
+```
 
 ## Standard Architecture
 
 ### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     CLIENT LAYER (React Native)                  │
-├────────────────────┬────────────────────┬────────────────────────┤
-│  Expo Router       │  Zustand Store     │  PostHog / Analytics   │
-│  (screens/tabs)    │  (auth + cache)    │  (event tracking)      │
-├────────────────────┴────────────────────┴────────────────────────┤
-│                     HOOK LAYER (React hooks)                      │
-│  useProperties  usePayments  useTenants  useDashboard  useNotif  │
-├─────────────────────────────────────────────────────────────────┤
-│                      LIB LAYER (utility modules)                  │
-│  supabase.ts  payments.ts  bot.ts  invite.ts  notifications.ts   │
-│  pdf.ts  expenses.ts  analytics.ts  biometric-auth.ts            │
-├─────────────────────────────────────────────────────────────────┤
-│                   SUPABASE EDGE (serverless functions)            │
-│  telegram-webhook  whatsapp-webhook  process-bot-message          │
-│  auto-confirm-payments  mark-overdue  send-reminders              │
-│  send-push  ai-insights  ai-search  ai-draft-reminders            │
-│  invite-redirect  generate-pdf                                    │
-├─────────────────────────────────────────────────────────────────┤
-│                   DATA LAYER (Supabase Postgres)                  │
-│  users → properties → tenants → payments                          │
-│  notifications  bot_conversations  expenses  push_tokens          │
-├─────────────────────────────────────────────────────────────────┤
-│                   EXTERNAL SERVICES                               │
-│  Telegram Bot API  WhatsApp (Edge)  Claude API  Expo Push         │
-│  Apple/Google OAuth  Supabase Storage  Apple/Google Store         │
-└─────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+|                      Expo Router Screens                          |
+|  app/(tabs)/tools/index.tsx  <- hub, 3 AI entries replaced       |
+|  app/tools/documents.tsx     NEW: document list + upload          |
+|  app/tools/maintenance.tsx   NEW: maintenance request list        |
+|  app/tools/maintenance-detail.tsx  NEW: request detail view       |
+|  app/tools/reports.tsx       NEW: reporting dashboard             |
++------------------------------------------------------------------+
+|                         Hooks Layer                               |
+|  useDocuments(propertyId, tenantId?)    NEW                       |
+|  useMaintenanceRequests(propertyId)     NEW                       |
+|  useReports(year)                       NEW                       |
+|  (all existing hooks unchanged)                                   |
++------------------------------------------------------------------+
+|                    lib/ Utilities                                  |
+|  lib/documents.ts   NEW: document category metadata              |
+|  lib/maintenance.ts NEW: status metadata, transition helpers      |
+|  lib/types.ts       MODIFY: add Document, MaintenanceRequest      |
+|  (all existing lib files unchanged)                               |
++------------------------------------------------------------------+
+|                      Supabase Backend                             |
+|  Tables (NEW): documents, maintenance_requests                    |
+|  Storage (NEW): property-docs, maintenance-photos                 |
+|  RLS: mirrors existing pattern (owner_all + tenant_read)         |
+|  Edge Fns: NONE new required (direct client ops with RLS)        |
+|  Migration 019: single migration for both tables + storage        |
++------------------------------------------------------------------+
 ```
 
 ### Component Responsibilities
 
-| Layer | Component | Responsibility | Audit Boundary |
-|-------|-----------|----------------|----------------|
-| Client | Expo Router screens | UI rendering, user input, navigation | Type safety, error display, UX correctness |
-| Client | Zustand store | Auth state, cached properties/tenants | Persistence correctness, stale state risk |
-| Client | `lib/` modules | Business logic wrappers, external SDK calls | Crypto security, error propagation, type fidelity |
-| Hook | Custom hooks | Data fetching, Realtime subscriptions, derived state | RLS alignment, subscription cleanup, N+1 risk |
-| Edge | Webhook functions | Ingest from Telegram/WhatsApp, validate, dispatch | Auth checks, input validation, error codes |
-| Edge | Scheduled functions | Time-based state transitions (auto-confirm, overdue, reminders) | Soft-delete filtering, idempotency, error codes |
-| Edge | AI functions | Claude API call, JSON parse, DB mutation | Structured output validation, fallback handling |
-| Data | Postgres tables | Source of truth for all entities | RLS policies, constraint enforcement, migration integrity |
-| Data | Storage | Payment proof images, PDF receipts, avatars | Bucket policies, signed URL expiry |
+| Component | Responsibility | Pattern |
+|-----------|----------------|---------|
+| `app/(tabs)/tools/index.tsx` | Tool hub menu — remove 3 AI entries, add Documents/Maintenance/Reports | Modify in place (swap TOOLS array entries) |
+| `app/tools/documents.tsx` | List + upload documents; filter by property or tenant scope | New screen, mirrors `expenses/index.tsx` structure |
+| `app/tools/maintenance.tsx` | List maintenance requests across all properties (landlord) or own requests (tenant) | New screen, FlatList + status filter chips |
+| `app/tools/maintenance-detail.tsx` | View/update a single request; link expense; upload photos | New screen, mirrors payment detail pattern |
+| `app/tools/reports.tsx` | Aggregate charts: P&L, expense breakdown, occupancy, payment reliability | New screen, consumes `useReports` + existing `useDashboard` stats |
+| `useDocuments` | Fetch docs for a property or tenant; Realtime subscription | Mirrors `useExpenses.ts` exactly |
+| `useMaintenanceRequests` | Fetch requests with status filter; Realtime subscription | Mirrors `useExpenses.ts`, adds status dimension |
+| `useReports` | Aggregate payment + expense data cross-property for full year | No Realtime; `useFocusEffect` reload only |
+| `lib/documents.ts` | Document category enum + label/icon/color metadata | Mirrors `lib/expenses.ts` verbatim |
+| `lib/maintenance.ts` | Status enum, valid transitions, label/color metadata | New; simpler than payment state machine |
 
-## Recommended Audit Layer Order
+## Recommended Project Structure
 
-### Dependency Order: Database First
-
-Audit in this sequence because each layer's correctness depends on the layer below it:
+New files only — existing structure unchanged:
 
 ```
-1. DATA LAYER (Postgres + Storage)
-       ↓ correctness here propagates upward
-2. EDGE FUNCTIONS
-       ↓ their behavior depends on DB contracts
-3. HOOK LAYER (client-side data fetching)
-       ↓ hooks mirror DB queries, inherit RLS assumptions
-4. LIB MODULES (business logic)
-       ↓ libs call hooks or supabase directly
-5. CLIENT LAYER (screens + Zustand)
-       ↓ screens consume lib + hooks
-6. CROSS-CUTTING (config, auth, logging, launch config)
-       acts on all layers, audited last as a sweep
+app/
++-- tools/
+|   +-- _layout.tsx              EXISTING — no change needed
+|   +-- ai-insights.tsx          REMOVE
+|   +-- ai-search.tsx            REMOVE
+|   +-- smart-reminders.tsx      REMOVE
+|   +-- documents.tsx            NEW
+|   +-- maintenance.tsx          NEW
+|   +-- maintenance-detail.tsx   NEW
+|   +-- reports.tsx              NEW
++-- (tabs)/
+    +-- tools/
+        +-- index.tsx            MODIFY — swap TOOLS entries
+
+hooks/
++-- useDocuments.ts              NEW (mirrors useExpenses.ts)
++-- useMaintenanceRequests.ts    NEW (mirrors useExpenses.ts + status filter)
++-- useReports.ts                NEW (aggregate query hook, no Realtime)
+
+lib/
++-- documents.ts                 NEW (mirrors expenses.ts metadata pattern)
++-- maintenance.ts               NEW (status metadata + transition helpers)
++-- types.ts                     MODIFY — add Document, MaintenanceRequest types
+
+components/
++-- DocumentUploader.tsx         NEW (extends ProofUploader with non-image files)
++-- MaintenanceStatusBadge.tsx   NEW (mirrors PaymentStatusBadge pattern)
+
+supabase/
++-- migrations/
+|   +-- 019_documents_maintenance.sql  NEW (single migration, two tables + storage)
++-- functions/
+    +-- ai-insights/             DELETE directory
+    +-- ai-search/               DELETE directory
+    +-- ai-draft-reminders/      DELETE directory
 ```
 
-**Rationale:**
+### Structure Rationale
 
-- An RLS policy gap found in layer 1 invalidates any security assumption made in layers 3-5. Auditing top-down means re-auditing after each DB fix.
-- A soft-delete filtering miss in a hook (layer 3) means every screen that consumes it silently shows archived records. Finding it at the DB level first prevents auditing 10+ screens for a symptom.
-- Edge Functions touch the DB directly (bypassing client RLS in some cases). They must be validated against the confirmed DB contracts, not audited before them.
+- **app/tools/**: All new screens live under the existing `tools/` Stack navigator. Expo Router registers them automatically — `_layout.tsx` needs no changes.
+- **hooks/useReports.ts**: Separate from `useDashboard` — reports span all properties and months, require different aggregation, and do not need Realtime. `useDashboard` remains payment-month focused.
+- **Single migration 019**: Both new tables share the same access model and are always deployed together. Splitting adds no value.
+- **No new Edge Functions**: Document upload, maintenance CRUD, and report aggregation are all client-executable Supabase queries with RLS. Edge Functions are warranted only for cross-user operations (e.g., notifying a landlord when a tenant files a request). That notification reuses the existing `send-push` Edge Function.
 
-## Audit Layer Boundaries
+## Architectural Patterns
 
-### Layer 1: Data Layer
+### Pattern 1: Hook Mirrors useExpenses
 
-**Audit surface:**
-- All 15 migrations (`001` through `015`) — schema correctness, constraint definitions
-- RLS policies on every table: `users`, `properties`, `tenants`, `payments`, `notifications`, `bot_conversations`, `expenses`, `push_tokens`
-- Storage bucket policies: `payment-proofs`, `avatars`
-- Triggers and functions (if any): state transition enforcement
+**What:** Every new data domain gets a `use[Domain](scopeId)` hook with identical structure: `fetch callback` → `useEffect trigger` → `Realtime channel` → `cleanup return`.
 
-**Key questions:**
-- Does RLS on `payments` prevent a tenant from reading another tenant's payments?
-- Does RLS on `properties` prevent tenants from querying other users' properties?
-- Is `is_archived = FALSE` enforced at the view or view-equivalent level, or only in app code?
-- Do all tables with `user_id`/`owner_id` foreign keys have corresponding RLS `auth.uid() = ...` policies?
-- Does `ON DELETE RESTRICT` on `tenant_id` in `payments` propagate correctly when archiving?
+**When to use:** `useDocuments` and `useMaintenanceRequests`. `useReports` omits Realtime (analytical, not live).
 
-**Findings feed:**
-- Every hook and Edge Function that queries these tables
-- Any screen that presents data without going through a hook (direct Supabase calls in screens)
+**Trade-offs:** Repetitive but explicit. Avoided using a generic factory hook because TypeScript generics over Supabase table names are awkward and reduce auto-complete quality. Explicit hooks are preferred — matches all existing hooks in the codebase.
 
----
+**Example:**
+```typescript
+// hooks/useDocuments.ts
+export function useDocuments(propertyId: string | null, tenantId?: string | null) {
+  const [docs, setDocs] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-### Layer 2: Edge Functions
+  const fetch = useCallback(async () => {
+    if (!propertyId) { setIsLoading(false); return; }
+    // query with .eq('is_archived', false)
+  }, [propertyId, tenantId]);
 
-**Audit surface:**
-13 deployed functions, grouped by concern:
+  useEffect(() => { fetch(); }, [fetch]);
 
-| Group | Functions | Primary Risk |
-|-------|-----------|--------------|
-| Bot ingestion | `telegram-webhook`, `whatsapp-webhook` | Input validation, token verification, no auth bypass |
-| Bot processing | `process-bot-message` | Claude output validation, structured JSON parse, DB mutation safety |
-| Scheduled state | `auto-confirm-payments`, `mark-overdue`, `send-reminders` | Soft-delete filtering, idempotency, correct HTTP status codes |
-| AI tools | `ai-insights`, `ai-search`, `ai-draft-reminders` | Auth header verification, rate limiting, error fallback |
-| Notifications | `send-push` | Push token validity, error handling per-token failure |
-| Utility | `invite-redirect`, `generate-pdf` | Placeholder URLs (#18), token exposure, PDF auth |
+  useEffect(() => {
+    if (!propertyId) return;
+    const channel = supabase.channel(`docs-${propertyId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents',
+          filter: `property_id=eq.${propertyId}` }, () => fetch())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [propertyId, fetch]);
 
-**Key questions:**
-- Do all Edge Functions that mutate data verify `Authorization` header against a known service key or user JWT?
-- Does `process-bot-message` validate Claude's structured JSON output before executing DB actions, or does it trust the model blindly?
-- Do scheduled functions (`auto-confirm-payments`, `mark-overdue`) include `is_archived = FALSE` in their tenant/payment queries?
-- Do all catch blocks return meaningful HTTP status codes (400/404/500/503) rather than generic 500?
-- Does `send-reminders` avoid double-sending if called twice in one day (idempotency)?
-
-**Findings feed:**
-- Client-side bot flow (screens calling these functions)
-- Scheduled job reliability (Supabase cron config)
-
----
-
-### Layer 3: Hook Layer
-
-**Audit surface:**
-9 custom hooks: `useProperties`, `usePayments`, `useTenants`, `useDashboard`, `useNotifications`, `useBotConversations`, `useAiNudge`, `useExpenses`, `useAllExpenses`
-
-**Key questions:**
-- Does every `select()` call include `.eq('is_archived', false)` where applicable?
-- Are Realtime subscription channels properly unsubscribed on unmount (not just removed)?
-- Does `useDashboard` execute N+1 queries (property → tenants → payments in sequence), and if so, how many extra round-trips does this generate?
-- Do hooks propagate errors to callers (via returned `error` state), or swallow them silently?
-- Do hooks cache invalidate on Realtime events, or do stale fetches race with live updates?
-
-**Findings feed:**
-- All screens consuming these hooks (upstream symptom source)
-- Zustand store invalidation behavior
-
----
-
-### Layer 4: Lib Modules
-
-**Audit surface:**
-`lib/bot.ts`, `lib/payments.ts`, `lib/invite.ts`, `lib/notifications.ts`, `lib/supabase.ts`, `lib/store.ts`, `lib/analytics.ts`, `lib/biometric-auth.ts`, `lib/pdf.ts`, `lib/expenses.ts`
-
-**Key questions:**
-- Does `lib/bot.ts` use `Math.random()` for UUID/code generation (known issue #2, #3)?
-- Does `lib/supabase.ts` fail fast on missing env vars (known issue #21)?
-- Does `lib/store.ts` properly clear all cached state on logout (tenant data, property cache)?
-- Does `lib/invite.ts` verify token expiry before accepting?
-- Does `lib/payments.ts` enforce valid status transitions, or is that left to calling code?
-
-**Findings feed:**
-- Screens that call lib functions directly
-- Security audit (crypto concerns)
-
----
-
-### Layer 5: Client Layer (Screens + Zustand)
-
-**Audit surface:**
-All `app/` screens, `components/`, Zustand `store.ts` state shape
-
-**Key questions:**
-- Do screens show user-facing error messages when hooks return errors (or silently show empty states)?
-- Does the auth flow handle profile sync failure visibly (known issue #13)?
-- Does the invite acceptance screen (`app/invite/[token].tsx`) handle expired or already-used tokens gracefully?
-- Is biometric auth enforced on re-open, or only on first launch?
-- Are TypeScript `as any` casts localized or proliferated across components?
-
-**Findings feed:**
-- UX audit pass
-- Type safety sweep
-
----
-
-### Layer 6: Cross-Cutting Concerns
-
-Audited last because they span all layers and require the full picture:
-
-| Concern | Spans | What to Check |
-|---------|-------|---------------|
-| TypeScript compilation | All layers | `npx tsc --noEmit` — known error in `_layout.tsx` (issue #1) |
-| Auth & session security | Client + Edge | JWT passed correctly, no anon key misuse in Edge |
-| Env/config validation | Client + Edge | All required vars present, fail-fast on missing |
-| Logging & observability | Edge + Client | No secrets in logs, no verification codes exposed |
-| Launch config | App metadata | `app.json` version, bundle ID, EAS build config, store URLs |
-| PostHog | Client | Autocapture scope, performance impact, correct event names |
-
-## Cross-Cutting Concerns That Span Layers
-
-### 1. Soft-Delete Pattern (affects layers 1, 2, 3, 5)
-
-**The chain:**
-```
-Migration adds is_archived column (layer 1)
-  → RLS does NOT filter archived rows (layer 1 gap)
-    → Hook queries archived data (layer 3 symptom)
-      → Edge Functions schedule actions on archived tenants (layer 2 symptom)
-        → Screen shows archived tenant in list (layer 5 symptom)
+  return { docs, isLoading, error, refresh: fetch };
+}
 ```
 
-**Audit approach:** Verify at layer 1 first (DB views or RLS). Every downstream finding about archived data is a symptom of the same root cause.
+### Pattern 2: Storage Path Convention
 
----
+**What:** Each storage bucket uses a structured path so RLS policies can validate access by parsing path segments with `split_part(name, '/', n)`.
 
-### 2. Auth Identity Propagation (affects layers 1, 2, 3, 4, 5)
+**When to use:** Every file upload. This pattern is established in the codebase.
 
-**The chain:**
+**New paths:**
 ```
-Supabase auth.uid() — source of identity (layer 1)
-  → RLS policies use auth.uid() for row ownership (layer 1)
-    → Edge Functions receive JWT and must verify it (layer 2)
-      → Hooks inherit user context from Zustand (layers 3-4)
-        → Screens render data filtered by user (layer 5)
+property-docs/{property_id}/{doc_id}/{filename}
+maintenance-photos/{request_id}/{n}.jpg
 ```
 
-**Audit approach:** Trace one user identity from login through to a payment query. Verify JWT is passed at each boundary, not just assumed.
+Path segment 1 is always a FK to a property or request row — this is what the RLS `WITH CHECK` clause validates.
 
----
+**Trade-offs:** Path-based RLS is tightly coupled to path structure. Changing path structure later requires a storage migration. Accept this: the pattern is established and consistent.
 
-### 3. Payment State Machine (affects layers 1, 2, 3, 4)
+**Important:** Store the raw storage path in the database (not signed URLs). Signed URLs expire (default 1 hour). Generate them at read time: `supabase.storage.from(bucket).createSignedUrl(path, 3600)`.
 
-**The chain:**
-```
-Status CHECK constraint in schema (layer 1 — partial enforcement)
-  → auto-confirm-payments changes paid → confirmed (layer 2)
-    → mark-overdue changes pending → overdue (layer 2)
-      → usePayments reads status and derives UI state (layer 3)
-        → PaymentStatusBadge renders color (layer 5)
-```
+### Pattern 3: Soft-Delete on All New Tables
 
-**Audit approach:** Map all transition-writing code paths. Verify invalid transitions (e.g., confirmed → pending) cannot occur through any code path or direct DB call.
+**What:** Both `documents` and `maintenance_requests` get `is_archived BOOLEAN NOT NULL DEFAULT FALSE` and `archived_at TIMESTAMPTZ`. Deletes are never hard.
 
----
+**When to use:** Every table in this codebase. Non-negotiable constraint from PROJECT.md.
 
-### 4. Bot Message Flow (affects layers 2, 4, 5)
+**Trade-offs:** Slightly more complex queries. Compensated by the existing index pattern: `CREATE INDEX ON table(is_archived)`. All hooks must include `.eq('is_archived', false)` in their queries.
 
-**The chain:**
-```
-Telegram/WhatsApp sends message → webhook Edge Function
-  → process-bot-message calls Claude API
-    → Claude returns structured JSON {intent, entities, action}
-      → Edge Function executes DB mutation
-        → Response sent back to user
-```
+### Pattern 4: Maintenance Status as TEXT CHECK (No DB Trigger)
 
-**Audit approach:** Validate that Claude's response is schema-checked before any DB write. A malformed or unexpected response must fail safely, not mutate data.
+**What:** Maintenance status uses `TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved', 'closed'))`.
 
----
+**When to use:** `maintenance_requests.status` — simpler than payment state machine.
 
-### 5. Invite Flow (affects layers 1, 2, 4, 5)
-
-**The chain:**
-```
-Landlord creates tenant → UUID token stored on tenants row (layer 1)
-  → Token embedded in deep link (layer 4 / invite.ts)
-    → invite-redirect Edge Function resolves token to store URL (layer 2)
-      → app/invite/[token].tsx accepts and links user_id (layer 5)
-        → tenants.invite_status = 'accepted' (layer 1)
-```
-
-**Audit approach:** Token must be single-use. Verify no second acceptance is possible once `invite_status = 'accepted'`. Verify token is not logged by Edge Function or rendered in shareable UI beyond the deep link itself.
+**Why no trigger:** Unlike payments (financial data, invariants must hold at DB level), maintenance status has no financial consequence. Invalid transitions are caught by client TypeScript. This matches the `expenses` pattern (no trigger) rather than the `payments` pattern (BEFORE UPDATE trigger).
 
 ## Data Flow
 
-### Primary Request Flow (Client → DB)
+### Document Upload Flow
 
 ```
-User Action (screen)
-    ↓
-Custom Hook (usePayments, useProperties, etc.)
-    ↓
-lib/supabase.ts (Supabase JS client)
-    ↓
-Supabase Postgres (RLS enforced)
-    ↓ (Realtime event if subscribed)
-Hook state update → React re-render
+User selects file (expo-document-picker for PDFs, ImagePicker for images)
+    |
+    v
+Insert row into documents table (storage_path: null)
+    |
+    v
+Upload blob to property-docs/{property_id}/{doc_id}/{filename}
+    |
+    v
+UPDATE documents SET storage_path = '{path}' WHERE id = '{doc_id}'
+    |
+    v
+Realtime fires -> useDocuments refetches -> UI updates
 ```
 
-### Bot Message Flow (Telegram/WhatsApp → DB)
+`DocumentUploader` component handles this flow. Based on `ProofUploader.tsx` but extended with `expo-document-picker` for non-image files (PDFs, DOCX). The two-step INSERT-then-UPDATE prevents orphaned storage objects (the DB row is always the source of truth).
+
+### Maintenance Request Flow
 
 ```
-External message (Telegram API / WhatsApp)
-    ↓
-telegram-webhook / whatsapp-webhook (Edge Function)
-    ↓ (validates, dispatches)
-process-bot-message (Edge Function)
-    ↓ (calls Claude API with DB context)
-Claude API returns structured JSON
-    ↓ (Edge Function validates and executes)
-Supabase DB mutation (bypasses client RLS — uses service key)
-    ↓
-Response sent back to user via Telegram/WhatsApp API
+Tenant creates request
+    |
+    v
+INSERT maintenance_requests (status: 'open', reported_by: tenant.user_id)
+    |
+    +-> Client-side call to send-push Edge Function (existing)
+        -> Landlord receives push notification
+    |
+    v
+Landlord opens request in maintenance-detail.tsx
+    |
+    +-> UPDATE status: 'in_progress'
+    +-> Upload photos to maintenance-photos/{request_id}/{n}.jpg
+    +-> Link expense (UPDATE linked_expense_id)
+    |
+    v
+UPDATE status: 'resolved' -> 'closed'
 ```
 
-### Scheduled Flow (Cron → DB)
+Push notification on INSERT is done client-side (tenant calls `send-push` via the Supabase client after a successful INSERT). This matches how reminders work today. Database Webhooks for automatic server-side triggers are deferred to a later milestone.
+
+### Reporting Data Flow
 
 ```
-Supabase cron trigger (hourly/daily)
-    ↓
-auto-confirm-payments / mark-overdue / send-reminders (Edge Function)
-    ↓ (queries active tenants + payments)
-DB UPDATE (status transition or notification INSERT)
-    ↓ (send-reminders also calls Expo Push API)
-Expo push notification delivered to device
+useReports(year) fires on screen mount (no Realtime subscription)
+    |
+    v
+Three parallel queries (Promise.all — same pattern as useDashboard):
+  1. payments for year (all user's properties)
+  2. expenses for year (all user's properties)
+  3. properties list (for occupancy: active tenants / total_units)
+    |
+    v
+Client-side aggregation:
+  - P&L: sum(payments.amount_paid) - sum(expenses.amount)
+  - Expense breakdown: group expenses by category
+  - Payment reliability: (paid+confirmed count) / total tenant-months * 100
+  - Occupancy: active (non-archived) tenants / total_units per property
+    |
+    v
+Pass aggregated numbers to chart components in reports.tsx
 ```
+
+No Edge Function needed. `useDashboard` already demonstrates this pattern for one month. `useReports` extends it to the full year. Client-side aggregation is sufficient at the scale of a single landlord's portfolio (typical: 1-50 properties).
+
+### State Management
+
+```
+Zustand store (auth state only — UNCHANGED)
+    |
+    v
+New hooks: useDocuments, useMaintenanceRequests, useReports
+(local React state per screen — same pattern as all existing hooks)
+```
+
+No Zustand expansion for new features. All state is hook-local, consistent with how expenses, payments, and notifications are handled today.
+
+## New Database Schema
+
+### Table: documents
+
+```sql
+CREATE TABLE documents (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id  UUID NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
+  tenant_id    UUID REFERENCES tenants(id) ON DELETE SET NULL,
+  uploaded_by  UUID NOT NULL REFERENCES users(id),
+  title        TEXT NOT NULL,
+  category     TEXT NOT NULL CHECK (category IN (
+    'lease', 'inspection', 'notice', 'invoice', 'insurance', 'other'
+  )),
+  storage_path TEXT,
+  file_name    TEXT,
+  file_size    INTEGER,
+  mime_type    TEXT,
+  notes        TEXT,
+  is_archived  BOOLEAN NOT NULL DEFAULT FALSE,
+  archived_at  TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+`tenant_id` is nullable: property-level docs have no tenant; tenant-level docs are scoped to one tenant. Both landlord and tenant can upload (bidirectional). `storage_path` is nullable during the upload window — it is set after the storage PUT succeeds.
+
+### Table: maintenance_requests
+
+```sql
+CREATE TABLE maintenance_requests (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id       UUID NOT NULL REFERENCES properties(id) ON DELETE RESTRICT,
+  tenant_id         UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+  reported_by       UUID NOT NULL REFERENCES users(id),
+  title             TEXT NOT NULL,
+  description       TEXT,
+  category          TEXT NOT NULL CHECK (category IN (
+    'plumbing', 'electrical', 'structural', 'appliance', 'pest', 'other'
+  )),
+  priority          TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN (
+    'low', 'normal', 'urgent'
+  )),
+  status            TEXT NOT NULL DEFAULT 'open' CHECK (status IN (
+    'open', 'in_progress', 'resolved', 'closed'
+  )),
+  photo_paths       TEXT[] DEFAULT '{}',
+  linked_expense_id UUID REFERENCES expenses(id) ON DELETE SET NULL,
+  landlord_notes    TEXT,
+  resolved_at       TIMESTAMPTZ,
+  is_archived       BOOLEAN NOT NULL DEFAULT FALSE,
+  archived_at       TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+`photo_paths` is a TEXT array of raw storage paths — consistent with how `proof_url` is stored in payments. Signed URLs generated at read time. `linked_expense_id` is nullable; if the expense is later deleted, the FK is set NULL (not cascade delete — the request itself persists).
+
+### Storage Buckets
+
+| Bucket | Path Pattern | Who Reads | Who Writes |
+|--------|--------------|-----------|------------|
+| `property-docs` (NEW) | `{property_id}/{doc_id}/{filename}` | Owner: all. Tenant: own tenant-scoped docs only. | Owner: all. Tenant: own tenant-scoped. |
+| `maintenance-photos` (NEW) | `{request_id}/{n}.jpg` | Owner: all. Tenant: own requests only. | Owner: all. Tenant: own requests only. |
+| `payment-proofs` (EXISTING) | `{property_id}/{tenant_id}/{year}-{month}.jpg` | Unchanged. | Unchanged. |
+
+### RLS Policies for New Tables
+
+Pattern mirrors existing `payments` and `expenses` policies.
+
+**documents — 4 policies:**
+- `documents_owner_all` — FOR ALL USING (property.owner_id = auth.uid())
+- `documents_tenant_read` — FOR SELECT USING (tenant.user_id = auth.uid() AND tenant_id IS NOT NULL)
+- `documents_tenant_insert` — FOR INSERT WITH CHECK (tenant.user_id = auth.uid() AND tenant_id IS NOT NULL)
+- `documents_tenant_update_own` — FOR UPDATE USING (tenant.user_id = auth.uid() AND tenant_id IS NOT NULL)
+
+**maintenance_requests — 4 policies:**
+- `maintenance_owner_all` — FOR ALL USING (property.owner_id = auth.uid())
+- `maintenance_tenant_read` — FOR SELECT USING (tenant.user_id = auth.uid())
+- `maintenance_tenant_insert` — FOR INSERT WITH CHECK (tenant.user_id = auth.uid())
+- `maintenance_tenant_update_open` — FOR UPDATE USING (tenant.user_id = auth.uid() AND status = 'open') — tenants can only edit their own still-open requests
+
+**Storage RLS for new buckets** follows the `split_part(name, '/', 1)` pattern from `002_storage.sql`:
+- `property-docs`: split_part path segment 1 = property_id — check property.owner_id OR tenants.user_id with tenant_id match
+- `maintenance-photos`: split_part path segment 1 = request_id — check maintenance_requests row ownership
+
+## Integration Points
+
+### Existing Code Modified
+
+| File | Change | Detail |
+|------|--------|--------|
+| `app/(tabs)/tools/index.tsx` | Swap TOOLS array | Remove ai-insights, smart-reminders, ai-search entries. Add documents, maintenance, reports entries pointing to new routes. |
+| `lib/types.ts` | Add types | Add `Document`, `MaintenanceRequest`, `MaintenanceStatus`, `DocumentCategory` TypeScript interfaces. |
+
+### Existing Code Deleted
+
+| Path | Reason |
+|------|--------|
+| `app/tools/ai-insights.tsx` | AI tools removal |
+| `app/tools/ai-search.tsx` | AI tools removal |
+| `app/tools/smart-reminders.tsx` | AI tools removal |
+| `supabase/functions/ai-insights/` | AI tools removal |
+| `supabase/functions/ai-search/` | AI tools removal |
+| `supabase/functions/ai-draft-reminders/` | AI tools removal |
+| `hooks/useAiNudge.ts` | Only used by AI insight card on dashboard |
+| `components/AiInsightCard.tsx` | AI tools removal |
+| `components/AiDisclosureModal.tsx` | No longer needed without AI features in Tools |
+
+Note: Verify `AiDisclosureModal` and `useAiNudge` are not referenced anywhere outside the AI tools screens before deleting. The dashboard currently imports `AiInsightCard` — that import must be removed from `app/(tabs)/dashboard/index.tsx`.
+
+### Existing Code Unchanged
+
+| Component | Why |
+|-----------|-----|
+| `ProofUploader.tsx` | Not reused directly (documents need non-image files) but serves as implementation reference for `DocumentUploader` |
+| `useExpenses.ts`, `useAllExpenses.ts` | `useReports` queries expense data directly — no hook changes needed |
+| `useDashboard.ts` | Reports screen can read stats from `useDashboard` as a secondary data source |
+| All auth, property, tenant, payment screens | Zero dependency on AI tools or new features |
+| `app/tools/_layout.tsx` | Stack navigator works as-is for new tool screens |
+| All Edge Functions except the 3 deleted | No changes to bot, scheduled jobs, notifications, invite flow |
+
+### New Components
+
+| Component | Purpose | Basis |
+|-----------|---------|-------|
+| `DocumentUploader.tsx` | Upload files (images + PDFs) to `property-docs` | `ProofUploader.tsx` — add `expo-document-picker` support for PDFs/DOCX alongside existing `expo-image-picker` path |
+| `MaintenanceStatusBadge.tsx` | Colored chip for open/in_progress/resolved/closed | `PaymentStatusBadge.tsx` pattern verbatim |
+| Chart components (inline in reports.tsx) | P&L bar chart, expense pie, reliability and occupancy metrics | See STACK.md for chart library recommendation |
+
+### External Services
+
+| Service | Integration | Notes |
+|---------|-------------|-------|
+| Supabase Storage | Two new buckets: `property-docs`, `maintenance-photos` | Same client pattern as `payment-proofs`. `supabase.storage.from(bucket).upload()` |
+| `send-push` Edge Function | Called client-side after maintenance request INSERT | Existing function at `supabase/functions/send-push/index.ts` — new call site in maintenance creation |
+| `expo-document-picker` | Pick PDF/DOCX files on device | Not currently installed — requires `npx expo install expo-document-picker` |
 
 ## Scaling Considerations
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| 0-1k users | Current monolith is fine. Focus on correctness, not scale. |
-| 1k-10k users | Optimize N+1 in `useDashboard`. Add DB connection pooling (PgBouncer, already in Supabase). |
-| 10k+ users | Move heavy AI context building out of per-message Edge Function. Cache property context per user in Redis/Upstash. |
+| 0-1k users | Current approach sufficient. Report aggregation client-side is fast. |
+| 1k-10k users | `useReports` full-year query may slow if landlord has 50+ properties. Move to a Postgres RPC function `get_annual_report(user_id, year)` with server-side GROUP BY. |
+| 10k+ users | Materialized views for report data, refreshed on payment/expense INSERT via Database Webhooks. |
 
 ### Scaling Priorities
 
-1. **First bottleneck:** `useDashboard` N+1 query pattern — sequential loads of properties → tenants → payments will hit noticeable latency around 20+ properties. Fix: single join query.
-2. **Second bottleneck:** Claude API context building — each bot message rebuilds full property/tenant context from DB. At 1k+ active bot users, this becomes expensive and slow. Fix: per-user context cache with 5-min TTL.
+1. **First bottleneck:** `useReports` fetches all payments and expenses for the full year across all of the user's properties. At 50 properties with 10 tenants each = 6,000 payment rows. Still fast, but add a Postgres RPC aggregation function as a performance escape hatch when needed.
+2. **Second bottleneck:** `maintenance-photos` bucket grows unbounded. Not a concern at this scale. If needed: implement soft-delete on photo storage (add `is_archived` flag to photo records) rather than physical deletion.
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Auditing Top-Down (Screen → DB)
+### Anti-Pattern 1: Realtime on Reports
 
-**What people do:** Start reading screens, find a UI bug, trace backward to the hook, then the query.
-**Why it's wrong:** A single RLS gap at the DB level causes dozens of symptom appearances in screens. Auditing screens first means finding the same root cause multiple times under different names.
-**Do this instead:** Audit DB layer first. Mark every finding. Then check if hooks/screens expose the same issue as a UI symptom — and consolidate into one fix rather than patching 12 screens.
+**What people do:** Subscribe to Realtime on the reports screen so charts update live.
 
----
+**Why it's wrong:** Reports are analytical, not operational. Adding Realtime on aggregated views means re-running expensive multi-table queries on every payment change anywhere in the user's portfolio, causing constant screen refreshes.
 
-### Anti-Pattern 2: Treating Edge Functions as Trusted
+**Do this instead:** `useFocusEffect` to reload on screen focus. The same pattern used by `useDashboard`. No Realtime subscription in `useReports`.
 
-**What people do:** Assume Edge Functions run in a safe environment and skip input validation.
-**Why it's wrong:** Telegram and WhatsApp webhooks are publicly reachable HTTP endpoints. Anyone can POST to them. Webhook secret verification is the only gate.
-**Do this instead:** Verify every Edge Function that handles external input has signature/secret validation as the first check. Fail fast before any DB operation.
+### Anti-Pattern 2: New Edge Function for Every Operation
 
----
+**What people do:** Create an Edge Function for document listing, maintenance CRUD, and report generation.
 
-### Anti-Pattern 3: Fixing Symptoms Without the Root Cause
+**Why it's wrong:** All these operations are direct Supabase table queries protected by RLS. Edge Functions add latency, a deployment step, and operational surface with no benefit when the client already has row-level security.
 
-**What people do:** Find archived tenants appearing in payment lists. Add `.eq('is_archived', false)` to that specific hook. Move on.
-**Why it's wrong:** The same missing filter exists in 5 other queries. The actual fix is a DB view or consistent query convention enforced at layer 1/3.
-**Do this instead:** When a soft-delete filter is missing, search all hooks and Edge Functions for the pattern before concluding scope of the fix.
+**Do this instead:** Direct client queries in hooks. Edge Functions are warranted only for cross-user operations (push notifications to another user's device) or complex server-side work. Use the existing `send-push` function for maintenance notifications.
 
----
+### Anti-Pattern 3: Storing Signed URLs in the Database
 
-### Anti-Pattern 4: Auditing Security Issues in Isolation
+**What people do:** Generate a signed URL on upload and store it in `storage_path`.
 
-**What people do:** Note "Math.random() is weak" and fix only `lib/bot.ts`.
-**Why it's wrong:** The same weak pattern may exist in `lib/invite.ts` (token generation) or in Edge Functions. Fixing one without a global search misses others.
-**Do this instead:** For each security class (weak crypto, log exposure, missing auth checks), search the entire codebase before marking the concern resolved.
+**Why it's wrong:** Signed URLs expire (default 1 hour in Supabase). Stored URLs become invalid and regenerating them requires UPDATE per row.
 
-## Integration Points
+**Do this instead:** Store the raw storage path (`{property_id}/{doc_id}/{filename}`). Generate signed URLs at read time in the hook using `supabase.storage.from(bucket).createSignedUrl(path, 3600)`.
 
-### External Services
+### Anti-Pattern 4: Hard-Deleting Documents or Requests
 
-| Service | Integration Layer | Auth Mechanism | Audit Focus |
-|---------|------------------|----------------|-------------|
-| Telegram Bot API | Edge Function (`telegram-webhook`) | Webhook secret in `X-Telegram-Bot-Api-Secret-Token` header | Secret presence, constant-time comparison |
-| WhatsApp (via `whatsapp-webhook`) | Edge Function | Custom HMAC or shared secret | Same as Telegram |
-| Claude API | Edge Function (`process-bot-message`, AI tools) | `ANTHROPIC_API_KEY` in env | Key in logs, structured output validation |
-| Expo Push API | Edge Function (`send-push`) | Bearer token | Token validity per-device, partial failure handling |
-| Apple OAuth | Client (`lib/social-auth.ts`) | Expo AuthSession | Nonce validation, token expiry |
-| Google OAuth | Client (`lib/social-auth.ts`) | Expo AuthSession | Same as Apple |
-| Supabase Storage | Client + Edge | Signed URLs (client), service key (Edge) | Signed URL expiry, bucket policy coverage |
-| PostHog | Client (`lib/posthog.ts`) | Public API key (EXPO_PUBLIC) | Autocapture scope, no PII in events |
+**What people do:** Add a DELETE button that calls `supabase.from('documents').delete().eq('id', id)`.
 
-### Internal Layer Boundaries
+**Why it's wrong:** This codebase uses soft-delete everywhere (`is_archived = TRUE`). Hard-deleting breaks the audit trail and orphans storage objects (the storage file remains but the DB row is gone).
 
-| Boundary | Communication | Audit Concern |
-|----------|---------------|---------------|
-| Screen → Hook | React hook call | Error surfaced to UI or silently swallowed? |
-| Hook → Supabase client | Supabase JS query | RLS alignment, soft-delete filter, subscription cleanup |
-| Screen → Lib module | Direct function call | Error propagation, type safety |
-| Client → Edge Function | `fetch()` with JWT | JWT passed in Authorization header? |
-| Edge Function → DB | Supabase service key | Bypasses RLS — must enforce own auth checks |
-| Edge Function → Claude API | REST call | Structured response validated before DB write? |
-| Edge Function → External (Telegram/WhatsApp) | REST call | Secrets not in logs, timeouts handled |
+**Do this instead:** `UPDATE documents SET is_archived = TRUE, archived_at = NOW()`. Storage cleanup is a separate background job (deferred to a future milestone).
+
+### Anti-Pattern 5: Separate Navigator for New Tool Screens
+
+**What people do:** Create a new `app/tools/_layout.tsx` or route group for the new features.
+
+**Why it's wrong:** The existing `app/tools/_layout.tsx` Stack navigator already handles all sub-routes. Expo Router registers new files automatically.
+
+**Do this instead:** Drop new screen files into `app/tools/`. No layout changes needed.
+
+## Build Order
+
+Dependencies determine sequence. Each step unblocks the next.
+
+```
+Step 1: AI Tools Removal (no deps — pure deletion)
+  - Delete 3 screen files, 3 Edge Function directories
+  - Remove AiInsightCard import from dashboard
+  - Update app/(tabs)/tools/index.tsx: remove 3 AI entries, stub 3 new entries
+  - Verify: app builds, Tools tab renders, no import errors
+
+Step 2: Migration 019 (no dep on client code)
+  - documents table + RLS
+  - maintenance_requests table + RLS
+  - property-docs storage bucket + RLS
+  - maintenance-photos storage bucket + RLS
+  - Verify: supabase db reset passes
+
+Step 3: Types + Lib (depends on Step 2 schema)
+  - lib/types.ts: add Document, MaintenanceRequest interfaces
+  - lib/documents.ts: category metadata (mirrors lib/expenses.ts)
+  - lib/maintenance.ts: status metadata, getCategoryLabel/Icon/Color helpers
+
+Step 4: Document Storage (depends on Steps 2 + 3)
+  - Install expo-document-picker
+  - hooks/useDocuments.ts
+  - components/DocumentUploader.tsx
+  - app/tools/documents.tsx
+  - Wire route in tools/index.tsx
+
+Step 5: Maintenance Requests (depends on Steps 2 + 3)
+  - hooks/useMaintenanceRequests.ts
+  - components/MaintenanceStatusBadge.tsx
+  - app/tools/maintenance.tsx
+  - app/tools/maintenance-detail.tsx
+  - Wire route in tools/index.tsx
+
+Step 6: Reporting Dashboard (depends only on existing tables — independent of Steps 4-5)
+  - Install chart library (see STACK.md)
+  - hooks/useReports.ts
+  - app/tools/reports.tsx
+  - Wire route in tools/index.tsx
+```
+
+Steps 4, 5, and 6 can proceed in any order after Steps 1-3 complete. Steps 4 and 5 can be built in parallel. Step 6 can begin as soon as Step 3 is done since it reads only existing tables.
 
 ## Sources
 
-- Project `CLAUDE.md` — architecture decisions, data flow, scheduled functions list
-- `.planning/PROJECT.md` — audit scope and known concerns
-- `.planning/codebase/CONCERNS.md` — 28 pre-identified issues with layer attribution
-- Supabase Edge Functions documentation (service key bypasses RLS — verified behavior)
-- React Native Expo Router architecture (file-based routing, managed workflow constraints)
+- Direct codebase analysis: `supabase/migrations/001_initial_schema.sql`, `004_expenses.sql`, `002_storage.sql`
+- Existing hook implementations: `hooks/useExpenses.ts`, `hooks/useDashboard.ts`, `hooks/usePayments.ts`
+- Existing screen pattern: `app/property/[id]/expenses/index.tsx`, `app/(tabs)/tools/index.tsx`
+- Existing component patterns: `components/ProofUploader.tsx`, `components/PaymentStatusBadge.tsx`
+- Project constraints: `.planning/PROJECT.md` (soft-delete, migration-based, no ejecting, no breaking changes)
+- CLAUDE.md architecture decisions: soft-delete pattern, RLS design, storage path conventions
 
 ---
-*Architecture research for: Dwella v2 launch audit*
-*Researched: 2026-03-18*
+*Architecture research for: Dwella v2 v1.1 — Document Storage, Maintenance Requests, Reporting Dashboards*
+*Researched: 2026-03-20*
