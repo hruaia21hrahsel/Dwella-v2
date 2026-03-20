@@ -54,7 +54,12 @@ Plans:
   3. Property-wide documents uploaded by the landlord are visible to all tenants in that property
   4. User can open a document in-app (PDF renders via WebView, images render inline) and tap to download or share
   5. Deleting a document removes both the storage file and the database row; no orphaned files remain
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 07-01-PLAN.md — Migration 019, install packages, types, config, utility functions
+- [ ] 07-02-PLAN.md — useDocuments hook with realtime subscription
+- [ ] 07-03-PLAN.md — UI components (DocumentCard, DocumentUploader, DocumentViewer, CategoryFilterBar)
+- [ ] 07-04-PLAN.md — Screens, tools menu wiring, end-to-end verification
 
 ### Phase 8: Maintenance Requests
 **Goal**: Tenants can submit maintenance requests with photos and priority, landlords can manage status and log costs, and both parties receive push notifications at the right moments
@@ -89,7 +94,7 @@ Plans:
 | 3. Edge Functions & Backend | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 4. Client Code & UX | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 5. Launch Configuration & Store Gate | v1.0 | 2/2 | Complete | 2026-03-19 |
-| 6. AI Tools Removal | 1/1 | Complete   | 2026-03-20 | - |
-| 7. Document Storage | v1.1 | 0/TBD | Not started | - |
+| 6. AI Tools Removal | v1.1 | 1/1 | Complete | 2026-03-20 |
+| 7. Document Storage | v1.1 | 0/4 | Planning complete | - |
 | 8. Maintenance Requests | v1.1 | 0/TBD | Not started | - |
 | 9. Reporting Dashboards | v1.1 | 0/TBD | Not started | - |
