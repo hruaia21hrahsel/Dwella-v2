@@ -59,7 +59,9 @@ All font sizes sourced from observed codebase patterns (`EmptyState`, `ConfirmDi
 | Body | 14px | 400 (regular) | 20px (1.43) | Document metadata: category badge text, file size, date, subtitle text, error messages |
 | Label | 16px | 400 (regular) | 24px (1.5) | Document name in card row, section headers (e.g. "Property Documents"), input field labels |
 | Heading | 17px | 700 (bold) | 22px (1.29) | Empty state title, modal title, screen section title — mirrors existing EmptyState title style |
-| Display | 20px | 600 (semibold) | 28px (1.4) | Screen-level header (DwellaHeader), standalone Documents screen title |
+| Display | 20px | 700 (bold) | 28px (1.4) | Screen-level header (DwellaHeader), standalone Documents screen title |
+
+**Weights declared:** 400 (regular) and 700 (bold) only. Two weights maximum — no intermediate weight (600) is used in this phase.
 
 **Note:** react-native-paper variant system (`titleLarge`, `bodyMedium`, `labelMedium`) is used where it matches. Custom `fontSize` + `fontWeight` is used where paper variants do not align (e.g. section headings within a scrollable list).
 
@@ -123,6 +125,8 @@ Existing components reused without modification:
 
 ### Screen 1: Standalone Documents Screen (`app/documents/index.tsx`)
 
+**Primary visual anchor:** Upload Document FAB (bottom-right, accent color, always visible when screen is scrolled) — this is the dominant focal point of the standalone screen and draws the first user action.
+
 ```
 DwellaHeader (title: "Documents")
 Property picker (if user has multiple properties — Picker or modal selector)
@@ -140,7 +144,7 @@ FAB or header button: Upload Document (landlord) / Upload to My Tenancy (tenant)
 ```
 
 - Horizontal padding: 16px
-- Section header: 16px font, weight 600, `colors.textSecondary`, padding top 24px bottom 8px
+- Section header: 16px font, weight 700, `colors.textSecondary`, padding top 24px bottom 8px
 - Section divider: `colors.divider`, height 1px
 
 ### Screen 2: Property-contextual Documents Tab (`app/property/[id]/documents.tsx`)
@@ -165,8 +169,8 @@ Upload button (bottom of list or sticky FAB)
 Full-screen overlay (backgroundColor: colors.background, opacity 1.0)
 SafeAreaView
   Top bar (height 56px, padding 16px horizontal):
-    Close button (left — "close" icon, 44x44 touch target, colors.textPrimary)
-    Document name (center — 16px, weight 600, truncated to 1 line)
+    Close button (left — "close" icon, 44x44 touch target, colors.textPrimary, a11y label: "Close document viewer")
+    Document name (center — 16px, weight 700, truncated to 1 line)
     [empty right slot]
   ────────────────────────────
   Content area (flex 1):
@@ -178,7 +182,7 @@ SafeAreaView
     Error state: ErrorBanner component (centered, with retry)
   ────────────────────────────
   Bottom bar (height 72px, padding 16px, border-top: colors.divider):
-    Share button (full width, mode: outlined, icon: "share-variant", label: "Share")
+    Share button (full width, mode: outlined, icon: "share-variant", label: "Share Document")
 ```
 
 ### Modal: DocumentUploader (bottom sheet or full modal)
@@ -220,12 +224,12 @@ Surface (borderRadius 16 at top, padding 24)
 2. Signed URL is generated on tap (not on list load).
 3. WebView or Image loads content. On load error: error state with "Could not load document. Tap to retry."
 4. User taps Close — modal dismisses.
-5. User taps Share — expo-sharing opens OS share sheet.
+5. User taps Share Document — expo-sharing opens OS share sheet.
 
 ### Delete Flow
 1. User long-presses or taps delete icon on DocumentCard (visible only if `uploader_id === current user`).
 2. ConfirmDialog appears: "Delete Document? This will permanently remove the file and cannot be undone."
-3. User taps "Delete" — loading state on confirm button.
+3. User taps "Delete Document" — loading state on confirm button.
 4. On success: dialog closes, document removed from list, success toast ("Document deleted").
 5. On storage delete failure: dialog closes, error toast ("Could not delete file. Please try again."), document remains in list.
 
@@ -267,13 +271,13 @@ Surface (borderRadius 16 at top, padding 24)
 | Uploader name input placeholder | "e.g. Lease Agreement Jan 2026" |
 | Uploader category label | "Category" |
 | Choose file button | "Choose File" |
-| Viewer close button | (icon only — no label) |
-| Viewer share button | "Share" |
+| Viewer close button a11y label | "Close document viewer" |
+| Viewer share button | "Share Document" |
 | Viewer load error | "Could not load document. Tap to retry." |
 | Delete icon a11y label | "Delete document" |
 | Delete confirmation title | "Delete Document?" |
 | Delete confirmation message | "This will permanently remove the file and cannot be undone." |
-| Delete confirmation action | "Delete" |
+| Delete confirmation action | "Delete Document" |
 | Upload success toast | "Document uploaded" |
 | Upload error toast | "Upload failed. Please try again." |
 | Delete success toast | "Document deleted" |
