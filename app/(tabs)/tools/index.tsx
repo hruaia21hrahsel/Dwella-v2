@@ -3,13 +3,23 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter, type Href } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/lib/theme-context';
+import { useToastStore } from '@/lib/toast';
 import { DwellaHeader } from '@/components/DwellaHeader';
+
+type ToolItem = {
+  label: string;
+  description: string;
+  icon: string;
+  color: string;
+  route?: string;
+  comingSoon?: boolean;
+};
 
 export default function ToolsScreen() {
   const router = useRouter();
   const { colors, shadows } = useTheme();
 
-  const TOOLS = [
+  const TOOLS: ToolItem[] = [
     {
       label: 'Payment History',
       description: 'Track rent payments and confirmations',
@@ -25,27 +35,27 @@ export default function ToolsScreen() {
       color: colors.statusPartial,
     },
     {
-      label: 'AI Insights',
-      description: 'AI-powered analytics and recommendations',
-      icon: 'chart-timeline-variant-shimmer',
-      route: '/tools/ai-insights',
-      color: '#8B5CF6',
+      label: 'Documents',
+      description: 'Upload and manage property documents',
+      icon: 'file-document-outline',
+      color: '#6366F1',
+      comingSoon: true,
     },
     {
-      label: 'Smart Reminders',
-      description: 'AI-drafted personalized rent reminders',
-      icon: 'bell-badge-outline',
-      route: '/tools/smart-reminders',
-      color: '#EC4899',
+      label: 'Maintenance',
+      description: 'Track and manage maintenance requests',
+      icon: 'wrench-outline',
+      color: '#14B8A6',
+      comingSoon: true,
     },
     {
-      label: 'AI Search',
-      description: 'Search your data with natural language',
-      icon: 'text-search',
-      route: '/tools/ai-search',
-      color: '#0EA5E9',
+      label: 'Analytics',
+      description: 'Financial reports and insights',
+      icon: 'chart-bar',
+      color: '#F97316',
+      comingSoon: true,
     },
-  ] as const;
+  ];
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
@@ -53,18 +63,33 @@ export default function ToolsScreen() {
       {TOOLS.map((tool) => (
         <TouchableOpacity
           key={tool.label}
-          style={[styles.card, { backgroundColor: colors.surface, ...shadows.sm }]}
-          onPress={() => router.push(tool.route as Href)}
+          style={[styles.card, { backgroundColor: colors.surface, ...shadows.sm }, tool.comingSoon && { opacity: 0.5 }]}
+          onPress={() => {
+            if (tool.comingSoon) {
+              useToastStore.getState().showToast('Coming soon!', 'info');
+            } else {
+              router.push(tool.route as Href);
+            }
+          }}
           activeOpacity={0.8}
         >
           <View style={[styles.iconWrap, { backgroundColor: tool.color + '18' }]}>
             <MaterialCommunityIcons name={tool.icon as ComponentProps<typeof MaterialCommunityIcons>['name']} size={24} color={tool.color} />
           </View>
           <View style={styles.cardText}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{tool.label}</Text>
+            <View style={styles.cardTitleRow}>
+              <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{tool.label}</Text>
+              {tool.comingSoon && (
+                <Text style={[styles.comingSoonBadge, { color: colors.textDisabled, backgroundColor: colors.surfaceElevated }]}>
+                  COMING SOON
+                </Text>
+              )}
+            </View>
             <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{tool.description}</Text>
           </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textDisabled} />
+          {!tool.comingSoon && (
+            <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textDisabled} />
+          )}
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -96,9 +121,22 @@ const styles = StyleSheet.create({
   cardText: {
     flex: 1,
   },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  comingSoonBadge: {
+    fontSize: 9,
+    fontWeight: '700',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+    overflow: 'hidden',
   },
   cardDesc: {
     fontSize: 12,

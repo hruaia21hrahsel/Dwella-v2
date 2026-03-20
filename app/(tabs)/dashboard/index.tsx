@@ -15,18 +15,17 @@ import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useDashboard, TenantRow } from '@/hooks/useDashboard';
-import { useAiNudge } from '@/hooks/useAiNudge';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
 import { DashboardSkeleton } from '@/components/DashboardSkeleton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { AnimatedCard } from '@/components/AnimatedCard';
-import { AiInsightCard } from '@/components/AiInsightCard';
 import { GlassCard } from '@/components/GlassCard';
 import { GradientButton } from '@/components/GradientButton';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency, formatDate, getMonthName, getCurrentMonthYear } from '@/lib/utils';
 import { getStatusColor } from '@/lib/payments';
 import { DwellaHeader } from '@/components/DwellaHeader';
+import { SetupPromptModal } from '@/components/SetupPromptModal';
 
 const HERO_STATUS_COLORS: Record<string, string> = {
   confirmed: '#FDE68A',
@@ -96,7 +95,6 @@ export default function DashboardScreen() {
   const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [summaryMonth, setSummaryMonth] = useState(currentMonth);
   const { tenantRows, stats, recentTransactions, isLoading, error, refresh } = useDashboard(selectedYear, summaryMonth);
-  const { nudge: aiNudge, loading: aiNudgeLoading } = useAiNudge(user?.id);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
@@ -430,8 +428,8 @@ export default function DashboardScreen() {
         style={{ marginTop: 8 }}
       />
 
-      {/* AI Nudge */}
-      <AiInsightCard nudge={aiNudge} loading={aiNudgeLoading} />
+      {/* Setup prompt — PIN, Telegram, WhatsApp */}
+      <SetupPromptModal />
 
       {/* Section 2 — Monthly Summary (expandable) */}
       <GlassCard variant="default" style={{ padding: 12, gap: 12, marginTop: 24 }}>
