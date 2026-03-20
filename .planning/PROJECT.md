@@ -50,7 +50,15 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) works c
 
 ### Active
 
-(No active milestone — start next with `/gsd:new-milestone`)
+## Current Milestone: v1.1 Tools Expansion
+
+**Goal:** Replace AI-specific tools screens with Document Storage, Maintenance Requests, and Reporting Dashboards; remove deprecated AI tools backend.
+
+**Target features:**
+- Document Storage (bi-directional uploads, property-level + tenant-level docs)
+- Maintenance Requests (tenant submission, landlord management, expense linking)
+- Reporting Dashboards (P&L, expense breakdown, payment reliability, occupancy)
+- AI Tools Removal (screens + Edge Functions + Claude tool definitions)
 
 ### Out of Scope (deferred from v1.0)
 
@@ -90,4 +98,4 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) works c
 | Fingerprint OTA policy + UpdateGate | Prevents native dependency mismatch crashes | ✓ Good — silent apply + forced-update fallback |
 
 ---
-*Last updated: 2026-03-19 after v1.0 milestone completion*
+*Last updated: 2026-03-20 after v1.1 milestone start*
