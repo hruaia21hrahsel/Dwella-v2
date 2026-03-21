@@ -100,18 +100,22 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Uploads a document file to Supabase Storage.
- * Uses fetch blob for reliable React Native uploads across iOS/Android.
+ * Reads file as base64 → ArrayBuffer for reliable React Native uploads.
  */
 export async function uploadDocument(
   asset: { uri: string; mimeType?: string | null; name: string },
   storagePath: string,
 ): Promise<void> {
-  const response = await fetch(asset.uri);
-  const blob = await response.blob();
+  const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+
+  const { decode } = await import('base64-arraybuffer');
+  const buffer = decode(base64);
 
   const { error } = await supabase.storage
     .from(DOCUMENTS_BUCKET)
-    .upload(storagePath, blob, {
+    .upload(storagePath, buffer, {
       contentType: asset.mimeType ?? 'application/octet-stream',
       upsert: false,
     });
