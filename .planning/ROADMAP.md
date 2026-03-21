@@ -27,7 +27,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 6: AI Tools Removal** - Delete deprecated screens, Edge Functions, and route references; free navigation slots (completed 2026-03-20)
 - [x] **Phase 7: Document Storage** - Migration 019 + storage buckets + full upload/view/download/delete UI for property and tenant documents (completed 2026-03-21)
 - [x] **Phase 8: Maintenance Requests** - Tenant submission, landlord status management, photos, expense linking, push notifications (completed 2026-03-21)
-- [ ] **Phase 9: Reporting Dashboards** - P&L, expense breakdown, payment reliability, occupancy, and portfolio summary charts
+- [x] **Phase 9: Reporting Dashboards** - P&L, expense breakdown, payment reliability, occupancy, and portfolio summary charts (completed 2026-03-21)
 
 ## Phase Details
 
@@ -88,12 +88,12 @@ Plans:
   3. Landlord can view each tenant's payment reliability (on-time percentage and average days late)
   4. Landlord can view occupancy tracking (filled vs vacant units over time) per property
   5. Landlord can view a portfolio-level summary card that rolls up P&L and occupancy across all properties
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 09-01-PLAN.md — Install victory-native@36, TDD aggregation helpers and types
 - [x] 09-02-PLAN.md — Chart components (PLBarChart, DonutChart, OccupancyChart, SparklineChart, ChartTooltip, ChartSectionCard)
 - [x] 09-03-PLAN.md — Control and display components (TimeControlBar, KpiCard, ReliabilityTable, PropertyReportCard, ReportSkeleton)
-- [ ] 09-04-PLAN.md — Report screens, data hook, tools menu wiring
+- [x] 09-04-PLAN.md — Report screens, data hook, tools menu wiring
 
 ## Progress
 
@@ -107,4 +107,4 @@ Plans:
 | 6. AI Tools Removal | v1.1 | 1/1 | Complete | 2026-03-20 |
 | 7. Document Storage | v1.1 | 4/4 | Complete   | 2026-03-21 |
 | 8. Maintenance Requests | v1.1 | 4/4 | Complete   | 2026-03-21 |
-| 9. Reporting Dashboards | v1.1 | 3/4 | In Progress|  |
+| 9. Reporting Dashboards | v1.1 | 4/4 | Complete   | 2026-03-21 |
