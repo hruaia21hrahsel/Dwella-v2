@@ -95,26 +95,26 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Uploads a document file to Supabase Storage.
- * Uses FormData for reliable React Native uploads across iOS/Android.
+ * Uses fetch blob for reliable React Native uploads across iOS/Android.
  */
 export async function uploadDocument(
   asset: { uri: string; mimeType?: string | null; name: string },
   storagePath: string,
 ): Promise<void> {
-  const formData = new FormData();
-  formData.append('', {
-    uri: asset.uri,
-    name: asset.name,
-    type: asset.mimeType ?? 'application/octet-stream',
-  } as any);
+  const response = await fetch(asset.uri);
+  const blob = await response.blob();
 
   const { error } = await supabase.storage
     .from(DOCUMENTS_BUCKET)
-    .upload(storagePath, formData, {
-      contentType: 'multipart/form-data',
+    .upload(storagePath, blob, {
+      contentType: asset.mimeType ?? 'application/octet-stream',
+      upsert: false,
     });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[uploadDocument] Storage error:', JSON.stringify(error));
+    throw new Error(`Storage upload failed: ${error.message} (${(error as any).statusCode ?? 'unknown'})`);
+  }
 }
 
 /**
