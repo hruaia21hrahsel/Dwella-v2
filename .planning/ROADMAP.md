@@ -25,7 +25,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 **Milestone Goal:** Replace deprecated AI tools screens with Document Storage, Maintenance Requests, and Reporting Dashboards; remove AI tools backend artifacts.
 
 - [x] **Phase 6: AI Tools Removal** - Delete deprecated screens, Edge Functions, and route references; free navigation slots (completed 2026-03-20)
-- [ ] **Phase 7: Document Storage** - Migration 019 + storage buckets + full upload/view/download/delete UI for property and tenant documents
+- [x] **Phase 7: Document Storage** - Migration 019 + storage buckets + full upload/view/download/delete UI for property and tenant documents (completed 2026-03-21)
 - [ ] **Phase 8: Maintenance Requests** - Tenant submission, landlord status management, photos, expense linking, push notifications
 - [ ] **Phase 9: Reporting Dashboards** - P&L, expense breakdown, payment reliability, occupancy, and portfolio summary charts
 
@@ -54,12 +54,12 @@ Plans:
   3. Property-wide documents uploaded by the landlord are visible to all tenants in that property
   4. User can open a document in-app (PDF renders via WebView, images render inline) and tap to download or share
   5. Deleting a document removes both the storage file and the database row; no orphaned files remain
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 - [x] 07-01-PLAN.md — Migration 019, install packages, types, config, utility functions
 - [x] 07-02-PLAN.md — useDocuments hook with realtime subscription
 - [x] 07-03-PLAN.md — UI components (DocumentCard, DocumentUploader, DocumentViewer, CategoryFilterBar)
-- [ ] 07-04-PLAN.md — Screens, tools menu wiring, end-to-end verification
+- [x] 07-04-PLAN.md — Screens, tools menu wiring, end-to-end verification
 
 ### Phase 8: Maintenance Requests
 **Goal**: Tenants can submit maintenance requests with photos and priority, landlords can manage status and log costs, and both parties receive push notifications at the right moments
@@ -95,6 +95,6 @@ Plans:
 | 4. Client Code & UX | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 5. Launch Configuration & Store Gate | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 6. AI Tools Removal | v1.1 | 1/1 | Complete | 2026-03-20 |
-| 7. Document Storage | v1.1 | 3/4 | In Progress|  |
+| 7. Document Storage | v1.1 | 4/4 | Complete   | 2026-03-21 |
 | 8. Maintenance Requests | v1.1 | 0/TBD | Not started | - |
 | 9. Reporting Dashboards | v1.1 | 0/TBD | Not started | - |
