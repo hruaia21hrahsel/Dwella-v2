@@ -27,12 +27,18 @@ import { useTheme } from '@/lib/theme-context';
 import { GradientButton } from '@/components/GradientButton';
 import { DocumentCategory } from '@/lib/types';
 
+interface TenantOption {
+  id: string;
+  tenant_name: string;
+}
+
 interface DocumentUploaderProps {
   visible: boolean;
   onClose: () => void;
   onUploadComplete: () => void;
   propertyId: string;
-  tenantId: string | null; // null = property-wide
+  tenantId: string | null; // null = property-wide (default scope)
+  tenants?: TenantOption[]; // if provided, shows scope picker for landlord
 }
 
 export function DocumentUploader({
@@ -41,6 +47,7 @@ export function DocumentUploader({
   onUploadComplete,
   propertyId,
   tenantId,
+  tenants,
 }: DocumentUploaderProps) {
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
@@ -49,12 +56,17 @@ export function DocumentUploader({
   const [asset, setAsset] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<DocumentCategory>('other');
+  const [scopeTenantId, setScopeTenantId] = useState<string | null>(tenantId);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Effective tenant ID: use scope picker value if tenants provided, otherwise prop
+  const effectiveTenantId = tenants && tenants.length > 0 ? scopeTenantId : tenantId;
 
   function resetState() {
     setAsset(null);
     setName('');
     setCategory('other');
+    setScopeTenantId(tenantId);
     setIsUploading(false);
   }
 
@@ -132,13 +144,13 @@ export function DocumentUploader({
     setIsUploading(true);
     try {
       const ext = getExtFromFilename(asset.name);
-      const storagePath = getDocumentStoragePath(propertyId, tenantId, ext);
+      const storagePath = getDocumentStoragePath(propertyId, effectiveTenantId, ext);
 
       await uploadDocument(asset, storagePath);
 
       const { error: dbError } = await supabase.from('documents').insert({
         property_id: propertyId,
-        tenant_id: tenantId,
+        tenant_id: effectiveTenantId,
         uploader_id: user.id,
         name: name.trim(),
         category,
@@ -179,6 +191,57 @@ export function DocumentUploader({
             <Text style={[styles.title, { color: colors.textPrimary }]}>
               Upload Document
             </Text>
+
+            {/* Scope picker — only for landlords with tenants */}
+            {tenants && tenants.length > 0 && (
+              <>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Upload for</Text>
+                <View style={styles.categoryRow}>
+                  <TouchableOpacity
+                    onPress={() => setScopeTenantId(null)}
+                    disabled={isUploading}
+                    style={[
+                      styles.categoryChip,
+                      scopeTenantId === null
+                        ? { backgroundColor: colors.primary }
+                        : { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        { color: scopeTenantId === null ? colors.textOnPrimary : colors.textSecondary },
+                      ]}
+                    >
+                      Property
+                    </Text>
+                  </TouchableOpacity>
+                  {tenants.map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      onPress={() => setScopeTenantId(t.id)}
+                      disabled={isUploading}
+                      style={[
+                        styles.categoryChip,
+                        scopeTenantId === t.id
+                          ? { backgroundColor: colors.primary }
+                          : { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.categoryChipText,
+                          { color: scopeTenantId === t.id ? colors.textOnPrimary : colors.textSecondary },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {t.tenant_name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
 
             {/* File preview */}
             {asset ? (

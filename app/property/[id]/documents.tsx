@@ -252,6 +252,7 @@ export default function PropertyDocumentsScreen() {
           visible={uploaderVisible}
           propertyId={propertyId}
           tenantId={uploadTenantId}
+          tenants={isOwner ? tenants : undefined}
           onUploadComplete={() => refresh()}
           onClose={() => setUploaderVisible(false)}
         />
