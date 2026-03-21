@@ -88,6 +88,7 @@ export default function DocumentsScreen() {
     try {
       await deleteDocument(deleteDoc);
       showToast('Document deleted', 'success');
+      refresh();
     } catch {
       showToast('Could not delete file. Please try again.', 'error');
     } finally {
