@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 08-03 (maintenance submit screen and list screens)
-last_updated: "2026-03-21T08:59:18.171Z"
+stopped_at: Completed 09-reporting-dashboards-01-PLAN.md
+last_updated: "2026-03-21T10:17:03.801Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 13
+  completed_plans: 10
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Every user-facing workflow works correctly and securely.
-**Current focus:** Phase 08 — maintenance-requests
+**Current focus:** Phase 09 — reporting-dashboards
 
 ## Current Position
 
-Phase: 08 (maintenance-requests) — EXECUTING
-Plan: 4 of 4
+Phase: 09 (reporting-dashboards) — EXECUTING
+Plan: 2 of 4
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Plan: 4 of 4
 | Phase 08-maintenance-requests P02 | 2 | 2 tasks | 5 files |
 | Phase 08-maintenance-requests P04 | 8 | 2 tasks | 2 files |
 | Phase 08-maintenance-requests P03 | 12 | 2 tasks | 4 files |
+| Phase 09-reporting-dashboards P01 | 15 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,9 @@ Recent decisions affecting v1.1:
 - [Phase 08-maintenance-requests]: Close action shows ConfirmDialog (destructive pattern); all other status advances execute immediately
 - [Phase 08-maintenance-requests]: Submit flow uploads photos after INSERT; partial failures show warning toast but do not block success
 - [Phase 08-maintenance-requests]: Standalone index.tsx uses direct supabase query (not hook) for all-properties view since useMaintenanceRequests is per-property
+- [Phase 09-reporting-dashboards]: victory-native pinned to @36 (SVG-based, avoids Skia dependency not available in Expo managed workflow)
+- [Phase 09-reporting-dashboards]: calcReliability uses .toISOString().slice(0,10) for timezone-safe calendar day comparison (D-17/pitfall-4)
+- [Phase 09-reporting-dashboards]: aggregatePortfolio sparkline always 12 monthly buckets regardless of granularity for consistent sparkline rendering
 
 ### Pending Todos
 
@@ -107,6 +111,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T08:59:18.168Z
-Stopped at: Completed 08-03 (maintenance submit screen and list screens)
+Last session: 2026-03-21T10:17:03.798Z
+Stopped at: Completed 09-reporting-dashboards-01-PLAN.md
 Resume file: None
