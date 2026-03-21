@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 09-reporting-dashboards-01-PLAN.md
-last_updated: "2026-03-21T10:17:03.801Z"
+stopped_at: Completed 09-reporting-dashboards-02-PLAN.md
+last_updated: "2026-03-21T10:24:55.798Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 ## Current Position
 
 Phase: 09 (reporting-dashboards) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Plan: 2 of 4
 | Phase 08-maintenance-requests P04 | 8 | 2 tasks | 2 files |
 | Phase 08-maintenance-requests P03 | 12 | 2 tasks | 4 files |
 | Phase 09-reporting-dashboards P01 | 15 | 2 tasks | 4 files |
+| Phase 09-reporting-dashboards P02 | 5 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ Recent decisions affecting v1.1:
 - [Phase 09-reporting-dashboards]: victory-native pinned to @36 (SVG-based, avoids Skia dependency not available in Expo managed workflow)
 - [Phase 09-reporting-dashboards]: calcReliability uses .toISOString().slice(0,10) for timezone-safe calendar day comparison (D-17/pitfall-4)
 - [Phase 09-reporting-dashboards]: aggregatePortfolio sparkline always 12 monthly buckets regardless of granularity for consistent sparkline rendering
+- [Phase 09-reporting-dashboards]: Victory @36 style callbacks cast to any — VictoryStringOrNumberCallback uses CallbackArgs with datum?: optional which conflicts with custom DatumShape types
+- [Phase 09-reporting-dashboards]: VictoryGroup/VictoryStack: two complete VictoryBar series as direct children (not per-element mapping) — this is the correct Victory API pattern
+- [Phase 09-reporting-dashboards]: DonutChart empty state: renders single colors.border segment with y=1 so VictoryPie ring remains visible as empty-state frame (per D-20/D-21)
 
 ### Pending Todos
 
@@ -111,6 +115,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T10:17:03.798Z
-Stopped at: Completed 09-reporting-dashboards-01-PLAN.md
+Last session: 2026-03-21T10:24:55.793Z
+Stopped at: Completed 09-reporting-dashboards-02-PLAN.md
 Resume file: None
