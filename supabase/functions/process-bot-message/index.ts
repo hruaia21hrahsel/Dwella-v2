@@ -615,12 +615,239 @@ const handleSendReminder: ActionHandler = async (supabase, userId, entities) => 
   return `Reminder sent to ${tenant.tenant_name}!`;
 };
 
+const handleQueryMaintenanceStatus: ActionHandler = async (supabase, userId, _entities) => {
+  // Fetch properties owned by user
+  const { data: ownedProps } = await supabase
+    .from('properties')
+    .select('id')
+    .eq('owner_id', userId)
+    .eq('is_archived', false);
+  const ownedIds = (ownedProps ?? []).map((p: any) => p.id);
+
+  // Fetch tenant rows for user
+  const { data: tenantRows } = await supabase
+    .from('tenants')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_archived', false);
+  const tenantIds = (tenantRows ?? []).map((t: any) => t.id);
+
+  // Build query — landlord sees by property, tenant sees by tenant_id
+  let query = supabase
+    .from('maintenance_requests')
+    .select(`
+      id, title, description, status, priority, created_at, updated_at,
+      maintenance_status_logs(from_status, to_status, note, created_at)
+    `)
+    .eq('is_archived', false)
+    .order('updated_at', { ascending: false })
+    .limit(10);
+
+  if (ownedIds.length > 0 && tenantIds.length > 0) {
+    query = query.or(`property_id.in.(${ownedIds.join(',')}),tenant_id.in.(${tenantIds.join(',')})`);
+  } else if (ownedIds.length > 0) {
+    query = query.in('property_id', ownedIds);
+  } else if (tenantIds.length > 0) {
+    query = query.in('tenant_id', tenantIds);
+  } else {
+    return 'You do not have any properties or tenancies yet.';
+  }
+
+  const { data: requests } = await query;
+
+  if (!requests || requests.length === 0) {
+    return 'No maintenance requests found. Everything looks good!';
+  }
+
+  const statusEmoji: Record<string, string> = {
+    open: '🔴', acknowledged: '🟡', 'in progress': '🔵', resolved: '🟢', closed: '⚪',
+  };
+
+  let response = `🔧 *Maintenance Status* (${requests.length} request${requests.length > 1 ? 's' : ''}):\n\n`;
+  for (const r of requests) {
+    const emoji = statusEmoji[r.status] ?? '⚪';
+    response += `${emoji} *${r.title}*\n`;
+    response += `   Status: ${r.status} | Priority: ${r.priority}\n`;
+    const logs = (r.maintenance_status_logs as any[]) ?? [];
+    if (logs.length > 0) {
+      const latest = logs.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+      response += `   Last update: ${latest.from_status} → ${latest.to_status}`;
+      if (latest.note) response += ` (${latest.note})`;
+      response += '\n';
+    }
+    response += '\n';
+  }
+
+  return response;
+};
+
+const handleQueryUpcomingPayments: ActionHandler = async (supabase, userId, _entities) => {
+  // Landlord: tenants in owned properties
+  const { data: ownedProps } = await supabase
+    .from('properties')
+    .select('id')
+    .eq('owner_id', userId)
+    .eq('is_archived', false);
+  const ownedIds = (ownedProps ?? []).map((p: any) => p.id);
+
+  // Tenant: user's own tenant rows
+  const { data: tenantRows } = await supabase
+    .from('tenants')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_archived', false);
+  const tenantIds = (tenantRows ?? []).map((t: any) => t.id);
+
+  // Collect all relevant tenant IDs
+  let allTenantIds = [...tenantIds];
+  if (ownedIds.length > 0) {
+    const { data: ownedTenants } = await supabase
+      .from('tenants')
+      .select('id')
+      .in('property_id', ownedIds)
+      .eq('is_archived', false);
+    allTenantIds = [...allTenantIds, ...(ownedTenants ?? []).map((t: any) => t.id)];
+  }
+  allTenantIds = [...new Set(allTenantIds)];
+
+  if (allTenantIds.length === 0) {
+    return 'You do not have any properties or tenancies yet.';
+  }
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('id, month, year, amount_due, amount_paid, status, tenants(tenant_name, flat_no, properties(name))')
+    .in('tenant_id', allTenantIds)
+    .in('status', ['pending', 'partial', 'overdue'])
+    .gte('year', currentYear)
+    .order('year', { ascending: true })
+    .order('month', { ascending: true });
+
+  if (!payments || payments.length === 0) {
+    return '✅ No upcoming or overdue payments. All caught up!';
+  }
+
+  const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  let response = `💰 *Upcoming Payments* (${payments.length}):\n\n`;
+  for (const p of payments) {
+    const tenant = (p as any).tenants;
+    const prop = tenant?.properties;
+    const statusEmoji = p.status === 'overdue' ? '🔴' : p.status === 'partial' ? '🟡' : '⚪';
+    response += `${statusEmoji} *${tenant?.tenant_name ?? 'Unknown'}* — ${prop?.name ?? ''} (${tenant?.flat_no ?? ''})\n`;
+    response += `   ${monthNames[p.month]} ${p.year}: Rs.${p.amount_due - p.amount_paid} remaining (${p.status})\n\n`;
+  }
+
+  return response;
+};
+
+const handleQueryPropertySummary: ActionHandler = async (supabase, userId, _entities) => {
+  const { data: properties } = await supabase
+    .from('properties')
+    .select(`
+      id, name, total_units,
+      tenants(id, user_id, monthly_rent, is_archived, payments(status, amount_due, amount_paid, month, year))
+    `)
+    .eq('owner_id', userId)
+    .eq('is_archived', false);
+
+  if (!properties || properties.length === 0) {
+    // Tenant-only user: show their own payment status
+    const { data: tenantRows } = await supabase
+      .from('tenants')
+      .select('tenant_name, flat_no, monthly_rent, due_day, properties(name), payments(status, amount_due, amount_paid, month, year)')
+      .eq('user_id', userId)
+      .eq('is_archived', false);
+
+    if (!tenantRows || tenantRows.length === 0) {
+      return 'You do not have any properties or tenancies yet.';
+    }
+
+    const now = new Date();
+    const cm = now.getMonth() + 1;
+    const cy = now.getFullYear();
+    let response = '🏠 *Your Tenant Summary*:\n\n';
+    for (const t of tenantRows) {
+      const prop = (t as any).properties;
+      const payments = ((t as any).payments ?? []) as any[];
+      const thisMo = payments.find((p: any) => p.month === cm && p.year === cy);
+      response += `📍 ${prop?.name ?? 'Property'} — Flat ${t.flat_no}\n`;
+      response += `   Rent: Rs.${t.monthly_rent}/mo, Due day: ${t.due_day}\n`;
+      if (thisMo) {
+        response += `   This month: ${thisMo.status} (Rs.${thisMo.amount_paid}/${thisMo.amount_due})\n`;
+      } else {
+        response += `   This month: no payment record yet\n`;
+      }
+      response += '\n';
+    }
+    return response;
+  }
+
+  const now = new Date();
+  const cm = now.getMonth() + 1;
+  const cy = now.getFullYear();
+
+  let totalOccupied = 0;
+  let totalUnits = 0;
+  let totalExpected = 0;
+  let totalCollected = 0;
+  let overdueCount = 0;
+
+  let response = '🏢 *Property Summary*:\n\n';
+  for (const prop of properties) {
+    const tenants = ((prop as any).tenants ?? []).filter((t: any) => !t.is_archived);
+    const activeTenants = tenants.filter((t: any) => t.user_id != null);
+    totalOccupied += activeTenants.length;
+    totalUnits += prop.total_units;
+
+    let propExpected = 0;
+    let propCollected = 0;
+    let propOverdue = 0;
+
+    for (const t of tenants) {
+      propExpected += t.monthly_rent ?? 0;
+      const payments = ((t as any).payments ?? []) as any[];
+      const thisMo = payments.find((p: any) => p.month === cm && p.year === cy);
+      if (thisMo) {
+        if (['paid', 'confirmed'].includes(thisMo.status)) {
+          propCollected += thisMo.amount_paid ?? thisMo.amount_due;
+        } else if (thisMo.status === 'partial') {
+          propCollected += thisMo.amount_paid ?? 0;
+        }
+        if (thisMo.status === 'overdue') propOverdue++;
+      }
+    }
+
+    totalExpected += propExpected;
+    totalCollected += propCollected;
+    overdueCount += propOverdue;
+
+    const rate = propExpected > 0 ? Math.round((propCollected / propExpected) * 100) : 0;
+    response += `📍 *${prop.name}*: ${activeTenants.length}/${prop.total_units} occupied, ${rate}% collected`;
+    if (propOverdue > 0) response += `, ${propOverdue} overdue`;
+    response += '\n';
+  }
+
+  const totalRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
+  response += `\n📊 *Total*: ${totalOccupied}/${totalUnits} occupied, ${totalRate}% collected this month`;
+  if (overdueCount > 0) response += `, ${overdueCount} overdue`;
+  response += '\n';
+
+  return response;
+};
+
 const ACTION_HANDLERS: Record<string, ActionHandler> = {
   log_payment: handleLogPayment,
   add_property: handleAddProperty,
   add_tenant: handleAddTenant,
   send_reminder: handleSendReminder,
   confirm_payment: handleConfirmPayment,
+  query_maintenance_status: handleQueryMaintenanceStatus,
+  query_upcoming_payments: handleQueryUpcomingPayments,
+  query_property_summary: handleQueryPropertySummary,
 };
 
 
@@ -705,6 +932,31 @@ async function buildContext(supabase: ReturnType<typeof createClient>, userId: s
     ctx += 'No properties or tenancies found for this user yet.\n';
   }
 
+  // Maintenance context
+  const { data: maintRequests } = await supabase
+    .from('maintenance_requests')
+    .select('id, title, status, priority, updated_at, property_id, tenant_id')
+    .eq('is_archived', false)
+    .in('status', ['open', 'acknowledged', 'in progress'])
+    .order('updated_at', { ascending: false })
+    .limit(20);
+
+  if (maintRequests && maintRequests.length > 0) {
+    // Filter to only requests relevant to this user
+    const userPropertyIds = (properties ?? []).map((p: any) => p.id);
+    const userTenantIds = (tenantRows ?? []).map((t: any) => t.id);
+    const relevant = maintRequests.filter((r: any) =>
+      userPropertyIds.includes(r.property_id) || userTenantIds.includes(r.tenant_id)
+    );
+    if (relevant.length > 0) {
+      ctx += `MAINTENANCE CONTEXT — ${relevant.length} active request(s):\n`;
+      for (const r of relevant) {
+        ctx += `  Request: <maint_title>${sanitizeForContext(r.title)}</maint_title> (ID: ${r.id}), Status: ${r.status}, Priority: ${r.priority}, Updated: ${r.updated_at}\n`;
+      }
+      ctx += '\n';
+    }
+  }
+
   return ctx;
 }
 
@@ -741,7 +993,10 @@ AVAILABLE ACTIONS — You can perform these for the user:
 - add_tenant: Add a tenant to a property. Entities: { property_name, tenant_name, flat_no?, monthly_rent?, due_day? }
 - send_reminder: Send a rent reminder to a tenant. Entities: { tenant_name }
 
-QUERY INTENTS (no action needed):
+QUERY INTENTS — Use these for read-only information requests:
+- query_maintenance_status: Show maintenance request status and history. No entities needed.
+- query_upcoming_payments: Show upcoming/overdue payments with amounts and dates. No entities needed.
+- query_property_summary: Show property occupancy and rent collection summary. No entities needed.
 - query_status, query_summary, query_overdue, query_tenant, general_chat
 
 RESPONSE FORMAT: Always respond with valid JSON matching this schema:
