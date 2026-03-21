@@ -104,11 +104,11 @@ Plans:
   4. Tenant receives a WhatsApp rent reminder 3 days before, on, and 3 days after the due date without the bot ever sending a free-form text message outside the 24-hour session window
   5. Tenant receives a WhatsApp payment confirmation receipt when their payment is confirmed
   6. Tenant and landlord both receive a WhatsApp notification when a maintenance request status changes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: New Claude intents (query_maintenance_status, query_upcoming_payments, query_property_summary) + extended buildContext() with maintenance data
-- [ ] 14-02: notify-whatsapp Edge Function + auto-confirm-payments hook + send-reminders template fix (replace free-form with dwella_rent_reminder template)
+- [ ] 14-01-PLAN.md — New Claude intents (query_maintenance_status, query_upcoming_payments, query_property_summary) + sub-menu button rewiring + extended buildContext() with maintenance data
+- [ ] 14-02-PLAN.md — notify-whatsapp Edge Function + DB trigger + send-reminders template switch + auto-confirm-payments WhatsApp/Telegram notifications
 
 ## Progress
 
