@@ -468,6 +468,19 @@ export default function ProfileScreen() {
             <Text variant="bodySmall" style={{ color: colors.textSecondary, fontSize: 13 }}>
               Linked to {user?.whatsapp_phone}. You can chat with Dwella Assistant on WhatsApp.
             </Text>
+            {WHATSAPP_BOT_PHONE ? (
+              <Button
+                mode="contained-tonal"
+                icon="whatsapp"
+                onPress={() => {
+                  const waUrl = `https://wa.me/${WHATSAPP_BOT_PHONE.replace(/^\+/, '')}`;
+                  Linking.openURL(waUrl);
+                }}
+                style={{ marginTop: 4 }}
+              >
+                Open WhatsApp
+              </Button>
+            ) : null}
             <Button
               mode="outlined"
               icon="link-off"
