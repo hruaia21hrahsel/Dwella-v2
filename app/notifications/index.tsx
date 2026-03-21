@@ -25,23 +25,27 @@ type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 function iconForType(type: string): IconName {
   switch (type) {
-    case 'reminder_upcoming': return 'clock-outline';
-    case 'reminder_due':      return 'alert-circle-outline';
-    case 'reminder_overdue':  return 'alert-outline';
-    case 'payment_confirmed': return 'check-circle-outline';
-    case 'payment_received':  return 'cash-check';
-    default:                  return 'bell-outline';
+    case 'reminder_upcoming':          return 'clock-outline';
+    case 'reminder_due':               return 'alert-circle-outline';
+    case 'reminder_overdue':           return 'alert-outline';
+    case 'payment_confirmed':          return 'check-circle-outline';
+    case 'payment_received':           return 'cash-check';
+    case 'maintenance_new':            return 'wrench-outline';
+    case 'maintenance_status_update':  return 'hammer-wrench';
+    default:                           return 'bell-outline';
   }
 }
 
 function useIconColorForType(type: string): string {
   const { colors } = useTheme();
   switch (type) {
-    case 'reminder_overdue': return colors.error;
-    case 'reminder_due':     return colors.warning;
+    case 'reminder_overdue':          return colors.error;
+    case 'reminder_due':              return colors.warning;
     case 'payment_confirmed':
-    case 'payment_received': return colors.success;
-    default:                 return colors.primary;
+    case 'payment_received':          return colors.success;
+    case 'maintenance_new':           return '#14B8A6'; // teal, matches tools card color
+    case 'maintenance_status_update': return '#F59E0B'; // amber, matches in_progress status
+    default:                          return colors.primary;
   }
 }
 
