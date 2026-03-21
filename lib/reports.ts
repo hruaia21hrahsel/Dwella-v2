@@ -132,73 +132,53 @@ function shortMonth(month: number): string {
   return getMonthName(month).slice(0, 3);
 }
 
-// ─── Indian Financial Year quarter mapping ───────────────────────────────────
-//
-// Indian FY runs April–March. "FY 2026" means Apr 2026 – Mar 2027.
-//   Q1 → Apr, May, Jun   (months 4, 5, 6   of FY start year)
-//   Q2 → Jul, Aug, Sep   (months 7, 8, 9   of FY start year)
-//   Q3 → Oct, Nov, Dec   (months 10, 11, 12 of FY start year)
-//   Q4 → Jan, Feb, Mar   (months 1, 2, 3   of FY start year + 1)
-
-/** Maps FY quarter → { months (1-12), yearOffset (0 or 1 relative to FY start year) }. */
-const FY_QUARTERS: Record<number, { months: number[]; yearOffset: number }> = {
-  1: { months: [4, 5, 6], yearOffset: 0 },
-  2: { months: [7, 8, 9], yearOffset: 0 },
-  3: { months: [10, 11, 12], yearOffset: 0 },
-  4: { months: [1, 2, 3], yearOffset: 1 },
-};
-
 // ─── getPeriodBuckets ────────────────────────────────────────────────────────
 
 /**
  * Returns the time buckets that correspond to a given TimePeriod.
- * Uses Indian Financial Year quarters (Apr–Mar).
  *
- * - yearly    → 4 quarter buckets (Q1=Apr-Jun … Q4=Jan-Mar)
- * - quarterly → 3 monthly buckets for that FY quarter
+ * - yearly    → 4 quarter buckets (Q1–Q4)
+ * - quarterly → 3 monthly buckets for that quarter
  * - monthly   → 1 bucket for that month
- *
- * `year` in TimePeriod represents the FY start year. FY 2026 = Apr 2026 – Mar 2027.
  */
 export function getPeriodBuckets(period: TimePeriod): PeriodBucket[] {
   const { year, granularity, quarter, month } = period;
 
   if (granularity === 'monthly') {
-    const m = month ?? 4; // default to April (FY start)
-    // Months 4-12 fall in `year`, months 1-3 fall in `year + 1`
-    const calYear = m >= 4 ? year : year + 1;
+    const m = month ?? 1;
     return [
       {
         label: shortMonth(m),
         months: [m],
-        startDate: monthStart(calYear, m),
-        endDate: monthEnd(calYear, m),
+        startDate: monthStart(year, m),
+        endDate: monthEnd(year, m),
       },
     ];
   }
 
   if (granularity === 'quarterly') {
     const q = quarter ?? 1;
-    const qInfo = FY_QUARTERS[q];
-    const calYear = year + qInfo.yearOffset;
-    return qInfo.months.map((m) => ({
-      label: shortMonth(m),
-      months: [m],
-      startDate: monthStart(calYear, m),
-      endDate: monthEnd(calYear, m),
-    }));
+    const startMonth = (q - 1) * 3 + 1; // Q1→1, Q2→4, Q3→7, Q4→10
+    return [0, 1, 2].map((offset) => {
+      const m = startMonth + offset;
+      return {
+        label: shortMonth(m),
+        months: [m],
+        startDate: monthStart(year, m),
+        endDate: monthEnd(year, m),
+      };
+    });
   }
 
-  // yearly → 4 FY quarter buckets (Apr–Mar)
+  // yearly → 4 quarter buckets
   return [1, 2, 3, 4].map((q) => {
-    const qInfo = FY_QUARTERS[q];
-    const calYear = year + qInfo.yearOffset;
-    const [m1, m2, m3] = qInfo.months;
+    const startMonth = (q - 1) * 3 + 1;
+    const endMonth = startMonth + 2;
     return {
       label: `Q${q}`,
-      months: qInfo.months,
-      startDate: monthStart(calYear, m1),
-      endDate: monthEnd(calYear, m3),
+      months: [startMonth, startMonth + 1, endMonth],
+      startDate: monthStart(year, startMonth),
+      endDate: monthEnd(year, endMonth),
     };
   });
 }
@@ -221,25 +201,19 @@ type PeriodFilterable =
  */
 export function filterByPeriod<T extends PeriodFilterable>(items: T[], period: TimePeriod): T[] {
   const buckets = getPeriodBuckets(period);
-  // Build a set of "calendarYear:month" keys from bucket date ranges
-  // so that FY Q4 (Jan-Mar of year+1) is matched correctly.
-  const allowedKeys = new Set<string>();
-  for (const bucket of buckets) {
-    const bucketYear = parseInt(bucket.startDate.slice(0, 4), 10);
-    for (const m of bucket.months) {
-      allowedKeys.add(`${bucketYear}:${m}`);
-    }
-  }
+  const allowedMonths = new Set(buckets.flatMap((b) => b.months));
 
   return items.filter((item) => {
     if ('expense_date' in item && item.expense_date) {
       const d = new Date(item.expense_date);
-      return allowedKeys.has(`${d.getFullYear()}:${d.getMonth() + 1}`);
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      return y === period.year && allowedMonths.has(m);
     }
     // Payment-style: month + year fields
     const itemYear = (item as { year: number }).year;
     const itemMonth = (item as { month: number }).month;
-    return allowedKeys.has(`${itemYear}:${itemMonth}`);
+    return itemYear === period.year && allowedMonths.has(itemMonth);
   });
 }
 
@@ -259,13 +233,11 @@ export function aggregateByPeriod(
   const buckets = getPeriodBuckets(period);
 
   return buckets.map((bucket) => {
-    const bucketYear = parseInt(bucket.startDate.slice(0, 4), 10);
-
-    // Income: paid/confirmed payments whose year+month matches this bucket
+    // Income: paid/confirmed payments whose month is in this bucket
     const income = payments
       .filter(
         (p) =>
-          p.year === bucketYear &&
+          p.year === period.year &&
           bucket.months.includes(p.month) &&
           (p.status === 'paid' || p.status === 'confirmed'),
       )
@@ -275,7 +247,7 @@ export function aggregateByPeriod(
     const expense = expenses
       .filter((e) => {
         const d = new Date(e.expense_date);
-        return d.getFullYear() === bucketYear && bucket.months.includes(d.getMonth() + 1);
+        return d.getFullYear() === period.year && bucket.months.includes(d.getMonth() + 1);
       })
       .reduce((sum, e) => sum + e.amount, 0);
 
@@ -477,15 +449,19 @@ export function aggregatePortfolio(
     const propIncome = pl.reduce((s, b) => s + b.income, 0);
     const propExpense = pl.reduce((s, b) => s + b.expense, 0);
 
-    // 12-month sparkline (Apr–Mar for Indian FY)
-    // FY months: Apr(4)–Dec(12) of period.year, Jan(1)–Mar(3) of period.year+1
-    const fyMonths = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3];
-    const monthlyPL: MonthlyPL[] = fyMonths.map((m) => {
-      const calYear = m >= 4 ? period.year : period.year + 1;
+    // 12-month sparkline (Jan–Dec)
+    const monthlyPL: MonthlyPL[] = Array.from({ length: 12 }, (_, i) => {
+      const m = i + 1;
+      const bucket: PeriodBucket = {
+        label: shortMonth(m),
+        months: [m],
+        startDate: monthStart(period.year, m),
+        endDate: monthEnd(period.year, m),
+      };
       const income = propPayments
         .filter(
           (p) =>
-            p.year === calYear &&
+            p.year === period.year &&
             p.month === m &&
             (p.status === 'paid' || p.status === 'confirmed'),
         )
@@ -493,10 +469,10 @@ export function aggregatePortfolio(
       const expense = propExpenses
         .filter((e) => {
           const d = new Date(e.expense_date);
-          return d.getFullYear() === calYear && d.getMonth() + 1 === m;
+          return d.getFullYear() === period.year && d.getMonth() + 1 === m;
         })
         .reduce((s, e) => s + e.amount, 0);
-      return { label: shortMonth(m), income, expense };
+      return { label: bucket.label, income, expense };
     });
 
     // Occupancy for selected period (first bucket for KPI)

@@ -101,14 +101,14 @@ export function usePortfolioData(year: number): PortfolioDataResult {
       // Collect all tenant IDs across all properties
       const allTenantIds = fetchedProperties.flatMap((p) => p.tenants.map((t) => t.id));
 
-      // Query 2: payments for FY (Apr of `year` – Mar of `year+1`)
+      // Query 2: payments for selected year (skip if no tenants)
       let fetchedPayments: Payment[] = [];
       if (allTenantIds.length > 0) {
         const { data: payData, error: payError } = await supabase
           .from('payments')
           .select('*')
           .in('tenant_id', allTenantIds)
-          .in('year', [year, year + 1]);
+          .eq('year', year);
         if (payError) throw payError;
         fetchedPayments = (payData ?? []) as Payment[];
       }
@@ -195,14 +195,14 @@ export function usePropertyReportData(
       const fetchedProperty = propData as unknown as PropertyWithTenants;
       const tenantIds = fetchedProperty.tenants.map((t) => t.id);
 
-      // Query 2: payments for FY (Apr of period.year – Mar of period.year+1)
+      // Query 2: payments for this property's tenants for selected year
       let fetchedPayments: Payment[] = [];
       if (tenantIds.length > 0) {
         const { data: payData, error: payError } = await supabase
           .from('payments')
           .select('*')
           .in('tenant_id', tenantIds)
-          .in('year', [period.year, period.year + 1]);
+          .eq('year', period.year);
         if (payError) throw payError;
         fetchedPayments = (payData ?? []) as Payment[];
       }
