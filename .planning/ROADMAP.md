@@ -89,7 +89,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — BUTTON_LOOKUP dispatch table in process-bot-message + callback_query handling and inline keyboard support in telegram-webhook
+- [x] 13-01-PLAN.md — BUTTON_LOOKUP dispatch table in process-bot-message + callback_query handling and inline keyboard support in telegram-webhook
 - [x] 13-02-PLAN.md — Interactive button_reply routing in whatsapp-webhook + session detection (last_bot_message_at migration) + welcome message on account linking
 - [ ] 13-03-PLAN.md — generate-pdf Edge Function (HTML-to-PDF via html2pdf.app) + pdf_month_ handler wiring + document delivery on both platforms
 
@@ -126,5 +126,5 @@ Plans:
 | 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete | 2026-03-21 |
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 12. Media Handling | v1.2 | 2/2 | Complete    | 2026-03-21 |
-| 13. Rich Messaging & Menus | v1.2 | 1/3 | In Progress|  |
+| 13. Rich Messaging & Menus | v1.2 | 2/3 | In Progress|  |
 | 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |

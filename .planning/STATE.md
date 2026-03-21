@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
 status: unknown
-stopped_at: Completed 13-rich-messaging-02-PLAN.md
-last_updated: "2026-03-21T15:16:31.319Z"
+stopped_at: Completed 13-rich-messaging-01-PLAN.md
+last_updated: "2026-03-21T15:21:27.827Z"
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 ## Current Position
 
 Phase: 13 (rich-messaging) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Plan: 2 of 3
 | Phase 12-media-handling P01 | 2m | 1 tasks | 1 files |
 | Phase 12-media-handling P02 | 5 | 1 tasks | 1 files |
 | Phase 13-rich-messaging P02 | 2 | 2 tasks | 2 files |
+| Phase 13-rich-messaging P01 | 6 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ See PROJECT.md Key Decisions table for full list.
 - [Phase 12-media-handling]: Await delegation fetch to whatsapp-media so catch block can send error reply on network failure; whatsapp-media handles its own user-facing reply for success/failure
 - [Phase 13-rich-messaging]: sendBotResponse() flattens button rows to flat array for WhatsApp's 3-button max — mirrors Telegram multi-message pattern
 - [Phase 13-rich-messaging]: Welcome message replaces old linking confirmation text on WhatsApp verification success — user gets menu immediately
+- [Phase 13-rich-messaging]: BUTTON_LOOKUP bypass: button_id check before Claude dispatch — no LLM call for menu taps
+- [Phase 13-rich-messaging]: Telegram callback_query handled before message early-return (Pitfall 6 fix) — supabase client moved above both branches
+- [Phase 13-rich-messaging]: answerCallbackQuery fires first before async work — prevents loading spinner hanging in Telegram
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T15:16:31.316Z
-Stopped at: Completed 13-rich-messaging-02-PLAN.md
+Last session: 2026-03-21T15:21:27.824Z
+Stopped at: Completed 13-rich-messaging-01-PLAN.md
 Resume file: None

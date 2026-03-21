@@ -34,13 +34,13 @@ Requirements for WhatsApp Bot milestone. Each maps to roadmap phases.
 
 - [x] **RICH-01**: Bot sends warm welcome message to first-time users upon account linking
 - [x] **RICH-02**: Bot presents main menu with 5 categories on each new session (Properties, Payments, History, Maintenance, Others)
-- [ ] **RICH-03**: Each main menu category expands into contextual sub-option buttons:
+- [x] **RICH-03**: Each main menu category expands into contextual sub-option buttons:
   - **Properties**: view, add, edit, occupancy, summary, delete (responds with explanatory message directing user to the app)
   - **Payments**: log, confirm, upcoming, remind
   - **History**: payments, maintenance, recent activity, download PDF report (user picks month/year)
   - **Maintenance**: submit, status, update
   - **Others**: upload doc, link/unlink account, help, contact landlord/tenant, chat with bot
-- [ ] **RICH-04**: Bot supports freeform text alongside button navigation (buttons are shortcuts, not the only path)
+- [x] **RICH-04**: Bot supports freeform text alongside button navigation (buttons are shortcuts, not the only path)
 - [x] **RICH-05**: Menu-driven flow works on both Telegram and WhatsApp bots
 
 ## Future Requirements
@@ -86,8 +86,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INTENT-03 | Phase 14 | Pending |
 | RICH-01 | Phase 13 | Complete |
 | RICH-02 | Phase 13 | Complete |
-| RICH-03 | Phase 13 | Pending |
-| RICH-04 | Phase 13 | Pending |
+| RICH-03 | Phase 13 | Complete |
+| RICH-04 | Phase 13 | Complete |
 | RICH-05 | Phase 13 | Complete |
 
 **Coverage:**
