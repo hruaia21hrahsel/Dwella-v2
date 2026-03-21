@@ -7,6 +7,7 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const PROCESS_BOT_URL = `${SUPABASE_URL}/functions/v1/process-bot-message`;
 const WHATSAPP_SEND_URL = `${SUPABASE_URL}/functions/v1/whatsapp-send`;
+const WHATSAPP_MEDIA_URL = `${SUPABASE_URL}/functions/v1/whatsapp-media`;
 
 /** Normalize a phone number to E.164 format with + prefix */
 function normalizePhone(phone: string): string {
@@ -106,7 +107,69 @@ serve(async (req) => {
 
   const msg = value['messages'][0];
   const senderPhone = normalizePhone(msg['from'] as string);
+  const msgType = (msg['type'] as string) ?? '';
   const text = (msg['text']?.['body'] as string) ?? '';
+
+  // ---- Media messages: delegate to whatsapp-media ----
+  if (msgType === 'image' || msgType === 'document') {
+    // Need linked user for media processing
+    const supabaseForMedia = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const { data: mediaUser } = await supabaseForMedia
+      .from('users')
+      .select('id')
+      .eq('whatsapp_phone', senderPhone)
+      .single();
+
+    if (!mediaUser) {
+      await sendWhatsApp(
+        senderPhone,
+        "I don't recognize this WhatsApp number. Please link it from the Dwella app \u2192 Profile \u2192 Link WhatsApp.",
+      );
+      return new Response('OK', { status: 200 });
+    }
+
+    try {
+      await fetch(WHATSAPP_MEDIA_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+        },
+        body: JSON.stringify({
+          user_id: mediaUser.id,
+          phone: senderPhone,
+          msg_type: msgType,
+          media: msg[msgType],
+        }),
+      });
+    } catch (err) {
+      console.error('whatsapp-media delegation error:', err);
+      await sendWhatsApp(
+        senderPhone,
+        'Something went wrong processing your media. Please try again or use the Dwella app directly.',
+      );
+    }
+    return new Response('OK', { status: 200 });
+  }
+
+  // ---- Unsupported media types: inform user ----
+  if (['video', 'audio', 'sticker', 'location', 'contacts'].includes(msgType)) {
+    // Check if user is linked before replying (avoid replying to unknown numbers)
+    const supabaseForCheck = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const { data: checkUser } = await supabaseForCheck
+      .from('users')
+      .select('id')
+      .eq('whatsapp_phone', senderPhone)
+      .single();
+
+    if (checkUser) {
+      await sendWhatsApp(
+        senderPhone,
+        'I can only accept photos (payment proofs) and documents (PDFs, Word files). For other requests, just type your message.',
+      );
+    }
+    return new Response('OK', { status: 200 });
+  }
 
   if (!text.trim()) {
     return new Response('OK', { status: 200 });
