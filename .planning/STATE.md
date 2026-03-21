@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
 status: unknown
-stopped_at: Completed 13-rich-messaging-03-PLAN.md
-last_updated: "2026-03-21T15:31:27.232Z"
+stopped_at: Completed 14-intents-outbound-notifications-02-PLAN.md
+last_updated: "2026-03-21T16:05:25.918Z"
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every user-facing workflow (auth, property CRUD, payments, invites, documents, maintenance, reports, bot) works correctly and securely.
-**Current focus:** Phase 13 — rich-messaging
+**Current focus:** Phase 14 — intents-outbound-notifications
 
 ## Current Position
 
-Phase: 14
-Plan: Not started
+Phase: 14 (intents-outbound-notifications) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -50,6 +50,8 @@ Plan: Not started
 | Phase 13-rich-messaging P02 | 2 | 2 tasks | 2 files |
 | Phase 13-rich-messaging P01 | 6 | 2 tasks | 2 files |
 | Phase 13-rich-messaging P03 | 3 | 2 tasks | 4 files |
+| Phase 14 P01 | 5 | 2 tasks | 1 files |
+| Phase 14 P02 | 12 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -78,6 +80,11 @@ See PROJECT.md Key Decisions table for full list.
 - [Phase 13-rich-messaging]: html2pdf.app response field uncertainty handled by trying multiple field names (pdf ?? base64 ?? content ?? data) with key logging on failure
 - [Phase 13-rich-messaging]: pdf-reports Storage bucket is private with 1-hour signed URL — PDF not publicly accessible
 - [Phase 13-rich-messaging]: handleButtonPress made async to support pdf_month_ PDF generation — only that branch is truly async
+- [Phase 14]: Query handlers registered in ACTION_HANDLERS so Claude freeform and button dispatch share same implementation
+- [Phase 14]: D-04 intercept: sub-menu button IDs checked inside startsWith('sub_') block before falling through to handleSubAction
+- [Phase 14]: notify-whatsapp fetches push_token from users table directly since send-push requires token not userId
+- [Phase 14]: WhatsApp receipt on auto-confirm goes only to tenant (not landlord) per D-07; landlord gets push only
+- [Phase 14]: All outbound WhatsApp routed through whatsapp-send Edge Function as single source of truth; no direct Meta API calls in scheduled functions
 
 ### Pending Todos
 
@@ -92,6 +99,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T15:27:43.256Z
-Stopped at: Completed 13-rich-messaging-03-PLAN.md
+Last session: 2026-03-21T16:05:25.915Z
+Stopped at: Completed 14-intents-outbound-notifications-02-PLAN.md
 Resume file: None

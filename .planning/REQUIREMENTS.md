@@ -26,9 +26,9 @@ Requirements for WhatsApp Bot milestone. Each maps to roadmap phases.
 
 ### New Bot Intents
 
-- [ ] **INTENT-01**: User can ask bot about maintenance request status and history
-- [ ] **INTENT-02**: User can ask bot about upcoming payments (what's due, when, how much)
-- [ ] **INTENT-03**: User can ask bot for property summary (occupancy, vacancy, rent collection status)
+- [x] **INTENT-01**: User can ask bot about maintenance request status and history
+- [x] **INTENT-02**: User can ask bot about upcoming payments (what's due, when, how much)
+- [x] **INTENT-03**: User can ask bot for property summary (occupancy, vacancy, rent collection status)
 
 ### Rich Messaging
 
@@ -81,9 +81,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUT-01 | Phase 14 | Pending |
 | OUT-02 | Phase 14 | Pending |
 | OUT-03 | Phase 14 | Pending |
-| INTENT-01 | Phase 14 | Pending |
-| INTENT-02 | Phase 14 | Pending |
-| INTENT-03 | Phase 14 | Pending |
+| INTENT-01 | Phase 14 | Complete |
+| INTENT-02 | Phase 14 | Complete |
+| INTENT-03 | Phase 14 | Complete |
 | RICH-01 | Phase 13 | Complete |
 | RICH-02 | Phase 13 | Complete |
 | RICH-03 | Phase 13 | Complete |

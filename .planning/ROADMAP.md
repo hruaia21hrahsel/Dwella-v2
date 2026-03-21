@@ -41,7 +41,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 - [x] **Phase 11: Setup & Infrastructure** — Meta account setup, WhatsApp linking flow, shared whatsapp-send helper, template submission (completed 2026-03-21)
 - [x] **Phase 12: Media Handling** — Inbound photo payment proof and document sharing via WhatsApp (completed 2026-03-21)
 - [x] **Phase 13: Rich Messaging & Menus** — Interactive button menus on both WhatsApp and Telegram, welcome message, PDF report delivery (completed 2026-03-21)
-- [ ] **Phase 14: Intents & Outbound Notifications** — New AI intents (maintenance, payments, property summary) and outbound template notifications
+- [x] **Phase 14: Intents & Outbound Notifications** — New AI intents (maintenance, payments, property summary) and outbound template notifications (completed 2026-03-21)
 
 ## Phase Details
 
@@ -107,8 +107,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — New Claude intents (query_maintenance_status, query_upcoming_payments, query_property_summary) + sub-menu button rewiring + extended buildContext() with maintenance data
-- [ ] 14-02-PLAN.md — notify-whatsapp Edge Function + DB trigger + send-reminders template switch + auto-confirm-payments WhatsApp/Telegram notifications
+- [x] 14-01-PLAN.md — New Claude intents (query_maintenance_status, query_upcoming_payments, query_property_summary) + sub-menu button rewiring + extended buildContext() with maintenance data
+- [x] 14-02-PLAN.md — notify-whatsapp Edge Function + DB trigger + send-reminders template switch + auto-confirm-payments WhatsApp/Telegram notifications
 
 ## Progress
 
@@ -127,4 +127,4 @@ Plans:
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 12. Media Handling | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 13. Rich Messaging & Menus | v1.2 | 3/3 | Complete    | 2026-03-21 |
-| 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |
+| 14. Intents & Outbound Notifications | v1.2 | 2/2 | Complete   | 2026-03-21 |
