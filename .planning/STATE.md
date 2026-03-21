@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
 status: unknown
-stopped_at: Completed 12-media-handling-01-PLAN.md
-last_updated: "2026-03-21T14:21:01.895Z"
+stopped_at: Completed 12-media-handling-02-PLAN.md
+last_updated: "2026-03-21T14:23:51.060Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -46,6 +46,7 @@ Plan: 2 of 2
 | Phase 11 P01 | 3m | 2 tasks | 2 files |
 | Phase 11 P02 | 2m | 2 tasks | 3 files |
 | Phase 12-media-handling P01 | 2m | 1 tasks | 1 files |
+| Phase 12-media-handling P02 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ See PROJECT.md Key Decisions table for full list.
 - [Phase 12-media-handling]: buildContext() copied verbatim from process-bot-message — Deno Edge Functions have no shared import; duplication is correct pattern
 - [Phase 12-media-handling]: Payment row created with status 'paid' when none exists on proof upload — sending proof implies payment was made
 - [Phase 12-media-handling]: Chunked base64 conversion in 8192-byte slices to prevent stack overflow on large image ArrayBuffers
+- [Phase 12-media-handling]: Inline createClient for media path in whatsapp-webhook — main client created post-text-check; media routing needs to happen before that block so fresh inline client is correct pattern
+- [Phase 12-media-handling]: Await delegation fetch to whatsapp-media so catch block can send error reply on network failure; whatsapp-media handles its own user-facing reply for success/failure
 
 ### Pending Todos
 
@@ -78,6 +81,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T14:21:01.892Z
-Stopped at: Completed 12-media-handling-01-PLAN.md
+Last session: 2026-03-21T14:23:51.056Z
+Stopped at: Completed 12-media-handling-02-PLAN.md
 Resume file: None

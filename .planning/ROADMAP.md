@@ -39,7 +39,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Milestone Goal:** Make the WhatsApp bot fully functional with Meta Business API integration, media support, interactive menus across both platforms, new AI intents, outbound notifications, and PDF report delivery.
 
 - [x] **Phase 11: Setup & Infrastructure** — Meta account setup, WhatsApp linking flow, shared whatsapp-send helper, template submission (completed 2026-03-21)
-- [ ] **Phase 12: Media Handling** — Inbound photo payment proof and document sharing via WhatsApp
+- [x] **Phase 12: Media Handling** — Inbound photo payment proof and document sharing via WhatsApp (completed 2026-03-21)
 - [ ] **Phase 13: Rich Messaging & Menus** — Interactive button menus on both WhatsApp and Telegram, welcome message, PDF report delivery
 - [ ] **Phase 14: Intents & Outbound Notifications** — New AI intents (maintenance, payments, property summary) and outbound template notifications
 
@@ -74,7 +74,7 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md — whatsapp-media Edge Function (two-step CDN download, Claude vision classification, Supabase Storage upload)
-- [ ] 12-02-PLAN.md — Media type routing in whatsapp-webhook + unsupported media error replies
+- [x] 12-02-PLAN.md — Media type routing in whatsapp-webhook + unsupported media error replies
 
 ### Phase 13: Rich Messaging & Menus
 **Goal**: Both WhatsApp and Telegram bots present interactive button menus, users can navigate all bot features via buttons or freeform text, new users receive a welcome message, and landlords can download a PDF report by picking month and year
@@ -125,6 +125,6 @@ Plans:
 | 9. Reporting Dashboards | v1.1 | 4/4 | Complete | 2026-03-21 |
 | 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete | 2026-03-21 |
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
-| 12. Media Handling | v1.2 | 1/2 | In Progress|  |
+| 12. Media Handling | v1.2 | 2/2 | Complete   | 2026-03-21 |
 | 13. Rich Messaging & Menus | v1.2 | 0/3 | Not started | - |
 | 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |
