@@ -88,7 +88,12 @@ Plans:
   3. Landlord can view each tenant's payment reliability (on-time percentage and average days late)
   4. Landlord can view occupancy tracking (filled vs vacant units over time) per property
   5. Landlord can view a portfolio-level summary card that rolls up P&L and occupancy across all properties
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 09-01-PLAN.md — Install victory-native@36, TDD aggregation helpers and types
+- [ ] 09-02-PLAN.md — Chart components (PLBarChart, DonutChart, OccupancyChart, SparklineChart, ChartTooltip, ChartSectionCard)
+- [ ] 09-03-PLAN.md — Control and display components (TimeControlBar, KpiCard, ReliabilityTable, PropertyReportCard, ReportSkeleton)
+- [ ] 09-04-PLAN.md — Report screens, data hook, tools menu wiring
 
 ## Progress
 
@@ -102,4 +107,4 @@ Plans:
 | 6. AI Tools Removal | v1.1 | 1/1 | Complete | 2026-03-20 |
 | 7. Document Storage | v1.1 | 4/4 | Complete   | 2026-03-21 |
 | 8. Maintenance Requests | v1.1 | 4/4 | Complete   | 2026-03-21 |
-| 9. Reporting Dashboards | v1.1 | 0/TBD | Not started | - |
+| 9. Reporting Dashboards | v1.1 | 0/4 | In progress | - |
