@@ -127,4 +127,4 @@ Plans:
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 12. Media Handling | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 13. Rich Messaging & Menus | v1.2 | 3/3 | Complete    | 2026-03-21 |
-| 14. Intents & Outbound Notifications | v1.2 | 2/2 | Complete   | 2026-03-21 |
+| 14. Intents & Outbound Notifications | v1.2 | 2/2 | Complete    | 2026-03-21 |
