@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
 status: unknown
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-03-21T13:52:35.909Z"
+stopped_at: Completed 12-media-handling-01-PLAN.md
+last_updated: "2026-03-21T14:21:01.895Z"
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every user-facing workflow (auth, property CRUD, payments, invites, documents, maintenance, reports, bot) works correctly and securely.
-**Current focus:** Phase 11 — setup-infrastructure
+**Current focus:** Phase 12 — media-handling
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
+Phase: 12 (media-handling) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Plan: Not started
 | Phase 10 | 1 | ~7 min |
 | Phase 11 P01 | 3m | 2 tasks | 2 files |
 | Phase 11 P02 | 2m | 2 tasks | 3 files |
+| Phase 12-media-handling P01 | 2m | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -60,6 +61,9 @@ See PROJECT.md Key Decisions table for full list.
 - [Phase 11]: whatsapp-send returns HTTP 200 for all responses with success/error in JSON body for caller simplicity
 - [Phase 11]: Webhook delegates all outbound messaging to whatsapp-send Edge Function (single source of truth)
 - [Phase 11]: Verification codes sent via template type through whatsapp-send instead of deprecated whatsapp-send-code
+- [Phase 12-media-handling]: buildContext() copied verbatim from process-bot-message — Deno Edge Functions have no shared import; duplication is correct pattern
+- [Phase 12-media-handling]: Payment row created with status 'paid' when none exists on proof upload — sending proof implies payment was made
+- [Phase 12-media-handling]: Chunked base64 conversion in 8192-byte slices to prevent stack overflow on large image ArrayBuffers
 
 ### Pending Todos
 
@@ -74,6 +78,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T13:49:48.868Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-03-21T14:21:01.892Z
+Stopped at: Completed 12-media-handling-01-PLAN.md
 Resume file: None

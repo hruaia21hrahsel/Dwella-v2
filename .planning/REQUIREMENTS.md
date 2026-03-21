@@ -15,8 +15,8 @@ Requirements for WhatsApp Bot milestone. Each maps to roadmap phases.
 
 ### Media Messages
 
-- [ ] **MEDIA-01**: Tenant can send a photo via WhatsApp and bot attaches it as payment proof to the correct tenant/month
-- [ ] **MEDIA-02**: User can send/receive documents (leases, receipts) via WhatsApp bot
+- [x] **MEDIA-01**: Tenant can send a photo via WhatsApp and bot attaches it as payment proof to the correct tenant/month
+- [x] **MEDIA-02**: User can send/receive documents (leases, receipts) via WhatsApp bot
 
 ### Outbound Messaging
 
@@ -76,8 +76,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SETUP-01 | Phase 11 | Complete |
 | SETUP-02 | Phase 11 | Complete |
 | SETUP-03 | Phase 11 | Complete |
-| MEDIA-01 | Phase 12 | Pending |
-| MEDIA-02 | Phase 12 | Pending |
+| MEDIA-01 | Phase 12 | Complete |
+| MEDIA-02 | Phase 12 | Complete |
 | OUT-01 | Phase 14 | Pending |
 | OUT-02 | Phase 14 | Pending |
 | OUT-03 | Phase 14 | Pending |

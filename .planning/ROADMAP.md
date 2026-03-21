@@ -73,7 +73,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — whatsapp-media Edge Function (two-step CDN download, Claude vision classification, Supabase Storage upload)
+- [x] 12-01-PLAN.md — whatsapp-media Edge Function (two-step CDN download, Claude vision classification, Supabase Storage upload)
 - [ ] 12-02-PLAN.md — Media type routing in whatsapp-webhook + unsupported media error replies
 
 ### Phase 13: Rich Messaging & Menus
@@ -125,6 +125,6 @@ Plans:
 | 9. Reporting Dashboards | v1.1 | 4/4 | Complete | 2026-03-21 |
 | 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete | 2026-03-21 |
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
-| 12. Media Handling | v1.2 | 0/2 | Not started | - |
+| 12. Media Handling | v1.2 | 1/2 | In Progress|  |
 | 13. Rich Messaging & Menus | v1.2 | 0/3 | Not started | - |
 | 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |
