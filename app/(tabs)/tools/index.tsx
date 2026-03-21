@@ -53,7 +53,7 @@ export default function ToolsScreen() {
       description: 'Financial reports and insights',
       icon: 'chart-bar',
       color: '#F97316',
-      comingSoon: true,
+      route: '/reports',
     },
   ];
 
