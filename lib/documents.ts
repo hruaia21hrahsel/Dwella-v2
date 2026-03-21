@@ -26,16 +26,21 @@ export function getDocumentStoragePath(
 
 /**
  * Returns the URL to load in a WebView for viewing the document.
- * - PDF: direct signed URL (WebView renders natively on iOS + Android)
+ * - PDF on iOS: direct signed URL (WebView renders natively)
+ * - PDF on Android: Google Docs Viewer (Android WebView can't render PDFs)
  * - Word: Google Docs Viewer URL (embedded)
  * - Images: signed URL (rendered via Image component, not WebView)
  */
-export function getViewerUrl(signedUrl: string, mimeType: string): string {
+export function getViewerUrl(signedUrl: string, mimeType: string, platform?: string): string {
   if (mimeType === 'application/pdf') {
+    // Android WebView can't render PDFs natively — use Google Docs Viewer
+    if (platform === 'android') {
+      return `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`;
+    }
     return signedUrl;
   }
   if (mimeType.includes('word') || mimeType.includes('document')) {
-    return `https://docs.google.com/viewer?url=${encodeURIComponent(signedUrl)}&embedded=true`;
+    return `https://docs.google.com/gview?url=${encodeURIComponent(signedUrl)}&embedded=true`;
   }
   return signedUrl;
 }

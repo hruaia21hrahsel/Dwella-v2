@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -30,6 +32,7 @@ interface DocumentViewerProps {
 export function DocumentViewer({ visible, document, onClose }: DocumentViewerProps) {
   const { colors } = useTheme();
   const showToast = useToastStore((s) => s.showToast);
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +47,8 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
     try {
       const url = await getSignedUrl(document.storage_path);
       setSignedUrl(url);
-    } catch {
+    } catch (err) {
+      console.error('[DocumentViewer] Signed URL fetch failed:', err);
       setError('Could not load document. Tap to retry.');
     } finally {
       setIsLoading(false);
@@ -127,7 +131,7 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
               >
                 <Image
                   source={{ uri: signedUrl }}
-                  style={styles.image}
+                  style={{ width: screenWidth, height: screenHeight - 180 }}
                   resizeMode="contain"
                 />
               </ScrollView>
@@ -135,10 +139,18 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
               // PDF / Word viewer via WebView
               <View style={styles.webViewContainer}>
                 <WebView
-                  source={{ uri: getViewerUrl(signedUrl, document.mime_type) }}
+                  source={{ uri: getViewerUrl(signedUrl, document.mime_type, Platform.OS) }}
                   style={styles.webView}
                   onLoadStart={() => setWebViewLoading(true)}
                   onLoadEnd={() => setWebViewLoading(false)}
+                  onError={(e) => {
+                    console.error('[DocumentViewer] WebView error:', e.nativeEvent);
+                    setError('Could not display document. Tap to retry.');
+                    setWebViewLoading(false);
+                  }}
+                  javaScriptEnabled
+                  domStorageEnabled
+                  startInLoadingState
                 />
                 {webViewLoading && (
                   <View style={[styles.webViewLoader, { backgroundColor: colors.background }]}>
@@ -226,10 +238,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
+  image: {},
   webViewContainer: {
     flex: 1,
     position: 'relative',
