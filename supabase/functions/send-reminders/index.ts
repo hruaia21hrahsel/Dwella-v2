@@ -6,6 +6,7 @@ interface TenantWithProperty {
   due_day: number;
   user_id: string | null;
   property_id: string;
+  monthly_rent: number;
   properties: { name: string } | null;
 }
 
@@ -24,6 +25,10 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 );
 
+const WHATSAPP_SEND_URL = `${Deno.env.get('SUPABASE_URL')!}/functions/v1/whatsapp-send`;
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
+
 Deno.serve(async (_req) => {
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
@@ -33,7 +38,7 @@ Deno.serve(async (_req) => {
   // Fetch all active tenants with their current month payment status
   const { data: tenants, error } = await supabase
     .from('tenants')
-    .select('id, tenant_name, due_day, user_id, property_id, properties(name)')
+    .select('id, tenant_name, due_day, user_id, property_id, monthly_rent, properties(name)')
     .eq('is_archived', false)
     .not('user_id', 'is', null) as { data: TenantWithProperty[] | null; error: unknown };
 
@@ -111,7 +116,7 @@ Deno.serve(async (_req) => {
   if (notifications.length > 0) {
     await supabase.from('notifications').insert(notifications);
 
-    // Send WhatsApp messages to users who have linked WhatsApp
+    // D-10: Send WhatsApp template messages via whatsapp-send (replaces free-form Meta API call)
     const waUserIds = [...new Set(notifications.map((n) => n.user_id))];
     const { data: waUsers } = await supabase
       .from('users')
@@ -120,38 +125,88 @@ Deno.serve(async (_req) => {
       .not('whatsapp_phone', 'is', null);
 
     if (waUsers && waUsers.length > 0) {
-      const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
-      const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
+      const waPhoneMap: Record<string, string> = Object.fromEntries(
+        (waUsers as UserWithPhone[]).map((u) => [u.id, u.whatsapp_phone!]),
+      );
 
-      if (WHATSAPP_ACCESS_TOKEN && WHATSAPP_PHONE_NUMBER_ID) {
-        const waPhoneMap: Record<string, string> = Object.fromEntries(
-          (waUsers as UserWithPhone[]).map((u) => [u.id, u.whatsapp_phone]),
-        );
+      // Build tenant lookup for template parameters
+      const tenantMap: Record<string, TenantWithProperty> = Object.fromEntries(
+        (tenants ?? []).filter((t) => t.user_id).map((t) => [t.user_id!, t]),
+      );
 
-        for (const n of notifications) {
-          const waPhone = waPhoneMap[n.user_id];
-          if (!waPhone) continue;
+      const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-          try {
-            await fetch(
-              `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-                },
-                body: JSON.stringify({
-                  messaging_product: 'whatsapp',
-                  to: waPhone,
-                  type: 'text',
-                  text: { body: `${n.title}\n\n${n.body}` },
-                }),
+      for (const n of notifications) {
+        const waPhone = waPhoneMap[n.user_id];
+        if (!waPhone) continue;
+
+        const t = tenantMap[n.user_id];
+        const dueDateStr = `${monthNames[currentMonth]} ${t?.due_day ?? todayDay}, ${currentYear}`;
+        const amount = String(t?.monthly_rent ?? 0);
+        const name = t?.tenant_name ?? 'Tenant';
+
+        try {
+          const res = await fetch(WHATSAPP_SEND_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              to: waPhone,
+              type: 'template',
+              template: {
+                name: 'dwella_rent_reminder',
+                language: 'en',
+                components: [{
+                  type: 'body',
+                  parameters: [
+                    { type: 'text', text: name },
+                    { type: 'text', text: amount },
+                    { type: 'text', text: dueDateStr },
+                  ],
+                }],
               },
-            );
-          } catch (err) {
-            console.error(`WhatsApp send failed for ${waPhone}:`, err);
+            }),
+          });
+          const data = await res.json();
+          if (!data.success) {
+            console.error(`WhatsApp reminder template failed for ${waPhone}:`, JSON.stringify(data));
           }
+        } catch (err) {
+          console.error(`WhatsApp send failed for ${waPhone}:`, err);
+        }
+      }
+    }
+
+    // D-09: Send Telegram reminders (full parity with WhatsApp)
+    const tgUserIds = [...new Set(notifications.map((n) => n.user_id))];
+    const { data: tgUsers } = await supabase
+      .from('users')
+      .select('id, telegram_chat_id')
+      .in('id', tgUserIds)
+      .not('telegram_chat_id', 'is', null);
+
+    if (tgUsers && tgUsers.length > 0) {
+      const tgChatMap: Record<string, number> = Object.fromEntries(
+        tgUsers.map((u: any) => [u.id, Number(u.telegram_chat_id)]),
+      );
+
+      for (const n of notifications) {
+        const chatId = tgChatMap[n.user_id];
+        if (!chatId) continue;
+
+        try {
+          await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: `${n.title}\n\n${n.body}`,
+            }),
+          });
+        } catch (err) {
+          console.error(`Telegram reminder send failed for chat ${chatId}:`, err);
         }
       }
     }
