@@ -62,6 +62,7 @@ export default function PortfolioScreen() {
         <TimeControlBar
           period={{ year, granularity: 'yearly' }}
           onPeriodChange={(p) => setYear(p.year)}
+          yearOnly
         />
       </View>
 

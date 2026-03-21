@@ -7,6 +7,8 @@ import { getMonthName } from '@/lib/utils';
 interface TimeControlBarProps {
   period: TimePeriod;
   onPeriodChange: (period: TimePeriod) => void;
+  /** When true, only show the year picker — hide granularity and period chips. */
+  yearOnly?: boolean;
 }
 
 const GRANULARITY_LABELS: { key: Granularity; label: string }[] = [
@@ -25,7 +27,7 @@ function getCurrentQuarter(): 1 | 2 | 3 | 4 {
   return Math.ceil(m / 3) as 1 | 2 | 3 | 4;
 }
 
-export function TimeControlBar({ period, onPeriodChange }: TimeControlBarProps) {
+export function TimeControlBar({ period, onPeriodChange, yearOnly = false }: TimeControlBarProps) {
   const { colors } = useTheme();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -104,28 +106,30 @@ export function TimeControlBar({ period, onPeriodChange }: TimeControlBarProps) 
       </View>
 
       {/* Granularity chips row */}
-      <View style={styles.chipsRow}>
-        {GRANULARITY_LABELS.map(({ key, label }) => {
-          const isActive = period.granularity === key;
-          return (
-            <TouchableOpacity
-              key={key}
-              onPress={() => handleGranularityChange(key)}
-              style={[
-                styles.chip,
-                isActive ? activeChipStyle : inactiveChipStyle,
-              ]}
-            >
-              <Text style={[styles.chipText, isActive ? activeChipTextStyle : inactiveChipTextStyle]}>
-                {label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {!yearOnly && (
+        <View style={styles.chipsRow}>
+          {GRANULARITY_LABELS.map(({ key, label }) => {
+            const isActive = period.granularity === key;
+            return (
+              <TouchableOpacity
+                key={key}
+                onPress={() => handleGranularityChange(key)}
+                style={[
+                  styles.chip,
+                  isActive ? activeChipStyle : inactiveChipStyle,
+                ]}
+              >
+                <Text style={[styles.chipText, isActive ? activeChipTextStyle : inactiveChipTextStyle]}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       {/* Period selector row (conditional) */}
-      {period.granularity === 'quarterly' && (
+      {!yearOnly && period.granularity === 'quarterly' && (
         <View style={styles.chipsRow}>
           {QUARTERS.map((q) => {
             const isActive = period.quarter === q;
@@ -148,7 +152,7 @@ export function TimeControlBar({ period, onPeriodChange }: TimeControlBarProps) 
         </View>
       )}
 
-      {period.granularity === 'monthly' && (
+      {!yearOnly && period.granularity === 'monthly' && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
