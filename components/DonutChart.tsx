@@ -98,21 +98,21 @@ export function DonutChart({ data, totalAmount, hasData, emptyLabel = 'No data' 
           padding={10}
         />
 
-        {/* Center label overlay */}
+        {/* Center label overlay — show total when data exists, empty label when not */}
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <View style={styles.centerLabel}>
-            <Text style={[styles.centerAmount, { color: colors.textPrimary }]}>
-              {formatCurrency(totalAmount)}
-            </Text>
-            <Text style={[styles.centerTitle, { color: colors.textSecondary }]}>Total</Text>
+            {hasData ? (
+              <>
+                <Text style={[styles.centerAmount, { color: colors.textPrimary }]}>
+                  {formatCurrency(totalAmount)}
+                </Text>
+                <Text style={[styles.centerTitle, { color: colors.textSecondary }]}>Total</Text>
+              </>
+            ) : (
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{emptyLabel}</Text>
+            )}
           </View>
         </View>
-
-        {!hasData && (
-          <View style={styles.emptyOverlay} pointerEvents="none">
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{emptyLabel}</Text>
-          </View>
-        )}
 
         <ChartTooltip
           visible={tooltip.visible}
