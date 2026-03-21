@@ -9,16 +9,18 @@ import {
   SafeAreaView,
   useWindowDimensions,
   Platform,
+  Linking,
 } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system/legacy';
 import { WebView } from 'react-native-webview';
 import { Document } from '@/lib/types';
 import {
   getSignedUrl,
-  getViewerUrl,
   shareDocument,
   isImageMime,
+  mimeToExt,
 } from '@/lib/documents';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
@@ -34,21 +36,27 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
   const showToast = useToastStore((s) => s.showToast);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
+  const [localUri, setLocalUri] = useState<string | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
-  const [webViewLoading, setWebViewLoading] = useState(false);
 
-  const fetchSignedUrl = useCallback(async () => {
+  const loadDocument = useCallback(async () => {
     if (!document) return;
     setIsLoading(true);
     setError(null);
     try {
       const url = await getSignedUrl(document.storage_path);
       setSignedUrl(url);
+
+      // Download to local cache for reliable display
+      const ext = mimeToExt(document.mime_type);
+      const localPath = `${FileSystem.cacheDirectory}doc_${document.id}.${ext}`;
+      const { uri } = await FileSystem.downloadAsync(url, localPath);
+      setLocalUri(uri);
     } catch (err) {
-      console.error('[DocumentViewer] Signed URL fetch failed:', err);
+      console.error('[DocumentViewer] Load failed:', err);
       setError('Could not load document. Tap to retry.');
     } finally {
       setIsLoading(false);
@@ -57,16 +65,15 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
 
   useEffect(() => {
     if (visible && document) {
-      fetchSignedUrl();
+      loadDocument();
     } else {
-      // Reset state on close
+      setLocalUri(null);
       setSignedUrl(null);
       setError(null);
       setIsLoading(false);
       setIsSharing(false);
-      setWebViewLoading(false);
     }
-  }, [visible, document, fetchSignedUrl]);
+  }, [visible, document, loadDocument]);
 
   async function handleShare() {
     if (!document || !signedUrl) return;
@@ -78,6 +85,106 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
     } finally {
       setIsSharing(false);
     }
+  }
+
+  function renderContent() {
+    if (isLoading) {
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading document...
+          </Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.centered}>
+          <TouchableOpacity onPress={loadDocument} style={styles.errorContainer}>
+            <MaterialCommunityIcons name="refresh" size={32} color={colors.textSecondary} />
+            <Text style={[styles.errorText, { color: colors.textSecondary }]}>
+              {error}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (!localUri || !document) return null;
+
+    if (isImageMime(document.mime_type)) {
+      return (
+        <ScrollView
+          maximumZoomScale={4}
+          minimumZoomScale={1}
+          contentContainerStyle={styles.imageContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <Image
+            source={{ uri: localUri }}
+            style={{ width: screenWidth, height: screenHeight - 180 }}
+            resizeMode="contain"
+            onError={(e) => {
+              console.error('[DocumentViewer] Image load error:', e.nativeEvent.error);
+              setError('Could not display image. Tap to retry.');
+            }}
+          />
+        </ScrollView>
+      );
+    }
+
+    // PDF / Word — use WebView with local file on iOS, Google Docs on Android
+    if (document.mime_type === 'application/pdf' && Platform.OS === 'ios') {
+      return (
+        <WebView
+          source={{ uri: localUri }}
+          style={styles.webView}
+          originWhitelist={['*']}
+          onError={(e) => {
+            console.error('[DocumentViewer] WebView error:', e.nativeEvent);
+            setError('Could not display document. Tap to retry.');
+          }}
+        />
+      );
+    }
+
+    // Android PDF or Word docs — open externally via system viewer
+    // WebView can't reliably render these
+    return (
+      <View style={styles.centered}>
+        <MaterialCommunityIcons
+          name={document.mime_type === 'application/pdf' ? 'file-pdf-box' : 'file-word'}
+          size={64}
+          color={colors.primary}
+        />
+        <Text style={[styles.externalTitle, { color: colors.textPrimary }]}>
+          {document.name}
+        </Text>
+        <Text style={[styles.externalSubtitle, { color: colors.textSecondary }]}>
+          Tap below to open in your device's viewer
+        </Text>
+        <TouchableOpacity
+          onPress={async () => {
+            try {
+              if (Platform.OS === 'android') {
+                await FileSystem.getContentUriAsync(localUri).then(Linking.openURL);
+              } else {
+                await Linking.openURL(localUri);
+              }
+            } catch {
+              showToast('No app found to open this file type.', 'error');
+            }
+          }}
+          style={[styles.openButton, { backgroundColor: colors.primary }]}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="open-in-new" size={20} color="#fff" />
+          <Text style={styles.openButtonText}>Open Document</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -103,63 +210,12 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
           >
             {document?.name ?? ''}
           </Text>
-          {/* Empty right slot for centering */}
           <View style={styles.rightSlot} />
         </View>
 
         {/* Content area */}
         <View style={styles.content}>
-          {isLoading ? (
-            <View style={styles.centered}>
-              <ActivityIndicator color={colors.primary} />
-            </View>
-          ) : error ? (
-            <View style={styles.centered}>
-              <TouchableOpacity onPress={fetchSignedUrl} style={styles.errorContainer}>
-                <Text style={[styles.errorText, { color: colors.textSecondary }]}>
-                  {error}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          ) : signedUrl && document ? (
-            isImageMime(document.mime_type) ? (
-              // Image viewer with pinch-to-zoom
-              <ScrollView
-                maximumZoomScale={3}
-                minimumZoomScale={1}
-                contentContainerStyle={styles.imageContainer}
-              >
-                <Image
-                  source={{ uri: signedUrl }}
-                  style={{ width: screenWidth, height: screenHeight - 180 }}
-                  resizeMode="contain"
-                />
-              </ScrollView>
-            ) : (
-              // PDF / Word viewer via WebView
-              <View style={styles.webViewContainer}>
-                <WebView
-                  source={{ uri: getViewerUrl(signedUrl, document.mime_type, Platform.OS) }}
-                  style={styles.webView}
-                  onLoadStart={() => setWebViewLoading(true)}
-                  onLoadEnd={() => setWebViewLoading(false)}
-                  onError={(e) => {
-                    console.error('[DocumentViewer] WebView error:', e.nativeEvent);
-                    setError('Could not display document. Tap to retry.');
-                    setWebViewLoading(false);
-                  }}
-                  javaScriptEnabled
-                  domStorageEnabled
-                  startInLoadingState
-                />
-                {webViewLoading && (
-                  <View style={[styles.webViewLoader, { backgroundColor: colors.background }]}>
-                    <ActivityIndicator color={colors.primary} />
-                  </View>
-                )}
-              </View>
-            )
-          ) : null}
+          {renderContent()}
         </View>
 
         {/* Bottom bar */}
@@ -224,9 +280,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    marginTop: 8,
   },
   errorContainer: {
     alignItems: 'center',
+    gap: 8,
   },
   errorText: {
     fontSize: 14,
@@ -234,22 +296,36 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   imageContainer: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  image: {},
-  webViewContainer: {
-    flex: 1,
-    position: 'relative',
   },
   webView: {
     flex: 1,
   },
-  webViewLoader: {
-    ...StyleSheet.absoluteFillObject,
+  externalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  externalSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  openButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  openButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   bottomBar: {
     height: 72,
