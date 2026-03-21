@@ -54,6 +54,7 @@
     "react-native-vector-icons": "^10.1.0",
     "react-native-web": "^0.21.0",
     "react-native-webview": "13.15.0",
+    "victory-native": "36",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
