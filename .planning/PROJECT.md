@@ -58,7 +58,24 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 
 ### Active
 
-(None — planning next milestone)
+- [ ] WhatsApp Business API setup and account linking flow
+- [ ] Media messages (photo payment proof, document sharing via WhatsApp)
+- [ ] Outbound WhatsApp messaging (reminders, receipts, maintenance notifications)
+- [ ] New bot intents (maintenance status, upcoming payments, property summary)
+- [ ] Menu-driven rich messaging with interactive buttons (both Telegram and WhatsApp)
+- [ ] PDF report generation and delivery via bot
+
+## Current Milestone: v1.2 WhatsApp Bot
+
+**Goal:** Make the WhatsApp bot fully functional with Meta Business API integration, media support, outbound messaging, new intents, and menu-driven rich messaging across both Telegram and WhatsApp.
+
+**Target features:**
+- Meta Business API setup + WhatsApp linking flow working end-to-end
+- Photo payment proof and document sharing via WhatsApp
+- Outbound reminders, receipts, and maintenance notifications via WhatsApp
+- New bot intents: maintenance status, upcoming payments, property summary
+- Menu-driven interactive buttons on both Telegram and WhatsApp bots
+- PDF report download from bot (user picks month/year)
 
 ### Out of Scope
 
@@ -82,7 +99,7 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 
 ## Context
 
-- **Status:** v1.1 shipped — all 10 phases across 2 milestones complete
+- **Status:** v1.2 in progress — WhatsApp bot expansion
 - **Codebase:** ~80 screens/components, 10 Edge Functions, 24 SQL migrations, 24,574 LOC TypeScript
 - **Tech stack:** React Native + Expo SDK 51, Supabase, Zustand, Claude API, Victory Native
 - **Tech debt:** 6 items from v1.1 audit (Nyquist gaps in phases 6-8, unbounded portfolio query, manual AI Edge Function deletion, notification routing now fixed)
@@ -111,4 +128,4 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 | Gap closure phase (Phase 10) | Milestone audit caught integration gaps before shipping | ✓ Good — notification routing + property shortcut wired |
 
 ---
-*Last updated: 2026-03-21 after v1.1 milestone*
+*Last updated: 2026-03-21 after v1.2 milestone start*
