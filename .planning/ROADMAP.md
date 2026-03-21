@@ -104,9 +104,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Tapping a `maintenance_new` or `maintenance_status_update` notification navigates to the maintenance request detail screen
   2. Property detail screen shows a "Maintenance" shortcut card that navigates to property-scoped maintenance list
-**Plans:** 0/1 plans
+**Plans:** 1 plan
 Plans:
-- [ ] 10-01-PLAN.md — Notification routing + property shortcut card
+- [ ] 10-01-PLAN.md — Migration 024, notification INSERT wiring, tap routing, property shortcut card
 
 ## Progress
 
