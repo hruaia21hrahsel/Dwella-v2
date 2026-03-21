@@ -59,7 +59,7 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 ### Active
 
 - [ ] WhatsApp Business API setup and account linking flow
-- [ ] Media messages (photo payment proof, document sharing via WhatsApp)
+- ✓ Media messages (photo payment proof, document sharing via WhatsApp) — Phase 12
 - [ ] Outbound WhatsApp messaging (reminders, receipts, maintenance notifications)
 - [ ] New bot intents (maintenance status, upcoming payments, property summary)
 - [ ] Menu-driven rich messaging with interactive buttons (both Telegram and WhatsApp)
@@ -99,8 +99,8 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 
 ## Context
 
-- **Status:** v1.2 in progress — WhatsApp bot expansion
-- **Codebase:** ~80 screens/components, 10 Edge Functions, 24 SQL migrations, 24,574 LOC TypeScript
+- **Status:** v1.2 in progress — Phase 12 complete (media handling), continuing with rich messaging
+- **Codebase:** ~80 screens/components, 11 Edge Functions, 24 SQL migrations, ~25,000 LOC TypeScript
 - **Tech stack:** React Native + Expo SDK 51, Supabase, Zustand, Claude API, Victory Native
 - **Tech debt:** 6 items from v1.1 audit (Nyquist gaps in phases 6-8, unbounded portfolio query, manual AI Edge Function deletion, notification routing now fixed)
 - **Pre-launch blockers:** Sentry DSN, pg_cron schedule verification, iOS App Store ID in UpdateGate
@@ -128,4 +128,4 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 | Gap closure phase (Phase 10) | Milestone audit caught integration gaps before shipping | ✓ Good — notification routing + property shortcut wired |
 
 ---
-*Last updated: 2026-03-21 after v1.2 milestone start*
+*Last updated: 2026-03-21 after Phase 12 (media handling) complete*
