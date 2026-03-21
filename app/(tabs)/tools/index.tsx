@@ -46,7 +46,7 @@ export default function ToolsScreen() {
       description: 'Track and manage maintenance requests',
       icon: 'wrench-outline',
       color: '#14B8A6',
-      comingSoon: true,
+      route: '/maintenance',
     },
     {
       label: 'Analytics',
