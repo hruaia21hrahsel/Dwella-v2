@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Modal,
-  Image,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
@@ -13,15 +12,10 @@ import {
 } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import * as FileSystem from 'expo-file-system/legacy';
-import { WebView } from 'react-native-webview';
 import { Document } from '@/lib/types';
-import {
-  getSignedUrl,
-  shareDocument,
-  isImageMime,
-  mimeToExt,
-} from '@/lib/documents';
+import { getSignedUrl, shareDocument, isImageMime, mimeToExt } from '@/lib/documents';
 import { useTheme } from '@/lib/theme-context';
 import { useToastStore } from '@/lib/toast';
 
@@ -36,8 +30,8 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
   const showToast = useToastStore((s) => s.showToast);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
-  const [localUri, setLocalUri] = useState<string | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [localUri, setLocalUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -50,11 +44,13 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
       const url = await getSignedUrl(document.storage_path);
       setSignedUrl(url);
 
-      // Download to local cache for reliable display
-      const ext = mimeToExt(document.mime_type);
-      const localPath = `${FileSystem.cacheDirectory}doc_${document.id}.${ext}`;
-      const { uri } = await FileSystem.downloadAsync(url, localPath);
-      setLocalUri(uri);
+      // For non-image files, download to local cache for system viewer
+      if (!isImageMime(document.mime_type)) {
+        const ext = mimeToExt(document.mime_type);
+        const localPath = `${FileSystem.cacheDirectory}doc_${document.id}.${ext}`;
+        const { uri } = await FileSystem.downloadAsync(url, localPath);
+        setLocalUri(uri);
+      }
     } catch (err) {
       console.error('[DocumentViewer] Load failed:', err);
       setError('Could not load document. Tap to retry.');
@@ -67,8 +63,8 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
     if (visible && document) {
       loadDocument();
     } else {
-      setLocalUri(null);
       setSignedUrl(null);
+      setLocalUri(null);
       setError(null);
       setIsLoading(false);
       setIsSharing(false);
@@ -112,9 +108,10 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
       );
     }
 
-    if (!localUri || !document) return null;
+    if (!document) return null;
 
-    if (isImageMime(document.mime_type)) {
+    if (isImageMime(document.mime_type) && signedUrl) {
+      // expo-image handles remote signed URLs directly — no download needed
       return (
         <ScrollView
           maximumZoomScale={4}
@@ -123,11 +120,11 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
           showsVerticalScrollIndicator={false}
         >
           <Image
-            source={{ uri: localUri }}
+            source={{ uri: signedUrl }}
             style={{ width: screenWidth, height: screenHeight - 180 }}
-            resizeMode="contain"
+            contentFit="contain"
             onError={(e) => {
-              console.error('[DocumentViewer] Image load error:', e.nativeEvent.error);
+              console.error('[DocumentViewer] Image load error:', e.error);
               setError('Could not display image. Tap to retry.');
             }}
           />
@@ -135,23 +132,9 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
       );
     }
 
-    // PDF / Word — use WebView with local file on iOS, Google Docs on Android
-    if (document.mime_type === 'application/pdf' && Platform.OS === 'ios') {
-      return (
-        <WebView
-          source={{ uri: localUri }}
-          style={styles.webView}
-          originWhitelist={['*']}
-          onError={(e) => {
-            console.error('[DocumentViewer] WebView error:', e.nativeEvent);
-            setError('Could not display document. Tap to retry.');
-          }}
-        />
-      );
-    }
+    if (!localUri) return null;
 
-    // Android PDF or Word docs — open externally via system viewer
-    // WebView can't reliably render these
+    // PDF / Word — open with system viewer (most reliable cross-platform)
     return (
       <View style={styles.centered}>
         <MaterialCommunityIcons
@@ -169,7 +152,8 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
           onPress={async () => {
             try {
               if (Platform.OS === 'android') {
-                await FileSystem.getContentUriAsync(localUri).then(Linking.openURL);
+                const contentUri = await FileSystem.getContentUriAsync(localUri);
+                await Linking.openURL(contentUri);
               } else {
                 await Linking.openURL(localUri);
               }
@@ -299,9 +283,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  webView: {
-    flex: 1,
   },
   externalTitle: {
     fontSize: 17,
