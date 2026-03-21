@@ -169,6 +169,19 @@ export default function PropertyDetailScreen() {
           <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
         </TouchableOpacity>
 
+        {/* Maintenance shortcut */}
+        <TouchableOpacity
+          style={[styles.shortcutCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => router.push(`/property/${id}/maintenance` as Href)}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.shortcutIcon, { backgroundColor: '#14B8A618' }]}>
+            <MaterialCommunityIcons name="wrench-outline" size={18} color="#14B8A6" />
+          </View>
+          <Text style={[styles.shortcutLabel, { color: colors.textPrimary }]}>Maintenance</Text>
+          <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
+        </TouchableOpacity>
+
         {/* Notes */}
         {property.notes ? (
           <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>

@@ -1,6 +1,6 @@
 import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, Href } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
@@ -101,7 +101,12 @@ export default function NotificationsScreen() {
     track(EVENTS.NOTIFICATION_TAPPED, { type: notif.type });
     if (!notif.is_read) await markRead(notif.id);
     // Navigate based on available context
-    if (notif.payment_id && notif.tenant_id) {
+    if (
+      (notif.type === 'maintenance_new' || notif.type === 'maintenance_status_update') &&
+      notif.maintenance_request_id
+    ) {
+      router.push(`/maintenance/${notif.maintenance_request_id}` as Href);
+    } else if (notif.payment_id && notif.tenant_id) {
       // We don't have property_id on the notification, so just go back
     }
   }
