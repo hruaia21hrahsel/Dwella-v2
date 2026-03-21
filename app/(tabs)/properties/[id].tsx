@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { ScrollView, StyleSheet, View, RefreshControl, TouchableOpacity } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter, Stack, useFocusEffect } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack, useFocusEffect, type Href } from 'expo-router';
 import { useProperties } from '@/hooks/useProperties';
 import { useTenants } from '@/hooks/useTenants';
 
@@ -156,6 +156,19 @@ export default function PropertyDetailScreen() {
           )}
         </View>
 
+        {/* Documents shortcut */}
+        <TouchableOpacity
+          style={[styles.shortcutCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => router.push(`/property/${id}/documents` as Href)}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.shortcutIcon, { backgroundColor: '#6366F118' }]}>
+            <MaterialCommunityIcons name="file-document-outline" size={18} color="#6366F1" />
+          </View>
+          <Text style={[styles.shortcutLabel, { color: colors.textPrimary }]}>Documents</Text>
+          <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textDisabled} />
+        </TouchableOpacity>
+
         {/* Notes */}
         {property.notes ? (
           <View style={[styles.notesCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -230,6 +243,17 @@ const styles = StyleSheet.create({
     borderRadius: 9, paddingHorizontal: 10, paddingVertical: 7,
   },
   addBtnText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+
+  // Shortcut card
+  shortcutCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12,
+  },
+  shortcutIcon: {
+    width: 34, height: 34, borderRadius: 9,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  shortcutLabel: { flex: 1, fontSize: 14, fontWeight: '600' },
 
   // Notes
   notesCard: { borderRadius: 12, borderWidth: 1, padding: 12, gap: 6 },

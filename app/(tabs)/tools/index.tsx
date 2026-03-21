@@ -39,7 +39,7 @@ export default function ToolsScreen() {
       description: 'Upload and manage property documents',
       icon: 'file-document-outline',
       color: '#6366F1',
-      comingSoon: true,
+      route: '/documents',
     },
     {
       label: 'Maintenance',
