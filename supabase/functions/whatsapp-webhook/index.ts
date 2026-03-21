@@ -31,6 +31,104 @@ async function sendWhatsApp(to: string, text: string) {
   }
 }
 
+/** Send an interactive button message via whatsapp-send Edge Function */
+async function sendWhatsAppInteractive(
+  to: string,
+  body: string,
+  buttons: Array<{ id: string; title: string }>,
+) {
+  const res = await fetch(WHATSAPP_SEND_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+    },
+    body: JSON.stringify({
+      to,
+      type: 'interactive',
+      interactive: { body, buttons },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('whatsapp-send interactive error:', err);
+  }
+}
+
+/** Send a document via whatsapp-send Edge Function */
+async function sendWhatsAppDocument(
+  to: string,
+  link: string,
+  filename: string,
+  caption: string,
+) {
+  const res = await fetch(WHATSAPP_SEND_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+    },
+    body: JSON.stringify({
+      to,
+      type: 'document',
+      document: { link, filename, caption },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('whatsapp-send document error:', err);
+  }
+}
+
+/** Send a process-bot-message response that may contain buttons and additional_messages */
+async function sendBotResponse(phone: string, botData: Record<string, unknown>) {
+  const reply = (botData['reply'] as string) ?? 'Sorry, I encountered an error.';
+  const buttons = botData['buttons'] as Array<Array<{ id: string; title: string }>> | undefined;
+  const additionalMessages = botData['additional_messages'] as Array<{
+    reply: string;
+    buttons?: Array<Array<{ id: string; title: string }>>;
+  }> | undefined;
+
+  // Send primary message
+  if (buttons && buttons.length > 0) {
+    // Flatten button rows to flat array (WhatsApp buttons are flat, max 3)
+    const flatButtons = buttons.map(row => row[0]).filter(Boolean);
+    await sendWhatsAppInteractive(phone, reply, flatButtons.slice(0, 3));
+  } else {
+    await sendWhatsApp(phone, reply);
+  }
+
+  // Send additional messages (multi-message menus)
+  if (additionalMessages) {
+    for (const msg of additionalMessages) {
+      if (msg.buttons && msg.buttons.length > 0) {
+        const flatBtns = msg.buttons.map(row => row[0]).filter(Boolean);
+        await sendWhatsAppInteractive(phone, msg.reply, flatBtns.slice(0, 3));
+      } else {
+        await sendWhatsApp(phone, msg.reply);
+      }
+    }
+  }
+}
+
+/** Send welcome message with main menu buttons (D-01, D-02, D-03) */
+async function sendWelcomeMessage(phone: string) {
+  await sendWhatsApp(
+    phone,
+    'Welcome to Dwella! I can help you manage properties, payments, and maintenance. Use the menu below or type anything.',
+  );
+  // Send main menu buttons (D-02) — 2 messages per D-11
+  await sendWhatsAppInteractive(phone, 'What would you like to do? (1/2)', [
+    { id: 'menu_properties', title: 'Properties' },
+    { id: 'menu_payments', title: 'Payments' },
+    { id: 'menu_history', title: 'History' },
+  ]);
+  await sendWhatsAppInteractive(phone, 'More options (2/2)', [
+    { id: 'menu_maintenance', title: 'Maintenance' },
+    { id: 'menu_others', title: 'Others' },
+  ]);
+}
+
 /** Validate Meta X-Hub-Signature-256 HMAC-SHA256 (SEC-05) */
 async function validateMetaSignature(req: Request, rawBody: string): Promise<boolean> {
   if (!WHATSAPP_APP_SECRET) return true; // Skip validation in dev when secret not configured
@@ -171,6 +269,62 @@ serve(async (req) => {
     return new Response('OK', { status: 200 });
   }
 
+  // ---- Interactive button replies: route to process-bot-message ----
+  if (msgType === 'interactive') {
+    const interactiveData = msg['interactive'] as Record<string, unknown> | undefined;
+    const interactiveType = interactiveData?.['type'] as string | undefined;
+
+    if (interactiveType === 'button_reply') {
+      const buttonReply = interactiveData?.['button_reply'] as { id: string; title: string } | undefined;
+      const buttonId = buttonReply?.id;
+
+      if (buttonId) {
+        // Find linked user
+        const supabaseForBtn = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+        const { data: btnUser } = await supabaseForBtn
+          .from('users')
+          .select('id')
+          .eq('whatsapp_phone', senderPhone)
+          .single();
+
+        if (!btnUser) {
+          await sendWhatsApp(senderPhone, "I don't recognize this WhatsApp number. Please link it from the Dwella app.");
+          return new Response('OK', { status: 200 });
+        }
+
+        // Update last_bot_message_at
+        await supabaseForBtn
+          .from('users')
+          .update({ last_bot_message_at: new Date().toISOString() })
+          .eq('id', btnUser.id);
+
+        // Forward to process-bot-message with button_id
+        try {
+          const botRes = await fetch(PROCESS_BOT_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            },
+            body: JSON.stringify({
+              user_id: btnUser.id,
+              message: buttonReply.title,  // button title as message for logging
+              source: 'whatsapp',
+              button_id: buttonId,
+            }),
+          });
+
+          const botData = await botRes.json();
+          await sendBotResponse(senderPhone, botData);
+        } catch (err) {
+          console.error('WhatsApp button_reply error:', err);
+          await sendWhatsApp(senderPhone, 'Sorry, something went wrong. Please try again.');
+        }
+      }
+      return new Response('OK', { status: 200 });
+    }
+  }
+
   if (!text.trim()) {
     return new Response('OK', { status: 200 });
   }
@@ -210,11 +364,7 @@ serve(async (req) => {
         .update({ whatsapp_phone: senderPhone, whatsapp_verify_code: null })
         .eq('id', codeUser.id);
 
-      const name = codeUser.full_name ?? 'there';
-      await sendWhatsApp(
-        senderPhone,
-        `Linked! Hi ${name}, your Dwella account is now connected to WhatsApp.\n\nYou can now ask me about your properties and payments right here!`,
-      );
+      await sendWelcomeMessage(senderPhone);
       return new Response('OK', { status: 200 });
     }
   }
@@ -234,6 +384,40 @@ serve(async (req) => {
     return new Response('OK', { status: 200 });
   }
 
+  // ---- Session detection: show menu if > 1 hour gap (D-05, D-06) ----
+  const { data: sessionUser } = await supabase
+    .from('users')
+    .select('id, last_bot_message_at')
+    .eq('whatsapp_phone', senderPhone)
+    .single();
+
+  const isNewSession = !sessionUser?.last_bot_message_at ||
+    (Date.now() - new Date(sessionUser.last_bot_message_at as string).getTime()) > 60 * 60 * 1000;
+
+  // Update last_bot_message_at
+  await supabase
+    .from('users')
+    .update({ last_bot_message_at: new Date().toISOString() })
+    .eq('id', linkedUser.id);
+
+  // Show menu on new session or explicit "menu"/"help" request (D-05, D-08)
+  if (isNewSession || /^(menu|help)$/i.test(text.trim())) {
+    await sendWhatsAppInteractive(senderPhone, 'What would you like to do? (1/2)', [
+      { id: 'menu_properties', title: 'Properties' },
+      { id: 'menu_payments', title: 'Payments' },
+      { id: 'menu_history', title: 'History' },
+    ]);
+    await sendWhatsAppInteractive(senderPhone, 'More options (2/2)', [
+      { id: 'menu_maintenance', title: 'Maintenance' },
+      { id: 'menu_others', title: 'Others' },
+    ]);
+
+    // If user only typed "menu" or "help", don't forward to Claude
+    if (/^(menu|help)$/i.test(text.trim())) {
+      return new Response('OK', { status: 200 });
+    }
+  }
+
   // Forward to process-bot-message
   try {
     const botRes = await fetch(PROCESS_BOT_URL, {
@@ -249,9 +433,8 @@ serve(async (req) => {
       }),
     });
 
-    const botData = (await botRes.json()) as { reply?: string; error?: string };
-    const reply = botData.reply ?? 'Sorry, I encountered an error. Please try again.';
-    await sendWhatsApp(senderPhone, reply);
+    const botData = await botRes.json();
+    await sendBotResponse(senderPhone, botData);
   } catch (err) {
     console.error('WhatsApp webhook forwarding error:', err);
     await sendWhatsApp(senderPhone, 'Sorry, something went wrong. Please try again later.');
