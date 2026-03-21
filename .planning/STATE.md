@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 09-reporting-dashboards-04-PLAN.md
-last_updated: "2026-03-21T10:40:38.621Z"
+stopped_at: Completed 10-maintenance-wiring-fixes-01-PLAN.md
+last_updated: "2026-03-21T12:14:15.555Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 13
-  completed_plans: 13
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Every user-facing workflow works correctly and securely.
-**Current focus:** Phase 09 — reporting-dashboards
+**Current focus:** Phase 10 — maintenance-wiring-fixes
 
 ## Current Position
 
-Phase: 09
-Plan: Not started
+Phase: 10 (maintenance-wiring-fixes) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: Not started
 | Phase 09-reporting-dashboards P02 | 5 | 2 tasks | 6 files |
 | Phase 09-reporting-dashboards P03 | 12 | 2 tasks | 5 files |
 | Phase 09-reporting-dashboards P04 | 15 | 2 tasks | 4 files |
+| Phase 10-maintenance-wiring-fixes P01 | 8 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting v1.1:
 - [Phase 09-reporting-dashboards]: ReliabilityTable uses View not FlatList since tenant count per property is small — virtualization overhead not justified
 - [Phase 09-reporting-dashboards]: ErrorBanner uses {error, onRetry} props not {message} — adapted screens to match actual interface
 - [Phase 09-reporting-dashboards]: DwellaHeader has no title/showBack API — report screens use Text title with insets.top and native stack back navigation
+- [Phase 10-maintenance-wiring-fixes]: Notification INSERT is non-blocking (try/catch with console.warn) — push failure must not disrupt submit/advance flows
+- [Phase 10-maintenance-wiring-fixes]: In-app notification row created regardless of push_token presence — decoupled from push delivery
 
 ### Pending Todos
 
@@ -121,6 +124,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T10:35:40.176Z
-Stopped at: Completed 09-reporting-dashboards-04-PLAN.md
+Last session: 2026-03-21T12:14:15.551Z
+Stopped at: Completed 10-maintenance-wiring-fixes-01-PLAN.md
 Resume file: None

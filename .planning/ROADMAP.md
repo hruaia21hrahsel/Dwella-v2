@@ -28,7 +28,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 - [x] **Phase 7: Document Storage** - Migration 019 + storage buckets + full upload/view/download/delete UI for property and tenant documents (completed 2026-03-21)
 - [x] **Phase 8: Maintenance Requests** - Tenant submission, landlord status management, photos, expense linking, push notifications (completed 2026-03-21)
 - [x] **Phase 9: Reporting Dashboards** - P&L, expense breakdown, payment reliability, occupancy, and portfolio summary charts (completed 2026-03-21)
-- [ ] **Phase 10: Maintenance Wiring Fixes** - Notification tap routing for maintenance requests + property detail shortcut card (gap closure)
+- [x] **Phase 10: Maintenance Wiring Fixes** - Notification tap routing for maintenance requests + property detail shortcut card (gap closure) (completed 2026-03-21)
 
 ## Phase Details
 
@@ -104,9 +104,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Tapping a `maintenance_new` or `maintenance_status_update` notification navigates to the maintenance request detail screen
   2. Property detail screen shows a "Maintenance" shortcut card that navigates to property-scoped maintenance list
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 Plans:
-- [ ] 10-01-PLAN.md — Migration 024, notification INSERT wiring, tap routing, property shortcut card
+- [x] 10-01-PLAN.md — Migration 024, notification INSERT wiring, tap routing, property shortcut card
 
 ## Progress
 
@@ -121,4 +121,4 @@ Plans:
 | 7. Document Storage | v1.1 | 4/4 | Complete   | 2026-03-21 |
 | 8. Maintenance Requests | v1.1 | 4/4 | Complete   | 2026-03-21 |
 | 9. Reporting Dashboards | v1.1 | 4/4 | Complete   | 2026-03-21 |
-| 10. Maintenance Wiring Fixes | v1.1 | 0/1 | Planned | — |
+| 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete   | 2026-03-21 |
