@@ -109,3 +109,21 @@ export interface BotConversation {
   metadata?: Record<string, unknown> | null;
   created_at: string;
 }
+
+export type DocumentCategory = 'lease' | 'id' | 'insurance' | 'receipts' | 'other';
+
+export interface Document {
+  id: string;
+  property_id: string | null;
+  tenant_id: string | null;
+  uploader_id: string;
+  name: string;
+  category: DocumentCategory;
+  storage_path: string;
+  mime_type: string;
+  file_size: number;
+  is_archived: boolean;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

@@ -69,7 +69,8 @@
           "sounds": []
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      ["expo-document-picker", { "usesIcloudStorage": true }]
     ],
     "experiments": {
       "typedRoutes": true
