@@ -70,11 +70,11 @@ Plans:
   2. User sends a document (lease, receipt) via WhatsApp and bot stores and acknowledges it
   3. Bot responds with a confirmation message when media is successfully processed, or a clear error if classification fails
   4. Inbound media is downloaded from Meta CDN within 5 minutes of receipt and stored in Supabase Storage
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 12-01: whatsapp-media Edge Function (two-step CDN download, intent classification, Supabase Storage upload)
-- [ ] 12-02: Media type routing in whatsapp-webhook + confirmation reply via whatsapp-send
+- [ ] 12-01-PLAN.md — whatsapp-media Edge Function (two-step CDN download, Claude vision classification, Supabase Storage upload)
+- [ ] 12-02-PLAN.md — Media type routing in whatsapp-webhook + unsupported media error replies
 
 ### Phase 13: Rich Messaging & Menus
 **Goal**: Both WhatsApp and Telegram bots present interactive button menus, users can navigate all bot features via buttons or freeform text, new users receive a welcome message, and landlords can download a PDF report by picking month and year
