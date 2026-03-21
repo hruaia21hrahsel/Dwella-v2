@@ -73,28 +73,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01 | — | Pending |
-| SETUP-02 | — | Pending |
-| SETUP-03 | — | Pending |
-| MEDIA-01 | — | Pending |
-| MEDIA-02 | — | Pending |
-| OUT-01 | — | Pending |
-| OUT-02 | — | Pending |
-| OUT-03 | — | Pending |
-| INTENT-01 | — | Pending |
-| INTENT-02 | — | Pending |
-| INTENT-03 | — | Pending |
-| RICH-01 | — | Pending |
-| RICH-02 | — | Pending |
-| RICH-03 | — | Pending |
-| RICH-04 | — | Pending |
-| RICH-05 | — | Pending |
+| SETUP-01 | Phase 11 | Pending |
+| SETUP-02 | Phase 11 | Pending |
+| SETUP-03 | Phase 11 | Pending |
+| MEDIA-01 | Phase 12 | Pending |
+| MEDIA-02 | Phase 12 | Pending |
+| OUT-01 | Phase 14 | Pending |
+| OUT-02 | Phase 14 | Pending |
+| OUT-03 | Phase 14 | Pending |
+| INTENT-01 | Phase 14 | Pending |
+| INTENT-02 | Phase 14 | Pending |
+| INTENT-03 | Phase 14 | Pending |
+| RICH-01 | Phase 13 | Pending |
+| RICH-02 | Phase 13 | Pending |
+| RICH-03 | Phase 13 | Pending |
+| RICH-04 | Phase 13 | Pending |
+| RICH-05 | Phase 13 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-21*
-*Last updated: 2026-03-21 after initial definition*
+*Last updated: 2026-03-21 after roadmap creation — all 16 requirements mapped*

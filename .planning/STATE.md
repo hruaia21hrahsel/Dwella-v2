@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
-status: defining_requirements
-stopped_at: Requirements approved, creating roadmap
+status: ready_to_plan
+stopped_at: Roadmap created, ready to plan Phase 11
 last_updated: "2026-03-21"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 9
   completed_plans: 0
 ---
 
@@ -19,32 +19,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every user-facing workflow (auth, property CRUD, payments, invites, documents, maintenance, reports, bot) works correctly and securely.
-**Current focus:** v1.2 WhatsApp Bot — defining requirements
+**Current focus:** v1.2 WhatsApp Bot — Phase 11: Setup & Infrastructure
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-21 — Milestone v1.2 started
+Phase: 11 of 14 (Setup & Infrastructure)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-03-21 — Roadmap created, all 16 requirements mapped to 4 phases
+
+Progress: [░░░░░░░░░░] 0% (0/9 plans complete)
 
 ## Performance Metrics
 
-**Velocity (v1.0 reference):**
+**Velocity (v1.1 reference):**
 
 - Total plans completed: 14
 - Average duration: ~10 min
 - Total execution time: ~2.3 hours
 
-**By Phase (v1.0):**
+**By Phase (v1.1):**
 
 | Phase | Plans | Avg/Plan |
 |-------|-------|----------|
-| Phase 1 | 4 | ~26 min |
-| Phase 2 | 4 | ~9 min |
-| Phase 3 | 2 | ~3 min |
-| Phase 4 | 2 | ~5 min |
-| Phase 5 | 2 | ~9 min |
+| Phase 6 | 1 | ~8 min |
+| Phase 7 | 4 | ~12 min |
+| Phase 8 | 4 | ~11 min |
+| Phase 9 | 4 | ~10 min |
+| Phase 10 | 1 | ~7 min |
 
 ## Accumulated Context
 
@@ -52,21 +54,25 @@ Last activity: 2026-03-21 — Milestone v1.2 started
 
 See PROJECT.md Key Decisions table for full list.
 
+- [v1.2 setup]: whatsapp-send is a prerequisite for all other phases — built in Phase 11 before any outbound calls
+- [v1.2 setup]: All 4 Meta templates submitted in Phase 11 because approval takes 2-7 days (external blocking dependency for Phase 14)
+- [v1.2 menus]: Stateless button_id scheme (e.g., menu_payments, action_log_payment) — no sessions table needed
+- [v1.2 menus]: Menu taps bypass Claude via lookup table — only freeform text routes to Claude
+- [v1.2 outbound]: Two code paths required: template (scheduled/triggered) vs. interactive (in-session) — 24-hour window constraint
+
 ### Pending Todos
 
 None.
 
 ### Blockers/Concerns
 
-Pre-launch items (not GSD blockers, carry over from v1.0):
-
-- Replace iOS App Store `[APP_ID]` placeholder in UpdateGate.tsx
-- Configure Sentry DSN in .env
-- Verify pg_cron schedule registration in Supabase dashboard
-- Replace placeholder store URLs in invite-redirect (env vars configured, need real values)
+- [Phase 14]: Meta template approval is an external dependency (2-7 days). Templates must be submitted in Phase 11 or Phase 14 will be blocked.
+- [Phase 13]: PDF generation library for Deno not yet selected (deno-puppeteer ruled out). Must research Deno-compatible HTML-to-PDF during Phase 13 planning.
+- [Phase 14]: WhatsApp opt-in requirement for cold outbound — first message to users who never initiated needs documented opt-in tracking design.
+- Pre-launch (carry over): iOS App Store [APP_ID] in UpdateGate.tsx, Sentry DSN in .env, pg_cron schedule verification, invite-redirect store URLs.
 
 ## Session Continuity
 
 Last session: 2026-03-21
-Stopped at: Milestone v1.2 requirements approved
+Stopped at: Roadmap created and approved — ready to plan Phase 11
 Resume file: None
