@@ -78,6 +78,7 @@ export interface Notification {
   user_id: string;
   tenant_id: string | null;
   payment_id: string | null;
+  maintenance_request_id: string | null;
   type: string;
   title: string;
   body: string;

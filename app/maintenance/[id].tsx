@@ -268,6 +268,19 @@ export default function MaintenanceDetailScreen() {
             },
           });
         }
+
+        // Insert in-app notification row for tenant (non-blocking)
+        try {
+          await supabase.from('notifications').insert({
+            user_id: tenant.user_id,
+            maintenance_request_id: requestId,
+            type: 'maintenance_status_update',
+            title: 'Request Update',
+            body: `Your maintenance request is now ${STATUS_LABELS[nextStatus]}.`,
+          });
+        } catch (notifErr) {
+          console.warn('[Dwella] Failed to insert maintenance_status_update notification row:', notifErr);
+        }
       }
 
       // 5. Reset form and refresh

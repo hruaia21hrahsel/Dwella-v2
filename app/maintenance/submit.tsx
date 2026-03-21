@@ -166,6 +166,19 @@ export default function SubmitMaintenanceScreen() {
               },
             });
           }
+
+          // Insert in-app notification row for landlord (non-blocking)
+          try {
+            await supabase.from('notifications').insert({
+              user_id: property.owner_id,
+              maintenance_request_id: inserted.id,
+              type: 'maintenance_new',
+              title: 'New Maintenance Request',
+              body: `${user.full_name ?? 'A tenant'}: ${title.trim().substring(0, 80)}`,
+            });
+          } catch (notifErr) {
+            console.warn('[Dwella] Failed to insert maintenance_new notification row:', notifErr);
+          }
         }
       } catch {
         // Push notification failure should not block the success flow
