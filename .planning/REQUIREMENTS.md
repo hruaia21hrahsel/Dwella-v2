@@ -25,12 +25,12 @@ Requirements for v1.1 Tools Expansion. Each maps to roadmap phases.
 
 ### Maintenance Requests
 
-- [ ] **MAINT-01**: Tenant can submit a maintenance request with description, photos, and priority level
+- [x] **MAINT-01**: Tenant can submit a maintenance request with description, photos, and priority level
 - [ ] **MAINT-02**: Landlord receives push notification when a new request is submitted
-- [ ] **MAINT-03**: Landlord can view, acknowledge, and update maintenance request status (open → acknowledged → in progress → resolved → closed)
-- [ ] **MAINT-04**: Landlord can add notes to a maintenance request
+- [x] **MAINT-03**: Landlord can view, acknowledge, and update maintenance request status (open → acknowledged → in progress → resolved → closed)
+- [x] **MAINT-04**: Landlord can add notes to a maintenance request
 - [ ] **MAINT-05**: Tenant receives push notification when request status changes
-- [ ] **MAINT-06**: Completed maintenance request can log cost as a property expense
+- [x] **MAINT-06**: Completed maintenance request can log cost as a property expense
 
 ### Reporting Dashboards
 
@@ -86,12 +86,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-06 | Phase 7 | Complete |
 | DOC-07 | Phase 7 | Complete |
 | DOC-08 | Phase 7 | Complete |
-| MAINT-01 | Phase 8 | Pending |
+| MAINT-01 | Phase 8 | Complete |
 | MAINT-02 | Phase 8 | Pending |
-| MAINT-03 | Phase 8 | Pending |
-| MAINT-04 | Phase 8 | Pending |
+| MAINT-03 | Phase 8 | Complete |
+| MAINT-04 | Phase 8 | Complete |
 | MAINT-05 | Phase 8 | Pending |
-| MAINT-06 | Phase 8 | Pending |
+| MAINT-06 | Phase 8 | Complete |
 | RPT-01 | Phase 9 | Pending |
 | RPT-02 | Phase 9 | Pending |
 | RPT-03 | Phase 9 | Pending |

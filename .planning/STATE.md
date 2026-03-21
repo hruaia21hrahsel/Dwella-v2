@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: "Checkpoint: Task 2 human verification for 07-04-PLAN.md"
-last_updated: "2026-03-21T07:58:59.120Z"
+stopped_at: Completed 08-01 (maintenance DB foundation and helpers)
+last_updated: "2026-03-21T08:48:19.882Z"
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 9
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Every user-facing workflow works correctly and securely.
-**Current focus:** Phase 07 — document-storage
+**Current focus:** Phase 08 — maintenance-requests
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (maintenance-requests) — EXECUTING
+Plan: 2 of 4
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: Not started
 | Phase 07 P02 | 5 | 1 tasks | 1 files |
 | Phase 07 P03 | 12 | 2 tasks | 4 files |
 | Phase 07 P04 | 3 | 1 tasks | 5 files |
+| Phase 08-maintenance-requests P01 | 8 | 1 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting v1.1:
 - [Phase 07]: Image viewer uses ScrollView maximumZoomScale=3 for pinch-to-zoom without native module changes
 - [Phase 07]: Two entry-points for documents: tools menu /documents (standalone) and property detail /property/[id]/documents (contextual)
 - [Phase 07]: FAB label is context-sensitive: landlord sees Upload Document, tenant sees Upload to My Tenancy
+- [Phase 08-maintenance-requests]: NEXT_STATUS typed as Partial<Record<...>> so closed terminal state has no entry — callers gate advance button on status in NEXT_STATUS
+- [Phase 08-maintenance-requests]: maintenance-photos path: {property_id}/{request_id}/{uuid}.{ext} — consistent with documents bucket pattern
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T06:31:54.735Z
-Stopped at: Checkpoint: Task 2 human verification for 07-04-PLAN.md
+Last session: 2026-03-21T08:48:19.879Z
+Stopped at: Completed 08-01 (maintenance DB foundation and helpers)
 Resume file: None
