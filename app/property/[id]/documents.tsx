@@ -101,15 +101,15 @@ export default function PropertyDocumentsScreen() {
         }}
       />
 
-      {/* Category filter bar */}
-      <CategoryFilterBar selected={selectedCategory} onSelect={setSelectedCategory} />
-
       {/* Main scroll */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={docsLoading} onRefresh={refresh} />}
       >
+        {/* Category filter bar */}
+        <CategoryFilterBar selected={selectedCategory} onSelect={setSelectedCategory} />
+
         {/* Property Documents section */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Property Documents</Text>
 
