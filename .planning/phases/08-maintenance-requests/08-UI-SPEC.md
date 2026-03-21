@@ -42,7 +42,7 @@ All values are multiples of 4. Source: measured from existing components (Docume
 
 Exceptions:
 - Touch targets for icon-only buttons: minimum 44×44px (delete, close, camera buttons) — enforced via `hitSlop={8}` on 36px icon or explicit `width: 44, height: 44` — pattern from DocumentCard `deleteBtn`
-- Status chip padding: `paddingHorizontal: 10, paddingVertical: 4` (14px vertical rhythm) — matches CategoryFilterBar chip
+- Status chip padding: `paddingHorizontal: 12, paddingVertical: 4` (nearest multiple of 4; matches CategoryFilterBar chip rhythm)
 - Activity timeline connector line: 2px wide, left-aligned at 20px from card left edge
 
 ---
@@ -55,10 +55,12 @@ Source: Measured from DocumentCard, EmptyState, CategoryFilterBar. Weights extra
 |------|------|--------|-------------|-------|
 | Body | 16px | 400 | 1.5 (24px) | Request title in card, description in detail screen, notes in timeline |
 | Label | 14px | 400 | 1.43 (20px) | Meta text (timestamp, property name, status log note), filter chip labels |
-| Heading | 17px | 700 | 1.29 (22px) | Screen section headings, empty state title, detail screen request title |
+| Heading | 18px | 700 | 1.22 (22px) | Screen section headings, empty state title, detail screen request title |
 | Display | 13px | 400 | 1.38 (18px) | Filter chips (CategoryFilterBar pattern), priority badge labels |
 
 No additional weights. The codebase uses only 400 (regular) and 700 (bold) — confirmed in DocumentCard (`fontWeight: '400'`) and EmptyState (`fontWeight: '700'`).
+
+Note: Heading was raised from 17px to 18px to ensure perceptible visual hierarchy above the 16px Body size (minimum 2px separation required).
 
 ---
 
@@ -72,7 +74,7 @@ Source: constants/theme.ts LightTheme. All values from the established theme tok
 |------|-------|-------|
 | Dominant (60%) | `colors.background` = `#F5F5F7` | Screen backgrounds, list scroll area |
 | Secondary (30%) | `colors.surface` = `#FFFFFF` | Request cards, detail screen sections, form inputs, timeline entries |
-| Accent (10%) | `colors.primary` = `#009688` | Active filter chips, primary action buttons (Acknowledge / Start Work / Mark Resolved / Close), FAB, Submit Request button |
+| Accent (10%) | `colors.primary` = `#009688` | Active filter chips, primary action buttons (Acknowledge Request / Start Work / Mark Resolved / Close Request), FAB, Submit Request button |
 | Destructive | `colors.error` = `#EF4444` | Archive/delete request confirmation dialogs only |
 
 Accent reserved for: active filter chip fill, the single primary action button on the detail screen per status step, the FAB on the list screen, and the Submit Request form button. Not used for status chips or priority indicators (those use their own semantic colors below).
@@ -123,8 +125,10 @@ All components either exist and are reused directly, or are new thin wrappers fo
 
 ### 1. Request List Screen (`app/maintenance/index.tsx` + `app/property/[id]/maintenance.tsx`)
 
+Focal point: the grouped status list. The filter bar anchors the top; visual weight lands on the first open-status group of cards. Users scan vertically from highest-priority open cards downward.
+
 - Header: DwellaHeader with screen title "Maintenance" (standalone) or "Maintenance" (contextual)
-- Filter bar: `MaintenanceFilterBar` with two rows — row 1: status chips (All | Open | Acknowledged | In Progress | Resolved | Closed), row 2: priority chips (All | Low | Normal | Urgent). Sort toggle button at far right of row 1: icon `sort-variant` cycling Newest first / Oldest first
+- Filter bar: `MaintenanceFilterBar` with two rows — row 1: status chips (All | Open | Acknowledged | In Progress | Resolved | Closed), row 2: priority chips (All | Low | Normal | Urgent). Sort toggle button at far right of row 1: icon `sort-variant` cycling Newest first / Oldest first. `accessibilityLabel` for sort toggle: `"Sort requests, currently {sortOrder}"` (e.g. "Sort requests, currently Newest first").
 - List: grouped by status sections — section headers at 14px/700 `colors.textSecondary`, uppercase. Section order: Open, Acknowledged, In Progress, Resolved, Closed
 - Each card: tap opens `app/maintenance/[id].tsx`. Long-press: no action (no context menu)
 - FAB: bottom-right, `wrench-plus-outline` icon, label "New Request" (tenant only — hide for landlord-only users). Navigates to `app/maintenance/submit.tsx`
@@ -139,12 +143,14 @@ All components either exist and are reused directly, or are new thin wrappers fo
   1. Title (required): single-line TextInput, label "Title", placeholder "e.g. Leaking kitchen tap"
   2. Description (required): multi-line TextInput, label "Description", minHeight 100px, 4 lines visible, placeholder "Describe the issue in detail"
   3. Priority (required, default Normal): horizontal segmented control — three TouchableOpacity cells in a row, equal width, 48px height, borderRadius 10, border `colors.border`. Active cell: `colors.primary` fill, `colors.textOnPrimary` label. Inactive: `colors.surface` fill, `colors.textSecondary` label. Labels: "Low" | "Normal" | "Urgent"
-  4. Photos (optional, max 5): `MaintenancePhotoUploader` — two buttons side by side: "Take Photo" (camera-outline icon) and "Choose from Library" (image-outline icon). Thumbnails appear below buttons in a horizontal scroll row, each 80×80px, borderRadius 8. Each thumbnail has an "×" close button (top-right, 20×20px, `colors.error` icon) to remove.
+  4. Photos (optional, max 5): `MaintenancePhotoUploader` — two buttons side by side: "Take Photo" (camera-outline icon) and "Choose from Library" (image-outline icon). Thumbnails appear below buttons in a horizontal scroll row, each 80×80px, borderRadius 8. Each thumbnail has an "×" close button (top-right, 20×20px, `colors.error` icon) to remove. `accessibilityLabel` for each remove button: `"Remove photo {n}"` (e.g. "Remove photo 1", "Remove photo 2").
   5. Upload progress: ActivityIndicator (react-native-paper) while photos upload post-insert. Not a progress bar — spinner only (Claude's discretion resolved to spinner: simpler, no byte count available from Supabase Storage)
 - Primary CTA: GradientButton "Submit Request" at bottom, full width, disabled until title + description filled
 - Error feedback: toast via `useToastStore` (not inline form errors)
 
 ### 3. Request Detail Screen (`app/maintenance/[id].tsx`)
+
+Focal point: the primary action button (landlord) or the status chip + timeline (tenant). Landlord eye path: status chip at top of info card → timeline → action button at bottom. Tenant eye path: status chip → timeline. GlassCard sections are stacked vertically with 16px gaps; the action area uses `colors.primary` to draw landlord attention to the next required step.
 
 Visible to both tenant and landlord. Role determines which elements are active.
 
@@ -168,7 +174,7 @@ Visible to both tenant and landlord. Role determines which elements are active.
 
 ### 5. Status Chip (on request cards)
 
-- Pill shape: borderRadius 12, paddingHorizontal 10, paddingVertical 4
+- Pill shape: borderRadius 12, paddingHorizontal 12, paddingVertical 4
 - backgroundColor: STATUS_COLORS soft background (`rgba(...)`)
 - Text: STATUS_LABELS[status] at 13px/400, color: STATUS_COLORS[status]
 
@@ -185,7 +191,7 @@ Visible to both tenant and landlord. Role determines which elements are active.
 | Element | Copy | Notes |
 |---------|------|-------|
 | Primary CTA (tenant submit) | "Submit Request" | GradientButton on submit form |
-| Primary CTA (landlord acknowledge) | "Acknowledge" | Detail screen action button when status=open |
+| Primary CTA (landlord acknowledge) | "Acknowledge Request" | Detail screen action button when status=open |
 | Primary CTA (landlord start work) | "Start Work" | Detail screen action button when status=acknowledged |
 | Primary CTA (landlord resolve) | "Mark Resolved" | Detail screen action button when status=in_progress |
 | Primary CTA (landlord close) | "Close Request" | Detail screen action button when status=resolved |
@@ -237,8 +243,8 @@ All icons from MaterialCommunityIcons. Sizes follow existing component conventio
 | Priority: low | `chevron-down-circle-outline` | 16 | `#94A3B8` |
 | Photo: take camera | `camera-outline` | 22 | `colors.primary` |
 | Photo: gallery | `image-outline` | 22 | `colors.primary` |
-| Photo: remove | `close-circle` | 20 | `colors.error` |
-| Sort toggle | `sort-variant` | 22 | `colors.textSecondary` |
+| Photo: remove | `close-circle` | 20 | `colors.error` — `accessibilityLabel`: "Remove photo {n}" |
+| Sort toggle | `sort-variant` | 22 | `colors.textSecondary` — `accessibilityLabel`: "Sort requests, currently {sortOrder}" |
 | Timeline connector | line (View, not icon) | 2px wide | `colors.divider` |
 
 ---
