@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-03-21T06:23:00.045Z"
+stopped_at: Completed 07-03-PLAN.md
+last_updated: "2026-03-21T06:25:22.021Z"
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 5
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 ## Current Position
 
 Phase: 07 (document-storage) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Plan: 3 of 4
 | Phase 06 P01 | 2 | 2 tasks | 11 files |
 | Phase 07 P01 | 20 | 2 tasks | 9 files |
 | Phase 07 P02 | 5 | 1 tasks | 1 files |
+| Phase 07 P03 | 12 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting v1.1:
 - [Phase 07]: Mock lib/supabase and constants/config in setup.ts to enable env-free unit tests
 - [Phase 07]: Atomic delete: remove storage file first, abort DB delete if storage fails
 - [Phase 07-02]: tenantId undefined/null/string tri-state enables single hook to serve both all-docs and filtered views
+- [Phase 07]: DocumentViewer uses presentationStyle=fullScreen for reliable full-bleed modal on both platforms
+- [Phase 07]: Image viewer uses ScrollView maximumZoomScale=3 for pinch-to-zoom without native module changes
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T06:23:00.042Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-03-21T06:25:22.018Z
+Stopped at: Completed 07-03-PLAN.md
 Resume file: None
