@@ -127,52 +127,52 @@ export default function DocumentsScreen() {
         <View style={styles.topBarBtn} />
       </View>
 
-      {/* Property picker */}
-      {allProperties.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={[styles.pickerRow, { borderBottomColor: colors.border }]}
-          contentContainerStyle={styles.pickerContent}
-        >
-          {allProperties.map((p) => {
-            const active = selectedPropertyId === p.id;
-            return (
-              <TouchableOpacity
-                key={p.id}
-                onPress={() => setSelectedPropertyId(p.id)}
-                style={[
-                  styles.pickerChip,
-                  active
-                    ? { backgroundColor: colors.primary }
-                    : { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-                ]}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.pickerChipText,
-                    { color: active ? colors.textOnPrimary : colors.textSecondary },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {p.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      )}
-
-      {/* Category filter bar */}
-      <CategoryFilterBar selected={selectedCategory} onSelect={setSelectedCategory} />
-
       {/* Main scroll */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={docsLoading} onRefresh={refresh} />}
       >
+        {/* Property picker */}
+        {allProperties.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.pickerContent}
+            style={styles.pickerRow}
+          >
+            {allProperties.map((p) => {
+              const active = selectedPropertyId === p.id;
+              return (
+                <TouchableOpacity
+                  key={p.id}
+                  onPress={() => setSelectedPropertyId(p.id)}
+                  style={[
+                    styles.pickerChip,
+                    active
+                      ? { backgroundColor: colors.primary }
+                      : { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.pickerChipText,
+                      { color: active ? colors.textOnPrimary : colors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {p.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {/* Category filter bar */}
+        <CategoryFilterBar selected={selectedCategory} onSelect={setSelectedCategory} />
+
         {/* Property Documents section */}
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Property Documents</Text>
 
@@ -365,22 +365,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   pickerRow: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 4,
   },
   pickerContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
     gap: 8,
     alignItems: 'center',
   },
   pickerChip: {
     borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
   pickerChipText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
     maxWidth: 160,
   },

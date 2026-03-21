@@ -74,18 +74,17 @@ export function CategoryFilterBar({ selected, onSelect }: CategoryFilterBarProps
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 4,
     alignItems: 'center',
   },
   chip: {
     borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginRight: 6,
   },
   chipText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
   },
   endSpacer: {
