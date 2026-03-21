@@ -1,238 +1,195 @@
 # Pitfalls Research
 
-**Domain:** React Native / Expo property management app — v1.1 Tools Expansion (Document Storage, Maintenance Requests, Reporting Dashboards, AI Tools Removal)
-**Researched:** 2026-03-20
-**Confidence:** HIGH (findings cross-verified with official Supabase docs, Expo docs, and known codebase structure)
+**Domain:** WhatsApp Cloud API + Interactive Messaging + Media Handling — v1.2 WhatsApp Bot Expansion
+**Researched:** 2026-03-21
+**Confidence:** HIGH (findings cross-verified with Meta official docs, multiple credible third-party sources, and existing Dwella codebase patterns)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: New Storage Bucket RLS Policies Missing WITH CHECK
+### Pitfall 1: Sending Non-Template Messages Outside the 24-Hour Customer Service Window
 
 **What goes wrong:**
-A `documents` bucket is created with RLS policies that use only a `USING` clause on INSERT, allowing a tenant to upload a document to a path they do not own. For example, a tenant could upload to `{other_property_id}/{their_tenant_id}/lease.pdf` and the INSERT succeeds because the path check only runs on SELECT (USING), not on write (WITH CHECK).
+The WhatsApp Cloud API enforces a strict 24-hour messaging window. Outside that window — when the user has not sent a message in the past 24 hours — you can only send pre-approved template messages. Sending a free-form text message, an interactive button message, or a media message outside the window fails with a 131047 error ("Re-engagement message"). Developers often discover this only after the feature is deployed when real users are inactive overnight.
 
 **Why it happens:**
-The `payment-proofs` bucket in migration 002 used `WITH CHECK` correctly, but it is easy to copy the pattern incorrectly when creating a second bucket. The existing 28 RLS policies were audited for the v1.0 milestone — any new policies added in v1.1 are outside that audit scope and start without coverage.
+Developers test the bot by sending a message and immediately responding. The 24-hour window is always open during testing. Production use cases (reminders, outbound notifications, receipt confirmations) are sent hours or days after the last user message, which is outside the window.
 
 **How to avoid:**
-- Every `FOR INSERT` storage policy must use `WITH CHECK (...)`, not `USING (...)`. Supabase Storage evaluates `WITH CHECK` for writes and `USING` for reads — using the wrong clause means the check silently does nothing.
-- Mirror the pattern from `002_storage.sql`: `CREATE POLICY "landlord_upload_doc" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'documents' AND EXISTS (SELECT 1 FROM public.properties p WHERE p.id::text = split_part(name, '/', 1) AND p.owner_id = auth.uid()))`.
-- Run Supabase's security linter (Dashboard → Database → Linter → Security) after adding every new migration.
+- All outbound Edge Functions (OUT-01 rent reminders, OUT-02 payment receipts, OUT-03 maintenance notifications) must use approved template messages — never free-form text.
+- Interactive reply button messages (RICH-02, RICH-03 menus) cannot be sent as outbound notifications. They are only valid inside the 24-hour window. If you want to re-engage a user, use a template to open a new window, then follow up with the interactive menu.
+- Design two code paths in the Edge Functions: one for inside-window (interactive buttons allowed) and one for outside-window (template only). Use the WhatsApp error response to detect the state, or track last-interaction time in the database.
 
 **Warning signs:**
-- Any new `CREATE POLICY ... FOR INSERT` on `storage.objects` that contains `USING (...)` instead of `WITH CHECK (...)`.
-- Storage policy created without a corresponding read policy — documents uploaded but inaccessible to the intended reader.
+- Integration test passes but production reminders fail with error 131047.
+- Reminders work in morning tests but fail for users who haven't chatted for a day.
 
 **Phase to address:**
-Phase 1 (Document Storage DB + Storage setup) — every new bucket policy must include `WITH CHECK` before any upload code is written.
+Setup & Outbound Messaging phase. Template design must happen before outbound Edge Functions are coded. Do not wire OUT-01, OUT-02, OUT-03 until approved templates exist for each.
 
 ---
 
-### Pitfall 2: Document Metadata Table Missing Soft-Delete or Not Filtering is_archived
+### Pitfall 2: Interactive Button Messages Are Not Templates — Cannot Be Sent Outside the 24-Hour Window
 
 **What goes wrong:**
-The `documents` metadata table stores `property_id` and optionally `tenant_id`. When a property or tenant is archived (soft-deleted), the documents table keeps rows with non-null foreign keys pointing to archived records. Queries that join `documents` with `properties` or `tenants` either return documents for archived records or fail with confusing empty results depending on whether the join filters `is_archived`.
+Interactive reply button messages (type: `interactive`, buttons with 3 max) look like templates and feel like templates, but they are NOT template messages. Meta does not require approval for them, but they can only be sent within an active 24-hour conversation window. This makes interactive menus impossible to use as notification openers. The RICH-02 main menu is session-only.
 
 **Why it happens:**
-This project uses a consistent soft-delete pattern — `is_archived = FALSE` on every query involving properties or tenants. New tables that reference those entities do not automatically inherit the filter. The query is written once; the archived-record case is only discovered when a beta user archives a property and still sees its documents in an unrelated screen.
+The Meta documentation separates "template messages" from "interactive messages" in different sections. Developers who build the menu first and the notification flow second often design menus as the notification entry point, which breaks outside the window.
 
 **How to avoid:**
-- Every query joining `documents` to `properties` or `tenants` must add `.eq('is_archived', false)` on the joined table.
-- Add a partial index on `documents` filtering by property so queries are fast: `CREATE INDEX idx_documents_active_property ON documents(property_id) WHERE property_id IS NOT NULL`.
-- Add soft-delete to the documents table itself (`is_archived BOOLEAN NOT NULL DEFAULT FALSE`) so documents can be hidden without deleting the file from storage, since deleting a bucket object via SQL metadata is not the same as deleting the actual file (see Pitfall 4).
+- Interactive menus (RICH-02, RICH-03) must only be triggered in response to an inbound user message.
+- Outbound proactive messages (reminders, receipts, notifications) must use template messages, not interactive buttons. After the template is received and the user replies, the next response can include an interactive menu.
+- The welcome message (RICH-01) sent after account linking should be a template message (the linking event constitutes the business-initiated open of a conversation window), then a follow-up interactive menu can be sent within that session.
 
 **Warning signs:**
-- A landlord archives a property and the document library screen still shows the archived property's documents.
-- A tenant archives flow completes but the tenant's documents still appear in the landlord's document library.
+- Menu appears in manual testing but fails when triggered by a pg_cron scheduled Edge Function.
+- Error 131047 or 132000 on any message type other than template in a scheduled function.
 
 **Phase to address:**
-Phase 1 (Document Storage DB schema) — add `is_archived` column and write query helpers before any UI is built.
+Rich Messaging phase. The distinction between template and interactive must be encoded in the shared bot message dispatch utility before any menu work begins.
 
 ---
 
-### Pitfall 3: Signed URL Expiry Not Handled — Documents Appear Broken
+### Pitfall 3: Media URL Expiry — 5-Minute Window After Webhook Delivery
 
 **What goes wrong:**
-Private bucket files in Supabase Storage are served via signed URLs that expire (default 1 hour, configurable up to 1 year via `expiresIn` seconds). The document library renders a list of documents with signed URLs fetched on screen load. If the user leaves the screen open for an hour, or returns to the screen from cache, all document thumbnails and download links show broken/expired URL errors. The existing `payment-proofs` bucket in Dwella already has this risk (noted in v1.0 PITFALLS.md) and the documents feature will amplify it because document lists are more static — users bookmark a document list screen and return to it repeatedly.
+When a user sends a photo (e.g., payment proof via MEDIA-01), the WhatsApp webhook delivers a media object containing a media ID, not a direct URL. You must call the Graph API to retrieve a temporary download URL. That URL expires in approximately 5 minutes and requires an Authorization header with the access token to download. If the Edge Function processes the webhook asynchronously or queues it, the URL may already be expired before the download attempt.
 
 **Why it happens:**
-Developers fetch signed URLs once and store them in component state or Zustand. The URL expires silently — there is no network error on the React Native side, just a failed image load or a 400 from the presigned URL endpoint.
+Developers familiar with Telegram (where `file_id` can be resolved at any time) assume WhatsApp behaves similarly. WhatsApp's CDN URLs are ephemeral and authenticated — they are not public.
 
 **How to avoid:**
-- Store signed URLs with their expiry timestamp: `{ url: string, expiresAt: number }`.
-- Before rendering, check `Date.now() > expiresAt - 60_000` (1-minute buffer) and re-fetch if expired.
-- Use a 24-hour `expiresIn` for documents (vs. 1-hour default) to reduce re-fetch frequency: `supabase.storage.from('documents').createSignedUrl(path, 86400)`.
-- Do not persist signed URLs in Zustand across app restarts — re-fetch on mount.
+- The `whatsapp-webhook` Edge Function must download and transfer media to Supabase Storage synchronously as the first action after webhook receipt, before any other processing.
+- Never pass the media ID to a downstream function for later resolution. Resolve and download immediately.
+- The download request must include `Authorization: Bearer {WHATSAPP_TOKEN}` in the header.
+- Store the Supabase Storage path (not the temporary CDN URL) on the payment or document record.
 
 **Warning signs:**
-- Document download button triggers a 400 or 403 error after the app has been open for more than an hour.
-- Broken image icons in the document list thumbnail view.
-- `expiresIn` not passed to `createSignedUrl` calls — means the default (1 hour) is used.
+- Media download succeeds during testing but fails intermittently in production (Edge Function cold starts, queue delays).
+- HTTP 401 or 403 errors on media download — the token is correct but the URL has expired.
 
 **Phase to address:**
-Phase 1 (Document Storage screens) — implement expiry-aware URL cache from day one, not as a post-launch fix.
+Media Handling phase. The media download-and-store pipeline must be the first thing built and tested before MEDIA-01 or MEDIA-02 are considered complete.
 
 ---
 
-### Pitfall 4: Deleting Document Metadata Without Deleting the Storage Object (Orphaned Files)
+### Pitfall 4: Template Rejection and Automatic Recategorization
 
 **What goes wrong:**
-A document is deleted from the `documents` table (the metadata row is removed), but the actual file in the Supabase Storage bucket is not deleted. The file remains in storage, consuming storage quota and remaining accessible to anyone who still has a signed URL. Over time, orphaned files accumulate silently.
+Meta rejects or automatically recategorizes WhatsApp message templates without warning. A template submitted as "Utility" (rent reminder, payment receipt, maintenance notification) can be approved as "Marketing" instead, which costs more per send and is subject to stricter frequency limits. As of April 2025, Meta no longer gives 24-hour notice before recategorizing — the change is immediate.
 
 **Why it happens:**
-Supabase Storage stores file metadata in `storage.objects` (internal schema) and the actual bytes in S3-compatible object storage. Deleting a row from your own `documents` table only removes your metadata — it does not call the storage API. Official Supabase docs explicitly warn: "Deleting the metadata doesn't remove the object in the underlying storage provider. This results in your object being inaccessible, but you'll still be billed for it."
+The line between Utility and Marketing is strict: Utility must be non-promotional, tied to a specific transaction or user action, and not contain any upsell language, discount framing, or persuasive phrasing. Words like "Don't miss your payment," "Stay on top of your finances," or any framing that could be construed as encouraging action rather than informing can trigger recategorization.
 
 **How to avoid:**
-- Never delete document records via a plain `DELETE FROM documents`. Always delete through the storage API first: `supabase.storage.from('documents').remove([path])`, then delete the metadata row.
-- Write a single `deleteDocument(id)` function in `lib/documents.ts` that handles both operations atomically (storage delete then DB delete). Callers must never call them separately.
-- For the soft-delete case: set `is_archived = TRUE` on the metadata row without touching storage. Only physically delete from storage when the user explicitly purges archived documents.
+- Write templates with pure transactional language. Example for rent reminder: "Your rent of {{1}} for {{2}} is due on {{3}}." No call to action, no urgency language, no recommendations.
+- Avoid shortened URLs in template bodies — Meta blocks them. Use full branded domain URLs only.
+- Variable format must be exact: `{{1}}`, `{{2}}` etc. — mismatched braces cause instant rejection.
+- Template display name must not be "Agent", "Bot", "Assistant", or similar generic names. Use "Dwella" or a specific message type name.
+- Build all required templates in the Setup phase before development of outbound functions begins. Account for a 24-72 hour approval window per template.
+- Subscribe to Meta webhook notifications for `message_template_status_update` events to detect automatic recategorization.
 
 **Warning signs:**
-- A `DELETE FROM documents WHERE id = $1` query anywhere in the codebase not preceded by a storage `remove()` call.
-- Storage bucket usage growing faster than active document count would explain.
+- Templates approved as Marketing instead of the submitted Utility category.
+- Outbound function costs higher than expected (Marketing templates billed differently).
+- Webhook event `message_template_status_update` with status `REJECTED` or category change.
 
 **Phase to address:**
-Phase 1 (Document Storage lib layer) — `lib/documents.ts` must enforce this invariant before any delete UI is wired up.
+Setup phase. Templates should be submitted on Day 1 of the milestone, not when outbound functions are being coded. Build the template content as part of setup documentation (SETUP-01).
 
 ---
 
-### Pitfall 5: AI Tools Screens Removed But Routes Still Referenced — TypeScript Misses It at Runtime
+### Pitfall 5: Temporary Access Token Used in Production
 
 **What goes wrong:**
-The three AI tools screens (`/tools/ai-insights`, `/tools/smart-reminders`, `/tools/ai-search`) are deleted from `app/(tabs)/tools/`. The `tools/index.tsx` menu still contains `route: '/tools/ai-insights'` in the TOOLS array. The app builds and passes TypeScript checks because Expo Router's typed routes only detect invalid hrefs when `typedRoutes: true` is enabled in `app.json`. If typed routes are not enabled, or the `router-typegen.d.ts` file is stale, pressing the removed menu items causes a runtime "no route found" crash rather than a compile-time error.
+During Meta app setup, the Developer Dashboard provides a temporary access token that expires in approximately 24 hours. Projects built with this token appear to work perfectly until the token silently expires, at which point all outbound messages fail with authentication errors. Since Supabase Edge Functions use environment variables, rotating the token requires a manual redeploy.
 
 **Why it happens:**
-Expo Router uses file-system-based routing. Removing a file removes the route, but string references to that route in navigation calls (`router.push('/tools/ai-insights')`) are plain strings at runtime — TypeScript only catches them if typed routes are active. The tools menu in `index.tsx` is a data-driven array with string literals, which is even less likely to produce a TS error.
+The temporary token is the fastest path to a working integration. Developers reach the "it works" milestone and move on without reading the production deployment section of Meta's documentation.
 
 **How to avoid:**
-- Before deleting any screen file, search the entire codebase for the route string: `grep -r "ai-insights\|smart-reminders\|ai-search" app/ components/ lib/`.
-- Remove or replace all references in `tools/index.tsx`, `_layout.tsx` files, and any deeplink handlers before deleting the screen files.
-- Enable `typedRoutes: true` in `app.json` (Expo Router experimental feature) so that removed route strings cause compile-time TypeScript errors.
-- After deletion, verify the tools tab renders without errors and no dead cards remain in the menu.
+- Use a System User token from Meta Business Manager from the start. System User tokens do not expire unless manually revoked.
+- Required permissions: `whatsapp_business_management` and `whatsapp_business_messaging`.
+- Store as `WHATSAPP_TOKEN` in Supabase Edge Function secrets (not in `.env` or plaintext config).
+- Never log the token value, even in debug mode.
 
 **Warning signs:**
-- The TOOLS array in `tools/index.tsx` still has items with routes pointing to deleted files after the AI removal phase.
-- Any `_layout.tsx` in `app/(tabs)/tools/` that still defines screens for the removed routes.
-- Bot/AI-related imports remaining in `lib/bot.ts` or referenced from screens that should be clean.
+- Outbound messages work then suddenly all fail with HTTP 401.
+- Error logs show token expiry or invalid token errors around the 24-hour mark after setup.
 
 **Phase to address:**
-Phase 4 (AI Tools Removal) — audit all route references before file deletion; verify with `npx tsc --noEmit` after deletion.
+Setup phase. The System User token must be configured before any Edge Function using the WhatsApp API is deployed.
 
 ---
 
-### Pitfall 6: Maintenance Request Expense Link Creates Orphaned Expenses on Request Deletion
+### Pitfall 6: Phone Number Already Registered to WhatsApp App
 
 **What goes wrong:**
-Maintenance requests are linked to expenses (landlord can log the cost of a repair). The `expenses` table uses `ON DELETE RESTRICT` for payment FKs (from the existing schema). If maintenance requests can be deleted and the linked expense is not also deleted, the expense becomes an orphan — it still appears in reporting totals but has no associated work order context. Alternatively, if the FK is set to CASCADE, deleting a maintenance request silently wipes the expense record from the landlord's P&L history.
+A phone number that is active in WhatsApp (personal or WhatsApp Business app) cannot be registered with the WhatsApp Cloud API without first deleting the existing account from the WhatsApp app on that device. If Dwella's test or production phone number was previously used with the WhatsApp app, registration will fail or the existing account will be wiped unexpectedly.
 
 **Why it happens:**
-The existing `expenses` table was designed for general property expenses, not workflow-linked expenses. Adding a `maintenance_request_id` FK to `expenses` without carefully choosing the delete behavior (RESTRICT vs CASCADE vs SET NULL) creates a data integrity trap. RESTRICT prevents cleanup; CASCADE destroys audit history; SET NULL is correct but requires the UI to handle the orphaned expense gracefully.
+Developers try to use their own WhatsApp number or a shared business number for quick testing, not realizing the number must be "clean." The Meta registration flow does not warn clearly that existing data is erased.
 
 **How to avoid:**
-- Use `maintenance_request_id UUID REFERENCES maintenance_requests(id) ON DELETE SET NULL` on the `expenses` table — expenses survive request deletion, the link is simply cleared.
-- In the reporting dashboard, display expenses without a maintenance request link as "Unlinked" rather than hiding them.
-- Do not add a `CASCADE` delete from `maintenance_requests` to `expenses` — a landlord's P&L must never silently lose expense records.
+- Use a dedicated phone number (SIM or VoIP) that has never been registered to WhatsApp. Document this as a prerequisite in SETUP-01.
+- Virtual numbers can work but some providers block WhatsApp verification calls. Prefer a physical SIM or a VoIP provider known to work with WhatsApp registration.
+- Landlines with IVR systems cannot receive the verification call.
 
 **Warning signs:**
-- Any migration that adds `maintenance_request_id` to `expenses` with `ON DELETE CASCADE`.
-- Any application code that deletes a maintenance request and separately deletes linked expenses in the same transaction — this is fine for intentional purge but must be an explicit user action, not automatic.
+- Registration appears to succeed but incoming messages never arrive.
+- The WhatsApp app on the associated device gets logged out unexpectedly.
 
 **Phase to address:**
-Phase 2 (Maintenance Requests DB schema) — FK delete behavior must be defined correctly in the migration, not changed later.
+Setup phase. Must be addressed in the SETUP-01 documentation as a hard prerequisite.
 
 ---
 
-### Pitfall 7: Reporting Dashboard Runs Full Table Scans via RLS — Visible Latency at Small Scale
+### Pitfall 7: Messaging Tier Limits Block Outbound Campaigns
 
 **What goes wrong:**
-The reporting dashboard aggregates `payments`, `expenses`, and `tenants` across a landlord's portfolio. The RLS policies on these tables use EXISTS subqueries that join back to `properties` to verify ownership. For an aggregate query like `SELECT SUM(amount_paid) FROM payments WHERE ...`, Postgres evaluates the RLS EXISTS subquery for every candidate row — even with a WHERE clause. On a table with 500+ payment rows, this causes query times of 200-800ms per aggregate, making a dashboard with 5-6 aggregate cards take 3-5 seconds to load.
+New WhatsApp Business API accounts start at 250 business-initiated conversations per 24 hours. Outbound reminders (OUT-01) sent to all active tenants could hit this cap if there are more than 250 tenants in the system. The messages silently fail or queue — there is no automatic retry on the Supabase Edge Function side.
 
 **Why it happens:**
-RLS subqueries using `EXISTS (SELECT 1 FROM properties WHERE owner_id = auth.uid())` are re-evaluated per row. The existing RLS on `payments` in Dwella uses this pattern. It works acceptably for paginated list queries (few rows) but becomes expensive for aggregate queries that touch many rows. The Supabase advisor flags this as `auth_rls_initplan`.
+Developers test with 5-10 fake tenants and do not simulate the 250-conversation limit. The limit escalates automatically over time, but only if quality rating stays High and 50%+ of the current limit is used within 7 days.
 
 **How to avoid:**
-- Add a `property_id` direct column to all tables that need it (payments already has `property_id`). Add a composite index: `CREATE INDEX idx_payments_owner_reporting ON payments(property_id, year, month, status)`.
-- Rewrite reporting queries to filter `property_id IN (SELECT id FROM properties WHERE owner_id = auth.uid() AND is_archived = FALSE)` — a single subquery evaluated once, not per row.
-- Consider using a Postgres `SECURITY DEFINER` function for dashboard aggregates (existing pattern in Dwella via `is_property_owner()`) — this bypasses RLS for the aggregate while still enforcing ownership in the function body.
-- Use Supabase Edge Functions for dashboard aggregates if queries exceed 200ms — offload the computation and return a pre-computed JSON payload.
+- The `send-reminders` Edge Function must check the WhatsApp API response for HTTP 429 or error code 131056 (Too many messages) and implement exponential backoff.
+- Log failed sends with recipient phone number and retry count to a `whatsapp_delivery_failures` table so missed notifications can be retried.
+- For MVP, the 250-conversation limit is sufficient if the user base is small. Document the limit in SETUP-01 so the user is aware.
+- Tier escalation to 1,000 then 10,000 then 100,000 conversations/day happens automatically over days/weeks of consistent, high-quality usage.
 
 **Warning signs:**
-- Dashboard cards take >1 second to render on a phone with 3+ properties.
-- Supabase query logs (Dashboard → Database → Query Performance) showing `payments` SELECT queries with high `mean_exec_time`.
-- The Supabase advisor flagging `auth_rls_initplan` on `payments` or `expenses`.
+- Some tenants receive reminders, others do not, with no apparent pattern.
+- Edge Function logs show HTTP 429 responses from the WhatsApp API.
 
 **Phase to address:**
-Phase 3 (Reporting Dashboards) — write queries with indexes from day one; do not defer optimization to post-launch.
+Outbound Messaging phase. Error handling with backoff must be part of the Edge Function implementation, not a post-launch patch.
 
 ---
 
-### Pitfall 8: Storage.list() Used for Document Browsing — Degrades at Scale
+### Pitfall 8: Webhook Returns Slow — Meta Marks Delivery Failed and Retries
 
 **What goes wrong:**
-`supabase.storage.from('documents').list(prefix)` is used to browse documents in a folder. The Supabase Storage `.list()` method is described in official docs as "quite generic" — it fetches both folders and objects in a single query and degrades when a bucket contains a large number of objects. For a multi-property landlord with years of accumulated documents, this causes slow load times and can hit query limits.
+WhatsApp requires the webhook endpoint to return HTTP 200 within a few seconds. If the Edge Function processes the message synchronously (parsing the payload, calling Claude, writing to DB, sending a reply) before returning 200, it will time out on high-load or cold-start scenarios. Meta then retries the webhook, causing duplicate message processing.
 
 **Why it happens:**
-`.list()` is the obvious API for a file browser UI. It works correctly in development with few files. The metadata table pattern (storing file path + metadata in a Postgres `documents` table) is more robust but requires an additional abstraction layer.
+The existing Telegram webhook (`telegram-webhook`) likely processes synchronously, which works because Telegram is more lenient with timeouts. WhatsApp has a stricter timeout window and will retry aggressively.
 
 **How to avoid:**
-- Use the `documents` metadata table as the primary source for listing documents in the UI — query `SELECT * FROM documents WHERE property_id = $1 AND is_archived = FALSE ORDER BY created_at DESC`.
-- Use `supabase.storage.from('documents').list()` only for admin/debug purposes, never as the production document list source.
-- The storage path is stored in the metadata row — signed URL generation is a secondary API call on demand, not a list operation.
+- The `whatsapp-webhook` Edge Function must return HTTP 200 immediately after HMAC signature validation.
+- All message processing (Claude call, DB write, reply dispatch) must happen after the response is sent, or be handed off to a separate `process-bot-message` Edge Function via an async invoke pattern (Supabase `functions.invoke` without awaiting, or via a DB-based queue).
+- Store the incoming webhook payload in a `whatsapp_inbox` table immediately, return 200, then let a separate function process it.
+- Implement deduplication using `message_id` from the webhook payload to prevent duplicate processing on retries. Store processed message IDs with a TTL.
 
 **Warning signs:**
-- Any UI component that calls `supabase.storage.from('documents').list(...)` to populate the document list screen.
-- Document list load time increasing linearly as more files are uploaded.
+- Users receive duplicate bot replies.
+- Meta dashboard shows repeated webhook delivery failures despite the Edge Function appearing to work.
+- Supabase Edge Function logs show timeouts.
 
 **Phase to address:**
-Phase 1 (Document Storage design) — use the metadata table as the source of truth for listing from the start; the storage API is only for upload/download/delete operations.
-
----
-
-### Pitfall 9: Maintenance Request Photo Uploads Use Same Bucket as Payment Proofs — RLS Collision
-
-**What goes wrong:**
-Maintenance request photos are uploaded to the existing `payment-proofs` bucket (re-using the same bucket for convenience). The existing RLS policies on `payment-proofs` use path-based access control structured as `{property_id}/{tenant_id}/{year-month}.jpg`. Maintenance photos with a different path structure (e.g., `maintenance/{request_id}/photo.jpg`) do not match any existing policy and silently fail with a 403. Alternatively, if the path is forced into the payment-proof format, data from different domains is mixed in one bucket, making cleanup and auditing harder.
-
-**Why it happens:**
-Developers see an existing bucket and avoid the overhead of creating a new one. The path-based RLS pattern in `payment-proofs` is opaque — it looks like generic file storage when it is actually domain-specific.
-
-**How to avoid:**
-- Create a separate `maintenance-photos` bucket with its own RLS policies tuned for the maintenance request domain: `{property_id}/{request_id}/{index}.jpg`.
-- Similarly, create a `documents` bucket separately from `payment-proofs`.
-- One bucket per domain: `payment-proofs`, `maintenance-photos`, `documents`. This keeps RLS policies readable and auditable.
-
-**Warning signs:**
-- Any new storage path written to the `payment-proofs` bucket that does not match the `{property_id}/{tenant_id}/{year-month}` format.
-- Maintenance photo upload failing with a 403 error when the user has correct property ownership.
-
-**Phase to address:**
-Phase 2 (Maintenance Requests storage setup) — create the `maintenance-photos` bucket in a new migration, do not reuse existing buckets.
-
----
-
-### Pitfall 10: Edge Function Deletion Leaves Dead Invocation Entries and Claude Tool Definitions
-
-**What goes wrong:**
-When the AI tools Edge Functions are removed (`ai-insights`, `smart-reminders`, `ai-search` or equivalent), the Supabase dashboard may still show previous deployment history for those functions. More critically, if `process-bot-message` referenced these tools as Claude API function definitions, those tool definitions remain in the function code and Claude continues to hallucinate calls to them, causing the bot to attempt tool executions that no longer exist. The bot starts returning malformed responses or errors.
-
-**Why it happens:**
-Edge Function removal in Supabase is not automatic — you must delete via the Supabase CLI (`supabase functions delete <name>`) or the dashboard. Function-to-function references (e.g., `process-bot-message` calling `ai-insights`) may not throw a clear error until the calling function actually executes at runtime.
-
-**How to avoid:**
-- Before deleting AI tools Edge Functions, grep the entire `supabase/functions/` directory for references to the functions being removed: `grep -r "ai-insights\|smart-reminders\|ai-search" supabase/functions/`.
-- Remove all Claude API tool definitions for the removed features from `process-bot-message` before deploying the removal.
-- After deletion, verify `process-bot-message` still works with a test bot message that would have previously triggered AI tools.
-- Delete functions via CLI: `supabase functions delete ai-insights` — the CLI validates the slug and removes from the deployment.
-
-**Warning signs:**
-- The bot returns structured JSON with an `action` field referencing a removed tool name.
-- `process-bot-message` logs show `Error: Cannot find function ai-insights` or similar.
-- Any `fetch('...supabase.co/functions/v1/ai-insights', ...)` remaining in Edge Function source code.
-
-**Phase to address:**
-Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion; test the bot end-to-end after removal.
+Setup phase — webhook architecture must be designed correctly from the start. Retrofitting async processing after the bot logic is written is a significant refactor.
 
 ---
 
@@ -240,12 +197,13 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Re-using `payment-proofs` bucket for maintenance photos | No migration needed | RLS collision, mixed domain data, harder to audit | Never — bucket creation is a one-line migration |
-| `supabase.storage.list()` for document browsing UI | Simple API, no metadata table needed | Degrades with scale, no filtering, no soft-delete | Never in production — use metadata table |
-| Storing signed URLs in Zustand without expiry tracking | Simple, fast to implement | Broken document links after 1 hour | Never for private buckets — always track expiry |
-| Aggregate queries without indexes on reporting columns | No extra migration | Dashboard latency visible at 3+ properties | Never — add indexes in same migration as table |
-| Cascade delete from maintenance requests to expenses | Simple cleanup | Destroys P&L audit history silently | Never for financial data |
-| Leaving AI tool route strings in `tools/index.tsx` while deleting screen files | Saves one edit | Runtime crash on navigation, confusing for testers | Never — remove together |
+| Use temporary access token from Dev Dashboard | Faster first integration | Expires in 24h, silent outage | Never — use System User token from start |
+| Process webhook synchronously (no async dispatch) | Simpler code, fewer components | Duplicate messages, Meta retry storms | Never for production |
+| Hardcode template names instead of fetching from Meta API | Faster coding | Templates renamed/recategorized without notice, silent failures | Never |
+| Skip HMAC verification in development | Faster local testing | Forgets to re-enable; security hole in production | Only local dev with env gate |
+| Send free-form text to all users regardless of window state | Simpler code path | Error 131047 floods, no outbound delivery | Never |
+| Download media lazily (not at webhook receipt time) | Decouples processing | 5-minute URL expiry causes silent media loss | Never |
+| Submit templates as Utility without reviewing against policy | Faster setup | Auto-recategorized to Marketing, higher cost | Never |
 
 ---
 
@@ -253,14 +211,16 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Supabase Storage (documents bucket) | `FOR INSERT WITH USING (...)` instead of `WITH CHECK (...)` | All insert policies must use `WITH CHECK`; `USING` is for reads only |
-| Supabase Storage (delete) | Delete metadata row without calling `storage.remove()` | Always call `storage.from('documents').remove([path])` first, then delete the metadata row |
-| Supabase Storage (signed URLs) | Generate once and store permanently in state or Zustand | Store with expiry timestamp; regenerate 60 seconds before expiry |
-| expo-document-picker | Not setting `copyToCacheDirectory: true` | `expo-file-system` cannot reliably read a picked file without copying it to app cache first |
-| expo-document-picker (large files) | Picking files > 100MB — URI property may be empty on some platforms | Validate file size before upload attempt; show error for files exceeding bucket limit (5MB for payment-proofs — set appropriate limit for documents bucket) |
-| Supabase aggregate queries with RLS | Running `SUM()` / `COUNT()` on tables with EXISTS-subquery RLS | Add composite indexes on `(property_id, ...)` columns; rewrite RLS to use `IN` subquery evaluated once |
-| Claude API tool definitions in `process-bot-message` | Leaving removed tool definitions in the tools array | Remove tool definitions for all AI tool features before deploying the removal migration |
-| Expo Router typed routes | Deleting screen files without updating string route references | Enable `typedRoutes: true` in `app.json`; search for route strings manually before deletion |
+| WhatsApp Cloud API | Using `link` parameter for media instead of uploading and using `id` | Upload media to Meta CDN first via `/media` endpoint, use returned `id` in message |
+| WhatsApp Cloud API | Sending interactive button message as outbound notification | Templates only for outbound; interactive only inside 24h window |
+| WhatsApp Cloud API | Logging full webhook payload including user phone numbers | Scrub PII (phone numbers, names) from logs — GDPR and Meta ToS |
+| WhatsApp Cloud API | Using `allow_category_change: false` on template creation | Removed as of April 2025 — Meta recategorizes regardless |
+| WhatsApp Cloud API | Using URL-shortened links in template bodies | Blocked by Meta — use full branded domain URLs only |
+| Meta Graph API | Calling media download URL without Authorization header | Include `Authorization: Bearer {TOKEN}` — URLs are authenticated |
+| Meta Graph API | Calling media download URL after 5 minutes | Download immediately on webhook receipt and persist to Supabase Storage |
+| Supabase Edge Functions | Calling WhatsApp API with service role key exposed in response | WhatsApp token must live in Edge Function secrets only, never client-side |
+| Supabase Edge Functions | Not handling `status` update webhooks (sent/delivered/read/failed) | WhatsApp sends status callbacks for every outbound message — must return 200 or retry storms begin |
+| Telegram bot | Adding interactive inline keyboards and assuming WhatsApp has equivalent | Telegram supports unlimited inline buttons in grids; WhatsApp reply buttons max 3, max 20 chars each |
 
 ---
 
@@ -268,11 +228,11 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Reporting dashboard fires 5-6 separate aggregate queries on mount | Dashboard blank for 3-5 seconds; each card loads independently | Combine all aggregates into a single Edge Function call that returns a JSON payload; or use parallel `Promise.all` with composite indexes | Visible at 3+ properties / 100+ payments |
-| Document list re-fetches signed URLs for every item on every render | Each list render causes N storage API calls (N = document count) | Fetch signed URLs lazily on item expand/tap, not on list render | Visible at 10+ documents |
-| Maintenance request list loads all requests + joins (tenant, property, linked expense) in a single N+1 query | Maintenance list takes >2 seconds; N+1 visible in Supabase query logs | Use a joined select: `maintenance_requests.select('*, tenants(tenant_name), expenses(amount)')` — single query | Visible at 20+ requests |
-| Dashboard reporting queries lack indexes on `year`, `month`, `status` columns | Slow aggregate queries even with few rows because Postgres does a seq scan on `payments` | Add `CREATE INDEX idx_payments_reporting ON payments(property_id, year, month, status)` in the migration that creates reporting queries | Visible at 200+ payment rows; performance cliff at 1000+ |
-| FlatList for document/maintenance lists without `keyExtractor` | Reconciliation errors, incorrect scroll position, items rendering twice | Always provide `keyExtractor={(item) => item.id}` for lists backed by UUID-keyed DB rows | Immediate — causes subtle rendering bugs from first use |
+| Synchronous webhook processing | Duplicate messages, Meta delivery failures | Return 200 immediately, process async | Every request under load or cold start |
+| Resolving media ID to URL inside the same function that processes business logic | Intermittent media loss | Download media as the first step, before any other logic | When function execution takes >5 minutes end-to-end |
+| Sending all tenant reminders in a single Edge Function iteration | Hits 250 conversation/day tier limit; partial delivery with no retry | Process in batches with backoff, log failures | >250 active tenants |
+| Polling for template approval status in a loop | Rate limit errors on Meta Graph API | Subscribe to `message_template_status_update` webhooks | First time template approval takes longer than expected |
+| Generating PDF in-memory and sending directly to WhatsApp | Memory limit on Edge Function runtime (~150MB) | Generate PDF to Supabase Storage, get signed URL, send URL as document message | PDF reports with many months of data |
 
 ---
 
@@ -280,11 +240,12 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| New document bucket with public access enabled | Any unauthenticated user can download lease agreements, IDs, and financial documents | Always create document buckets with `public: FALSE`; verify in Supabase dashboard after migration |
-| Document upload path not validated before insert | Tenant uploads to `{other_property_id}/...` path, bypassing property ownership | RLS `WITH CHECK` must parse the first path segment as a UUID and verify it matches a property owned by `auth.uid()` |
-| Maintenance request photos accessible to tenants of other units in the same property | A tenant can see maintenance photos uploaded for a different flat | RLS on `maintenance-photos` bucket must scope to `tenant_id` (second path segment), not just `property_id` |
-| Maintenance request status editable by tenant (should be landlord-only for some transitions) | Tenant closes their own maintenance request before landlord has reviewed it | RLS `WITH CHECK` on UPDATE for `maintenance_requests` must restrict `status` transitions: tenants can set `open`/`cancelled`, landlords can set `in_progress`/`resolved`/`closed` |
-| Reporting dashboard queries bypass RLS via service role in Edge Function | All properties' data visible regardless of ownership | If using an Edge Function for dashboard aggregates, pass `Authorization: Bearer <user_jwt>` and use a user-scoped Supabase client, not the service role client |
+| Skipping HMAC-SHA256 verification on WhatsApp webhook | Any attacker can send fake messages, triggering bot actions | Always verify `X-Hub-Signature-256` header against raw request body before processing; use `timingSafeEqual` |
+| Comparing HMAC signature after JSON parsing | Signature mismatch due to JSON re-serialization differences | Verify against the raw bytes before parsing |
+| Storing WhatsApp token in `.env` committed to repo | Token exposed via git history | Store only in Supabase Edge Function secrets (`supabase secrets set WHATSAPP_TOKEN=...`) |
+| Trusting `from` field in webhook payload without cross-referencing DB | Tenant impersonation — attacker sends message pretending to be a different phone number | Cross-reference `from` phone number against `users` table before any bot action |
+| Logging phone numbers from webhook payload | PII exposure in Supabase logs (queryable by team members) | Hash or truncate phone numbers in all log statements |
+| Processing message without checking for `message_id` deduplication | Replay attacks via resent webhooks | Store processed `message_id` values with TTL check before processing |
 
 ---
 
@@ -292,26 +253,26 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Document upload progress not shown | User taps upload, nothing appears to happen for 5-10 seconds, taps again uploading twice | Show a progress indicator using Supabase Storage's upload progress callback: `onUploadProgress: (progress) => setPercent(progress.loaded / progress.total)` |
-| Maintenance request status labels using internal enum values | Tenant sees "in_progress" — unclear if anyone has looked at the issue | Map to plain language: "open" → "Submitted", "in_progress" → "Being looked at", "resolved" → "Fixed — awaiting confirmation", "closed" → "Closed" |
-| AI tools menu items shown to users during the removal phase | Users tap AI Insights and see a crash or empty screen | Remove menu items from `tools/index.tsx` before or at the same time as removing the screen files — never have a menu item with no destination |
-| Reporting dashboard shows all-time totals with no date filter | Landlord sees cumulative numbers that are confusing for tax year planning | Default to current calendar year; add a year selector as the primary filter control |
-| Document library shows no empty state | New users see a blank screen with no context | Add an empty state: "No documents yet. Upload a lease agreement or notice to keep your records in one place." |
+| Sending the main menu (5 categories) as every reply | Bot feels spammy, WhatsApp conversation becomes cluttered | Send the menu only on session start (RICH-02); after a transaction, send a confirmation then offer "Need anything else?" |
+| Button label text truncated at 20 characters | "Upcoming Payments" becomes "Upcoming Payments" but "Maintenance Status" becomes "Maintenance Stat..." | Review every button label at design time; keep all labels under 20 chars |
+| WhatsApp bot sends Telegram Markdown formatting (`*bold*`, `_italic_`) | Raw asterisks and underscores visible to WhatsApp users | Build a platform-aware message formatter — WhatsApp uses its own bold/italic syntax or plain text |
+| Freeform AI response sent without checking if interactive session is active | Long AI responses outside a session window fail silently | Always check window state; if outside window, send truncated summary via approved template |
+| Welcome message sent every time user links/re-links account | Duplicate welcome messages confuse returning users | Track `welcome_sent` boolean on `users` table, send RICH-01 only on first link |
+| Interactive menu with 5 buttons sent but WhatsApp only shows 3 maximum | User sees only first 3 buttons, last 2 categories invisible | WhatsApp reply buttons cap at 3. Use 3 buttons for primary actions + a "More..." button that triggers a follow-up menu |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Document bucket:** Created and migration applied — verify bucket is `public: FALSE` and RLS policies have `WITH CHECK` on INSERT, not `USING`.
-- [ ] **Document metadata table:** Migration creates `documents` table with `is_archived` column — verify all list queries filter `is_archived = FALSE`.
-- [ ] **Signed URL expiry:** Documents render correctly on screen load — verify URLs are re-fetched after 1 hour by simulating an expired URL (use a 5-second expiry in dev and wait).
-- [ ] **Delete document:** Document removed from UI — verify file is also deleted from storage bucket (check Supabase Storage dashboard, not just DB row count).
-- [ ] **Maintenance-photos bucket:** Created separately from `payment-proofs` — verify path structure `{property_id}/{request_id}/{index}` matches RLS policies exactly.
-- [ ] **Maintenance expense link:** Request deleted — verify linked expense still exists with `maintenance_request_id = NULL` (not cascade-deleted).
-- [ ] **Reporting dashboard:** Cards render with data — verify queries run via `EXPLAIN ANALYZE` in Supabase SQL editor; confirm no seq scans on `payments` or `expenses` for property-scoped aggregates.
-- [ ] **AI tools removal:** Three screen files deleted — verify `tools/index.tsx` TOOLS array has no routes pointing to deleted files; verify `npx tsc --noEmit` passes.
-- [ ] **AI Edge Functions removed:** Functions deleted from Supabase — verify `process-bot-message` no longer includes tool definitions for removed features; test bot with a message that would have triggered an AI tool.
-- [ ] **New RLS policies:** All new table policies added — run Supabase security linter after each migration; verify cross-user test (user B cannot read user A's documents or maintenance requests).
+- [ ] **WhatsApp account linking (SETUP-02):** Verification code flow tested but no test for already-registered phone number edge case — verify that re-linking an already-linked number is handled gracefully.
+- [ ] **Media upload (MEDIA-01):** Photo sends correctly in happy path but no test for file size >5MB (header image limit) or >100MB (global limit) — verify rejection is user-friendly, not a silent 400 error.
+- [ ] **Outbound reminders (OUT-01):** Reminder fires for all tenants in test but no test for user who has never initiated WhatsApp conversation — first outbound message to a cold number requires the user to have opted in; cannot message someone who has never messaged the business first.
+- [ ] **Template messages (all OUT-* requirements):** Template approved in Meta dashboard but no test for what happens when variable count in the API call doesn't match the template definition — verify error handling.
+- [ ] **Interactive menus (RICH-02, RICH-03):** Buttons render in WhatsApp Web but not tested on WhatsApp Desktop (Windows/Mac) or older Android versions — test across clients.
+- [ ] **PDF delivery (History → download PDF):** PDF generates and sends in isolation but not tested after a large report — verify PDF file size stays under the 100MB document limit (in practice, keep under 10MB for usability).
+- [ ] **Telegram menu parity (RICH-05):** WhatsApp menu built and working but Telegram inline keyboard not updated to match — verify both platforms serve the same menu structure before closing the phase.
+- [ ] **Webhook deduplication:** Bot reply sent once in testing, but no test for Meta retrying the same webhook — verify `message_id` deduplication prevents double-processing.
+- [ ] **Quality rating monitoring:** Messages send successfully at launch but no alert configured for when quality rating drops to Yellow — set up a monitoring webhook or periodic check before going live.
 
 ---
 
@@ -319,12 +280,13 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Orphaned files in storage (metadata deleted, object retained) | LOW | Write a one-off script using Supabase Admin API to list all objects in the bucket, compare with documents table, and delete any paths not in the table |
-| Expired signed URLs causing broken document links in production | LOW | Re-fetch all signed URLs for the user's document list on next app open; no data loss |
-| Maintenance expense cascade-deleted a P&L record | HIGH | Restore from Supabase PITR snapshot to the point before deletion; replay any mutations since that point |
-| AI tools screens deleted but routes still referenced in menu | LOW | Re-add the screen files as redirect stubs pointing to the new tools, deploy OTA update, then clean up in next release |
-| Document bucket created as public instead of private | HIGH | Change bucket visibility to private immediately in Supabase dashboard; rotate any signed URLs that were issued during the public window; notify affected users if lease/ID documents were exposed |
-| New RLS policy hole discovered (documents or maintenance requests cross-user readable) | HIGH | Same as v1.0 protocol: rotate anon keys, audit access logs, deploy fix migration, notify affected users per GDPR 72-hour window |
+| Temporary token expired, all outbound fails | LOW | Generate System User token, update Supabase secret, redeploy Edge Functions |
+| Template rejected or recategorized | MEDIUM | Rewrite template copy to pure transactional language, resubmit (24-72h turnaround), update template name in Edge Function env var |
+| Phone number quality rating drops to Red | HIGH | Stop all outbound campaigns immediately, audit message content and opt-in processes, wait 7 days for rating to recover, appeal to Meta if unjustified |
+| Duplicate messages sent due to webhook retry | MEDIUM | Deploy deduplication logic, mark already-processed messages in DB, manually identify and notify affected users |
+| Media loss due to delayed download | MEDIUM | Cannot recover expired CDN URLs — inform affected users to resend media; deploy synchronous download fix immediately |
+| Interactive menu shows only 3 of 5 buttons | LOW | Redesign menu to use 3 primary buttons + "More" overflow pattern; redeploy |
+| 24-hour window violation causing notification failure | LOW | Switch affected outbound function to approved template; retry failed sends with template |
 
 ---
 
@@ -332,35 +294,41 @@ Phase 4 (AI Tools Removal) — audit function-to-function calls before deletion;
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| New storage bucket RLS missing WITH CHECK | Phase 1: Document Storage (DB + Storage) | Supabase security linter pass; test tenant cannot upload to another property's path |
-| Document metadata missing soft-delete filter | Phase 1: Document Storage (DB schema) | Archive a property; verify its documents disappear from all list screens |
-| Signed URL expiry not handled | Phase 1: Document Storage (screens) | Simulate expired URL in dev; verify auto-refresh occurs |
-| Storage delete without removing bucket object | Phase 1: Document Storage (lib layer) | Delete a document; verify object absent in Supabase Storage dashboard |
-| AI tools routes still referenced after screen deletion | Phase 4: AI Tools Removal | `npx tsc --noEmit` passes; all tools menu items navigate correctly |
-| Maintenance expense FK cascade deletes P&L record | Phase 2: Maintenance Requests (DB schema) | Delete a maintenance request; verify linked expense still exists with NULL request ID |
-| Reporting aggregate queries slow (RLS per-row subquery) | Phase 3: Reporting Dashboards | `EXPLAIN ANALYZE` shows index scan, not seq scan; dashboard loads in < 1s on device |
-| Storage.list() used for document browsing | Phase 1: Document Storage (design) | Document list screen queries `documents` table, not `storage.list()` |
-| Maintenance photos in wrong bucket (RLS collision) | Phase 2: Maintenance Requests (storage setup) | Verify `maintenance-photos` bucket exists separately; RLS policies scoped to request path |
-| Edge Function dead references after AI tools removal | Phase 4: AI Tools Removal | Test bot with a message that previously triggered AI tools; verify clean JSON response |
+| Non-template messages outside 24h window | Setup & Outbound (Phase 1 or 2) | Every outbound Edge Function uses `type: template`; integration test with 25h gap between messages |
+| Interactive buttons outside 24h window | Rich Messaging phase | Menu dispatch only fires on inbound message handler path, never from scheduled functions |
+| Media URL 5-minute expiry | Media Handling phase | Media download is the first await in webhook handler; integration test with artificial 10s delay confirms failure |
+| Template rejection/recategorization | Setup phase (Day 1) | All templates approved (not Pending) before any outbound function is deployed; webhook for status updates subscribed |
+| Temporary access token used | Setup phase (Day 1) | `WHATSAPP_TOKEN` set via `supabase secrets set`, System User visible in Meta Business Manager |
+| Phone number already registered | Setup phase (before registration) | SETUP-01 documentation includes clean-number prerequisite |
+| Messaging tier 250 cap | Outbound Messaging phase | `send-reminders` logs HTTP 429 responses to a failures table; manual test with simulated 429 response |
+| Webhook timeout / duplicate processing | Webhook architecture (Phase 1) | `whatsapp-webhook` returns 200 before Claude call; `message_id` deduplication in place before any testing |
 
 ---
 
 ## Sources
 
-- Supabase Storage access control — WITH CHECK vs USING: https://supabase.com/docs/guides/storage/security/access-control
-- Supabase Storage inefficient folder operations and RLS: https://supabase.com/docs/guides/storage/schema/design
-- Supabase critical API-only operations warning (metadata vs object deletion): https://chat2db.ai/resources/blog/supabase-storage-file-management-guide
-- Supabase RLS performance and best practices discussion: https://github.com/orgs/supabase/discussions/14576
-- Supabase RLS initplan advisor: https://supabase.com/docs/guides/database/database-advisors
-- expo-document-picker copyToCacheDirectory requirement: https://docs.expo.dev/versions/latest/sdk/document-picker/
-- Expo Router typed routes for dead-link detection: https://docs.expo.dev/router/reference/typed-routes/
-- React Native FlatList optimization for large lists: https://reactnative.dev/docs/optimizing-flatlist-configuration
-- Supabase Storage signed URL expiry: https://supabase.com/docs/reference/javascript/storage-from-createsignedurl
-- Supabase cascade deletes: https://supabase.com/docs/guides/database/postgres/cascade-deletes
-- Dwella v2 `lib/types.ts` — existing schema for integration reference
-- Dwella v2 `supabase/migrations/002_storage.sql` — existing storage RLS pattern to mirror
-- Dwella v2 `supabase/migrations/016_rls_with_check.sql` — WITH CHECK pattern established in v1.0
+- [WhatsApp Business API: 24-Hour Messaging Window — smsmode](https://www.smsmode.com/en/whatsapp-business-api-customer-care-window-ou-templates-comment-les-utiliser/)
+- [WhatsApp API Rate Limits: How They Work — Wati](https://www.wati.io/en/blog/whatsapp-business-api/whatsapp-api-rate-limits/)
+- [Interactive Reply Buttons — Meta for Developers](https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/)
+- [Interactive Reply Buttons Developer Docs — Meta](https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/interactive-reply-buttons-messages/)
+- [Media — WhatsApp Cloud API — Meta for Developers](https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media/)
+- [Supported Media Types and Sizes — AWS End User Messaging (mirrors Meta specs)](https://docs.aws.amazon.com/social-messaging/latest/userguide/supported-media-types.html)
+- [Downloading Media via WhatsApp Cloud API Webhook — Medium](https://medium.com/@shreyas.sreedhar/downloading-media-using-whatsapps-cloud-api-webhooks-and-uploading-it-to-aws-s3-bucket-via-nodejs-07c5cbae896f)
+- [WhatsApp Template Approval: 27 Reasons Meta Rejects Messages — WUSeller](https://www.wuseller.com/blog/whatsapp-template-approval-checklist-27-reasons-meta-rejects-messages/)
+- [Why Meta Rejects WhatsApp Templates — Fyno](https://www.fyno.io/blog/why-is-meta-rejecting-my-whatsapp-business-templates-cm2efjq2s0057m1jlzfh7olqz)
+- [WhatsApp Template Recategorized from Utility to Marketing — msg91](https://msg91.com/guide/whatsapp-template-recategorized-from-utility-marketing-fix)
+- [WhatsApp API Message Template Category Update July 2025 — YCloud](https://www.ycloud.com/blog/whatsapp-api-message-template-category-guidelines-update/)
+- [Messaging Limits — Meta for Developers](https://developers.facebook.com/docs/whatsapp/messaging-limits/)
+- [WhatsApp Rate Limits for Developers — Fyno](https://www.fyno.io/blog/whatsapp-rate-limits-for-developers-a-guide-to-smooth-sailing-clycvmek2006zuj1oof8uiktv)
+- [WhatsApp Cloud API Webhook Setup — Pons Blog](https://pons.chat/blog/whatsapp-cloud-api-webhook-nextjs)
+- [Guide to WhatsApp Webhooks — Hookdeck](https://hookdeck.com/webhooks/platforms/guide-to-whatsapp-webhooks-features-and-best-practices)
+- [Shadow Delivery Mystery — Siri Prasad on Medium](https://medium.com/@siri.prasad/the-shadow-delivery-mystery-why-your-whatsapp-cloud-api-webhooks-silently-fail-and-how-to-fix-2c7383fec59f)
+- [Permanent Access Token — Anjok Technologies](https://anjoktechnologies.in/blog/-whatsapp-cloud-api-permanent-access-token-step-by-step-system-user-2026-complete-correct-guide-by-anjok-technologies)
+- [WhatsApp Business Registration Phone Pitfalls — Sobot](https://www.sobot.io/article/troubleshoot-new-number-for-whatsapp-business-registration-issues/)
+- [WhatsApp Messaging Limits and Quality Ratings — PickyAssist](https://pickyassist.com/blog/whatsapps-messaging-limits-quality-ratings-on-2025/)
+- [WhatsApp Cloud API PDF error 131053 bug report — Chatwoot GitHub](https://github.com/chatwoot/chatwoot/issues/13656)
+- [Building a Scalable Webhook Architecture for WhatsApp — ChatArchitect](https://www.chatarchitect.com/news/building-a-scalable-webhook-architecture-for-custom-whatsapp-solutions)
 
 ---
-*Pitfalls research for: React Native / Expo property management app — v1.1 Document Storage, Maintenance Requests, Reporting Dashboards*
-*Researched: 2026-03-20*
+*Pitfalls research for: Dwella v1.2 WhatsApp Bot Expansion*
+*Researched: 2026-03-21*

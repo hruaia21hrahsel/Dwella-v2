@@ -1,153 +1,370 @@
-# Stack Research
+# Technology Stack
 
-**Domain:** React Native / Expo managed workflow — Document Storage, Maintenance Requests, Reporting Dashboards
-**Researched:** 2026-03-20
-**Confidence:** HIGH (charts, document picker, file system), MEDIUM (PDF viewing approach)
-
----
-
-## Context
-
-This is a **subsequent milestone** (v1.1) for an existing Expo SDK 54 + React Native 0.81.5 + Supabase app. The baseline stack is fixed. This document covers only the **net-new library additions** required for three new feature areas:
-
-1. **Document Storage** — bi-directional uploads (PDF, images, DOCX), property + tenant level, inline viewing
-2. **Maintenance Requests** — tenant photo submission, status workflow, expense linking
-3. **Reporting Dashboards** — P&L, expense breakdown, payment reliability, occupancy charts
-
-**Already available (no changes needed):**
-- `expo-image-picker` ~17.0.10 — maintenance photo capture, already used for payment proofs
-- `expo-file-system` ~19.0.21 — file download and cache management
-- `expo-sharing` ~14.0.8 — "Share" / "Open in..." native sheet
-- `expo-print` ~15.0.8 — PDF generation (receipt printing already wired)
-- `react-native-svg` 15.12.1 — required peer dependency for gifted-charts, already present
-- `expo-linear-gradient` ~15.0.8 — optional peer for gifted-charts, already present
-- Supabase Storage — bucket infrastructure, upload/download already working for payment proofs
+**Project:** Dwella v2 — v1.2 WhatsApp Bot Expansion
+**Researched:** 2026-03-21
+**Scope:** NEW capabilities only. Existing stack (Expo SDK 51, Supabase, Claude API, Zustand, Victory Native) is validated and unchanged.
 
 ---
 
-## Recommended Stack
+## Executive Finding
 
-### Core Technologies (New Additions)
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| `expo-document-picker` | ~14.0.0 | Pick PDF, DOCX, images from device storage / cloud drives (iCloud, Google Drive) | First-party Expo package, managed workflow native, matches the `npx expo install` version pin for SDK 54. SDK 54 upgraded expo-file-system integration — picked files can be read immediately from the cache directory. No eject needed. |
-| `react-native-gifted-charts` | ^1.4.76 | Bar, line, pie, and donut charts for P&L, expense breakdown, payment reliability, occupancy dashboards | Pure JS + react-native-svg (already installed). Zero new native modules. Expo managed compatible. Single library covers all four chart types needed. Actively maintained (1.4.76 as of early 2026). `react-native-svg` and `expo-linear-gradient` are already present — no additional peer installs required. |
-| `react-native-webview` | ~14.1.1 | Inline PDF rendering via Google Docs Viewer (remote) or PDF.js HTML (local/signed URL) | No native PDF module exists that works in Expo managed workflow without a custom dev build config plugin. WebView is the only zero-eject PDF rendering path. Already supported in Expo SDK 54 managed workflow. Version ~14.1.1 is the SDK 54 compatible pin. |
-
-### Supporting Libraries (No New Install Required)
-
-| Library | Version | Purpose | How It Applies |
-|---------|---------|---------|----------------|
-| `expo-image-picker` | ~17.0.10 (installed) | Camera + photo library picker for maintenance request photos | Already used for payment proof uploads — identical pattern. No changes needed. |
-| `expo-file-system` | ~19.0.21 (installed) | Download signed URLs from Supabase Storage to local cache before sharing/viewing | `FileSystem.downloadAsync()` to cache, then pass URI to WebView or `expo-sharing` |
-| `expo-sharing` | ~14.0.8 (installed) | "Open in..." native sheet for downloaded documents | Fallback when user wants to open a document in an external app (Files, Mail, etc.) |
-| `react-native-svg` | 15.12.1 (installed) | Required peer dependency for `react-native-gifted-charts` | Already present at a compatible version — no upgrade needed |
-| `expo-linear-gradient` | ~15.0.8 (installed) | Optional peer for gradient fills in gifted-charts | Already present — enables gradient bar/line fills without additional install |
-| `@supabase/supabase-js` | ^2.45.0 (installed) | Storage bucket upload/download for documents | New `documents` bucket alongside existing `payment-proofs` bucket. Same client, new bucket path pattern. |
+This milestone adds **zero new npm packages** and **zero new Deno libraries**. Every new capability is achieved by extending the calls to existing HTTP APIs. The "stack" additions are entirely API surface extensions and new Edge Functions written in the same pattern already used in production.
 
 ---
 
-## Installation
+## What Is Already In Place (Do Not Re-Research)
 
-```bash
-# New installs only — all peers are already present
-npx expo install expo-document-picker react-native-webview react-native-gifted-charts
+| Capability | Where | Status |
+|------------|-------|--------|
+| WhatsApp Cloud API v21.0 calls | `whatsapp-webhook`, `whatsapp-send-code`, `send-reminders` | Working. Auth pattern established. |
+| WhatsApp template message sending | `whatsapp-send-code` | `dwella_verification` template already approved and in use. |
+| WhatsApp outbound text messages | `send-reminders` | Sends plain text today — needs upgrade to templates for outbound. |
+| Telegram Bot API calls | `telegram-webhook` | Working. `sendMessage` with `parse_mode: 'Markdown'`. |
+| process-bot-message shared AI logic | `process-bot-message` | Claude API structured intent dispatch already working. |
+| Supabase Storage binary upload | `payment-proofs` bucket | Pattern established — `arraybuffer` upload via service role. |
+| Deno `fetch` for external APIs | All Edge Functions | Native Deno — no library needed. |
+
+---
+
+## API Layer: WhatsApp Cloud API
+
+### Version Lock
+
+**Use v21.0 exclusively.** The codebase already uses `graph.facebook.com/v21.0` in `whatsapp-webhook`, `whatsapp-send-code`, and `send-reminders`. All new calls must use the same version. Do not mix API versions across Edge Functions.
+
+**Base URL:** `https://graph.facebook.com/v21.0`
+
+### New Endpoints Needed
+
+| Endpoint | Method | Purpose | Used By |
+|----------|--------|---------|---------|
+| `/{phone_number_id}/messages` | POST | Send interactive button messages | `whatsapp-webhook` (menu replies) |
+| `/{phone_number_id}/messages` | POST | Send template messages (reminders, receipts, alerts) | `whatsapp-outbound` (new Edge Function) |
+| `/{phone_number_id}/messages` | POST | Send document messages (PDF report delivery) | `whatsapp-outbound` |
+| `/{media_id}` | GET | Retrieve temporary download URL for incoming media | `whatsapp-webhook` (MEDIA-01, MEDIA-02) |
+| `/{phone_number_id}/media` | POST multipart | Upload outbound PDF before sending as document message | `whatsapp-outbound` (RICH-03 PDF delivery) |
+
+All calls use the existing `Authorization: Bearer {WHATSAPP_ACCESS_TOKEN}` header — no new credentials.
+
+---
+
+### Interactive Reply Buttons (RICH-02, RICH-03, RICH-05)
+
+Interactive buttons replace plain text replies for menu-driven flows. Sent by setting `type: "interactive"` on the message object.
+
+**Hard constraints (HIGH confidence — Meta official SDK docs + community verification):**
+- Maximum **3 buttons per message** — this is a hard API limit, not a soft guideline.
+- Button `title` max **20 characters** — keep labels short. "Log Payment" yes; "Record a payment for this month" no.
+- Button `id` max **256 bytes** — use short namespaced strings: `"menu:payments"`, `"sub:payments:log"`.
+- Interactive messages **can only be sent within the 24-hour customer service window** — a user must have messaged first to open the window. Proactive outbound (reminders, notifications) must use approved templates regardless of button intent.
+
+**The 5-category menu problem:** The RICH-02 requirement lists 5 categories (Properties, Payments, History, Maintenance, Others). Five exceeds the 3-button limit. Resolution: split into two sequential messages — message 1 sends buttons 1-3, message 2 sends buttons 4-5. Or condense to 3 top-level categories and fold less-common options into an "Others" text-triggered path. This is a design decision for the phase, not a stack blocker.
+
+**Request body for interactive button message:**
+```json
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "<E.164_phone>",
+  "type": "interactive",
+  "interactive": {
+    "type": "button",
+    "body": { "text": "What would you like to do?" },
+    "action": {
+      "buttons": [
+        { "type": "reply", "reply": { "id": "menu:payments", "title": "Payments" } },
+        { "type": "reply", "reply": { "id": "menu:maintenance", "title": "Maintenance" } },
+        { "type": "reply", "reply": { "id": "menu:history", "title": "History" } }
+      ]
+    }
+  }
+}
 ```
 
-That is all. Three packages. No native config plugins required for any of them in managed workflow.
+**Incoming button reply webhook shape** (what the webhook receives when a user taps a button):
+```json
+{
+  "type": "interactive",
+  "interactive": {
+    "type": "button_reply",
+    "button_reply": { "id": "menu:payments", "title": "Payments" }
+  }
+}
+```
+
+The existing `whatsapp-webhook` currently reads only `msg['text']?.['body']`. It must additionally read `msg['interactive']?.['button_reply']?.['id']` to handle button callbacks. This is a 10-line addition to the existing webhook handler.
 
 ---
 
-## Alternatives Considered
+### Media Handling (MEDIA-01, MEDIA-02)
 
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| `react-native-gifted-charts` | `victory-native` (XL) | Victory Native XL requires Skia (`@shopify/react-native-skia`) which needs a custom dev build and is not compatible with Expo Go. Gifted Charts is SVG-based — no native dependency beyond react-native-svg, which is already installed. |
-| `react-native-gifted-charts` | `recharts` | Recharts is a web-only library (DOM-dependent). Does not render on React Native. |
-| `react-native-gifted-charts` | `react-native-chart-kit` | react-native-chart-kit is largely unmaintained (last meaningful commit 2022). Gifted Charts is actively maintained and more feature-rich. |
-| `react-native-webview` for PDFs | `react-native-pdf` | react-native-pdf requires a config plugin (`@config-plugins/react-native-pdf`) and a custom dev build. Dwella uses Expo managed workflow — adding a custom native module requires a new EAS build cycle for every update. WebView approach works today without any EAS build changes. |
-| `react-native-webview` for PDFs | `pdf-viewer-expo` (npm) | Version 1.0.0, 1 GitHub star, 5 commits, no releases published, no pagination or zoom. Not production-ready. |
-| `expo-document-picker` | `react-native-document-picker` | The community `react-native-document-picker` requires manual native linking. `expo-document-picker` is first-party, versioned with the SDK, and works in managed workflow without any config plugin. |
+**Incoming media (tenant sends payment photo via WhatsApp):**
 
----
+Webhook payload includes `msg['image']?.['id']` or `msg['document']?.['id']` — a temporary Media ID string. The existing webhook ignores these fields and returns early on non-text messages. This must be changed.
 
-## What NOT to Use
+Two-step retrieval process (no library — raw Deno `fetch`):
+1. `GET https://graph.facebook.com/v21.0/{media_id}` with `Authorization: Bearer {token}` → returns JSON with `url` field (valid for 5 minutes only)
+2. `GET {url}` with `Authorization: Bearer {token}` → returns binary file content as `ArrayBuffer`
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| `react-native-pdf` | Requires config plugin + custom dev build. Breaks Expo managed workflow OTA update compatibility (native module version is pinned to the build, not the JS bundle). | `react-native-webview` + Google Docs Viewer URL or PDF.js HTML string |
-| `@shopify/react-native-skia` (Victory Native XL) | Custom dev build required. Significant bundle size increase. Overkill for property management dashboards. | `react-native-gifted-charts` (SVG-based, no native requirement) |
-| `recharts` | DOM-only. Will throw on React Native at import time. | `react-native-gifted-charts` |
-| `react-native-chart-kit` | Unmaintained since 2022. API is incomplete and has unfixed rendering bugs on newer RN versions. | `react-native-gifted-charts` |
-| `pdf-viewer-expo` | 1 star, 5 commits, v1.0.0 only, no zoom or pagination, no active maintenance. | `react-native-webview` with PDF.js HTML approach |
-| Direct `Linking.openURL()` for PDFs | Opens Safari/Chrome — user leaves the app for every document view. Breaks the in-app UX model. | `react-native-webview` inline viewer |
+Then upload to Supabase Storage (`payment-proofs` bucket) using existing pattern.
 
----
+**File size limits (HIGH confidence — verified against AWS Social Messaging docs, which mirror Meta's official limits):**
+| Type | MIME Types | Max Size |
+|------|-----------|---------|
+| Image | `image/jpeg`, `image/png` | 5 MB |
+| Document | `application/pdf` | 100 MB (practical: much less) |
 
-## Stack Patterns by Feature
+**Outbound media (bot delivers PDF report to user):**
 
-**Document upload (landlord or tenant):**
-- Use `expo-document-picker` to select files (PDF, DOCX, images via `type: ['*/*']`)
-- Upload directly to Supabase Storage via `supabase.storage.from('documents').upload(path, file)`
-- Path pattern: `{property_id}/{scope}/{filename}` where scope is `property` or `tenant/{tenant_id}`
+Required for RICH-03 "download PDF report" flow:
+1. Generate PDF (base64 or binary) via `generate-pdf` Edge Function
+2. Upload to WhatsApp media: `POST /{phone_number_id}/media` as `multipart/form-data` with fields `messaging_product=whatsapp`, `type=application/pdf`, `file=<binary>` → returns `{ "id": "<media_id>" }`
+3. Send document message: `POST /{phone_number_id}/messages` with `type: "document"` and `document: { "id": "<media_id>", "filename": "dwella-report-2026-03.pdf" }`
 
-**Document viewing (inline PDF):**
-- Download signed URL from Supabase Storage
-- If the document is a PDF: render in `react-native-webview` using Google Docs Viewer URL as source (`https://docs.google.com/viewer?url={encodeURIComponent(signedUrl)}&embedded=true`) for remote URLs, or a PDF.js HTML string for downloaded local files
-- If the document is an image: display inline with React Native `Image` component
-- If the user wants to export/open externally: `expo-sharing` native sheet
-
-**Maintenance request photo upload:**
-- Use `expo-image-picker` (already installed and used for payment proofs) — identical pattern
-- Upload to `maintenance-photos` Supabase Storage bucket at `{property_id}/{request_id}/{sequence}.jpg`
-- Multiple photos per request: iterate `ImagePicker.launchImageLibraryAsync({ allowsMultipleSelection: true })`
-
-**Reporting dashboards:**
-- `BarChart` from `react-native-gifted-charts` for monthly P&L and expense breakdown
-- `LineChart` for payment reliability trend over time
-- `PieChart` / `DonutChart` for occupancy rate and expense category breakdown
-- Pass `expo-linear-gradient` colors through `frontColor` / `gradientColor` props for the existing brand palette
+Deno handles `multipart/form-data` natively via the built-in `FormData` class — no additional import needed. Supabase Storage returns `Blob` from `storage.from(bucket).download(path)` which can be appended directly to `FormData`.
 
 ---
 
-## Version Compatibility
+### Template Messages: Outbound Proactive Messaging (OUT-01, OUT-02, OUT-03)
 
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| `react-native-gifted-charts` ^1.4.76 | `react-native-svg` 15.x, `expo-linear-gradient` ~15.x | Peer deps use `*` version constraints — all installed versions are compatible. No changes to existing packages. |
-| `expo-document-picker` ~14.0.0 | Expo SDK 54, React Native 0.81.5 | Version 14 targets SDK 54. `copyToCacheDirectory: true` required on Android for `expo-file-system` to read immediately after pick (already the default). iOS requires `usesIcloudStorage: true` in `app.json` for iCloud Drive access. |
-| `react-native-webview` ~14.1.1 | Expo SDK 54, New Architecture (Fabric) supported | Supports both Paper and Fabric renderers. Use `npx expo install` to get the SDK 54 pinned version — do not manually specify a version or you risk a Paper/Fabric mismatch. |
+Templates are the **only** mechanism for sending proactive messages when the user has not messaged in the last 24 hours. The `dwella_verification` template is already approved and working — this establishes the pattern for all new templates.
+
+**New templates to create and submit for approval:**
+
+| Template Name | Category | Parameters | Use Case |
+|---------------|----------|-----------|---------|
+| `dwella_verification` | Utility | `{{1}}` = code | Already approved. Do not change. |
+| `dwella_rent_reminder` | Utility | `{{1}}` = property name, `{{2}}` = days until/overdue, `{{3}}` = amount | OUT-01: 3 days before, on due date, 3 days overdue |
+| `dwella_payment_receipt` | Utility | `{{1}}` = tenant name, `{{2}}` = property name, `{{3}}` = amount, `{{4}}` = month | OUT-02: payment confirmed |
+| `dwella_maintenance_update` | Utility | `{{1}}` = property name, `{{2}}` = new status, `{{3}}` = request summary | OUT-03: maintenance status change |
+
+**Why Utility (not Marketing):** Rent reminders, payment receipts, and maintenance status updates are transactional notifications triggered by user-initiated events. They contain no promotional content. Utility templates have two advantages: (1) they are free when sent within the 24-hour customer service window, and (2) they face less scrutiny during approval. If a template contains any promotional language it will be reclassified as Marketing automatically by Meta's scanner.
+
+**Approval timeline:** 1 minute to 48 hours typically. Templates must be submitted via Meta Business Manager before any Edge Function can use them. Template creation is a prerequisite step, not a code task — it must appear in the setup guide (SETUP-01) as a manual human step.
+
+**Pricing context (July 1 2025 change):** Meta moved from conversation-based to per-message pricing on July 1 2025. Utility templates within a 24-hour window are free. Outside the window, cost is per delivered message by country. For an India-based user base the cost is small but non-zero. This does not change the implementation approach.
+
+**Template request body pattern (established in `whatsapp-send-code`):**
+```json
+{
+  "messaging_product": "whatsapp",
+  "to": "<phone>",
+  "type": "template",
+  "template": {
+    "name": "dwella_rent_reminder",
+    "language": { "code": "en" },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          { "type": "text", "text": "Sunset Apartments" },
+          { "type": "text", "text": "3 days" },
+          { "type": "text", "text": "₹15,000" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The existing `send-reminders` Edge Function already sends WhatsApp text messages outside the template system. This will break once the 24-hour window closes. It must be replaced with template calls for all three outbound scenarios (OUT-01, OUT-02, OUT-03).
 
 ---
 
-## Supabase Storage Notes
+## API Layer: Telegram Bot API
 
-The existing `payment-proofs` bucket pattern is the model. For v1.1, add two new buckets via migration:
+### Version
 
-| Bucket | Path Pattern | Allowed MIME Types | Max Size |
-|--------|-------------|---------------------|----------|
-| `documents` | `{property_id}/{scope}/{filename}` | `application/pdf`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, `image/*` | 50 MB (Free plan global limit) |
-| `maintenance-photos` | `{property_id}/{request_id}/{seq}.jpg` | `image/jpeg`, `image/png` | 10 MB |
+The Telegram Bot API is versioned implicitly by the bot API server — no URL version segment. The existing `telegram-webhook` calls `api.telegram.org/bot{token}/sendMessage` with `parse_mode: 'Markdown'`. No URL change is needed.
 
-RLS on both buckets must gate on `auth.uid()` matching the `owner_id` of the parent property or the `user_id` on the linked tenant row — same pattern already proven in `payment-proofs`.
+Bot API 9.x (current as of 2025) supports inline keyboards with callback data. Since the API endpoint is the same, there is no version migration to perform.
+
+### Inline Keyboards (RICH-02, RICH-03, RICH-05)
+
+Telegram inline keyboards are attached via `reply_markup` in any `sendMessage` call. Unlike WhatsApp's 3-button hard limit, Telegram supports arbitrary rows and columns — the full 5-category main menu can appear in a single message.
+
+**`callback_data` limit: 64 bytes (HIGH confidence — consistent across all sources).** Keep IDs short. `"menu:payments"` is 13 bytes; `"sub:history:pdf"` is 15 bytes — both well within limit.
+
+**JSON structure for `sendMessage` with inline keyboard:**
+```json
+{
+  "chat_id": 123456789,
+  "text": "What would you like to do?",
+  "parse_mode": "Markdown",
+  "reply_markup": {
+    "inline_keyboard": [
+      [
+        { "text": "Properties", "callback_data": "menu:properties" },
+        { "text": "Payments", "callback_data": "menu:payments" }
+      ],
+      [
+        { "text": "History", "callback_data": "menu:history" },
+        { "text": "Maintenance", "callback_data": "menu:maintenance" }
+      ],
+      [
+        { "text": "Others", "callback_data": "menu:others" }
+      ]
+    ]
+  }
+}
+```
+
+The inner arrays are rows; multiple buttons in the same array appear side by side. This allows the 5-category grid layout.
+
+### Callback Query Handling
+
+When a user taps an inline button, Telegram sends a `callback_query` update — **not** a `message` update. The existing `telegram-webhook` reads only `update['message']` and returns early if it is absent. This must be extended to also read `update['callback_query']`.
+
+**New endpoint required:** `answerCallbackQuery` must be called after processing every callback query to clear Telegram's loading spinner. Without this call, the button appears stuck to the user.
+
+```
+POST https://api.telegram.org/bot{token}/answerCallbackQuery
+Body: { "callback_query_id": "<id>", "text": "" }
+```
+
+**Incoming callback_query update shape:**
+```json
+{
+  "callback_query": {
+    "id": "1234567890",
+    "from": { "id": 987654321 },
+    "message": { "chat": { "id": 987654321 }, "message_id": 42 },
+    "data": "menu:payments"
+  }
+}
+```
+
+The `message.chat.id` is the `chatId` used to send the reply. The `data` field is the `callback_data` value that was set when the button was created.
+
+---
+
+## New Edge Functions
+
+| Function | Responsibility | Why New (Not Modified) |
+|----------|---------------|----------------------|
+| `whatsapp-outbound` | Sends all proactive outbound WhatsApp messages: template-based reminders, payment receipts, maintenance alerts, and PDF document delivery | Outbound logic separated from the inbound webhook handler. Called by `send-reminders`, `auto-confirm-payments`, and the maintenance status update trigger. Keeps webhook handler focused on inbound parsing. |
+| `generate-pdf` | Generates PDF report for a given user + month/year, uploads to Supabase Storage, returns download URL | Already planned in CLAUDE.md. Required for RICH-03 "History > download PDF report". PDF generation in Deno uses HTML string + a headless rendering approach or a pre-built PDF library available via esm.sh. |
+
+---
+
+## Existing Edge Functions: Required Modifications
+
+| Function | What Changes |
+|----------|-------------|
+| `whatsapp-webhook` | (1) Parse `msg['type'] === 'interactive'` and extract `button_reply.id`. (2) Parse `msg['type'] === 'image'` or `'document'` and download media via the two-step media retrieval flow. (3) Route button `id` values through a menu state machine that sends the next interactive message. (4) On account linking success (SETUP-02 + RICH-01), send a welcome interactive message instead of plain text. |
+| `telegram-webhook` | (1) Read `update['callback_query']` alongside `update['message']`. (2) Call `answerCallbackQuery` after every callback. (3) Modify `sendTelegram` to accept optional `reply_markup` parameter for inline keyboard. (4) Add menu dispatch routing on `callback_data` values. |
+| `process-bot-message` | (1) Add `query_maintenance_status`, `query_upcoming_payments`, `query_property_summary` to `ACTION_HANDLERS` and Claude system prompt. (2) Extend `buildContext` to include maintenance requests for the current user. (3) Update `BotRequest` interface: add `interactive_button_id?: string` so button taps can bypass Claude entirely for deterministic menu navigation. |
+| `send-reminders` | Replace the plain `type: "text"` WhatsApp sends (lines 136-153) with calls to `whatsapp-outbound` using the `dwella_rent_reminder` template. |
+
+---
+
+## Environment Variables: No New Additions
+
+All new API calls reuse existing credentials:
+
+| Variable | Used By | Already Configured |
+|----------|---------|-------------------|
+| `WHATSAPP_ACCESS_TOKEN` | All WhatsApp API calls | Yes |
+| `WHATSAPP_PHONE_NUMBER_ID` | All WhatsApp API calls | Yes |
+| `WHATSAPP_APP_SECRET` | HMAC validation in webhook | Yes |
+| `WHATSAPP_VERIFY_TOKEN` | Webhook verification challenge | Yes |
+| `TELEGRAM_BOT_TOKEN` | All Telegram API calls | Yes |
+| `TELEGRAM_WEBHOOK_SECRET` | Webhook secret validation | Yes |
+
+---
+
+## What NOT to Add
+
+| Rejected Option | Reason |
+|-----------------|--------|
+| `@whatsapp/nodejs-sdk` (Meta's official SDK) | Adds esm.sh CDN dependency for something that `fetch` already handles. The existing production pattern (raw REST calls) is working, audited, and HMAC-validated. A library wrapper adds abstraction without benefit. |
+| `grammy`, `telegraf`, or any Telegram bot library | Same reason — the Telegram handler is a thin webhook dispatcher. A library would replace 136 lines of audited code with framework magic and a version dependency. |
+| WhatsApp List Messages (`type: "list"`) | Explicitly out of scope in REQUIREMENTS.md. Interactive buttons cover the v1.2 menu requirement. Lists add complexity for no additional benefit in this use case. |
+| Session state database table for menu navigation | Introduces schema migration + RLS policy for transient state. Use the `bot_conversations.metadata` column (already present) to store the current menu context per user, or embed state in button `id` values (stateless: `"sub:payments:log"` tells the handler exactly where the user is without a lookup). Stateless design preferred. |
+| `deno-puppeteer` / `playwright` for PDF generation | Headless browser in a Supabase Edge Function is not supported (no Chromium binary, 150 MB cold start). Use an HTML-to-PDF Deno library from esm.sh or pre-generate PDFs by formatting data as structured text and encoding as PDF primitives. The `generate-pdf` function already exists in CLAUDE.md plans. |
+| Video / voice message handling in WhatsApp | Explicitly out of scope in REQUIREMENTS.md. Photo + document covers the v1.2 use cases. |
+
+---
+
+## Integration Flow Summary
+
+```
+Incoming WhatsApp text message
+  → whatsapp-webhook
+  → (unchanged path) → process-bot-message → Claude API → reply
+
+Incoming WhatsApp button tap
+  → whatsapp-webhook (msg.type === "interactive")
+  → Extract button_reply.id → menu state machine
+  → Send next interactive message OR forward to process-bot-message with intent context
+
+Incoming WhatsApp photo / document
+  → whatsapp-webhook (msg.type === "image" | "document")
+  → GET graph.facebook.com/v21.0/{media_id} → get temporary URL
+  → GET {url} with auth → binary ArrayBuffer
+  → Supabase Storage upload (payment-proofs bucket)
+  → Update payment row → reply with confirmation
+
+Outbound proactive (rent reminder / payment receipt / maintenance alert)
+  → send-reminders / auto-confirm-payments / maintenance trigger
+  → whatsapp-outbound (new Edge Function)
+  → POST /{phone_number_id}/messages with type: "template"
+
+Outbound PDF report via bot
+  → user sends "menu:history" → "sub:history:pdf" → picks month/year
+  → generate-pdf Edge Function → PDF binary → POST /{phone_number_id}/media
+  → POST /{phone_number_id}/messages with type: "document"
+
+Incoming Telegram text message
+  → telegram-webhook (update.message path, unchanged)
+  → process-bot-message → Claude API → sendMessage (+ optional inline_keyboard)
+
+Incoming Telegram button tap
+  → telegram-webhook (update.callback_query path, new)
+  → answerCallbackQuery (clear spinner)
+  → menu dispatch on callback_query.data → sendMessage with inline_keyboard
+```
+
+---
+
+## Pre-Implementation Checklist (Before Writing Code)
+
+These must be completed by the developer before the implementation phases:
+
+- [ ] Create `dwella_rent_reminder` template in Meta Business Manager, submit for approval
+- [ ] Create `dwella_payment_receipt` template in Meta Business Manager, submit for approval
+- [ ] Create `dwella_maintenance_update` template in Meta Business Manager, submit for approval
+- [ ] Verify Meta App is in Live mode (not Development mode) — webhooks and templates require Live mode
+- [ ] Verify WhatsApp Business Account is connected to the Meta App and phone number is registered
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Source |
+|------|-----------|--------|
+| WhatsApp Cloud API v21.0 version | HIGH | Already in production codebase |
+| Interactive button JSON structure | HIGH | Meta official Node.js SDK docs + multiple verifications |
+| 3-button hard limit | HIGH | Consistent across Meta docs, community, and third-party providers |
+| Media two-step retrieval flow | HIGH | Multiple developer implementations confirm the pattern |
+| File size limits (5 MB image, 100 MB doc) | HIGH | AWS Social Messaging docs (mirrors Meta), cross-verified |
+| Template approval timeline | MEDIUM | Third-party sources; Meta's own timeline is "minutes to 48 hours" |
+| Template category (Utility vs Marketing) | HIGH | Meta's July 2025 category guidelines are well-documented |
+| Telegram callback_data 64 byte limit | HIGH | Consistent across python-telegram-bot docs and all community sources |
+| answerCallbackQuery requirement | HIGH | Telegram Bot API spec — missing call causes stuck UI |
+| Telegram inline_keyboard row/column flexibility | HIGH | Confirmed in API spec and multiple implementations |
 
 ---
 
 ## Sources
 
-- [Expo DocumentPicker Documentation](https://docs.expo.dev/versions/latest/sdk/document-picker/) — API surface, iOS iCloud requirements. HIGH confidence.
-- [expo-document-picker CHANGELOG](https://github.com/expo/expo/blob/main/packages/expo-document-picker/CHANGELOG.md) — Version 14.0.0 targets SDK 54. HIGH confidence.
-- [react-native-gifted-charts GitHub](https://github.com/Abhinandan-Kushwaha/react-native-gifted-charts) — Version 1.4.76, peer dependencies confirmed from package.json. HIGH confidence.
-- [react-native-gifted-charts npm](https://www.npmjs.com/package/react-native-gifted-charts) — Active maintenance, Expo managed workflow compatibility confirmed. HIGH confidence.
-- [react-native-webview Expo Documentation](https://docs.expo.dev/versions/latest/sdk/webview/) — Managed workflow support, Fabric/Paper compatibility. HIGH confidence.
-- [pdf-viewer-expo GitHub](https://github.com/abdelouali/pdf-viewer-expo) — Version 1.0.0, 1 star, not production-ready. Used to rule out. HIGH confidence.
-- [Supabase Storage File Limits](https://supabase.com/docs/guides/storage/uploads/file-limits) — 50 MB global Free plan limit, per-bucket MIME type restrictions. HIGH confidence.
-- [Expo SDK 54 Changelog](https://expo.dev/changelog/sdk-54) — File system upgrade context, SDK 54 release date August 2025. HIGH confidence.
-- [Victory Native docs](https://nearform.com/open-source/victory/docs/introduction/native/) — Skia/native dependency requirement confirmed. Used to rule out. MEDIUM confidence.
-- [LogRocket: Top React Native Chart Libraries 2025](https://blog.logrocket.com/top-react-native-chart-libraries/) — Comparative analysis confirming gifted-charts maintenance advantage. MEDIUM confidence.
-
----
-
-*Stack research for: Dwella v2 — v1.1 Document Storage, Maintenance Requests, Reporting Dashboards*
-*Researched: 2026-03-20*
+- [WhatsApp Cloud API — Interactive Reply Buttons](https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/) — button JSON structure, 3-button limit (HIGH confidence)
+- [WhatsApp Node.js SDK — Interactive Message Reference](https://whatsapp.github.io/WhatsApp-Nodejs-SDK/api-reference/messages/interactive/) — Meta official SDK confirming structure (HIGH confidence)
+- [WhatsApp Cloud API — Media Reference](https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media/) — media endpoints (HIGH confidence, via search)
+- [AWS End User Messaging Social — Supported Media Types](https://docs.aws.amazon.com/social-messaging/latest/userguide/supported-media-types.html) — MIME types and size limits (HIGH confidence)
+- [WhatsApp Template Category Guidelines July 2025](https://www.ycloud.com/blog/whatsapp-api-message-template-category-guidelines-update/) — Utility vs Marketing classification (HIGH confidence)
+- [WhatsApp API Pricing Update July 2025](https://www.ycloud.com/blog/whatsapp-api-pricing-update) — per-message pricing context (HIGH confidence)
+- [24-hour Customer Service Window](https://www.smsmode.com/en/whatsapp-business-api-customer-care-window-ou-templates-comment-les-utiliser/) — session window rules (HIGH confidence)
+- [Telegram Bot API](https://core.telegram.org/bots/api) — InlineKeyboardMarkup, callback_query (HIGH confidence)
+- [Telegram InlineKeyboardButton callback_data — python-telegram-bot](https://docs.python-telegram-bot.org/en/stable/telegram.callbackquery.html) — 64 byte limit cross-verification (HIGH confidence)
+- Existing codebase: `whatsapp-webhook/index.ts`, `send-reminders/index.ts`, `telegram-webhook/index.ts` — confirmed v21.0 usage, auth pattern, and existing gaps (HIGH confidence)

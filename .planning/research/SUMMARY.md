@@ -1,184 +1,198 @@
 # Project Research Summary
 
-**Project:** Dwella v2 — v1.1 Tools Expansion
-**Domain:** React Native / Expo property management — Document Storage, Maintenance Requests, Reporting Dashboards, AI Tools Removal
-**Researched:** 2026-03-20
+**Project:** Dwella v2 — v1.2 WhatsApp Bot Expansion
+**Domain:** WhatsApp Cloud API + Telegram interactive bot for property management
+**Researched:** 2026-03-21
 **Confidence:** HIGH
 
 ## Executive Summary
 
-Dwella v1.1 is an additive milestone on a complete, shipped codebase (Expo SDK 54, Supabase, Zustand). All four feature areas — Document Storage, Maintenance Requests, Reporting Dashboards, and AI Tools Removal — can be built by extending existing patterns rather than introducing new architectural paradigms. Only three new npm packages are required (`expo-document-picker`, `react-native-webview`, `react-native-gifted-charts`), all Expo managed-workflow compatible with zero native config plugins. The existing hook pattern (`useExpenses`), storage bucket pattern (`payment-proofs`), and RLS design are directly reusable templates for every new feature.
+Dwella v1.2 extends the existing dual-bot architecture (WhatsApp + Telegram) with interactive menus, inbound media handling, outbound template notifications, and new AI intents. The core finding across all four research areas is that this milestone adds zero new npm packages and zero new Deno libraries — every new capability is achieved by extending HTTP API surface calls within the existing Supabase Edge Function pattern. The recommended approach follows a strict dependency order: build `whatsapp-send` first (shared outbound helper), add media handling second, wire interactive menus third, and deploy outbound template notifications last (because template approval from Meta is an external dependency with a 2-7 day lead time that must be started on Day 1).
 
-The recommended build order is: (1) remove AI tools first to free navigation slots and eliminate dead Edge Function references, (2) write the single database migration that creates both new tables and storage buckets, (3) build Document Storage and Maintenance Requests (these are independent of each other and can proceed in parallel after the migration), (4) build Reporting Dashboards last since it reads only existing tables and has no new schema dependencies. Reporting is the lowest-risk feature because all data already exists in `payments`, `expenses`, `tenants`, and `properties`.
+The single most important architectural rule governing this milestone is the WhatsApp 24-hour customer service window. Interactive menus can only be sent inside an active session; all proactive outbound messages (rent reminders, payment receipts, maintenance alerts) must use pre-approved Utility templates. This constraint bifurcates every outbound code path and must be encoded as a first-class design decision before any Edge Function is written. Telegram has no equivalent restriction and can serve as the simpler reference implementation for menu logic.
 
-The critical risk area is storage and data integrity: Supabase Storage RLS policies require `WITH CHECK` on INSERT (not `USING`), signed URLs expire after 1 hour by default, and deleting a document metadata row without calling `storage.remove()` leaves orphaned files consuming storage quota indefinitely. These are not difficult to prevent but are silent failures that only surface in production. A dedicated `lib/documents.ts` helper must enforce the correct delete sequence before any delete UI is wired. A secondary risk is reporting query performance: aggregate queries against tables with EXISTS-subquery RLS policies cause per-row evaluation that degrades at 100+ rows — composite indexes on `(property_id, year, month, status)` must be included in the migration, not added later.
+The primary risks are operational (Meta template rejection, temporary access token expiry, phone number pre-registration, messaging tier limits) and architectural (blocking the webhook on synchronous processing, duplicating the outbound fetch block, forwarding menu button taps to Claude unnecessarily). All of these are preventable with correct setup on Day 1 and well-understood patterns already established in the codebase. Recovery costs range from low to high, with phone number quality rating degradation being the most expensive to recover from.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack is almost entirely fixed by the existing codebase. Only three new packages are needed, all installed via `npx expo install` with no native config plugins or EAS rebuild required. `expo-document-picker` (~14.0.0) is the first-party Expo document picker for managed workflow. `react-native-gifted-charts` (^1.4.76) covers all four chart types needed using the already-installed `react-native-svg` and `expo-linear-gradient` as peers — zero additional installs. `react-native-webview` (~14.1.1) is the only viable path to inline PDF rendering in Expo managed workflow; native PDF libraries like `react-native-pdf` require a custom dev build and break OTA update compatibility.
+The existing stack handles all v1.2 requirements without modification. WhatsApp Cloud API v21.0 is already in production at `graph.facebook.com/v21.0` — all new calls use the same version and the same `WHATSAPP_ACCESS_TOKEN` credential. Telegram Bot API requires no version change. All new Edge Functions are written in the same Deno `fetch` pattern already used in `whatsapp-webhook`, `telegram-webhook`, and `send-reminders`.
 
-**Core technologies (net-new additions only):**
-- `expo-document-picker` (~14.0.0): Pick PDF, DOCX, and images from device and cloud drives — first-party, SDK 54 pinned, no eject required
-- `react-native-gifted-charts` (^1.4.76): Bar, line, pie, and donut charts — SVG-based using already-installed peers, zero new native modules, actively maintained
-- `react-native-webview` (~14.1.1): Inline PDF rendering via Google Docs Viewer URL — the only managed-workflow-compatible PDF viewer option that preserves OTA compatibility
+**Core technologies (existing, confirmed):**
+- **WhatsApp Cloud API v21.0:** Interactive reply buttons, template messages, media endpoints — version locked, auth pattern established in production
+- **Telegram Bot API (current):** Inline keyboards with `callback_data`, `answerCallbackQuery` — no version segment needed
+- **Supabase Edge Functions (Deno):** Native `fetch`, `FormData`, `ArrayBuffer` — all required primitives built-in, no esm.sh imports needed
+- **Supabase Storage (`payment-proofs` bucket):** Binary upload pattern already working — extended to inbound WhatsApp media
+- **Claude API (`claude-sonnet-4-20250514`):** Extended with 3 new read-only intents; menu navigation bypasses Claude via lookup table
+
+**Critical version/limit facts:**
+- WhatsApp interactive reply buttons: max **3 per message**, button title max **20 characters**
+- Telegram `callback_data`: max **64 bytes** per button
+- WhatsApp media URL expiry: **5 minutes** after webhook delivery — download immediately
+- WhatsApp new account messaging tier: **250 business-initiated conversations per 24 hours**
 
 ### Expected Features
 
-The AI Tools Removal must happen before any new screens are added to navigation. Document Storage and Maintenance Requests are independent of each other. Reporting Dashboards require no new schema at all.
+**Must have (table stakes):**
+- Outbound rent reminders via WhatsApp — reduces no-response rate; requires pre-approved Utility template
+- Payment confirmation receipt via WhatsApp — tenant paper trail; Utility template required
+- Maintenance status notifications via WhatsApp — expected by both landlord and tenant; Utility template per event
+- Inbound photo as payment proof via WhatsApp (MEDIA-01) — natural user behavior; two-step media download required
+- Interactive main menu on both WhatsApp and Telegram (RICH-02, RICH-05) — without navigation the bot feels opaque
+- Freeform text alongside buttons (RICH-04) — all actions must be reachable by typing, not buttons only
+- Bot welcome message on WhatsApp account linking (RICH-01) — onboarding context for new connections
 
-**Must have for v1.1 (P1 — table stakes):**
-- AI Tools screens and Edge Functions removed, navigation slots freed
-- Document upload (landlord and tenant) with property-level and tenant-level scoping
-- Document listing and signed URL download with expiry-aware caching
-- Maintenance request submission (tenant) and status management (landlord)
-- Maintenance status flow: open → in_progress → resolved → closed
-- Push notification on maintenance status change (reuses existing `send-push` Edge Function)
-- Financial P&L dashboard per property and portfolio rollup
-- Expense breakdown by category chart
-- Rent collection rate and occupancy rate per property
+**Should have (differentiators):**
+- Menu-driven sub-navigation with 5 categories (RICH-03) — makes the bot an action layer, not just an alert channel
+- PDF report delivery via bot with month/year picker — landlords get financial reports without opening the app
+- Maintenance status query via natural language (INTENT-01) — "what's happening with my sink repair?" answered in chat
+- Upcoming payments summary (INTENT-02) — tenant asks "what do I owe?" and gets a structured response
+- Property portfolio summary for landlords (INTENT-03) — occupancy, rent collection, open maintenance in one message
+- Inbound document sharing via WhatsApp (MEDIA-02) — lease and notice exchange within the messenger
 
-**Should have after validation (P2 — differentiators):**
-- Maintenance request photos (separate `maintenance-photos` storage bucket, adds upload complexity)
-- Maintenance cost linking to existing expenses table (high value, FK is the only new schema addition)
-- Priority levels on maintenance requests (low/normal/urgent — simple filter/sort addition)
-- Tenant payment reliability score (computed from existing `payments` table, no new schema)
-- Document expiry tracking (`expires_at` field on documents, dashboard warning within 30 days)
-- Date-range filtering on reports (essential for tax-year use cases, date picker on all report queries)
+**Defer (v2+):**
+- WhatsApp list messages — explicitly out of scope per REQUIREMENTS.md; buttons cover the v1.2 menu depth
+- Video/voice message handling — no property management use case worth the storage and processing cost
+- Per-platform feature divergence — one intent layer, two platform renderers; divergence doubles maintenance
 
-**Defer to v2+:**
-- Maintenance comment thread (meaningful Realtime infrastructure addition; validate base messaging is insufficient first)
-- E-signature integration (legal liability and third-party SDK complexity)
-- Preventive maintenance scheduling (calendar/cron complexity; different product scope)
-- CSV export for reports (defer until large-portfolio landlords request it)
+**Pre-flight requirement (not a code task):**
+- Four Meta templates must be submitted for approval on Day 1: `dwella_rent_reminder`, `dwella_payment_confirmed`, `dwella_maintenance_update`, `dwella_reopen_session`
 
 ### Architecture Approach
 
-All new features slot into the existing `app/tools/` Stack navigator without layout changes — Expo Router registers new screen files automatically. The pattern is consistent: new screen in `app/tools/`, new hook in `hooks/`, metadata helpers in `lib/`, shared components modeled on existing equivalents (`PaymentStatusBadge` → `MaintenanceStatusBadge`, `ProofUploader` → `DocumentUploader`). No Zustand expansion is needed; all state is hook-local. A single migration (019) creates both new tables and both new storage buckets. No new Edge Functions are required — document CRUD, maintenance CRUD, and report aggregation are all direct Supabase client operations protected by RLS; the existing `send-push` Edge Function handles maintenance notifications client-side.
+The existing architecture separates inbound webhook functions (`whatsapp-webhook`, `telegram-webhook`) from a shared AI dispatch function (`process-bot-message`). This separation is preserved and extended. Three new Edge Functions are introduced to centralize responsibilities that are currently duplicated or missing: `whatsapp-send` (all outbound WhatsApp, single API version control point), `whatsapp-media` (inbound media download + Supabase Storage upload, fire-and-forget from webhook), and `notify-whatsapp` (triggered outbound notifications for payment confirmation and maintenance events). Menu navigation uses a stateless button ID scheme — all state is encoded in the `button_id` string, avoiding a sessions table.
 
 **Major components:**
-1. `app/tools/documents.tsx` — document list and upload screen, mirrors `expenses/index.tsx` structure
-2. `app/tools/maintenance.tsx` + `maintenance-detail.tsx` — request list and detail, mirrors payment detail pattern
-3. `app/tools/reports.tsx` — aggregate chart dashboard, consumes `useReports(year)` hook with no Realtime subscription
-4. `hooks/useDocuments`, `useMaintenanceRequests`, `useReports` — new hooks, all mirror `useExpenses.ts` pattern exactly
-5. `lib/documents.ts` + `lib/maintenance.ts` — metadata helpers and the critical `deleteDocument()` function enforcing storage + DB atomicity
-6. Migration 019 — `documents` table, `maintenance_requests` table, `property-docs` bucket, `maintenance-photos` bucket, all 8 RLS policies, and composite reporting index on `payments`
+1. `whatsapp-webhook` — HMAC validation, message type routing (text/interactive/image/document), fire-and-forget to `whatsapp-media`
+2. `telegram-webhook` — secret validation, message/callback_query routing, `answerCallbackQuery` required on every callback
+3. `process-bot-message` — Claude intent detection; lookup table for pure menu navigation (no Claude call); new query handlers for INTENT-01/02/03; extended context with maintenance data
+4. `whatsapp-send` (NEW) — single outbound channel for all WhatsApp message types (text, interactive, template, document)
+5. `whatsapp-media` (NEW) — two-step Meta CDN download then Supabase Storage upload; classifies intent from caption heuristic
+6. `notify-whatsapp` (NEW) — payment confirmation and maintenance status template sends; called by `auto-confirm-payments` and app client
+
+**Database changes:** One migration — add `last_whatsapp_message_at timestamptz` to `users` for session detection; verify `proof_url` column exists on `payments`.
 
 ### Critical Pitfalls
 
-1. **Storage RLS INSERT policy uses USING instead of WITH CHECK** — Supabase Storage evaluates `WITH CHECK` for writes and `USING` for reads only; using the wrong clause means write access restrictions silently do nothing. Every `FOR INSERT` storage policy must use `WITH CHECK (...)`. Mirror `002_storage.sql` and run the Supabase security linter after every migration.
+1. **Non-template messages outside the 24-hour session window** — All outbound Edge Functions must use `type: "template"` with approved templates. Sending free-form text or interactive buttons to users who have not messaged in 24+ hours returns error 131047. Design two code paths: template for scheduled/triggered outbound, interactive for in-session replies.
 
-2. **Signed URL expiry causes silently broken document links** — Private bucket URLs expire after 1 hour by default. Store URLs with an `expiresAt` timestamp and regenerate 60 seconds before expiry. Use 24-hour `expiresIn` for documents. Never persist signed URLs in Zustand across app restarts.
+2. **Media URL 5-minute expiry** — The `whatsapp-webhook` must fire-and-forget to `whatsapp-media` immediately after receipt. The media download inside `whatsapp-media` must include `Authorization: Bearer {TOKEN}` — the CDN URL is authenticated, not public. Never pass the media ID downstream for later resolution.
 
-3. **Document metadata deleted without removing the storage object** — Deleting a `documents` table row does not delete the file from Supabase Storage. Always call `supabase.storage.from('documents').remove([path])` before deleting the metadata row. Enforce this invariant via a single `deleteDocument()` function in `lib/documents.ts` — callers must never invoke storage and DB deletes separately.
+3. **Webhook synchronous processing causing Meta retries** — `whatsapp-webhook` must return HTTP 200 immediately after HMAC validation. Processing Claude, DB writes, and reply sends must happen after the response is sent. Implement `message_id` deduplication to prevent duplicate bot replies on retries.
 
-4. **Reporting aggregate queries degrade due to per-row RLS subquery evaluation** — EXISTS-subquery RLS is re-evaluated per row during aggregate queries, causing 200-800ms latency per chart card. Add composite indexes on `(property_id, year, month, status)` in the migration and rewrite report queries to use `property_id IN (SELECT id FROM properties WHERE owner_id = auth.uid())` — a subquery evaluated once.
+4. **Temporary access token used in production** — The Developer Dashboard provides a 24-hour token. Use a System User token from Meta Business Manager from Day 1. Store in Supabase secrets only, never in `.env` or committed to git.
 
-5. **AI tools route strings remain in navigation after screen files are deleted** — Expo Router routes are plain strings; TypeScript does not catch dead routes unless `typedRoutes: true` is enabled. Search the codebase for route strings before deleting screen files, update `tools/index.tsx` simultaneously, and verify `npx tsc --noEmit` passes after deletion. Also audit `process-bot-message` for Claude API tool definitions referencing removed features.
+5. **Template rejection and automatic recategorization** — Write all templates with pure transactional language, no promotional framing, no shortened URLs, exact `{{1}}` variable format. Submit on Day 1. Subscribe to `message_template_status_update` webhooks to detect auto-recategorization without notice (Meta removed the 24-hour warning period in April 2025).
+
+---
 
 ## Implications for Roadmap
 
-The dependency chain is unambiguous: AI removal unblocks navigation and eliminates dead Edge Function references. The migration unblocks all client code. Document Storage and Maintenance Requests are independent of each other after the migration. Reporting Dashboards depend only on existing tables and can technically proceed as soon as types are defined, but benefit from the Tools tab being populated first.
+Based on research, the dependency order is firm: `whatsapp-send` is a prerequisite for all other phases; template approval is the long-pole external dependency that must be started in parallel with Phase 1.
 
-### Phase 1: AI Tools Removal
+### Phase 0: Setup and Prerequisites (Pre-Development)
+**Rationale:** Meta template approval takes 2-7 days and is a hard external dependency for outbound notifications. Setup blockers — System User token, phone number registration, Meta app in Live mode — must be resolved before any code can be tested end-to-end.
+**Delivers:** System User token configured in Supabase secrets; Meta app in Live mode; WhatsApp phone number registered and clean (never previously used in the WhatsApp consumer app); all 4 templates submitted to Meta Business Manager; SETUP-01 documentation complete; WhatsApp account linking flow verified end-to-end (SETUP-02)
+**Avoids:** Temporary token expiry (Pitfall 5), phone number pre-registration conflict (Pitfall 6), template submission delay blocking Phase 4
 
-**Rationale:** Zero dependencies — pure deletion. Must happen first to free navigation slots and remove dead Edge Function references that would conflict with new screens. Removing broken references before adding new ones prevents hard-to-diagnose runtime crashes and keeps the build clean throughout subsequent phases.
-**Delivers:** Clean navigation, no dead routes, `tools/index.tsx` ready for three new entries, `process-bot-message` free of removed tool definitions, `hooks/useAiNudge.ts` and `components/AiInsightCard.tsx` removed.
-**Addresses:** AI Tools Removal (P1), unblocks navigation placement for all three new feature areas.
-**Avoids:** Pitfall 5 (AI tools routes still referenced after screen deletion) and Pitfall 10 (Edge Function dead references causing bot malfunction from stale Claude tool definitions).
+### Phase 1: Media Handling — Inbound Photo and Document (MEDIA-01, MEDIA-02)
+**Rationale:** `whatsapp-send` (the shared outbound helper) must be built first because all later phases depend on it. Inbound media is the highest-urgency tenant-facing feature with no dependency on interactive menus or templates. Building it first validates the `whatsapp-send` helper under real conditions before other phases rely on it.
+**Delivers:** `whatsapp-send` Edge Function (text, interactive, template, document types); `whatsapp-media` Edge Function (two-step Meta CDN download + Supabase Storage upload); media type routing added to `whatsapp-webhook`; DB migration (verify `proof_url` on `payments`)
+**Addresses:** MEDIA-01 (payment photo proof), MEDIA-02 (document sharing)
+**Avoids:** Media URL 5-minute expiry (Pitfall 3), blocking webhook on synchronous download (Pitfall 8), duplicating outbound fetch block across functions (Architecture anti-pattern 3)
 
-### Phase 2: Database Foundation (Migration 019)
+### Phase 2: Interactive Menus — WhatsApp and Telegram (RICH-01 through RICH-05)
+**Rationale:** The menu system is the UX backbone for all new bot features. It must be complete before new intents can be reached via button navigation. Building menus second means `whatsapp-send` is already available for interactive message delivery.
+**Delivers:** Modified `process-bot-message` with `buttons` response field and `button_id` input (lookup table for pure menu taps, bypasses Claude); modified `telegram-webhook` with `callback_query` routing and `answerCallbackQuery`; modified `whatsapp-webhook` with `interactive` type routing; stateless button ID scheme (`menu_payments`, `action_log_payment`, etc.); `last_whatsapp_message_at` session tracking migration; welcome message on account linking (RICH-01)
+**Addresses:** RICH-01, RICH-02, RICH-03, RICH-04, RICH-05
+**Avoids:** Forwarding menu taps to Claude (Architecture anti-pattern 4), session state DB table for menu navigation (anti-pattern 5), WhatsApp interactive message outside 24h window (Pitfalls 1 and 2), Telegram callback spinner stuck from missing `answerCallbackQuery`
 
-**Rationale:** Both new tables and both new storage buckets must exist before any client code is testable. A single migration ensures RLS is audited once, together, before upload code is written. Composite reporting indexes belong here so they are present before any aggregate query is run — adding them post-launch requires a second migration and may require `REINDEX` in production.
-**Delivers:** `documents` table (with soft-delete, FK references, CHECK constraints), `maintenance_requests` table (status CHECK, priority CHECK, `photo_paths TEXT[]`, `linked_expense_id ON DELETE SET NULL`), `property-docs` bucket, `maintenance-photos` bucket, all 8 RLS policies with correct `WITH CHECK` on INSERT, composite index on `payments(property_id, year, month, status)`.
-**Avoids:** Pitfall 1 (missing WITH CHECK on storage INSERT policies), Pitfall 2 (soft-delete not present on new tables), Pitfall 6 (maintenance expense FK must be `ON DELETE SET NULL` not CASCADE), Pitfall 9 (maintenance photos reusing wrong bucket with colliding RLS).
+### Phase 3: New Bot Intents (INTENT-01, INTENT-02, INTENT-03)
+**Rationale:** Pure additions to existing AI logic. No new infrastructure required after Phase 2 establishes the structured response format with `buttons` and `button_id`. This is the lowest-risk phase — no new Edge Functions, no external dependencies, no new schema.
+**Delivers:** Maintenance status query handler (`query_maintenance_status`); upcoming payments handler (`query_upcoming_payments`); property summary handler (`query_property_summary`); extended `buildContext()` with maintenance data; updated Claude system prompt
+**Addresses:** INTENT-01, INTENT-02, INTENT-03
+**Uses:** Updated `process-bot-message` `ActionHandler` pattern from Phase 2
 
-### Phase 3: Document Storage
+### Phase 4: Outbound Template Notifications (OUT-01, OUT-02, OUT-03)
+**Rationale:** This phase is blocked on Meta template approval (submitted in Phase 0). If templates are approved by the time Phase 3 is complete, Phase 4 can proceed immediately. Building it fourth means all helper infrastructure (`whatsapp-send`, `notify-whatsapp`) is available.
+**Delivers:** `notify-whatsapp` Edge Function (payment confirmed + maintenance update template sends); `send-reminders` updated to use `dwella_rent_reminder` template (replacing free-form text that breaks outside the 24h window); `auto-confirm-payments` hooked to `notify-whatsapp`; HTTP 429 error handling with failures logging for the 250-conversation tier limit
+**Addresses:** OUT-01, OUT-02, OUT-03
+**Avoids:** Free-form text outside 24h window (Pitfall 1), messaging tier 250 cap silent failures (Pitfall 7), template variable mismatch errors
 
-**Rationale:** After migration exists, Document Storage has no further dependencies. `lib/documents.ts` with atomic `deleteDocument()` must be written before any delete UI — the lib layer enforces storage invariants. Install `expo-document-picker` and `react-native-webview` here. Signed URL expiry handling must be implemented on day one, not added after a user reports broken links.
-**Delivers:** `useDocuments` hook with Realtime subscription and `is_archived` filter, `DocumentUploader` component (extends `ProofUploader` with `expo-document-picker` support for PDFs and DOCX), `app/tools/documents.tsx` screen with property-level and tenant-level scoping, expiry-aware signed URL rendering, atomic document delete.
-**Uses:** `expo-document-picker` (new install), `react-native-webview` (new install, PDF inline view via Google Docs Viewer URL), `expo-image-picker` (already installed, for image documents), Supabase Storage `property-docs` bucket.
-**Implements:** Document Upload Flow (two-step INSERT-then-UPDATE prevents orphaned DB rows), Storage Path Convention, Signed URL Expiry Pattern.
-**Avoids:** Pitfall 3 (signed URL expiry), Pitfall 4 (orphaned storage objects on delete), Pitfall 8 (using `storage.list()` for document listing instead of the metadata table).
-
-### Phase 4: Maintenance Requests
-
-**Rationale:** Independent of Document Storage — both Phase 3 and Phase 4 can proceed after Phase 2 in a single-developer sequential workflow, or in parallel with two developers. Maintenance Requests reuse the same hook pattern and the existing `send-push` Edge Function for notifications. Build the base workflow (submit, list, status update) before adding photos or expense linking.
-**Delivers:** `useMaintenanceRequests` hook, `MaintenanceStatusBadge` component, `app/tools/maintenance.tsx` (list view filtered by status), `app/tools/maintenance-detail.tsx` (status transitions, expense linking, landlord notes), push notification to landlord on request creation via existing `send-push` Edge Function.
-**Uses:** `expo-image-picker` (already installed) for request photos, Supabase Storage `maintenance-photos` bucket, existing `send-push` Edge Function (called client-side after INSERT).
-**Implements:** Maintenance Request Flow, Soft-Delete Pattern, status as TEXT CHECK without DB trigger (simpler than payment state machine — no financial invariants to enforce at DB level).
-**Avoids:** Pitfall 6 (expense FK behavior — `ON DELETE SET NULL` enforced in migration), Pitfall 9 (separate bucket from `payment-proofs`).
-
-### Phase 5: Reporting Dashboards
-
-**Rationale:** Lowest risk — reads only existing tables, zero new schema. Install `react-native-gifted-charts` here. `useReports` omits Realtime (analytical data; `useFocusEffect` reload is sufficient). Parallel `Promise.all` for three aggregate queries. Performance must be validated via `EXPLAIN ANALYZE` before shipping — the composite index added in Phase 2 is the primary mitigation, but the production query plan should be confirmed.
-**Delivers:** `useReports(year)` hook with year-scoped parallel aggregate queries, `app/tools/reports.tsx` with P&L bar chart, expense category pie chart, rent collection rate, and occupancy rate per property. Year selector as primary filter. Portfolio-level rollup card.
-**Uses:** `react-native-gifted-charts` (new install), `expo-linear-gradient` (already installed, gradient bar fills), existing `payments`, `expenses`, `tenants`, `properties` tables.
-**Implements:** Reporting Data Flow (no Realtime subscription, no Edge Function, client-side aggregation sufficient at single-landlord scale up to 50 properties).
-**Avoids:** Anti-Pattern 1 from ARCHITECTURE.md (no Realtime on reports), Anti-Pattern 2 (no Edge Function for direct table queries), Pitfall 7 (RLS per-row aggregate degradation — mitigated by composite index from Phase 2).
+### Phase 5: PDF Report Delivery via Bot (RICH-03 History submenu)
+**Rationale:** Most complex multi-turn flow; depends on interactive menus (Phase 2) and `whatsapp-send` document type (Phase 1). Deferred last to ensure all infrastructure is stable before adding two-turn state complexity.
+**Delivers:** PDF month/year picker flow in both bots; `generate-pdf` modified to return signed Supabase Storage URL instead of binary; document delivery via `whatsapp-send` (document type with `link` field) and Telegram `sendDocument`; file size guard (keep under 10MB practical limit)
+**Addresses:** RICH-03 History submenu PDF delivery
+**Avoids:** In-memory PDF generation exceeding Edge Function memory limits (generate to Storage, return signed URL not binary)
 
 ### Phase Ordering Rationale
 
-- Phase 1 before everything: AI removal has no dependencies, and dead route strings cause runtime crashes in subsequent phases if left in place.
-- Phase 2 before Phases 3-5: Client code cannot be tested without the schema. Single migration ensures RLS is audited once and composite reporting indexes are present from the start.
-- Phases 3 and 4 are parallel after Phase 2: they share no schema dependencies. In a single-developer workflow, build 3 then 4 sequentially in either order.
-- Phase 5 can technically begin after types are defined (Phase 2), but placing it last ensures the Tools tab is populated and the reporting screen is not the sole new user-visible feature in a release.
+- `whatsapp-send` must be built in Phase 1 before any phase that sends outbound WhatsApp messages — it is the single outbound channel and all later phases call it
+- Template approval (2-7 days) runs in parallel with Phases 1-3 so Phase 4 is not delayed by an external wait
+- Menu system (Phase 2) must precede new intents (Phase 3) because intents are reached via menu button taps in the UX flow
+- PDF delivery (Phase 5) is last because it requires a two-turn conversation state machine and all other infrastructure to be stable first
 
 ### Research Flags
 
-Phases with well-documented patterns (no additional research needed):
-- **Phase 1 (AI Tools Removal):** Pure file deletion and route cleanup. Standard Expo Router and Supabase CLI operations.
-- **Phase 2 (Migration 019):** Full DDL for both tables and all 8 RLS policies is specified in ARCHITECTURE.md. Execute directly.
-- **Phase 4 (Maintenance Requests):** Mirrors `useExpenses` pattern exactly. Status flow is simpler than the payment state machine with no DB trigger required.
+Phases likely needing deeper research during planning:
+- **Phase 4:** WhatsApp messaging tier limit handling — backoff strategy and failure logging table design need implementation specifics validated against Supabase Edge Function runtime constraints (no `setTimeout` in Deno Deploy)
+- **Phase 5:** PDF generation library for Deno on `esm.sh` — `deno-puppeteer` is confirmed not viable (no Chromium binary in Edge Function runtime); the specific Deno-compatible HTML-to-PDF library needs selection and validation before Phase 5 begins
 
-Phases that warrant targeted review during planning:
-- **Phase 3 (Document Storage — PDF rendering):** The `react-native-webview` + Google Docs Viewer approach has known edge cases with large files, OAuth-protected signed URLs, and offline usage. Validate against a real Supabase signed URL on a physical device before wiring the full documents screen. If Google Docs Viewer proves unreliable, the fallback is a PDF.js HTML string rendered inside WebView (documented in STACK.md).
-- **Phase 5 (Reporting — production query plan):** Client-side aggregation performance is sufficient at small scale, but the Postgres query plan in production Supabase can differ from `supabase start` locally. Run `EXPLAIN ANALYZE` on the report queries against production data before shipping. The escape hatch (Postgres RPC function with server-side GROUP BY) is documented in ARCHITECTURE.md and can be added without a screen change.
+Phases with standard patterns (skip additional research):
+- **Phase 1:** Media two-step download pattern is documented at HIGH confidence across multiple sources; `whatsapp-send` follows the existing `whatsapp-send-code` pattern exactly
+- **Phase 2:** Interactive button and Telegram inline keyboard specs are fully documented at HIGH confidence; all payload structures are verified; implementation is unambiguous
+- **Phase 3:** Follows the existing `process-bot-message` `ActionHandler` pattern exactly — pure addition, no new integration surface, no new API calls
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All three new libraries verified against official Expo SDK 54 docs and package changelogs. Alternatives ruled out with clear technical rationale (react-native-pdf ejects, Victory Native XL requires Skia, recharts is DOM-only). |
-| Features | HIGH | Grounded in analysis of AppFolio, Buildium, TenantCloud, and RentRedi feature sets. Feature boundaries and P1/P2/P3 prioritization are clear and consistent. Anti-features are well-justified with alternatives. |
-| Architecture | HIGH | Based on direct codebase analysis of existing migrations, hooks, screens, and components. All patterns verified from source files. No speculative design — every new component has an explicit existing analog. |
-| Pitfalls | HIGH | Cross-verified with official Supabase Storage docs, Expo docs, and known codebase structure from the v1.0 audit. Specific warning signs and recovery steps provided for each of the 10 identified pitfalls. |
+| Stack | HIGH | Zero new dependencies; all new capability is API surface extension of existing working integrations verified in production |
+| Features | HIGH | Meta official docs + Telegram Bot API spec; all limits verified from multiple sources with cross-verification |
+| Architecture | HIGH | Patterns derived from existing working codebase + official API specs; component boundaries and data flows are unambiguous |
+| Pitfalls | HIGH | Cross-verified against Meta docs, multiple third-party provider blogs, and direct gaps identified in existing codebase source files |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **PDF viewer reliability with Supabase signed URLs:** The Google Docs Viewer URL approach (`https://docs.google.com/viewer?url={encodeURIComponent(signedUrl)}&embedded=true`) is widely used but has intermittent failures with large files and may not work if the signed URL contains certain query parameter characters. Validate against a real signed URL during Phase 3 before committing to this approach. The PDF.js HTML string approach is the documented fallback.
+- **PDF generation library for Deno:** `generate-pdf` Edge Function exists in CLAUDE.md plans but the specific Deno-compatible HTML-to-PDF library is not yet selected. Options via `esm.sh` must be evaluated during Phase 5 planning. Hard constraint: no Chromium binary available, ruling out all headless browser approaches.
+- **`whatsapp-media` intent classification heuristic:** Research recommends classifying inbound media as payment proof vs. document based on caption keywords. This heuristic may need refinement for non-English captions or absent captions. A user-facing fallback (ask sender to clarify) should be designed during Phase 1 planning.
+- **`generate-pdf` current return format:** Research flags that the function must be modified to return a signed Supabase Storage URL. Verify the current implementation's return shape before Phase 5 begins to scope the modification accurately.
+- **WhatsApp opt-in requirement for cold outbound:** The first outbound message to a user who has never initiated a conversation requires documented opt-in. The `send-reminders` opt-in tracking mechanism needs design during Phase 4 planning.
 
-- **iOS iCloud Drive access requirement:** `expo-document-picker` requires `usesIcloudStorage: true` in `app.json` for iCloud Drive documents to appear on iOS. This is a one-line config change but requires an EAS build to validate — it cannot be tested in Expo Go. Flag this for an early EAS build during Phase 3.
-
-- **Reporting query performance on production data:** The composite index on `payments(property_id, year, month, status)` is added in Phase 2, but the actual query plan depends on the production row count and Postgres statistics. Validate with `EXPLAIN ANALYZE` during Phase 5 before release. If the seq scan advisor flag (`auth_rls_initplan`) appears, move to the Postgres RPC function escape hatch documented in ARCHITECTURE.md.
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Expo DocumentPicker Documentation (SDK 54): https://docs.expo.dev/versions/latest/sdk/document-picker/
-- expo-document-picker CHANGELOG — version 14.0.0 targets SDK 54
-- react-native-gifted-charts GitHub (v1.4.76): https://github.com/Abhinandan-Kushwaha/react-native-gifted-charts
-- react-native-webview Expo Documentation (Fabric support, SDK 54 pin): https://docs.expo.dev/versions/latest/sdk/webview/
-- Supabase Storage access control — WITH CHECK vs USING: https://supabase.com/docs/guides/storage/security/access-control
-- Supabase Storage signed URL API: https://supabase.com/docs/reference/javascript/storage-from-createsignedurl
-- Supabase Storage inefficient folder operations design guide: https://supabase.com/docs/guides/storage/schema/design
-- Supabase RLS Database Advisors (auth_rls_initplan): https://supabase.com/docs/guides/database/database-advisors
-- Supabase cascade deletes guide: https://supabase.com/docs/guides/database/postgres/cascade-deletes
-- Expo Router typed routes: https://docs.expo.dev/router/reference/typed-routes/
-- Direct codebase analysis: existing migrations (001, 002, 004, 016), hooks (useExpenses, useDashboard, usePayments), screens (expenses/index.tsx, tools/index.tsx), components (ProofUploader.tsx, PaymentStatusBadge.tsx)
+- [WhatsApp Cloud API — Interactive Reply Buttons](https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/) — button JSON structure, 3-button hard limit
+- [WhatsApp Node.js SDK — Interactive Message Reference](https://whatsapp.github.io/WhatsApp-Nodejs-SDK/api-reference/messages/interactive/) — Meta official SDK confirming structure
+- [WhatsApp Cloud API — Media Reference](https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media/) — two-step download, 5-minute URL expiry, authenticated CDN URLs
+- [AWS End User Messaging Social — Supported Media Types](https://docs.aws.amazon.com/social-messaging/latest/userguide/supported-media-types.html) — file size limits (mirrors Meta specs)
+- [WhatsApp Template Category Guidelines July 2025](https://www.ycloud.com/blog/whatsapp-api-message-template-category-guidelines-update/) — Utility vs. Marketing classification
+- [Telegram Bot API](https://core.telegram.org/bots/api) — InlineKeyboardMarkup, callback_query, answerCallbackQuery, 64-byte callback_data limit
+- Existing codebase: `whatsapp-webhook/index.ts`, `whatsapp-send-code/index.ts`, `send-reminders/index.ts`, `telegram-webhook/index.ts` — confirmed v21.0 usage, auth pattern, and existing gaps identified by direct source inspection
 
 ### Secondary (MEDIUM confidence)
-- AppFolio, Buildium, TenantCloud, RentRedi feature set analysis (marketing pages and help documentation)
-- Property management dashboard KPI guides: secondnature.com, turbotenant.com
-- LogRocket: Top React Native Chart Libraries 2025 — comparative analysis confirming gifted-charts maintenance advantage over react-native-chart-kit
-- Maintenance request workflow best practices: ftmaintenance.com
+- [WhatsApp 24-hour Customer Service Window — smsmode](https://www.smsmode.com/en/whatsapp-business-api-customer-care-window-ou-templates-comment-les-utiliser/) — session window rules and consequences
+- [Downloading Media via WhatsApp Cloud API — Medium](https://medium.com/@shreyas.sreedhar/downloading-media-using-whatsapps-cloud-api-webhooks-and-uploading-it-to-aws-s3-bucket-via-nodejs-07c5cbae896f) — two-step media download flow implementation
+- [WhatsApp API Rate Limits — Wati](https://www.wati.io/en/blog/whatsapp-business-api/whatsapp-api-rate-limits/) — 250-conversation tier limit and escalation timeline
+- [Building a Scalable Webhook Architecture — ChatArchitect](https://chatarmin.com/en/blog/whats-app-api-send-messages) — async webhook processing patterns
+- [Messaging Limits — Meta for Developers](https://developers.facebook.com/docs/whatsapp/messaging-limits/) — tier escalation mechanics
+- [Button reply webhook payload — Chatwoot GitHub #12030](https://github.com/chatwoot/chatwoot/issues/12030) — interactive button_reply payload structure cross-verification
 
-### Tertiary (LOW confidence — validate during implementation)
-- Supabase RLS performance community discussion: https://github.com/orgs/supabase/discussions/14576 — aggregate query per-row degradation pattern; confirm with EXPLAIN ANALYZE on production data during Phase 5
+### Tertiary (referenced for completeness)
+- [WhatsApp Template Approval: 27 Reasons Meta Rejects — WUSeller](https://www.wuseller.com/blog/whatsapp-template-approval-checklist-27-reasons-meta-rejects-messages/) — template rejection checklist
+- [Permanent Access Token Setup — Anjok Technologies](https://anjoktechnologies.in/blog/-whatsapp-cloud-api-permanent-access-token-step-by-step-system-user-2026-complete-correct-guide-by-anjok-technologies) — System User token setup walkthrough
+- [WhatsApp Messaging Limits and Quality Ratings — PickyAssist](https://pickyassist.com/blog/whatsapps-messaging-limits-quality-ratings-on-2025/) — quality rating tier mechanics and recovery
 
 ---
-*Research completed: 2026-03-20*
+
+*Research completed: 2026-03-21*
 *Ready for roadmap: yes*
