@@ -55,7 +55,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
   3. User can tap "Open WhatsApp" after linking and land directly in the Dwella bot conversation
   4. The shared whatsapp-send Edge Function handles text, interactive, template, and document message types from a single call point
   5. All 4 Meta notification templates are submitted and pending approval before any code in subsequent phases requires them
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
 - [ ] 11-01: Meta Business API setup guide + System User token + whatsapp-send Edge Function
