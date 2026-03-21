@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A cross-platform mobile app (React Native + Expo) for landlords and tenants to manage rental properties, track payments, store documents, handle maintenance requests, and view financial reports — with an AI-powered Telegram/WhatsApp bot. Feature-complete, audited, and hardened for App Store and Play Store submission.
+A cross-platform mobile app (React Native + Expo) for landlords and tenants to manage rental properties, track payments, store documents, handle maintenance requests, and view financial reports — with an AI-powered Telegram/WhatsApp bot that supports natural language queries, interactive menus, media handling, and proactive notifications.
 
 ## Core Value
 
@@ -55,27 +55,16 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 - ✓ P&L bar charts, expense donut, payment reliability, occupancy tracking — v1.1
 - ✓ Portfolio-level summary across all properties — v1.1
 - ✓ AI tools screens removed, navigation clean — v1.1
+- ✓ WhatsApp Business API setup and account linking flow — v1.2
+- ✓ Media messages (photo payment proof, document sharing via WhatsApp) — v1.2
+- ✓ Outbound WhatsApp messaging (reminders, receipts, maintenance notifications) — v1.2
+- ✓ New bot intents (maintenance status, upcoming payments, property summary) — v1.2
+- ✓ Menu-driven rich messaging with interactive buttons (both Telegram and WhatsApp) — v1.2
+- ✓ PDF report generation and delivery via bot — v1.2
 
 ### Active
 
-- [ ] WhatsApp Business API setup and account linking flow
-- ✓ Media messages (photo payment proof, document sharing via WhatsApp) — Phase 12
-- ✓ Outbound WhatsApp messaging (reminders, receipts, maintenance notifications) — Phase 14
-- ✓ New bot intents (maintenance status, upcoming payments, property summary) — Phase 14
-- ✓ Menu-driven rich messaging with interactive buttons (both Telegram and WhatsApp) — Phase 13
-- ✓ PDF report generation and delivery via bot — Phase 13
-
-## Current Milestone: v1.2 WhatsApp Bot
-
-**Goal:** Make the WhatsApp bot fully functional with Meta Business API integration, media support, outbound messaging, new intents, and menu-driven rich messaging across both Telegram and WhatsApp.
-
-**Target features:**
-- Meta Business API setup + WhatsApp linking flow working end-to-end
-- Photo payment proof and document sharing via WhatsApp
-- Outbound reminders, receipts, and maintenance notifications via WhatsApp
-- New bot intents: maintenance status, upcoming payments, property summary
-- Menu-driven interactive buttons on both Telegram and WhatsApp bots
-- PDF report download from bot (user picks month/year)
+(None — next milestone requirements TBD)
 
 ### Out of Scope
 
@@ -99,11 +88,11 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 
 ## Context
 
-- **Status:** v1.2 in progress — Phase 14 complete (intents + outbound notifications), last phase of milestone
-- **Codebase:** ~80 screens/components, 12 Edge Functions, 25 SQL migrations, ~26,000 LOC TypeScript
+- **Status:** v1.2 shipped — WhatsApp Bot milestone complete (4 phases, 9 plans, 16 requirements)
+- **Codebase:** ~80 screens/components, 12 Edge Functions, 25 SQL migrations, ~28,000 LOC TypeScript
 - **Tech stack:** React Native + Expo SDK 51, Supabase, Zustand, Claude API, Victory Native
-- **Tech debt:** 6 items from v1.1 audit (Nyquist gaps in phases 6-8, unbounded portfolio query, manual AI Edge Function deletion, notification routing now fixed)
-- **Pre-launch blockers:** Sentry DSN, pg_cron schedule verification, iOS App Store ID in UpdateGate
+- **Tech debt:** 5 items from v1.2 audit (orphaned whatsapp-send-code function, pdf-reports bucket manual setup, HTML2PDF_API_KEY not in checklist, migration 026 settings dependency, WHATSAPP_BOT_PHONE env gating)
+- **Pre-launch blockers:** Sentry DSN, pg_cron schedule verification, iOS App Store ID in UpdateGate, pdf-reports bucket creation, HTML2PDF_API_KEY secret
 
 ## Constraints
 
@@ -126,6 +115,9 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 | DB-level state machine for maintenance | Matches payment pattern; prevents invalid status transitions | ✓ Good — consistent pattern, no bypass possible |
 | Victory Native for charts | Native rendering, tap-to-highlight, theme-aware, no web dependency | ✓ Good — 6 chart components with tooltips, performant |
 | Gap closure phase (Phase 10) | Milestone audit caught integration gaps before shipping | ✓ Good — notification routing + property shortcut wired |
+| Route all WhatsApp sends through whatsapp-send (v1.2) | Single deployment point, consistent retry logic, template support | ✓ Good — 6 callers, zero direct Meta API calls remaining |
+| pg_net DB trigger for maintenance notifications (v1.2) | Instant notification on any status change from any source (app, bot, admin) | ✓ Good — fires automatically, no cron lag |
+| Dual access pattern for bot intents (v1.2) | Single handler callable from both Claude freeform and button taps | ✓ Good — no code duplication, consistent responses |
 
 ---
-*Last updated: 2026-03-21 after Phase 14 (intents & outbound notifications) complete*
+*Last updated: 2026-03-21 after v1.2 milestone*

@@ -130,6 +130,17 @@ None - no new external services. Templates were submitted in Phase 11. The notif
 - send-reminders and auto-confirm-payments need redeployment
 - Phase 14 plan 02 is the final plan in the milestone; full system ready for testing
 
+## Self-Check: PASSED
+
+- FOUND: supabase/functions/notify-whatsapp/index.ts
+- FOUND: supabase/migrations/026_maintenance_notify_trigger.sql
+- FOUND: supabase/functions/send-reminders/index.ts
+- FOUND: supabase/functions/auto-confirm-payments/index.ts
+- FOUND: .planning/phases/14-intents-outbound-notifications/14-02-SUMMARY.md
+- FOUND: c24b42c (Task 1 commit)
+- FOUND: 754ea52 (Task 2 commit)
+- FOUND: 4b43a77 (Task 3 commit)
+
 ---
 *Phase: 14-intents-outbound-notifications*
 *Completed: 2026-03-21*

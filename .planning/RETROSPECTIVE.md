@@ -88,6 +88,51 @@
 
 ---
 
+## Milestone: v1.2 — WhatsApp Bot
+
+**Shipped:** 2026-03-21
+**Phases:** 4 | **Plans:** 9
+
+### What Was Built
+- WhatsApp Business API setup with account linking via verification code flow
+- Media handling: photo payment proof via Claude vision classification + document sharing through WhatsApp
+- Interactive button menus on both Telegram and WhatsApp with session detection and welcome messages
+- PDF report generation via html2pdf.app with delivery through both bot platforms
+- Three query intent handlers (maintenance status, upcoming payments, property summary) with dual button/freeform access
+- Multi-channel outbound notifications: WhatsApp templates + Telegram + push fallback for reminders, confirmations, and maintenance updates
+
+### What Worked
+- Routing all WhatsApp sends through a single `whatsapp-send` Edge Function — 6 callers, zero direct Meta API calls, consistent retry logic
+- pg_net DB trigger for maintenance notifications — instant, fires from any source (app, bot, admin), no cron lag
+- Dual access pattern (same handler callable from both Claude intent dispatch and button tap) — zero code duplication
+- Parallel wave execution for plans with no file overlap (14-01 and 14-02 ran simultaneously)
+- Research agents were highly effective — Phase 14 researcher identified the send-reminders compliance violation (free-form text outside 24h window) before planning
+
+### What Was Inefficient
+- SUMMARY.md `requirements-completed` frontmatter still inconsistently filled — only 6 of 16 requirements listed across 9 summaries (caught by 3-source cross-reference)
+- Phase 12 verification status was `human_needed` — never resolved to `passed` before milestone completion
+- Nyquist compliance remained `false` for all 4 phases — project has no automated test infrastructure, making VALIDATION.md a formality
+- whatsapp-send-code Edge Function left deployed but orphaned after refactoring in Phase 11 — should have been cleaned up immediately
+
+### Patterns Established
+- WhatsApp template call format: `whatsapp-send` with `type: 'template'` + components array for variable substitution
+- pg_net AFTER UPDATE trigger pattern: `WHEN (OLD.status IS DISTINCT FROM NEW.status)` guard + `SECURITY DEFINER` + `net.http_post` to Edge Function
+- Push fallback pattern: try WhatsApp template → try Telegram → fall back to push notification → always create notifications DB row
+- `sendTelegramDirect()` helper for outbound Telegram sends from non-webhook Edge Functions (send-reminders, auto-confirm-payments, notify-whatsapp)
+
+### Key Lessons
+1. Single-sender pattern (whatsapp-send) should be established in the first phase — retrofitting `send-reminders` to route through it was more work than if it had been designed this way from the start
+2. Meta template approval is a real blocker — implement push fallback before relying on templates, test with known-approved templates first
+3. DB triggers for notifications are superior to cron-based polling — instant delivery, no timing gaps, fires from any mutation source
+4. Operational setup items (storage buckets, API keys, env vars) should be tracked in a pre-launch checklist from Phase 1, not discovered during audit
+
+### Cost Observations
+- Model mix: ~15% opus (orchestration + planning), ~85% sonnet (research + execution + verification)
+- 4 phases completed in ~3 hours of wall time in a single session
+- Notable: Both Phase 14 plans executed in parallel (~5 min each) with zero conflicts due to no file overlap
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -96,6 +141,7 @@
 |-----------|--------|-------|------------|
 | v1.0 | 5 | 14 | Established bottom-up audit sequence, verification gates, gap closure cycle |
 | v1.1 | 5 | 14 | Feature development with 4-plan wave structure, milestone audit gap closure |
+| v1.2 | 4 | 9 | Bot platform integration, single-sender pattern, DB trigger notifications |
 
 ### Cumulative Quality
 
@@ -103,6 +149,7 @@
 |-----------|-------------|----------|-----------------|
 | v1.0 | 26/26 | 100% | 10 (non-blocking) |
 | v1.1 | 21/21 | 100% | 6 (non-blocking) |
+| v1.2 | 16/16 | 100% | 5 (non-blocking) |
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -110,3 +157,4 @@
 2. 3-source cross-reference at milestone audit catches gaps that per-phase checks miss
 3. Gap closure phases are high-value, low-cost — catch integration issues before shipping
 4. DB-level state machines (payments, maintenance) provide consistent, bypass-proof domain enforcement
+5. Single-sender patterns (whatsapp-send) and DB triggers (pg_net) are superior to distributed direct calls and polling cron jobs

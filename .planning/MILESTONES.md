@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.2 WhatsApp Bot (Shipped: 2026-03-21)
+
+**Phases completed:** 4 phases, 9 plans, 13 tasks
+
+**Key accomplishments:**
+
+- Self-contained WhatsApp media processing pipeline: two-step Meta CDN download, Claude vision payment classification, Supabase Storage upload for both image and document types, DB writes, and confirmation replies via whatsapp-send.
+- Media type detection and delegation added to whatsapp-webhook: image and document messages now route to whatsapp-media; unsupported types (video, audio, sticker, location, contacts) receive an informative rejection reply.
+- BUTTON_LOOKUP dispatch with Telegram inline keyboard support, callback_query handling, welcome message on linking, and 1-hour session detection
+- One-liner:
+- generate-pdf Edge Function converts HTML payment reports to PDF via html2pdf.app, stores in Supabase Storage, and delivers via signed URL through both WhatsApp and Telegram bots
+- Three query intent handlers (maintenance status, upcoming payments, property summary) added to process-bot-message with real DB queries callable via Claude freeform dispatch and direct button intercept
+- Multi-channel outbound notification system: WhatsApp templates (dwella_rent_reminder, dwella_payment_confirmed, dwella_maintenance_update) + Telegram parity + push fallback via DB trigger and upgraded Edge Functions
+
+---
+
 ## v1.1 Tools Expansion (Shipped: 2026-03-21)
 
 **Phases completed:** 5 phases, 14 plans, 20 tasks
