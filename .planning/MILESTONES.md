@@ -1,5 +1,27 @@
 # Milestones
 
+## v1.1 Tools Expansion (Shipped: 2026-03-21)
+
+**Phases completed:** 5 phases, 14 plans, 20 tasks
+
+**Key accomplishments:**
+
+- One-liner:
+- Postgres documents table with per-operation RLS (is_property_owner SECURITY DEFINER), 10 MB Supabase Storage bucket, archive cascade trigger, Document TypeScript interface, and 9-function documents utility library with 25 passing unit tests
+- React hook for documents data-fetching with property/tenant tri-state filtering and Supabase Realtime subscription following the established usePayments pattern
+- Four theme-aware document UI components — DocumentCard, CategoryFilterBar, DocumentUploader, DocumentViewer — wired to lib/documents.ts utility layer with expo-document-picker and react-native-webview integration
+- Standalone and property-contextual document screens wired with upload/view/delete flows, tools menu activated, human-verified
+- Postgres migration with maintenance state machine trigger, per-operation RLS, maintenance-photos bucket, TypeScript interfaces, and pure helper module with 16 passing unit tests
+- Realtime maintenance_requests hook + 4 reusable UI components (card, photo uploader, filter bar, timeline) ready for screen integration
+- app/maintenance/submit.tsx
+- One-liner:
+- One-liner:
+- Six Victory Native @36 chart components with per-datum tap-to-highlight, floating tooltip overlay, empty-state frames, and theme-aware colors throughout.
+- 5 UI components for time selection (TimeControlBar), KPI display (KpiCard), loading states (ReportSkeleton), tenant reliability scoring (ReliabilityTable), and tappable property summaries with sparklines (PropertyReportCard)
+- hooks/useReportData.ts
+
+---
+
 ## v1.0 Launch Audit & Hardening (Shipped: 2026-03-19)
 
 **Phases completed:** 5 phases, 14 plans
@@ -19,6 +41,7 @@
 **Audit:** tech_debt — all requirements met, 10 non-blocking items tracked (see milestones/v1.0-MILESTONE-AUDIT.md)
 
 **Archives:**
+
 - `milestones/v1.0-ROADMAP.md` — full phase details
 - `milestones/v1.0-REQUIREMENTS.md` — requirements with traceability
 - `milestones/v1.0-MILESTONE-AUDIT.md` — 3-source cross-reference audit
