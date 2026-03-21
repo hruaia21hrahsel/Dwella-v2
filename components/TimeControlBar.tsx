@@ -22,9 +22,13 @@ const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 const MIN_YEAR = 2000;
 
+/** Indian FY quarter: Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar. */
 function getCurrentQuarter(): 1 | 2 | 3 | 4 {
-  const m = new Date().getMonth() + 1;
-  return Math.ceil(m / 3) as 1 | 2 | 3 | 4;
+  const m = new Date().getMonth() + 1; // 1-12
+  if (m >= 4 && m <= 6) return 1;
+  if (m >= 7 && m <= 9) return 2;
+  if (m >= 10 && m <= 12) return 3;
+  return 4; // Jan-Mar
 }
 
 export function TimeControlBar({ period, onPeriodChange, yearOnly = false }: TimeControlBarProps) {

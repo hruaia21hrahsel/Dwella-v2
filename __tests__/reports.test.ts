@@ -34,16 +34,16 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     amount_due: 10000,
     amount_paid: 10000,
     status: 'confirmed',
-    month: 1,
+    month: 4,
     year: 2025,
-    due_date: '2025-01-05',
-    paid_at: '2025-01-04T12:00:00Z',
+    due_date: '2025-04-05',
+    paid_at: '2025-04-04T12:00:00Z',
     confirmed_at: null,
     auto_confirmed: false,
     proof_url: null,
     notes: null,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
+    created_at: '2025-04-01T00:00:00Z',
+    updated_at: '2025-04-01T00:00:00Z',
     ...overrides,
   };
 }
@@ -56,10 +56,10 @@ function makeExpense(overrides: Partial<Expense> = {}): Expense {
     amount: 5000,
     category: 'repairs' as ExpenseCategory,
     description: null,
-    expense_date: '2025-01-15',
+    expense_date: '2025-04-15',
     maintenance_request_id: null,
-    created_at: '2025-01-15T00:00:00Z',
-    updated_at: '2025-01-15T00:00:00Z',
+    created_at: '2025-04-15T00:00:00Z',
+    updated_at: '2025-04-15T00:00:00Z',
     ...overrides,
   };
 }
@@ -106,6 +106,8 @@ function makeProperty(overrides: Partial<Property> = {}): Property {
   };
 }
 
+// FY 2025 = Apr 2025 – Mar 2026
+// Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar(2026)
 const yearlyPeriod: TimePeriod = { year: 2025, granularity: 'yearly' };
 const q2Period: TimePeriod = { year: 2025, granularity: 'quarterly', quarter: 2 };
 const monthlyPeriod: TimePeriod = { year: 2025, granularity: 'monthly', month: 7 };
@@ -122,29 +124,32 @@ describe('getPeriodBuckets', () => {
     expect(buckets[3].label).toMatch(/Q4/i);
   });
 
-  test('yearly: Q1 covers months 1-3', () => {
+  test('yearly: Q1 covers months 4-6 (Apr-Jun)', () => {
     const buckets = getPeriodBuckets(yearlyPeriod);
-    expect(buckets[0].months).toEqual([1, 2, 3]);
+    expect(buckets[0].months).toEqual([4, 5, 6]);
   });
 
-  test('yearly: Q4 covers months 10-12', () => {
+  test('yearly: Q4 covers months 1-3 (Jan-Mar of next calendar year)', () => {
     const buckets = getPeriodBuckets(yearlyPeriod);
-    expect(buckets[3].months).toEqual([10, 11, 12]);
+    expect(buckets[3].months).toEqual([1, 2, 3]);
+    // Q4 of FY 2025 is Jan-Mar 2026
+    expect(buckets[3].startDate).toBe('2026-01-01');
+    expect(buckets[3].endDate).toBe('2026-03-31');
   });
 
-  test('quarterly Q2: returns 3 month buckets for Apr-Jun', () => {
+  test('quarterly Q2: returns 3 month buckets for Jul-Sep', () => {
     const buckets = getPeriodBuckets(q2Period);
     expect(buckets).toHaveLength(3);
-    expect(buckets[0].label).toMatch(/Apr/i);
-    expect(buckets[1].label).toMatch(/May/i);
-    expect(buckets[2].label).toMatch(/Jun/i);
+    expect(buckets[0].label).toMatch(/Jul/i);
+    expect(buckets[1].label).toMatch(/Aug/i);
+    expect(buckets[2].label).toMatch(/Sep/i);
   });
 
   test('quarterly Q2: each bucket has 1 month', () => {
     const buckets = getPeriodBuckets(q2Period);
-    expect(buckets[0].months).toEqual([4]);
-    expect(buckets[1].months).toEqual([5]);
-    expect(buckets[2].months).toEqual([6]);
+    expect(buckets[0].months).toEqual([7]);
+    expect(buckets[1].months).toEqual([8]);
+    expect(buckets[2].months).toEqual([9]);
   });
 
   test('monthly month=7: returns 1 bucket for July', () => {
@@ -156,41 +161,44 @@ describe('getPeriodBuckets', () => {
 
   test('buckets include startDate and endDate as ISO date strings', () => {
     const buckets = getPeriodBuckets(yearlyPeriod);
-    expect(buckets[0].startDate).toBe('2025-01-01');
-    expect(buckets[0].endDate).toBe('2025-03-31');
-    expect(buckets[3].startDate).toBe('2025-10-01');
-    expect(buckets[3].endDate).toBe('2025-12-31');
+    // Q1 = Apr-Jun 2025
+    expect(buckets[0].startDate).toBe('2025-04-01');
+    expect(buckets[0].endDate).toBe('2025-06-30');
+    // Q3 = Oct-Dec 2025
+    expect(buckets[2].startDate).toBe('2025-10-01');
+    expect(buckets[2].endDate).toBe('2025-12-31');
   });
 });
 
 // ─── filterByPeriod ──────────────────────────────────────────────────────────
 
 describe('filterByPeriod', () => {
-  test('filters payments by year for yearly period', () => {
+  test('filters payments within FY year (Apr-Dec of year, Jan-Mar of year+1)', () => {
     const payments = [
-      makePayment({ year: 2025, month: 3 }),
-      makePayment({ id: 'pay-2', year: 2024, month: 3 }),
+      makePayment({ year: 2025, month: 5 }),           // May 2025 — in FY 2025 Q1
+      makePayment({ id: 'pay-2', year: 2026, month: 2 }), // Feb 2026 — in FY 2025 Q4
+      makePayment({ id: 'pay-3', year: 2024, month: 3 }), // Mar 2024 — NOT in FY 2025
     ];
     const filtered = filterByPeriod(payments, yearlyPeriod);
-    expect(filtered).toHaveLength(1);
-    expect((filtered[0] as Payment).year).toBe(2025);
+    expect(filtered).toHaveLength(2);
   });
 
-  test('filters payments by quarter months for quarterly period', () => {
+  test('filters payments by FY quarter months for quarterly period', () => {
+    // Q2 of FY 2025 = Jul, Aug, Sep 2025
     const payments = [
-      makePayment({ id: 'pay-apr', month: 4, year: 2025 }),
-      makePayment({ id: 'pay-may', month: 5, year: 2025 }),
-      makePayment({ id: 'pay-jun', month: 6, year: 2025 }),
-      makePayment({ id: 'pay-jan', month: 1, year: 2025 }),
+      makePayment({ id: 'pay-jul', month: 7, year: 2025 }),
+      makePayment({ id: 'pay-aug', month: 8, year: 2025 }),
+      makePayment({ id: 'pay-sep', month: 9, year: 2025 }),
+      makePayment({ id: 'pay-apr', month: 4, year: 2025 }), // Q1, not Q2
     ];
     const filtered = filterByPeriod(payments, q2Period);
     expect(filtered).toHaveLength(3);
   });
 
-  test('filters expenses by expense_date for yearly period', () => {
+  test('filters expenses by expense_date for yearly FY period', () => {
     const expenses = [
-      makeExpense({ expense_date: '2025-03-15' }),
-      makeExpense({ id: 'exp-2', expense_date: '2024-12-15' }),
+      makeExpense({ expense_date: '2025-06-15' }),     // Jun 2025 — in FY 2025
+      makeExpense({ id: 'exp-2', expense_date: '2025-03-15' }), // Mar 2025 — NOT in FY 2025 (it's FY 2024 Q4)
     ];
     const filtered = filterByPeriod(expenses, yearlyPeriod);
     expect(filtered).toHaveLength(1);
@@ -209,10 +217,10 @@ describe('filterByPeriod', () => {
 // ─── aggregateByPeriod ───────────────────────────────────────────────────────
 
 describe('aggregateByPeriod', () => {
-  test('groups confirmed and paid payments as income', () => {
+  test('groups confirmed and paid payments as income in FY Q1 (Apr-Jun)', () => {
     const payments = [
-      makePayment({ month: 1, year: 2025, amount_paid: 10000, status: 'confirmed' }),
-      makePayment({ id: 'pay-2', month: 1, year: 2025, amount_paid: 8000, status: 'paid' }),
+      makePayment({ month: 4, year: 2025, amount_paid: 10000, status: 'confirmed' }),
+      makePayment({ id: 'pay-2', month: 4, year: 2025, amount_paid: 8000, status: 'paid' }),
     ];
     const result = aggregateByPeriod(payments, [], yearlyPeriod);
     const q1 = result.find((r) => r.label === 'Q1');
@@ -222,8 +230,8 @@ describe('aggregateByPeriod', () => {
 
   test('pending and overdue payments are NOT counted as income', () => {
     const payments = [
-      makePayment({ month: 1, year: 2025, amount_paid: 10000, status: 'pending' }),
-      makePayment({ id: 'pay-2', month: 2, year: 2025, amount_paid: 10000, status: 'overdue' }),
+      makePayment({ month: 4, year: 2025, amount_paid: 10000, status: 'pending' }),
+      makePayment({ id: 'pay-2', month: 5, year: 2025, amount_paid: 10000, status: 'overdue' }),
     ];
     const result = aggregateByPeriod(payments, [], yearlyPeriod);
     result.forEach((bucket) => {
@@ -233,7 +241,7 @@ describe('aggregateByPeriod', () => {
 
   test('partial payments are not counted as income (only paid/confirmed)', () => {
     const payments = [
-      makePayment({ month: 1, year: 2025, amount_paid: 5000, status: 'partial' }),
+      makePayment({ month: 4, year: 2025, amount_paid: 5000, status: 'partial' }),
     ];
     const result = aggregateByPeriod(payments, [], yearlyPeriod);
     const q1 = result.find((r) => r.label === 'Q1');
@@ -242,28 +250,28 @@ describe('aggregateByPeriod', () => {
 
   test('empty period returns MonthlyPL with income=0 and expense=0', () => {
     const result = aggregateByPeriod([], [], yearlyPeriod);
-    expect(result).toHaveLength(4); // 4 quarters
+    expect(result).toHaveLength(4); // 4 FY quarters
     result.forEach((bucket) => {
       expect(bucket.income).toBe(0);
       expect(bucket.expense).toBe(0);
     });
   });
 
-  test('multiple payments in same quarter sum correctly', () => {
+  test('multiple payments in same FY quarter sum correctly', () => {
     const payments = [
-      makePayment({ month: 1, year: 2025, amount_paid: 10000, status: 'confirmed' }),
-      makePayment({ id: 'pay-2', month: 2, year: 2025, amount_paid: 10000, status: 'confirmed' }),
-      makePayment({ id: 'pay-3', month: 3, year: 2025, amount_paid: 10000, status: 'confirmed' }),
+      makePayment({ month: 4, year: 2025, amount_paid: 10000, status: 'confirmed' }),
+      makePayment({ id: 'pay-2', month: 5, year: 2025, amount_paid: 10000, status: 'confirmed' }),
+      makePayment({ id: 'pay-3', month: 6, year: 2025, amount_paid: 10000, status: 'confirmed' }),
     ];
     const result = aggregateByPeriod(payments, [], yearlyPeriod);
     const q1 = result.find((r) => r.label === 'Q1');
     expect(q1!.income).toBe(30000);
   });
 
-  test('expenses are summed into correct quarter bucket', () => {
+  test('expenses are summed into correct FY quarter bucket (Q2=Jul-Sep)', () => {
     const expenses = [
-      makeExpense({ expense_date: '2025-04-15', amount: 3000 }),
-      makeExpense({ id: 'exp-2', expense_date: '2025-05-20', amount: 2000 }),
+      makeExpense({ expense_date: '2025-07-15', amount: 3000 }),
+      makeExpense({ id: 'exp-2', expense_date: '2025-08-20', amount: 2000 }),
     ];
     const result = aggregateByPeriod([], expenses, yearlyPeriod);
     const q2 = result.find((r) => r.label === 'Q2');
@@ -310,9 +318,9 @@ describe('aggregateByCategory', () => {
   });
 
   test('omits categories with zero amount (no expenses in period filter)', () => {
-    // expenses outside the year 2025 should be filtered out
+    // expenses outside FY 2025 (Apr 2025 – Mar 2026) should be filtered out
     const expenses = [
-      makeExpense({ expense_date: '2024-01-15', amount: 5000 }),
+      makeExpense({ expense_date: '2025-03-15', amount: 5000 }), // Mar 2025 = FY 2024 Q4
     ];
     const result = aggregateByCategory(expenses, yearlyPeriod);
     expect(result).toHaveLength(0);
@@ -331,7 +339,7 @@ describe('calcReliability', () => {
   test('on-time payment (paid_at date <= due_date) yields onTimePct=100', () => {
     const tenants = [makeTenant()];
     const payments = [
-      makePayment({ paid_at: '2025-01-04T12:00:00Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ month: 4, year: 2025, paid_at: '2025-04-04T12:00:00Z', due_date: '2025-04-05', status: 'confirmed' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
     expect(result[0].onTimePct).toBe(100);
@@ -340,7 +348,7 @@ describe('calcReliability', () => {
   test('late payment (paid_at date > due_date) lowers onTimePct', () => {
     const tenants = [makeTenant()];
     const payments = [
-      makePayment({ paid_at: '2025-01-10T12:00:00Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ month: 4, year: 2025, paid_at: '2025-04-10T12:00:00Z', due_date: '2025-04-05', status: 'confirmed' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
     expect(result[0].onTimePct).toBe(0);
@@ -349,7 +357,7 @@ describe('calcReliability', () => {
   test('avgDaysLate is mean of late days only (0 if all on-time)', () => {
     const tenants = [makeTenant()];
     const payments = [
-      makePayment({ paid_at: '2025-01-04T12:00:00Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ month: 4, year: 2025, paid_at: '2025-04-04T12:00:00Z', due_date: '2025-04-05', status: 'confirmed' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
     expect(result[0].avgDaysLate).toBe(0);
@@ -359,9 +367,9 @@ describe('calcReliability', () => {
     const tenants = [makeTenant()];
     const payments = [
       // 5 days late
-      makePayment({ id: 'pay-1', month: 1, paid_at: '2025-01-10T00:00:00Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ id: 'pay-1', month: 4, year: 2025, paid_at: '2025-04-10T00:00:00Z', due_date: '2025-04-05', status: 'confirmed' }),
       // 3 days late
-      makePayment({ id: 'pay-2', month: 2, paid_at: '2025-02-08T00:00:00Z', due_date: '2025-02-05', status: 'confirmed' }),
+      makePayment({ id: 'pay-2', month: 5, year: 2025, paid_at: '2025-05-08T00:00:00Z', due_date: '2025-05-05', status: 'confirmed' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
     // avg of 5 and 3 = 4
@@ -376,9 +384,9 @@ describe('calcReliability', () => {
     ];
     const payments = [
       // Alice: on-time
-      makePayment({ id: 'pay-alice', tenant_id: 'tenant-1', paid_at: '2025-01-04T00:00:00Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ id: 'pay-alice', tenant_id: 'tenant-1', month: 4, year: 2025, paid_at: '2025-04-04T00:00:00Z', due_date: '2025-04-05', status: 'confirmed' }),
       // Bob: late
-      makePayment({ id: 'pay-bob', tenant_id: 'tenant-2', paid_at: '2025-01-10T00:00:00Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ id: 'pay-bob', tenant_id: 'tenant-2', month: 4, year: 2025, paid_at: '2025-04-10T00:00:00Z', due_date: '2025-04-05', status: 'confirmed' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
     expect(result[0].tenantName).toBe('Alice');
@@ -386,13 +394,11 @@ describe('calcReliability', () => {
   });
 
   test('timezone edge case: paid_at same calendar day as due_date is on-time', () => {
-    // paid_at is late UTC time on the same calendar day as due_date
     const tenants = [makeTenant()];
     const payments = [
-      makePayment({ paid_at: '2025-01-05T23:59:59Z', due_date: '2025-01-05', status: 'confirmed' }),
+      makePayment({ month: 4, year: 2025, paid_at: '2025-04-05T23:59:59Z', due_date: '2025-04-05', status: 'confirmed' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
-    // Same calendar day — should be on-time
     expect(result[0].onTimePct).toBe(100);
   });
 
@@ -408,8 +414,8 @@ describe('calcReliability', () => {
   test('totalPayments counts paid and confirmed payments in period', () => {
     const tenants = [makeTenant()];
     const payments = [
-      makePayment({ id: 'p1', month: 1, paid_at: '2025-01-04T00:00:00Z', status: 'confirmed' }),
-      makePayment({ id: 'p2', month: 2, paid_at: '2025-02-04T00:00:00Z', status: 'paid' }),
+      makePayment({ id: 'p1', month: 4, year: 2025, paid_at: '2025-04-04T00:00:00Z', status: 'confirmed' }),
+      makePayment({ id: 'p2', month: 5, year: 2025, paid_at: '2025-05-04T00:00:00Z', status: 'paid' }),
     ];
     const result = calcReliability(payments, tenants, yearlyPeriod);
     expect(result[0].totalPayments).toBe(2);
@@ -439,16 +445,16 @@ describe('calcOccupancy', () => {
   });
 
   test('tenant whose lease started after bucket end is not counted', () => {
-    // Tenant started in Q3, so Q1 and Q2 should not count them
-    const tenants = [makeTenant({ lease_start: '2025-07-01', lease_end: null, is_archived: false })];
+    // Tenant started in Oct 2025 (Q3), so Q1 (Apr-Jun) should not count them
+    const tenants = [makeTenant({ lease_start: '2025-10-01', lease_end: null, is_archived: false })];
     const result = calcOccupancy(tenants, totalUnits, yearlyPeriod);
     const q1 = result.find((r) => r.label === 'Q1');
     expect(q1!.filled).toBe(0);
   });
 
   test('tenant whose lease ended before bucket end is not counted', () => {
-    // Tenant's lease ended in Q1, so Q2+ should not count them
-    const tenants = [makeTenant({ lease_start: '2024-01-01', lease_end: '2025-03-01', is_archived: false })];
+    // Tenant's lease ended in Jun 2025 (Q1 end), so Q2 (Jul-Sep) should not count them
+    const tenants = [makeTenant({ lease_start: '2024-01-01', lease_end: '2025-06-15', is_archived: false })];
     const result = calcOccupancy(tenants, totalUnits, yearlyPeriod);
     const q2 = result.find((r) => r.label === 'Q2');
     expect(q2!.filled).toBe(0);
@@ -478,13 +484,13 @@ describe('aggregatePortfolio', () => {
   ];
 
   const payments = [
-    makePayment({ id: 'p1', tenant_id: 'tenant-1', property_id: 'prop-1', month: 1, year: 2025, amount_paid: 10000, status: 'confirmed' }),
-    makePayment({ id: 'p2', tenant_id: 'tenant-2', property_id: 'prop-2', month: 1, year: 2025, amount_paid: 8000, status: 'confirmed' }),
+    makePayment({ id: 'p1', tenant_id: 'tenant-1', property_id: 'prop-1', month: 4, year: 2025, amount_paid: 10000, status: 'confirmed' }),
+    makePayment({ id: 'p2', tenant_id: 'tenant-2', property_id: 'prop-2', month: 4, year: 2025, amount_paid: 8000, status: 'confirmed' }),
   ];
 
   const expenses = [
-    makeExpense({ id: 'e1', property_id: 'prop-1', expense_date: '2025-01-15', amount: 3000 }),
-    makeExpense({ id: 'e2', property_id: 'prop-2', expense_date: '2025-02-15', amount: 2000 }),
+    makeExpense({ id: 'e1', property_id: 'prop-1', expense_date: '2025-04-15', amount: 3000 }),
+    makeExpense({ id: 'e2', property_id: 'prop-2', expense_date: '2025-05-15', amount: 2000 }),
   ];
 
   test('totalIncome sums income across all properties', () => {
