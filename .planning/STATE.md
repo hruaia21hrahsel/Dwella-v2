@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 08-01 (maintenance DB foundation and helpers)
-last_updated: "2026-03-21T08:48:19.882Z"
+stopped_at: Completed 08-02 (data hook and UI components)
+last_updated: "2026-03-21T08:53:10.322Z"
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 ## Current Position
 
 Phase: 08 (maintenance-requests) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Plan: 2 of 4
 | Phase 07 P03 | 12 | 2 tasks | 4 files |
 | Phase 07 P04 | 3 | 1 tasks | 5 files |
 | Phase 08-maintenance-requests P01 | 8 | 1 tasks | 6 files |
+| Phase 08-maintenance-requests P02 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,9 @@ Recent decisions affecting v1.1:
 - [Phase 07]: FAB label is context-sensitive: landlord sees Upload Document, tenant sees Upload to My Tenancy
 - [Phase 08-maintenance-requests]: NEXT_STATUS typed as Partial<Record<...>> so closed terminal state has no entry — callers gate advance button on status in NEXT_STATUS
 - [Phase 08-maintenance-requests]: maintenance-photos path: {property_id}/{request_id}/{uuid}.{ext} — consistent with documents bucket pattern
+- [Phase 08-maintenance-requests]: relativeTime helper duplicated locally in card and timeline (not extracted to lib) — consistent with pattern in notifications/index.tsx
+- [Phase 08-maintenance-requests]: PhotoAsset interface defined within MaintenancePhotoUploader.tsx (UI-only shape, not a DB entity)
+- [Phase 08-maintenance-requests]: FilterBar uses two separate ScrollView rows (status + priority) for independent horizontal scrolling
 
 ### Pending Todos
 
@@ -97,6 +101,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T08:48:19.879Z
-Stopped at: Completed 08-01 (maintenance DB foundation and helpers)
+Last session: 2026-03-21T08:53:10.319Z
+Stopped at: Completed 08-02 (data hook and UI components)
 Resume file: None
