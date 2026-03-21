@@ -20,9 +20,9 @@ Requirements for WhatsApp Bot milestone. Each maps to roadmap phases.
 
 ### Outbound Messaging
 
-- [ ] **OUT-01**: Tenant receives rent reminder via WhatsApp (3 days before, on due date, 3 days after)
-- [ ] **OUT-02**: Tenant receives payment confirmation receipt via WhatsApp when payment is confirmed
-- [ ] **OUT-03**: Tenant and landlord receive maintenance status change notifications via WhatsApp
+- [x] **OUT-01**: Tenant receives rent reminder via WhatsApp (3 days before, on due date, 3 days after)
+- [x] **OUT-02**: Tenant receives payment confirmation receipt via WhatsApp when payment is confirmed
+- [x] **OUT-03**: Tenant and landlord receive maintenance status change notifications via WhatsApp
 
 ### New Bot Intents
 
@@ -78,9 +78,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SETUP-03 | Phase 11 | Complete |
 | MEDIA-01 | Phase 12 | Complete |
 | MEDIA-02 | Phase 12 | Complete |
-| OUT-01 | Phase 14 | Pending |
-| OUT-02 | Phase 14 | Pending |
-| OUT-03 | Phase 14 | Pending |
+| OUT-01 | Phase 14 | Complete |
+| OUT-02 | Phase 14 | Complete |
+| OUT-03 | Phase 14 | Complete |
 | INTENT-01 | Phase 14 | Complete |
 | INTENT-02 | Phase 14 | Complete |
 | INTENT-03 | Phase 14 | Complete |
