@@ -57,27 +57,30 @@ Source: Derived from existing `dashboard/index.tsx` (padding: 16, gap: 8, margin
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
-| Body | 14px | 400 | 1.5 (21px) |
 | Label | 13px | 500 | 1.4 (18px) |
-| Heading | 16px | 700 | 1.2 (19px) |
+| Body+Heading | 16px | 400 / 600 / 700 | 1.5 body / 1.2 heading |
+| Subheading | 20px | 800 | 1.1 (22px) |
 | Display | 22px | 800 | 1.1 (24px) |
 
-**Specific assignments for this phase:**
+**Specific assignments for this phase (all mapped to declared scale — no additional sizes):**
 - Screen title (portfolio "Analytics" header): Display — 22px, weight 800
-- Section heading ("P&L", "Expense Breakdown", "Tenant Reliability", "Occupancy"): Heading — 16px, weight 700
-- KPI value on portfolio summary cards: 20px, weight 800, color from status context (income=success, expense=error, net=conditional)
+- Section heading ("P&L", "Expense Breakdown", "Tenant Reliability", "Occupancy"): Body+Heading — 16px, weight 700, line-height 1.2
+- KPI value on portfolio summary cards: Subheading — 20px, weight 800, color from status context (income=success, expense=error, net=conditional)
 - KPI label below value: Label — 13px, weight 500, color `textSecondary`
-- Chart axis tick labels: 11px, weight 500, color `textSecondary`
-- Tooltip value: 14px, weight 700, color `textPrimary`
-- Tooltip label: 12px, weight 400, color `textSecondary`
-- Reliability table: tenant name 14px weight 600; percentage 14px weight 700; "avg days late" 13px weight 400
-- Property summary card name: 15px, weight 700
-- Property summary card sub-text (occupancy fraction, period): 13px, weight 400, color `textSecondary`
-- Empty state title: 17px, weight 700 (matches existing `EmptyState` component — no change)
-- Empty state subtitle: 14px, weight 400, color `textDisabled`
-- Selector chip text (year/granularity/quarter/month): 13px, weight 500 (matches existing `selectorChipText` pattern)
+- Chart axis tick labels: Label — 13px, weight 500, color `textSecondary`
+- Tooltip value: Body+Heading — 16px, weight 700, color `textPrimary`
+- Tooltip label: Label — 13px, weight 400, color `textSecondary`
+- Reliability table: tenant name 16px weight 600; percentage 16px weight 700; "avg days late" 13px weight 400
+- Property summary card name: Body+Heading — 16px, weight 700
+- Property summary card sub-text (occupancy fraction, period): Label — 13px, weight 400, color `textSecondary`
+- Empty state title: Body+Heading — 16px, weight 700 (overrides existing EmptyState default of 17px — apply `titleStyle={{ fontSize: 16 }}`)
+- Empty state subtitle: Body+Heading — 16px, weight 400, color `textDisabled`
+- Selector chip text (year/granularity/quarter/month): Label — 13px, weight 500
+- Year picker active year text: Body+Heading — 16px, weight 700
 
-Source: Extrapolated from `dashboard/index.tsx` styles (sectionTitle: 16px/700, selectorChipText: 13px/500, heroTitle: 18px/800, yearText: 15px/700) and `EmptyState.tsx` (title: 17px/700, subtitle: 14px).
+**Note on existing EmptyState component:** The `EmptyState` component renders title at 17px by default. For this phase, pass `titleStyle={{ fontSize: 16 }}` to bring it within the declared scale. Do not modify the component globally.
+
+Source: Extrapolated from `dashboard/index.tsx` styles (sectionTitle: 16px/700, selectorChipText: 13px/500) and remapped to 4-size scale per design contract. 14px, 11px, 12px, 15px, 17px do not appear in this phase.
 
 ---
 
@@ -125,7 +128,7 @@ Components to build new for this phase (no existing equivalent):
 Components to reuse unchanged:
 - `GlassCard` — chart section cards, property summary cards
 - `AnimatedCard` — stagger-animate property cards on portfolio page
-- `EmptyState` — per the copywriting contract below
+- `EmptyState` — per the copywriting contract below (pass `titleStyle={{ fontSize: 16 }}`)
 - `DwellaHeader` — standard screen header on both screens
 - `ListSkeleton` / `DashboardSkeleton` — adapt or create `ReportSkeleton` that matches report layout
 - `ErrorBanner` — failed query error state
@@ -146,7 +149,7 @@ Navigation: Tools menu Analytics card (`app/(tabs)/tools/index.tsx`) flips `comi
 ## Interaction Contracts
 
 ### Time Control Bar (D-06, D-07, D-08, D-09)
-- Year picker: left/right chevrons. Minimum year = 2000. Maximum year = current year. Active year text: 15px weight 700.
+- Year picker: left/right chevrons. Minimum year = 2000. Maximum year = current year. Active year text: 16px weight 700.
 - Granularity toggle: 3 chips — "Yearly" | "Quarterly" | "Monthly". Active chip: `primarySoft` background + `primary` border + `primary` text. Inactive: `surface` background + `border` border + `textSecondary` text.
 - When Quarterly selected: Q1 / Q2 / Q3 / Q4 chip row appears below. Active = same pattern as granularity toggle.
 - When Monthly selected: 12-month chip row appears (Jan–Dec abbreviations). Active = same pattern. Future months in current year are visually muted (`textDisabled` color) but still tappable (data will be empty).
@@ -163,7 +166,7 @@ Navigation: Tools menu Analytics card (`app/(tabs)/tools/index.tsx`) flips `comi
 - Back button in DwellaHeader calls `router.back()` — returns to portfolio page with preserved scroll position (no scroll reset).
 
 ### Empty State Behavior (D-20, D-21)
-- Chart containers render at fixed height even when empty. The axes/frame remain visible. A centered `Text` overlay ("No data for Q3 2026") is rendered inside the chart container at 50% opacity, using `textSecondary` color at 13px.
+- Chart containers render at fixed height even when empty. The axes/frame remain visible. A centered `Text` overlay ("No data for Q3 2026") is rendered inside the chart container at 50% opacity, using `textSecondary` color at 13px (Label scale).
 - `EmptyState` component (full icon + text variant) is used only on the portfolio page when the landlord has zero properties.
 
 ### Pull-to-Refresh
@@ -192,7 +195,7 @@ Navigation: Tools menu Analytics card (`app/(tabs)/tools/index.tsx`) flips `comi
 | Reliability table — avg late value when 0 | "—" (em dash, not "0 days") |
 | Empty chart state (period has data) | "No data for {period}" (e.g. "No data for Q3 2026") |
 | Empty portfolio state (no properties) | Title: "No Properties Yet" / Subtitle: "Add a property to start seeing your analytics." |
-| Empty state — property has no payments | Title: "No Data" / Subtitle: "Payments for this period will appear here once recorded." |
+| Empty state — property has no payments | Title: "No Payments Recorded" / Subtitle: "Payments for this period will appear here once recorded." |
 | Error state — query failed | "Couldn't load report data. Pull down to try again." (shown via `ErrorBanner`) |
 | Donut chart center label — zero total | "₹0" |
 | Tooltip format — monetary | "₹{amount}" (via `formatCurrency()`) |
@@ -234,6 +237,8 @@ No third-party shadcn registries. Registry safety gate: not applicable.
 8. **Chart container fixed height.** All chart section cards must use fixed-height containers (`height: 200` for bars, `height: 220` for donut, `height: 180` for occupancy, `height: 40` for sparkline). Do not use `flex: 1` on chart wrappers — height must be predictable for empty-state overlay positioning.
 
 9. **Occupancy chart type decision.** Use stacked bar chart (VictoryStack with VictoryBar) per Claude's discretion. Each period has two bars stacked: filled (bottom, success color) + vacant (top, pendingSoft color). Total bar height = total unit count, always constant. This makes filled vs vacant immediately legible.
+
+10. **EmptyState fontSize override.** The `EmptyState` component defaults to 17px for its title. All uses in this phase must pass `titleStyle={{ fontSize: 16 }}` to stay within the declared 4-size type scale.
 
 ---
 
