@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
 status: unknown
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-21T13:45:52.806Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-03-21T13:49:48.871Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -44,6 +44,7 @@ Plan: 2 of 2
 | Phase 9 | 4 | ~10 min |
 | Phase 10 | 1 | ~7 min |
 | Phase 11 P01 | 3m | 2 tasks | 2 files |
+| Phase 11 P02 | 2m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -57,6 +58,8 @@ See PROJECT.md Key Decisions table for full list.
 - [v1.2 menus]: Menu taps bypass Claude via lookup table — only freeform text routes to Claude
 - [v1.2 outbound]: Two code paths required: template (scheduled/triggered) vs. interactive (in-session) — 24-hour window constraint
 - [Phase 11]: whatsapp-send returns HTTP 200 for all responses with success/error in JSON body for caller simplicity
+- [Phase 11]: Webhook delegates all outbound messaging to whatsapp-send Edge Function (single source of truth)
+- [Phase 11]: Verification codes sent via template type through whatsapp-send instead of deprecated whatsapp-send-code
 
 ### Pending Todos
 
@@ -71,6 +74,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T13:45:52.803Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-21T13:49:48.868Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
