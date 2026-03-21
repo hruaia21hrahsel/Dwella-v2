@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import {
   VictoryChart,
   VictoryBar,
@@ -91,8 +91,13 @@ export function PLBarChart({ data, hasData, emptyLabel = 'No data' }: PLBarChart
     },
   };
 
+  function dismissTooltip() {
+    setSelected(null);
+    setTooltip(HIDDEN_TOOLTIP);
+  }
+
   return (
-    <View style={styles.container}>
+    <Pressable style={styles.container} onPress={dismissTooltip}>
       <VictoryChart
         height={200}
         domainPadding={{ x: 20 }}
@@ -136,7 +141,7 @@ export function PLBarChart({ data, hasData, emptyLabel = 'No data' }: PLBarChart
         x={tooltip.x}
         y={tooltip.y}
       />
-    </View>
+    </Pressable>
   );
 }
 

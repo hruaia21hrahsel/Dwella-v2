@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import {
   VictoryChart,
   VictoryStack,
@@ -96,8 +96,13 @@ export function OccupancyChart({ data, hasData, emptyLabel = 'No data' }: Occupa
     },
   };
 
+  function dismissTooltip() {
+    setSelectedIndex(null);
+    setTooltip(HIDDEN_TOOLTIP);
+  }
+
   return (
-    <View>
+    <Pressable onPress={dismissTooltip}>
       <View style={styles.container}>
         <VictoryChart
           height={180}
@@ -150,7 +155,7 @@ export function OccupancyChart({ data, hasData, emptyLabel = 'No data' }: Occupa
           <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>Vacant</Text>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

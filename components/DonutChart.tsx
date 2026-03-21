@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { VictoryPie } from 'victory-native';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency } from '@/lib/utils';
@@ -74,8 +74,13 @@ export function DonutChart({ data, totalAmount, hasData, emptyLabel = 'No data' 
     },
   };
 
+  function dismissTooltip() {
+    setSelectedIndex(null);
+    setTooltip(HIDDEN_TOOLTIP);
+  }
+
   return (
-    <View>
+    <Pressable onPress={dismissTooltip}>
       <View style={styles.container}>
         <VictoryPie
           data={displayData}
@@ -123,7 +128,7 @@ export function DonutChart({ data, totalAmount, hasData, emptyLabel = 'No data' 
           ))}
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 
