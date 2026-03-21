@@ -16,11 +16,7 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 import { UpdateGate } from '@/components/UpdateGate';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
-import { initSentry } from '@/lib/sentry';
-import * as Sentry from '@sentry/react-native';
 import { useToastStore } from '@/lib/toast';
-
-initSentry();
 SplashScreen.preventAutoHideAsync();
 
 Notifications.setNotificationHandler({
@@ -153,7 +149,6 @@ function AuthGuard() {
           } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Failed to load profile';
             useToastStore.getState().showToast('Profile sync failed. Some data may be outdated.', 'error');
-            Sentry.captureException(err);
           }
           registerPushToken(uid);
         })();
