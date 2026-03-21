@@ -16,3 +16,41 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(() => Promise.resolve(null)),
   removeItem: jest.fn(() => Promise.resolve()),
 }));
+
+// Mock constants/config to avoid requireEnv throwing at import time in tests
+jest.mock('@/constants/config', () => ({
+  SUPABASE_URL: 'https://test.supabase.co',
+  SUPABASE_ANON_KEY: 'test-anon-key',
+  SENTRY_DSN: '',
+  TELEGRAM_BOT_USERNAME: '',
+  WHATSAPP_BOT_PHONE: '',
+  STORAGE_BUCKET: 'payment-proofs',
+  DOCUMENTS_BUCKET: 'documents',
+  BOT_MODEL: 'claude-sonnet-4-20250514',
+  AUTO_CONFIRM_HOURS: 48,
+  REMINDER_DAYS_BEFORE: 3,
+  REMINDER_DAYS_AFTER: 3,
+}));
+
+// Mock lib/supabase to prevent real Supabase client creation during tests
+jest.mock('@/lib/supabase', () => ({
+  supabase: {
+    storage: {
+      from: jest.fn(() => ({
+        upload: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+        remove: jest.fn(() => Promise.resolve({ data: {}, error: null })),
+        createSignedUrl: jest.fn(() => Promise.resolve({ data: { signedUrl: 'https://test.url' }, error: null })),
+      })),
+    },
+    from: jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      is: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+    })),
+  },
+}));
