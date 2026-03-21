@@ -18,7 +18,7 @@ Requirements for v1.1 Tools Expansion. Each maps to roadmap phases.
 - [x] **DOC-02**: Landlord can upload documents tied to a specific tenant
 - [x] **DOC-03**: Tenant can upload documents tied to their own tenancy
 - [x] **DOC-04**: User can view uploaded documents in-app (PDF via WebView, images inline)
-- [ ] **DOC-05**: User can download or share documents from the app
+- [x] **DOC-05**: User can download or share documents from the app
 - [x] **DOC-06**: Property-wide documents are visible to all tenants in that property
 - [x] **DOC-07**: Tenant-specific documents are visible only to that tenant and the landlord
 - [x] **DOC-08**: User can delete their own uploaded documents (atomic: storage file + DB row)
@@ -82,7 +82,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-02 | Phase 7 | Complete |
 | DOC-03 | Phase 7 | Complete |
 | DOC-04 | Phase 7 | Complete |
-| DOC-05 | Phase 7 | Pending |
+| DOC-05 | Phase 7 | Complete |
 | DOC-06 | Phase 7 | Complete |
 | DOC-07 | Phase 7 | Complete |
 | DOC-08 | Phase 7 | Complete |
