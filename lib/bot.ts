@@ -93,14 +93,27 @@ export async function initiateWhatsAppLink(userId: string, phoneNumber: string):
   if (!session) throw new Error('Not authenticated');
 
   const res = await fetch(
-    `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/whatsapp-send-code`,
+    `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/whatsapp-send`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ phone, code }),
+      body: JSON.stringify({
+        to: phone,
+        type: 'template',
+        template: {
+          name: 'dwella_verification',
+          language: 'en',
+          components: [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: code }],
+            },
+          ],
+        },
+      }),
     },
   );
 

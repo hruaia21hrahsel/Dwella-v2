@@ -1,13 +1,12 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const WHATSAPP_ACCESS_TOKEN = Deno.env.get('WHATSAPP_ACCESS_TOKEN')!;
-const WHATSAPP_PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID')!;
 const WHATSAPP_VERIFY_TOKEN = Deno.env.get('WHATSAPP_VERIFY_TOKEN')!;
 const WHATSAPP_APP_SECRET = Deno.env.get('WHATSAPP_APP_SECRET');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const PROCESS_BOT_URL = `${SUPABASE_URL}/functions/v1/process-bot-message`;
+const WHATSAPP_SEND_URL = `${SUPABASE_URL}/functions/v1/whatsapp-send`;
 
 /** Normalize a phone number to E.164 format with + prefix */
 function normalizePhone(phone: string): string {
@@ -15,28 +14,19 @@ function normalizePhone(phone: string): string {
   return digits.startsWith('+') ? digits : `+${digits}`;
 }
 
-/** Send a text message via WhatsApp Cloud API */
+/** Send a text message via whatsapp-send Edge Function */
 async function sendWhatsApp(to: string, text: string) {
-  const res = await fetch(
-    `https://graph.facebook.com/v21.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to,
-        type: 'text',
-        text: { body: text },
-      }),
+  const res = await fetch(WHATSAPP_SEND_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
     },
-  );
-
+    body: JSON.stringify({ to, type: 'text', text }),
+  });
   if (!res.ok) {
     const err = await res.text();
-    console.error('WhatsApp send error:', err);
+    console.error('whatsapp-send error:', err);
   }
 }
 
