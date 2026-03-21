@@ -71,7 +71,12 @@ Plans:
   3. Landlord can advance a request through the full status flow (open → acknowledged → in progress → resolved → closed) and add notes at any step
   4. Tenant receives a push notification each time the landlord changes the request status
   5. Landlord can log the repair cost against the request and it appears as a property expense
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 08-01-PLAN.md — Migration 022, types, helpers, unit tests
+- [ ] 08-02-PLAN.md — Hook with Realtime, UI components (card, photo uploader, filter bar, timeline)
+- [ ] 08-03-PLAN.md — Submit screen, list screens (standalone + contextual), tools menu wiring
+- [ ] 08-04-PLAN.md — Detail screen with status management, cost logging, push notifications
 
 ### Phase 9: Reporting Dashboards
 **Goal**: Landlords can see financial and operational health for each property and across their portfolio without leaving the app
@@ -96,5 +101,5 @@ Plans:
 | 5. Launch Configuration & Store Gate | v1.0 | 2/2 | Complete | 2026-03-19 |
 | 6. AI Tools Removal | v1.1 | 1/1 | Complete | 2026-03-20 |
 | 7. Document Storage | v1.1 | 4/4 | Complete   | 2026-03-21 |
-| 8. Maintenance Requests | v1.1 | 0/TBD | Not started | - |
+| 8. Maintenance Requests | v1.1 | 0/4 | Not started | - |
 | 9. Reporting Dashboards | v1.1 | 0/TBD | Not started | - |
