@@ -29,7 +29,7 @@ Requirements for v1.1 Tools Expansion. Each maps to roadmap phases.
 - [ ] **MAINT-02**: Landlord receives push notification when a new request is submitted
 - [x] **MAINT-03**: Landlord can view, acknowledge, and update maintenance request status (open → acknowledged → in progress → resolved → closed)
 - [x] **MAINT-04**: Landlord can add notes to a maintenance request
-- [ ] **MAINT-05**: Tenant receives push notification when request status changes
+- [x] **MAINT-05**: Tenant receives push notification when request status changes
 - [x] **MAINT-06**: Completed maintenance request can log cost as a property expense
 
 ### Reporting Dashboards
@@ -90,7 +90,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MAINT-02 | Phase 8 | Pending |
 | MAINT-03 | Phase 8 | Complete |
 | MAINT-04 | Phase 8 | Complete |
-| MAINT-05 | Phase 8 | Pending |
+| MAINT-05 | Phase 8 | Complete |
 | MAINT-06 | Phase 8 | Complete |
 | RPT-01 | Phase 9 | Pending |
 | RPT-02 | Phase 9 | Pending |

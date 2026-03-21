@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 08-02 (data hook and UI components)
-last_updated: "2026-03-21T08:53:10.322Z"
+stopped_at: Completed 08-04 (detail screen + notifications integration)
+last_updated: "2026-03-21T08:58:12.229Z"
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-20)
 ## Current Position
 
 Phase: 08 (maintenance-requests) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: 3 of 4
 | Phase 07 P04 | 3 | 1 tasks | 5 files |
 | Phase 08-maintenance-requests P01 | 8 | 1 tasks | 6 files |
 | Phase 08-maintenance-requests P02 | 2 | 2 tasks | 5 files |
+| Phase 08-maintenance-requests P04 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting v1.1:
 - [Phase 08-maintenance-requests]: relativeTime helper duplicated locally in card and timeline (not extracted to lib) — consistent with pattern in notifications/index.tsx
 - [Phase 08-maintenance-requests]: PhotoAsset interface defined within MaintenancePhotoUploader.tsx (UI-only shape, not a DB entity)
 - [Phase 08-maintenance-requests]: FilterBar uses two separate ScrollView rows (status + priority) for independent horizontal scrolling
+- [Phase 08-maintenance-requests]: Photo viewer uses local Modal + ScrollView instead of DocumentViewer — DocumentViewer API requires full Document object; maintenance photos only need view/pinch-zoom without share/download
+- [Phase 08-maintenance-requests]: Close action shows ConfirmDialog (destructive pattern); all other status advances execute immediately
 
 ### Pending Todos
 
@@ -101,6 +104,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T08:53:10.319Z
-Stopped at: Completed 08-02 (data hook and UI components)
+Last session: 2026-03-21T08:58:12.226Z
+Stopped at: Completed 08-04 (detail screen + notifications integration)
 Resume file: None
