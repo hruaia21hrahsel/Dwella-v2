@@ -26,6 +26,7 @@ jest.mock('@/constants/config', () => ({
   WHATSAPP_BOT_PHONE: '',
   STORAGE_BUCKET: 'payment-proofs',
   DOCUMENTS_BUCKET: 'documents',
+  MAINTENANCE_PHOTOS_BUCKET: 'maintenance-photos',
   BOT_MODEL: 'claude-sonnet-4-20250514',
   AUTO_CONFIRM_HOURS: 48,
   REMINDER_DAYS_BEFORE: 3,

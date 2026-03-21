@@ -97,6 +97,7 @@ export interface Expense {
   category: ExpenseCategory;
   description: string | null;
   expense_date: string;
+  maintenance_request_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -107,6 +108,34 @@ export interface BotConversation {
   role: 'user' | 'assistant';
   content: string;
   metadata?: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export type MaintenanceStatus = 'open' | 'acknowledged' | 'in_progress' | 'resolved' | 'closed';
+export type MaintenancePriority = 'low' | 'normal' | 'urgent';
+
+export interface MaintenanceRequest {
+  id: string;
+  property_id: string;
+  tenant_id: string;
+  title: string;
+  description: string;
+  priority: MaintenancePriority;
+  status: MaintenanceStatus;
+  photo_paths: string[];
+  is_archived: boolean;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaintenanceStatusLog {
+  id: string;
+  request_id: string;
+  changed_by: string;
+  from_status: MaintenanceStatus | null;
+  to_status: MaintenanceStatus;
+  note: string | null;
   created_at: string;
 }
 
