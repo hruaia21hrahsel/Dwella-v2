@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
 status: unknown
-stopped_at: Completed 13-rich-messaging-01-PLAN.md
-last_updated: "2026-03-21T15:21:27.827Z"
+stopped_at: Completed 13-rich-messaging-03-PLAN.md
+last_updated: "2026-03-21T15:27:43.259Z"
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -49,6 +49,7 @@ Plan: 3 of 3
 | Phase 12-media-handling P02 | 5 | 1 tasks | 1 files |
 | Phase 13-rich-messaging P02 | 2 | 2 tasks | 2 files |
 | Phase 13-rich-messaging P01 | 6 | 2 tasks | 2 files |
+| Phase 13-rich-messaging P03 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ See PROJECT.md Key Decisions table for full list.
 - [Phase 13-rich-messaging]: BUTTON_LOOKUP bypass: button_id check before Claude dispatch — no LLM call for menu taps
 - [Phase 13-rich-messaging]: Telegram callback_query handled before message early-return (Pitfall 6 fix) — supabase client moved above both branches
 - [Phase 13-rich-messaging]: answerCallbackQuery fires first before async work — prevents loading spinner hanging in Telegram
+- [Phase 13-rich-messaging]: html2pdf.app response field uncertainty handled by trying multiple field names (pdf ?? base64 ?? content ?? data) with key logging on failure
+- [Phase 13-rich-messaging]: pdf-reports Storage bucket is private with 1-hour signed URL — PDF not publicly accessible
+- [Phase 13-rich-messaging]: handleButtonPress made async to support pdf_month_ PDF generation — only that branch is truly async
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21T15:21:27.824Z
-Stopped at: Completed 13-rich-messaging-01-PLAN.md
+Last session: 2026-03-21T15:27:43.256Z
+Stopped at: Completed 13-rich-messaging-03-PLAN.md
 Resume file: None

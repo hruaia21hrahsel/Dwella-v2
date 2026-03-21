@@ -40,7 +40,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 - [x] **Phase 11: Setup & Infrastructure** — Meta account setup, WhatsApp linking flow, shared whatsapp-send helper, template submission (completed 2026-03-21)
 - [x] **Phase 12: Media Handling** — Inbound photo payment proof and document sharing via WhatsApp (completed 2026-03-21)
-- [ ] **Phase 13: Rich Messaging & Menus** — Interactive button menus on both WhatsApp and Telegram, welcome message, PDF report delivery
+- [x] **Phase 13: Rich Messaging & Menus** — Interactive button menus on both WhatsApp and Telegram, welcome message, PDF report delivery (completed 2026-03-21)
 - [ ] **Phase 14: Intents & Outbound Notifications** — New AI intents (maintenance, payments, property summary) and outbound template notifications
 
 ## Phase Details
@@ -91,7 +91,7 @@ Plans:
 Plans:
 - [x] 13-01-PLAN.md — BUTTON_LOOKUP dispatch table in process-bot-message + callback_query handling and inline keyboard support in telegram-webhook
 - [x] 13-02-PLAN.md — Interactive button_reply routing in whatsapp-webhook + session detection (last_bot_message_at migration) + welcome message on account linking
-- [ ] 13-03-PLAN.md — generate-pdf Edge Function (HTML-to-PDF via html2pdf.app) + pdf_month_ handler wiring + document delivery on both platforms
+- [x] 13-03-PLAN.md — generate-pdf Edge Function (HTML-to-PDF via html2pdf.app) + pdf_month_ handler wiring + document delivery on both platforms
 
 ### Phase 14: Intents & Outbound Notifications
 **Goal**: Users can ask the bot about maintenance status, upcoming payments, and property summary in natural language, and tenants and landlords receive proactive WhatsApp notifications for reminders, payment confirmations, and maintenance updates
@@ -126,5 +126,5 @@ Plans:
 | 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete | 2026-03-21 |
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 12. Media Handling | v1.2 | 2/2 | Complete    | 2026-03-21 |
-| 13. Rich Messaging & Menus | v1.2 | 2/3 | In Progress|  |
+| 13. Rich Messaging & Menus | v1.2 | 3/3 | Complete   | 2026-03-21 |
 | 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |
