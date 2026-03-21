@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Text, TextInput, Button, ActivityIndicator, Surface } from 'react-native-paper';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import {
   uploadDocument,
@@ -91,6 +92,40 @@ export function DocumentUploader({
     setName(dotIndex > 0 ? rawName.substring(0, dotIndex) : rawName);
   }
 
+  async function handleChooseFromGallery() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showToast('Gallery permission is required to select photos.', 'error');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const img = result.assets[0];
+
+    if (img.fileSize && img.fileSize > 10485760) {
+      showToast('File exceeds 10 MB limit. Please choose a smaller file.', 'error');
+      return;
+    }
+
+    // Convert ImagePicker result to DocumentPicker-compatible shape
+    const fileName = img.fileName ?? `photo_${Date.now()}.jpg`;
+    setAsset({
+      uri: img.uri,
+      name: fileName,
+      mimeType: img.mimeType ?? 'image/jpeg',
+      size: img.fileSize ?? 0,
+    } as DocumentPicker.DocumentPickerAsset);
+
+    const dotIndex = fileName.lastIndexOf('.');
+    setName(dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName);
+  }
+
   async function handleUpload() {
     if (!asset || !name.trim() || !user) return;
 
@@ -164,16 +199,27 @@ export function DocumentUploader({
               <View style={[styles.previewAreaEmpty, { borderColor: colors.border }]} />
             )}
 
-            {/* Choose File button */}
-            <Button
-              mode="outlined"
-              icon="file-plus"
-              onPress={handleChooseFile}
-              disabled={isUploading}
-              style={styles.chooseButton}
-            >
-              Choose File
-            </Button>
+            {/* Source buttons */}
+            <View style={styles.sourceRow}>
+              <Button
+                mode="outlined"
+                icon="image"
+                onPress={handleChooseFromGallery}
+                disabled={isUploading}
+                style={styles.sourceButton}
+              >
+                From Gallery
+              </Button>
+              <Button
+                mode="outlined"
+                icon="file-plus"
+                onPress={handleChooseFile}
+                disabled={isUploading}
+                style={styles.sourceButton}
+              >
+                Browse Files
+              </Button>
+            </View>
 
             {/* Document name input */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Document Name</Text>
@@ -295,8 +341,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '400',
   },
-  chooseButton: {
-    alignSelf: 'stretch',
+  sourceRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  sourceButton: {
+    flex: 1,
   },
   label: {
     fontSize: 14,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -41,9 +41,14 @@ export default function DocumentsScreen() {
     ...tenantProperties.map((tp) => tp.properties),
   ];
 
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
-    allProperties.length > 0 ? allProperties[0].id : null,
-  );
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+
+  // Set default property once properties finish loading
+  useEffect(() => {
+    if (!selectedPropertyId && allProperties.length > 0) {
+      setSelectedPropertyId(allProperties[0].id);
+    }
+  }, [allProperties.length]);
 
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | null>(null);
   const [uploaderVisible, setUploaderVisible] = useState(false);
@@ -122,8 +127,8 @@ export default function DocumentsScreen() {
         <View style={styles.topBarBtn} />
       </View>
 
-      {/* Property picker — only if multiple properties */}
-      {allProperties.length > 1 && (
+      {/* Property picker */}
+      {allProperties.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
