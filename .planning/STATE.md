@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: WhatsApp Bot
-status: ready_to_plan
-stopped_at: Roadmap created, ready to plan Phase 11
-last_updated: "2026-03-21"
+status: unknown
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-21T13:45:52.806Z"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 9
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
 ---
 
 # Project State
@@ -19,16 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Every user-facing workflow (auth, property CRUD, payments, invites, documents, maintenance, reports, bot) works correctly and securely.
-**Current focus:** v1.2 WhatsApp Bot — Phase 11: Setup & Infrastructure
+**Current focus:** Phase 11 — setup-infrastructure
 
 ## Current Position
 
-Phase: 11 of 14 (Setup & Infrastructure)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-21 — Roadmap created, all 16 requirements mapped to 4 phases
-
-Progress: [░░░░░░░░░░] 0% (0/9 plans complete)
+Phase: 11 (setup-infrastructure) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -47,6 +43,7 @@ Progress: [░░░░░░░░░░] 0% (0/9 plans complete)
 | Phase 8 | 4 | ~11 min |
 | Phase 9 | 4 | ~10 min |
 | Phase 10 | 1 | ~7 min |
+| Phase 11 P01 | 3m | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -59,6 +56,7 @@ See PROJECT.md Key Decisions table for full list.
 - [v1.2 menus]: Stateless button_id scheme (e.g., menu_payments, action_log_payment) — no sessions table needed
 - [v1.2 menus]: Menu taps bypass Claude via lookup table — only freeform text routes to Claude
 - [v1.2 outbound]: Two code paths required: template (scheduled/triggered) vs. interactive (in-session) — 24-hour window constraint
+- [Phase 11]: whatsapp-send returns HTTP 200 for all responses with success/error in JSON body for caller simplicity
 
 ### Pending Todos
 
@@ -73,6 +71,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-21
-Stopped at: Roadmap created and approved — ready to plan Phase 11
+Last session: 2026-03-21T13:45:52.803Z
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None

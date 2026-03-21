@@ -58,7 +58,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 **Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: Meta Business API setup guide + System User token + whatsapp-send Edge Function
+- [x] 11-01: Meta Business API setup guide + System User token + whatsapp-send Edge Function
 - [ ] 11-02: WhatsApp account linking flow (verification code, SETUP-02, SETUP-03) + DB migration
 
 ### Phase 12: Media Handling
@@ -124,7 +124,7 @@ Plans:
 | 8. Maintenance Requests | v1.1 | 4/4 | Complete | 2026-03-21 |
 | 9. Reporting Dashboards | v1.1 | 4/4 | Complete | 2026-03-21 |
 | 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete | 2026-03-21 |
-| 11. Setup & Infrastructure | v1.2 | 0/2 | Not started | - |
+| 11. Setup & Infrastructure | v1.2 | 1/2 | In Progress|  |
 | 12. Media Handling | v1.2 | 0/2 | Not started | - |
 | 13. Rich Messaging & Menus | v1.2 | 0/3 | Not started | - |
 | 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |

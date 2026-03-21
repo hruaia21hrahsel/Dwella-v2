@@ -9,7 +9,7 @@ Requirements for WhatsApp Bot milestone. Each maps to roadmap phases.
 
 ### Setup & Linking
 
-- [ ] **SETUP-01**: Meta Business API setup guide with step-by-step instructions for WhatsApp Business Account, phone registration, and access token configuration
+- [x] **SETUP-01**: Meta Business API setup guide with step-by-step instructions for WhatsApp Business Account, phone registration, and access token configuration
 - [ ] **SETUP-02**: User can link WhatsApp account via verification code flow (env vars configured, Edge Function deployed, end-to-end working)
 - [ ] **SETUP-03**: User can tap "Open WhatsApp" button to jump directly to Dwella bot conversation after linking
 
@@ -73,7 +73,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01 | Phase 11 | Pending |
+| SETUP-01 | Phase 11 | Complete |
 | SETUP-02 | Phase 11 | Pending |
 | SETUP-03 | Phase 11 | Pending |
 | MEDIA-01 | Phase 12 | Pending |
