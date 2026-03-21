@@ -20,6 +20,10 @@ export function initSentry(): void {
     tracesSampleRate: 0,
     enableAutoPerformanceTracing: false,
     enableAutoSessionTracking: false,
+    // Native crash reporting disabled: @sentry/react-native 7.2.x native iOS
+    // framework is incompatible with Expo SDK 54 / RN 0.81. Re-enable once
+    // the Sentry config plugin is re-added and the version is updated.
+    enableNative: false,
     debug: __DEV__,
   });
 }
