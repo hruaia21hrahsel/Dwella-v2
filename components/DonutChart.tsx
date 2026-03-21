@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { VictoryPie } from 'victory-native';
 import { useTheme } from '@/lib/theme-context';
 import { formatCurrency } from '@/lib/utils';
@@ -59,6 +59,12 @@ export function DonutChart({ data, totalAmount, hasData, emptyLabel = 'No data' 
         },
       },
     },
+    {
+      target: 'parent' as const,
+      eventHandlers: {
+        onPress: () => { dismissTooltip(); return []; },
+      },
+    },
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +86,7 @@ export function DonutChart({ data, totalAmount, hasData, emptyLabel = 'No data' 
   }
 
   return (
-    <Pressable onPress={dismissTooltip}>
+    <View>
       <View style={styles.container}>
         <VictoryPie
           data={displayData}
@@ -128,7 +134,7 @@ export function DonutChart({ data, totalAmount, hasData, emptyLabel = 'No data' 
           ))}
         </View>
       )}
-    </Pressable>
+    </View>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import {
   VictoryChart,
   VictoryBar,
@@ -97,11 +97,15 @@ export function PLBarChart({ data, hasData, emptyLabel = 'No data' }: PLBarChart
   }
 
   return (
-    <Pressable style={styles.container} onPress={dismissTooltip}>
+    <View style={styles.container}>
       <VictoryChart
         height={200}
         domainPadding={{ x: 20 }}
         padding={{ top: 10, bottom: 30, left: 50, right: 10 }}
+        events={[{
+          target: 'parent' as const,
+          eventHandlers: { onPress: () => { dismissTooltip(); return []; } },
+        }]}
       >
         <VictoryAxis
           style={{
@@ -141,7 +145,7 @@ export function PLBarChart({ data, hasData, emptyLabel = 'No data' }: PLBarChart
         x={tooltip.x}
         y={tooltip.y}
       />
-    </Pressable>
+    </View>
   );
 }
 
