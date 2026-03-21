@@ -13,13 +13,21 @@ interface BotRequest {
   message: string;
   source: 'app' | 'telegram' | 'whatsapp';
   telegram_chat_id?: number;
+  button_id?: string;   // Present when user tapped a button
 }
 
 interface BotResponse {
   reply: string;
   intent?: string;
   action_taken?: string;
+  buttons?: Array<Array<{ id: string; title: string }>>;
+  additional_messages?: ButtonResponse[];
 }
+
+type ButtonResponse = {
+  reply: string;
+  buttons?: Array<Array<{ id: string; title: string }>>;
+};
 
 interface ClaudeIntent {
   intent: string;
@@ -50,6 +58,200 @@ type ActionHandler = (
   userId: string,
   entities: Record<string, unknown>,
 ) => Promise<string>;
+
+// ----------------------------------------------------------------
+// Menu Builder Functions (BUTTON_LOOKUP infrastructure)
+// ----------------------------------------------------------------
+
+/**
+ * Builds the main menu — 2 messages (3 + 2 buttons) per D-11.
+ */
+function buildMainMenu(): ButtonResponse[] {
+  return [
+    {
+      reply: 'What would you like to do? (1/2)',
+      buttons: [
+        [{ id: 'menu_properties', title: 'Properties' }],
+        [{ id: 'menu_payments', title: 'Payments' }],
+        [{ id: 'menu_history', title: 'History' }],
+      ],
+    },
+    {
+      reply: 'More options (2/2)',
+      buttons: [
+        [{ id: 'menu_maintenance', title: 'Maintenance' }],
+        [{ id: 'menu_others', title: 'Others' }],
+      ],
+    },
+  ];
+}
+
+/**
+ * Builds sub-option messages for a given category.
+ * Splits items into groups of 2, with 1 slot reserved for back button (per D-12).
+ */
+function buildSubMenu(category: string): ButtonResponse[] {
+  const subMenus: Record<string, Array<{ id: string; title: string }>> = {
+    properties: [
+      { id: 'sub_properties_view', title: 'View Properties' },
+      { id: 'sub_properties_add', title: 'Add Property' },
+      { id: 'sub_properties_edit', title: 'Edit Property' },
+      { id: 'sub_properties_occupancy', title: 'Occupancy' },
+      { id: 'sub_properties_summary', title: 'Summary' },
+      { id: 'sub_properties_delete', title: 'Delete Property' },
+    ],
+    payments: [
+      { id: 'sub_payments_log', title: 'Log Payment' },
+      { id: 'sub_payments_confirm', title: 'Confirm Payment' },
+      { id: 'sub_payments_upcoming', title: 'Upcoming' },
+      { id: 'sub_payments_remind', title: 'Send Reminder' },
+    ],
+    history: [
+      { id: 'sub_history_payments', title: 'Payment History' },
+      { id: 'sub_history_maintenance', title: 'Maintenance Log' },
+      { id: 'sub_history_recent', title: 'Recent Activity' },
+      { id: 'sub_history_pdf', title: 'Download PDF Report' },
+    ],
+    maintenance: [
+      { id: 'sub_maint_submit', title: 'Submit Request' },
+      { id: 'sub_maint_status', title: 'Check Status' },
+      { id: 'sub_maint_update', title: 'Update Request' },
+    ],
+    others: [
+      { id: 'sub_others_upload', title: 'Upload Document' },
+      { id: 'sub_others_link', title: 'Link/Unlink' },
+      { id: 'sub_others_help', title: 'Help' },
+      { id: 'sub_others_contact', title: 'Contact' },
+      { id: 'sub_others_chat', title: 'Chat with Bot' },
+    ],
+  };
+
+  const items = subMenus[category];
+  if (!items) return [{ reply: 'Unknown category. Type "menu" to see options.' }];
+
+  const backBtn = { id: 'back_main', title: 'Main Menu' };
+  const messages: ButtonResponse[] = [];
+  const label = category.charAt(0).toUpperCase() + category.slice(1);
+
+  // Split items into groups of 2 (leaving 1 slot for back button per D-12)
+  for (let i = 0; i < items.length; i += 2) {
+    const chunk = items.slice(i, i + 2);
+    const page = Math.floor(i / 2) + 1;
+    const totalPages = Math.ceil(items.length / 2);
+    const suffix = totalPages > 1 ? ` (${page}/${totalPages})` : '';
+    messages.push({
+      reply: `${label}${suffix}:`,
+      buttons: [...chunk.map(b => [b]), [backBtn]],
+    });
+  }
+  return messages;
+}
+
+/**
+ * Handles sub-option button taps — returns instructional text for each action.
+ * Per D-16 through D-20.
+ */
+function handleSubAction(buttonId: string): ButtonResponse {
+  const actions: Record<string, string> = {
+    sub_properties_view: 'To view your properties, just type: "show my properties" or "list properties"',
+    sub_properties_add: 'To add a property, type something like: "add property called Sunrise Apartments at 123 Main St"',
+    sub_properties_edit: 'To edit a property, please use the Dwella app. Go to Properties tab and tap the property to edit.',
+    sub_properties_occupancy: 'To check occupancy, type: "what is the occupancy of [property name]?"',
+    sub_properties_summary: 'To get a property summary, type: "summary of [property name]"',
+    sub_properties_delete: 'For safety, properties can only be deleted from the Dwella app. Go to Properties tab, tap the property, then use the delete option.',
+    sub_payments_log: 'To log a payment, type something like: "log payment for [tenant name] for March"',
+    sub_payments_confirm: 'To confirm a payment, type: "confirm payment for [tenant name]"',
+    sub_payments_upcoming: 'To see upcoming payments, type: "what payments are due?" or "upcoming payments"',
+    sub_payments_remind: 'To send a reminder, type: "send reminder to [tenant name]"',
+    sub_history_payments: 'To view payment history, type: "payment history for [tenant name]" or "show payments"',
+    sub_history_maintenance: 'To view maintenance history, type: "maintenance history" or "show maintenance requests"',
+    sub_history_recent: 'To see recent activity, type: "what happened recently?" or "recent activity"',
+    sub_history_pdf: 'To download a PDF payment report, pick a year below:',
+    sub_maint_submit: 'To submit a maintenance request, type: "I need to report a maintenance issue at [property/flat]"',
+    sub_maint_status: 'To check maintenance status, type: "what is the status of my maintenance request?"',
+    sub_maint_update: 'To update a request, type: "update maintenance request [description]"',
+    sub_others_upload: 'To upload a document, just send a photo or file in this chat. I will classify and store it automatically.',
+    sub_others_link: 'To link or unlink your account, go to the Dwella app -> Profile -> Link WhatsApp/Telegram.',
+    sub_others_help: 'I can help you manage properties, payments, maintenance, and documents. Just type what you need in plain English, or use the menu buttons for shortcuts. Type "menu" anytime to see the main menu.',
+    sub_others_contact: 'To contact your landlord or tenant, type: "message [name]" and I will help you reach them.',
+    sub_others_chat: 'Just type anything! I am here to help with your property management needs.',
+  };
+
+  const reply = actions[buttonId] ?? 'I did not recognize that option. Type "menu" to see available options.';
+
+  // For PDF report, show year picker buttons instead of text
+  if (buttonId === 'sub_history_pdf') {
+    const currentYear = new Date().getFullYear();
+    return {
+      reply,
+      buttons: [
+        [{ id: `pdf_year_${currentYear - 2}`, title: `${currentYear - 2}` }],
+        [{ id: `pdf_year_${currentYear - 1}`, title: `${currentYear - 1}` }],
+        [{ id: `pdf_year_${currentYear}`, title: `${currentYear}` }],
+      ],
+    };
+  }
+
+  // Add back button for all sub-actions
+  return {
+    reply,
+    buttons: [[{ id: 'back_main', title: 'Main Menu' }]],
+  };
+}
+
+/**
+ * Builds month picker messages for PDF year selection.
+ * Months split into groups of 3 per D-23.
+ */
+function buildMonthPickerMessages(year: number): ButtonResponse[] {
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  const messages: ButtonResponse[] = [];
+  for (let i = 0; i < 12; i += 3) {
+    const chunk = months.slice(i, i + 3);
+    const page = Math.floor(i / 3) + 1;
+    messages.push({
+      reply: `Pick a month for ${year} (${page}/4):`,
+      buttons: chunk.map((m, j) => [{
+        id: `pdf_month_${year}_${String(i + j + 1).padStart(2, '0')}`,
+        title: m,
+      }]),
+    });
+  }
+  return messages;
+}
+
+/**
+ * BUTTON_LOOKUP dispatch — maps button_id prefixes to handler functions.
+ * Returns array of ButtonResponse (multi-message support).
+ * Per D-14: bypasses Claude entirely.
+ */
+function handleButtonPress(buttonId: string): ButtonResponse[] {
+  // Main menu back navigation
+  if (buttonId === 'back_main') return buildMainMenu();
+  // Main menu categories
+  if (buttonId.startsWith('menu_')) {
+    const category = buttonId.replace('menu_', '');
+    return buildSubMenu(category);
+  }
+  // Sub-option actions
+  if (buttonId.startsWith('sub_')) {
+    return [handleSubAction(buttonId)];
+  }
+  // PDF year picker
+  if (buttonId.startsWith('pdf_year_')) {
+    const year = parseInt(buttonId.replace('pdf_year_', ''), 10);
+    return buildMonthPickerMessages(year);
+  }
+  // PDF month picker (triggers generation — handled in Plan 13-03)
+  if (buttonId.startsWith('pdf_month_')) {
+    return [{ reply: 'PDF report generation is not yet available. Check back soon!' }];
+  }
+  // Unknown button
+  return [{ reply: 'I did not recognize that button. Type "menu" to see options.' }];
+}
 
 // ----------------------------------------------------------------
 // Action Handlers
@@ -189,7 +391,7 @@ const handleLogPayment: ActionHandler = async (supabase, userId, entities) => {
     if (error) {
       results.push(`${payMonth}/${payYear}: Failed — ${error.message}`);
     } else {
-      results.push(`${payMonth}/${payYear}: ✅ Marked as ${newStatus} (₹${newAmountPaid})`);
+      results.push(`${payMonth}/${payYear}: Marked as ${newStatus} (Rs.${newAmountPaid})`);
     }
   }
 
@@ -330,7 +532,7 @@ const handleSendReminder: ActionHandler = async (supabase, userId, entities) => 
     tenant_id: tenant.id,
     type: 'reminder',
     title: 'Rent Reminder',
-    body: `Hi ${tenant.tenant_name}, this is a friendly reminder about your rent payment for ${property.name} (Flat ${tenant.flat_no}). Your monthly rent is ₹${tenant.monthly_rent}.`,
+    body: `Hi ${tenant.tenant_name}, this is a friendly reminder about your rent payment for ${property.name} (Flat ${tenant.flat_no}). Your monthly rent is Rs.${tenant.monthly_rent}.`,
   });
 
   if (error) return `Failed to send reminder: ${error.message}`;
@@ -396,9 +598,9 @@ async function buildContext(supabase: ReturnType<typeof createClient>, userId: s
         const currentPayment = payments.find(
           (pay) => pay['month'] === currentMonth && pay['year'] === currentYear
         );
-        ctx += `  Tenant: <tenant_name>${sanitizeForContext(t['tenant_name'] as string)}</tenant_name> (ID: ${t['id']}), Flat <flat_no>${sanitizeForContext(String(t['flat_no']))}</flat_no>, Rent: ₹${t['monthly_rent']}/mo, Due day: ${t['due_day']}.\n`;
+        ctx += `  Tenant: <tenant_name>${sanitizeForContext(t['tenant_name'] as string)}</tenant_name> (ID: ${t['id']}), Flat <flat_no>${sanitizeForContext(String(t['flat_no']))}</flat_no>, Rent: Rs.${t['monthly_rent']}/mo, Due day: ${t['due_day']}.\n`;
         if (currentPayment) {
-          ctx += `    This month payment: status=${currentPayment['status']}, due=₹${currentPayment['amount_due']}, paid=₹${currentPayment['amount_paid']}.\n`;
+          ctx += `    This month payment: status=${currentPayment['status']}, due=Rs.${currentPayment['amount_due']}, paid=Rs.${currentPayment['amount_paid']}.\n`;
         } else {
           ctx += `    This month payment: no record yet.\n`;
         }
@@ -415,9 +617,9 @@ async function buildContext(supabase: ReturnType<typeof createClient>, userId: s
       const currentPayment = payments.find(
         (pay) => pay['month'] === currentMonth && pay['year'] === currentYear
       );
-      ctx += `\nProperty: <property_name>${sanitizeForContext(String(prop?.['name'] ?? ''))}</property_name> (<property_address>${sanitizeForContext(String(prop?.['address'] ?? ''))}</property_address>). Flat <flat_no>${sanitizeForContext(String(t.flat_no))}</flat_no>. Rent: ₹${t.monthly_rent}/mo, Due day: ${t.due_day}.\n`;
+      ctx += `\nProperty: <property_name>${sanitizeForContext(String(prop?.['name'] ?? ''))}</property_name> (<property_address>${sanitizeForContext(String(prop?.['address'] ?? ''))}</property_address>). Flat <flat_no>${sanitizeForContext(String(t.flat_no))}</flat_no>. Rent: Rs.${t.monthly_rent}/mo, Due day: ${t.due_day}.\n`;
       if (currentPayment) {
-        ctx += `  This month payment: status=${currentPayment['status']}, due=₹${currentPayment['amount_due']}, paid=₹${currentPayment['amount_paid']}.\n`;
+        ctx += `  This month payment: status=${currentPayment['status']}, due=Rs.${currentPayment['amount_due']}, paid=Rs.${currentPayment['amount_paid']}.\n`;
       }
     }
     ctx += '\n';
@@ -482,7 +684,7 @@ RULES:
 - If amount is not specified for log_payment, default to the tenant's monthly_rent.
 - Always set needs_confirmation: false. Actions are executed immediately.
 - Do NOT ask "Should I go ahead?" — just describe what you're doing. The result will be appended automatically.
-- Keep replies concise and conversational. Use ₹ for Indian Rupees. Format dates as DD MMM YYYY.`;
+- Keep replies concise and conversational. Use Rs. for Indian Rupees. Format dates as DD MMM YYYY.`;
 
   const messages = [
     ...history.map((h) => ({ role: h.role, content: h.content })),
@@ -571,12 +773,33 @@ serve(async (req) => {
 
   try {
     const body: BotRequest = await req.json();
-    const { user_id, message } = body;
+    const { user_id, message, button_id } = body;
 
     if (!user_id || !message) {
       return new Response(JSON.stringify({ error: 'user_id and message required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ---- Button dispatch — bypass Claude entirely (per D-14) ----
+    if (button_id) {
+      const responses = handleButtonPress(button_id);
+      return jsonResponse({
+        reply: responses[0]?.reply ?? '',
+        buttons: responses[0]?.buttons,
+        // Include additional messages if multi-message response
+        ...(responses.length > 1 ? { additional_messages: responses.slice(1) } : {}),
+      });
+    }
+
+    // ---- "menu" or "help" text — show main menu (per D-08) ----
+    if (/^(menu|help)$/i.test(message.trim())) {
+      const menuMessages = buildMainMenu();
+      return jsonResponse({
+        reply: menuMessages[0].reply,
+        buttons: menuMessages[0].buttons,
+        ...(menuMessages.length > 1 ? { additional_messages: menuMessages.slice(1) } : {}),
       });
     }
 
@@ -593,16 +816,29 @@ serve(async (req) => {
 
     const handler = ACTION_HANDLERS[result.intent];
 
+    // After building reply, append menu for re-navigation (per D-07)
+    const menuMessages = buildMainMenu();
+
     if (handler) {
       // Execute the action immediately and return the real result
       const actionResult = await handler(supabase, user_id, result.entities);
       const reply = `${result.reply}\n\n${actionResult}`;
       await saveMessages(supabase, user_id, message, reply);
-      return jsonResponse({ reply, intent: result.intent, action_taken: result.action_description });
+      return jsonResponse({
+        reply,
+        intent: result.intent,
+        action_taken: result.action_description,
+        additional_messages: menuMessages,
+      });
     } else {
       // Query intent — return reply as-is
       await saveMessages(supabase, user_id, message, result.reply);
-      return jsonResponse({ reply: result.reply, intent: result.intent, action_taken: result.action_description });
+      return jsonResponse({
+        reply: result.reply,
+        intent: result.intent,
+        action_taken: result.action_description,
+        additional_messages: menuMessages,
+      });
     }
   } catch (err) {
     console.error('process-bot-message error:', err);
