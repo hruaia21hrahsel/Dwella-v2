@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Tools Expansion
 status: unknown
-stopped_at: Completed 08-04 (detail screen + notifications integration)
-last_updated: "2026-03-21T08:58:12.229Z"
+stopped_at: Completed 08-03 (maintenance submit screen and list screens)
+last_updated: "2026-03-21T08:59:18.171Z"
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -53,6 +53,7 @@ Plan: 4 of 4
 | Phase 08-maintenance-requests P01 | 8 | 1 tasks | 6 files |
 | Phase 08-maintenance-requests P02 | 2 | 2 tasks | 5 files |
 | Phase 08-maintenance-requests P04 | 8 | 2 tasks | 2 files |
+| Phase 08-maintenance-requests P03 | 12 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ Recent decisions affecting v1.1:
 - [Phase 08-maintenance-requests]: FilterBar uses two separate ScrollView rows (status + priority) for independent horizontal scrolling
 - [Phase 08-maintenance-requests]: Photo viewer uses local Modal + ScrollView instead of DocumentViewer — DocumentViewer API requires full Document object; maintenance photos only need view/pinch-zoom without share/download
 - [Phase 08-maintenance-requests]: Close action shows ConfirmDialog (destructive pattern); all other status advances execute immediately
+- [Phase 08-maintenance-requests]: Submit flow uploads photos after INSERT; partial failures show warning toast but do not block success
+- [Phase 08-maintenance-requests]: Standalone index.tsx uses direct supabase query (not hook) for all-properties view since useMaintenanceRequests is per-property
 
 ### Pending Todos
 
@@ -104,6 +107,6 @@ Research flags for v1.1 implementation:
 
 ## Session Continuity
 
-Last session: 2026-03-21T08:58:12.226Z
-Stopped at: Completed 08-04 (detail screen + notifications integration)
+Last session: 2026-03-21T08:59:18.168Z
+Stopped at: Completed 08-03 (maintenance submit screen and list screens)
 Resume file: None
