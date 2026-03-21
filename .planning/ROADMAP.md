@@ -86,12 +86,12 @@ Plans:
   3. Tapping any main menu category reveals contextual sub-option buttons that trigger the correct action or explanatory response
   4. User can accomplish any bot action by typing freeform text — buttons are shortcuts, not the only path
   5. User can request a PDF report via the History menu, pick a month and year, and receive the PDF file in the same chat
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 13-01: process-bot-message menu lookup table + stateless button_id scheme + callback_query handler in telegram-webhook
-- [ ] 13-02: interactive type routing in whatsapp-webhook + session window detection (last_whatsapp_message_at migration) + welcome message on linking
-- [ ] 13-03: PDF month/year picker two-turn flow + generate-pdf modification to return signed Storage URL + document delivery via whatsapp-send and Telegram sendDocument
+- [ ] 13-01-PLAN.md — BUTTON_LOOKUP dispatch table in process-bot-message + callback_query handling and inline keyboard support in telegram-webhook
+- [ ] 13-02-PLAN.md — Interactive button_reply routing in whatsapp-webhook + session detection (last_bot_message_at migration) + welcome message on account linking
+- [ ] 13-03-PLAN.md — generate-pdf Edge Function (HTML-to-PDF via html2pdf.app) + pdf_month_ handler wiring + document delivery on both platforms
 
 ### Phase 14: Intents & Outbound Notifications
 **Goal**: Users can ask the bot about maintenance status, upcoming payments, and property summary in natural language, and tenants and landlords receive proactive WhatsApp notifications for reminders, payment confirmations, and maintenance updates
