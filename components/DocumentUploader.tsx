@@ -153,8 +153,10 @@ export function DocumentUploader({
       onUploadComplete();
       resetState();
       onClose();
-    } catch {
-      showToast('Upload failed. Please try again.', 'error');
+    } catch (err: any) {
+      const msg = err?.message ?? String(err);
+      console.error('[DocumentUploader] Upload failed:', msg, err);
+      showToast(`Upload failed: ${msg}`, 'error');
     } finally {
       setIsUploading(false);
     }

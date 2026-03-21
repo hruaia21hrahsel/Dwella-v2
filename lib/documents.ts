@@ -1,7 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { decode } from 'base64-arraybuffer';
 import { supabase } from './supabase';
 import { DocumentCategory } from './types';
 import { DOCUMENTS_BUCKET } from '@/constants/config';
@@ -96,21 +95,23 @@ export function formatFileSize(bytes: number): string {
 
 /**
  * Uploads a document file to Supabase Storage.
- * Uses FileSystem base64 read to handle content:// URIs on Android reliably.
+ * Uses FormData for reliable React Native uploads across iOS/Android.
  */
 export async function uploadDocument(
   asset: { uri: string; mimeType?: string | null; name: string },
   storagePath: string,
 ): Promise<void> {
-  const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-  const buffer = decode(base64);
+  const formData = new FormData();
+  formData.append('', {
+    uri: asset.uri,
+    name: asset.name,
+    type: asset.mimeType ?? 'application/octet-stream',
+  } as any);
 
   const { error } = await supabase.storage
     .from(DOCUMENTS_BUCKET)
-    .upload(storagePath, buffer, {
-      contentType: asset.mimeType ?? 'application/octet-stream',
+    .upload(storagePath, formData, {
+      contentType: 'multipart/form-data',
     });
 
   if (error) throw error;
