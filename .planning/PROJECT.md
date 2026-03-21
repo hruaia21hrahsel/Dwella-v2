@@ -59,6 +59,7 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) works c
 - Maintenance Requests (tenant submission, landlord management, expense linking)
 - Reporting Dashboards (P&L, expense breakdown, payment reliability, occupancy)
 - ~~AI Tools Removal (screens + Edge Functions + Claude tool definitions)~~ — Completed Phase 6, 2026-03-20
+- ~~Maintenance Requests (tenant submission, landlord management, expense linking)~~ — Completed Phase 8, 2026-03-21
 
 ### Out of Scope (deferred from v1.0)
 
@@ -73,8 +74,8 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) works c
 
 ## Context
 
-- **Status:** v1.1 in progress — Phase 6 (AI Tools Removal) complete, Phase 7 (Document Storage) next
-- **Codebase:** ~50 screens/components, 10 Edge Functions, 18 SQL migrations
+- **Status:** v1.1 in progress — Phase 8 (Maintenance Requests) complete, Phase 9 (Reporting Dashboards) next
+- **Codebase:** ~60 screens/components, 10 Edge Functions, 22 SQL migrations
 - **Tech stack:** React Native + Expo SDK 51, Supabase, Zustand, Claude API
 - **Tech debt:** 10 items tracked in v1.0 audit (ESLint scope gap for Deno files, WhatsApp HMAC bypass, dead fallback code, iOS App Store placeholder)
 - **Pre-launch blockers:** Sentry DSN, pg_cron schedule verification, iOS App Store ID in UpdateGate
@@ -98,4 +99,4 @@ Every user-facing workflow (auth, property CRUD, payments, invites, bot) works c
 | Fingerprint OTA policy + UpdateGate | Prevents native dependency mismatch crashes | ✓ Good — silent apply + forced-update fallback |
 
 ---
-*Last updated: 2026-03-20 after Phase 6 completion*
+*Last updated: 2026-03-21 after Phase 8 completion*
