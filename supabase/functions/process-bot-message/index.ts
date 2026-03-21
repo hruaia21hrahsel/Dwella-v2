@@ -168,18 +168,15 @@ function handleSubAction(buttonId: string): ButtonResponse {
     sub_properties_add: 'To add a property, type something like: "add property called Sunrise Apartments at 123 Main St"',
     sub_properties_edit: 'To edit a property, please use the Dwella app. Go to Properties tab and tap the property to edit.',
     sub_properties_occupancy: 'To check occupancy, type: "what is the occupancy of [property name]?"',
-    sub_properties_summary: 'To get a property summary, type: "summary of [property name]"',
     sub_properties_delete: 'For safety, properties can only be deleted from the Dwella app. Go to Properties tab, tap the property, then use the delete option.',
     sub_payments_log: 'To log a payment, type something like: "log payment for [tenant name] for March"',
     sub_payments_confirm: 'To confirm a payment, type: "confirm payment for [tenant name]"',
-    sub_payments_upcoming: 'To see upcoming payments, type: "what payments are due?" or "upcoming payments"',
     sub_payments_remind: 'To send a reminder, type: "send reminder to [tenant name]"',
     sub_history_payments: 'To view payment history, type: "payment history for [tenant name]" or "show payments"',
     sub_history_maintenance: 'To view maintenance history, type: "maintenance history" or "show maintenance requests"',
     sub_history_recent: 'To see recent activity, type: "what happened recently?" or "recent activity"',
     sub_history_pdf: 'To download a PDF payment report, pick a year below:',
     sub_maint_submit: 'To submit a maintenance request, type: "I need to report a maintenance issue at [property/flat]"',
-    sub_maint_status: 'To check maintenance status, type: "what is the status of my maintenance request?"',
     sub_maint_update: 'To update a request, type: "update maintenance request [description]"',
     sub_others_upload: 'To upload a document, just send a photo or file in this chat. I will classify and store it automatically.',
     sub_others_link: 'To link or unlink your account, go to the Dwella app -> Profile -> Link WhatsApp/Telegram.',
@@ -314,6 +311,33 @@ async function handleButtonPress(buttonId: string, userId?: string): Promise<But
   }
   // Sub-option actions
   if (buttonId.startsWith('sub_')) {
+    // D-04: Three sub-menu buttons execute real queries instead of instructional text
+    if (buttonId === 'sub_maint_status' || buttonId === 'sub_payments_upcoming' || buttonId === 'sub_properties_summary') {
+      if (!userId) {
+        return [{ reply: 'Could not identify your account. Please try again.', buttons: [[{ id: 'back_main', title: 'Main Menu' }]] }];
+      }
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      let result: string;
+      let actionButtons: Array<Array<{ id: string; title: string }>> = [];
+
+      if (buttonId === 'sub_maint_status') {
+        result = await handleQueryMaintenanceStatus(supabase, userId, {});
+        actionButtons = [[{ id: 'sub_maint_submit', title: 'Submit Request' }], [{ id: 'sub_maint_update', title: 'Update Request' }]];
+      } else if (buttonId === 'sub_payments_upcoming') {
+        result = await handleQueryUpcomingPayments(supabase, userId, {});
+        actionButtons = [[{ id: 'sub_payments_log', title: 'Log Payment' }], [{ id: 'sub_payments_remind', title: 'Send Reminder' }]];
+      } else {
+        result = await handleQueryPropertySummary(supabase, userId, {});
+        actionButtons = [[{ id: 'sub_properties_view', title: 'View Properties' }]];
+      }
+
+      // D-02: Append main menu after the answer
+      const mainMenu = buildMainMenu();
+      return [
+        { reply: result, buttons: [...actionButtons, [{ id: 'back_main', title: 'Main Menu' }]] },
+        ...mainMenu,
+      ];
+    }
     return [handleSubAction(buttonId)];
   }
   // PDF year picker
