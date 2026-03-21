@@ -57,30 +57,33 @@ Source: Derived from existing `dashboard/index.tsx` (padding: 16, gap: 8, margin
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
-| Label | 13px | 500 | 1.4 (18px) |
-| Body+Heading | 16px | 400 / 600 / 700 | 1.5 body / 1.2 heading |
-| Subheading | 20px | 800 | 1.1 (22px) |
-| Display | 22px | 800 | 1.1 (24px) |
+| Label | 13px | 400 | 1.4 (18px) |
+| Body | 16px | 400 | 1.5 (24px) |
+| Heading | 16px | 700 | 1.2 (19px) |
+| Subheading | 20px | 700 | 1.1 (22px) |
+| Display | 22px | 700 | 1.1 (24px) |
+
+**Only two weights are used across this entire phase: 400 (Regular) and 700 (Bold). No other weights (500, 600, 800) appear anywhere.**
 
 **Specific assignments for this phase (all mapped to declared scale — no additional sizes):**
-- Screen title (portfolio "Analytics" header): Display — 22px, weight 800
-- Section heading ("P&L", "Expense Breakdown", "Tenant Reliability", "Occupancy"): Body+Heading — 16px, weight 700, line-height 1.2
-- KPI value on portfolio summary cards: Subheading — 20px, weight 800, color from status context (income=success, expense=error, net=conditional)
-- KPI label below value: Label — 13px, weight 500, color `textSecondary`
-- Chart axis tick labels: Label — 13px, weight 500, color `textSecondary`
-- Tooltip value: Body+Heading — 16px, weight 700, color `textPrimary`
+- Screen title (portfolio "Analytics" header): Display — 22px, weight 700, line-height 1.1
+- Section heading ("P&L", "Expense Breakdown", "Tenant Reliability", "Occupancy"): Heading — 16px, weight 700, line-height 1.2
+- KPI value on portfolio summary cards: Subheading — 20px, weight 700, color from status context (income=success, expense=error, net=conditional)
+- KPI label below value: Label — 13px, weight 400, color `textSecondary`
+- Chart axis tick labels: Label — 13px, weight 400, color `textSecondary`
+- Tooltip value: Heading — 16px, weight 700, color `textPrimary`
 - Tooltip label: Label — 13px, weight 400, color `textSecondary`
-- Reliability table: tenant name 16px weight 600; percentage 16px weight 700; "avg days late" 13px weight 400
-- Property summary card name: Body+Heading — 16px, weight 700
+- Reliability table: tenant name 16px weight 700; percentage 16px weight 700; "avg days late" 13px weight 400
+- Property summary card name: Heading — 16px, weight 700
 - Property summary card sub-text (occupancy fraction, period): Label — 13px, weight 400, color `textSecondary`
-- Empty state title: Body+Heading — 16px, weight 700 (overrides existing EmptyState default of 17px — apply `titleStyle={{ fontSize: 16 }}`)
-- Empty state subtitle: Body+Heading — 16px, weight 400, color `textDisabled`
-- Selector chip text (year/granularity/quarter/month): Label — 13px, weight 500
-- Year picker active year text: Body+Heading — 16px, weight 700
+- Empty state title: Heading — 16px, weight 700 (overrides existing EmptyState default of 17px — apply `titleStyle={{ fontSize: 16 }}`)
+- Empty state subtitle: Body — 16px, weight 400, color `textDisabled`
+- Selector chip text (year/granularity/quarter/month): Label — 13px, weight 400
+- Year picker active year text: Heading — 16px, weight 700
 
 **Note on existing EmptyState component:** The `EmptyState` component renders title at 17px by default. For this phase, pass `titleStyle={{ fontSize: 16 }}` to bring it within the declared scale. Do not modify the component globally.
 
-Source: Extrapolated from `dashboard/index.tsx` styles (sectionTitle: 16px/700, selectorChipText: 13px/500) and remapped to 4-size scale per design contract. 14px, 11px, 12px, 15px, 17px do not appear in this phase.
+Source: Extrapolated from `dashboard/index.tsx` styles (sectionTitle: 16px/700, selectorChipText: 13px) and remapped to 4-size / 2-weight scale per design contract. 14px, 11px, 12px, 15px, 17px do not appear in this phase. Weights 500, 600, 800 collapsed to 400 or 700 respectively.
 
 ---
 
@@ -94,6 +97,10 @@ Source: Extrapolated from `dashboard/index.tsx` styles (sectionTitle: 16px/700, 
 | Destructive | `colors.error` (#EF4444 light / #F87171 dark) | Expense bars in P&L chart, negative net P&L value, expense KPI value |
 
 **Accent reserved for:** year picker active chip border + background tint, currently-selected granularity chip, portfolio header background gradient (`gradients.hero`), sparkline stroke on property cards. Not applied to buttons, table rows, or chart fills beyond these.
+
+**Focal Points:**
+- Portfolio screen: the 4-KPI grid row is the primary focal point — it is the first full-width element below the header and concentrates the highest-information-density data.
+- Property report screen: the P&L bar chart is the primary focal point — it is the tallest chart (200px), appears first in the scroll order, and uses the highest-contrast color pair (income green / expense red).
 
 **Chart-specific color assignments (locked):**
 - P&L grouped bars: income bar = `colors.statusConfirmed` (#22C55E light); expense bar = `colors.error` (#EF4444 light). Both use theme tokens — dark mode uses the dark theme equivalents automatically.
