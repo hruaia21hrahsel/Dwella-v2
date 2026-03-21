@@ -14,14 +14,14 @@ Requirements for v1.1 Tools Expansion. Each maps to roadmap phases.
 
 ### Document Storage
 
-- [ ] **DOC-01**: Landlord can upload documents (PDF, images, Word) to a property
-- [ ] **DOC-02**: Landlord can upload documents tied to a specific tenant
-- [ ] **DOC-03**: Tenant can upload documents tied to their own tenancy
+- [x] **DOC-01**: Landlord can upload documents (PDF, images, Word) to a property
+- [x] **DOC-02**: Landlord can upload documents tied to a specific tenant
+- [x] **DOC-03**: Tenant can upload documents tied to their own tenancy
 - [ ] **DOC-04**: User can view uploaded documents in-app (PDF via WebView, images inline)
 - [ ] **DOC-05**: User can download or share documents from the app
-- [ ] **DOC-06**: Property-wide documents are visible to all tenants in that property
-- [ ] **DOC-07**: Tenant-specific documents are visible only to that tenant and the landlord
-- [ ] **DOC-08**: User can delete their own uploaded documents (atomic: storage file + DB row)
+- [x] **DOC-06**: Property-wide documents are visible to all tenants in that property
+- [x] **DOC-07**: Tenant-specific documents are visible only to that tenant and the landlord
+- [x] **DOC-08**: User can delete their own uploaded documents (atomic: storage file + DB row)
 
 ### Maintenance Requests
 
@@ -78,14 +78,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | CLEAN-01 | Phase 6 | Complete |
 | CLEAN-02 | Phase 6 | Complete |
-| DOC-01 | Phase 7 | Pending |
-| DOC-02 | Phase 7 | Pending |
-| DOC-03 | Phase 7 | Pending |
+| DOC-01 | Phase 7 | Complete |
+| DOC-02 | Phase 7 | Complete |
+| DOC-03 | Phase 7 | Complete |
 | DOC-04 | Phase 7 | Pending |
 | DOC-05 | Phase 7 | Pending |
-| DOC-06 | Phase 7 | Pending |
-| DOC-07 | Phase 7 | Pending |
-| DOC-08 | Phase 7 | Pending |
+| DOC-06 | Phase 7 | Complete |
+| DOC-07 | Phase 7 | Complete |
+| DOC-08 | Phase 7 | Complete |
 | MAINT-01 | Phase 8 | Pending |
 | MAINT-02 | Phase 8 | Pending |
 | MAINT-03 | Phase 8 | Pending |
