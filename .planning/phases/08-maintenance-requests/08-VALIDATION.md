@@ -39,7 +39,7 @@ created: 2026-03-21
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 08-01-01 | 01 | 1 | MAINT-01 | integration | `supabase db reset && npx jest --testPathPattern=migration` | ❌ W0 | ⬜ pending |
-| 08-01-02 | 01 | 1 | MAINT-03 | unit | `npx jest --testPathPattern=status-machine` | ❌ W0 | ⬜ pending |
+| 08-01-02 | 01 | 1 | MAINT-03 | unit | `npx jest --testPathPattern=maintenance` | ❌ W0 | ⬜ pending |
 | 08-02-01 | 02 | 1 | MAINT-01 | manual | Device camera/gallery test | N/A | ⬜ pending |
 | 08-02-02 | 02 | 1 | MAINT-02 | manual | Push notification delivery test | N/A | ⬜ pending |
 | 08-03-01 | 03 | 2 | MAINT-03 | manual | Status flow walkthrough | N/A | ⬜ pending |
@@ -53,8 +53,7 @@ created: 2026-03-21
 
 ## Wave 0 Requirements
 
-- [ ] `__tests__/maintenance-migration.test.ts` — stubs for MAINT-01 (schema validation)
-- [ ] `__tests__/maintenance-status-machine.test.ts` — stubs for MAINT-03 (valid/invalid transitions)
+- [ ] `__tests__/maintenance.test.ts` — stubs for MAINT-01 (schema validation) and MAINT-03 (valid/invalid status transitions, helper function tests)
 
 *Existing jest infrastructure covers framework needs.*
 
