@@ -125,6 +125,6 @@ Plans:
 | 9. Reporting Dashboards | v1.1 | 4/4 | Complete | 2026-03-21 |
 | 10. Maintenance Wiring Fixes | v1.1 | 1/1 | Complete | 2026-03-21 |
 | 11. Setup & Infrastructure | v1.2 | 2/2 | Complete    | 2026-03-21 |
-| 12. Media Handling | v1.2 | 2/2 | Complete   | 2026-03-21 |
+| 12. Media Handling | v1.2 | 2/2 | Complete    | 2026-03-21 |
 | 13. Rich Messaging & Menus | v1.2 | 0/3 | Not started | - |
 | 14. Intents & Outbound Notifications | v1.2 | 0/2 | Not started | - |
