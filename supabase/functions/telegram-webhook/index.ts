@@ -63,7 +63,7 @@ function toTelegramKeyboard(
 }
 
 /**
- * Sends multi-message bot responses — handles additional_messages from process-bot-message.
+ * Sends multi-message bot responses — handles additional_messages and document delivery from process-bot-message.
  */
 async function sendBotResponse(chatId: number, botData: Record<string, unknown>) {
   const reply = (botData['reply'] as string) ?? 'Sorry, I encountered an error.';
@@ -72,6 +72,12 @@ async function sendBotResponse(chatId: number, botData: Record<string, unknown>)
 
   // Send primary message
   await sendTelegram(chatId, reply, toTelegramKeyboard(buttons));
+
+  // Handle document delivery (PDF reports)
+  const doc = botData['document'] as { url: string; filename: string; caption: string } | undefined;
+  if (doc) {
+    await sendTelegramDocument(chatId, doc.url, doc.caption);
+  }
 
   // Send additional messages (multi-message menus)
   if (additionalMessages) {

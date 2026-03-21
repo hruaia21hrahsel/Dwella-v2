@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const GENERATE_PDF_URL = `${SUPABASE_URL}/functions/v1/generate-pdf`;
 
 // ----------------------------------------------------------------
 // Types
@@ -22,11 +23,21 @@ interface BotResponse {
   action_taken?: string;
   buttons?: Array<Array<{ id: string; title: string }>>;
   additional_messages?: ButtonResponse[];
+  document?: {
+    url: string;
+    filename: string;
+    caption: string;
+  };
 }
 
 type ButtonResponse = {
   reply: string;
   buttons?: Array<Array<{ id: string; title: string }>>;
+  document?: {
+    url: string;
+    filename: string;
+    caption: string;
+  };
 };
 
 interface ClaudeIntent {
@@ -224,11 +235,76 @@ function buildMonthPickerMessages(year: number): ButtonResponse[] {
 }
 
 /**
+ * Handles PDF report generation for the selected month.
+ * Calls the generate-pdf Edge Function and returns document delivery instructions.
+ */
+async function handlePdfGeneration(buttonId: string, userId: string): Promise<ButtonResponse[]> {
+  // Parse year and month from button_id: pdf_month_2025_03
+  const parts = buttonId.replace('pdf_month_', '').split('_');
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+
+  if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+    return [{ reply: 'Invalid month/year selection. Please try again from the menu.' }];
+  }
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  const monthName = monthNames[month - 1];
+
+  try {
+    const res = await fetch(GENERATE_PDF_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+      },
+      body: JSON.stringify({ user_id: userId, year, month }),
+    });
+
+    const data = await res.json();
+
+    if (data.error === 'no_data') {
+      return [{
+        reply: data.message ?? `No data found for ${monthName} ${year}.`,
+        buttons: [[{ id: 'sub_history_pdf', title: 'Try Another Month' }], [{ id: 'back_main', title: 'Main Menu' }]],
+      }];
+    }
+
+    if (!res.ok || data.error) {
+      return [{
+        reply: `Sorry, I could not generate the report for ${monthName} ${year}. Please try again later.`,
+        buttons: [[{ id: 'back_main', title: 'Main Menu' }]],
+      }];
+    }
+
+    // Return document delivery instruction — the webhook will use signed_url to send document
+    return [{
+      reply: `Your payment report for ${monthName} ${year} is ready!`,
+      document: {
+        url: data.signed_url,
+        filename: data.filename,
+        caption: data.caption,
+      },
+      buttons: [[{ id: 'sub_history_pdf', title: 'Another Report' }], [{ id: 'back_main', title: 'Main Menu' }]],
+    }];
+  } catch (err) {
+    console.error('PDF generation request error:', err);
+    return [{
+      reply: 'Sorry, something went wrong generating your report. Please try again later.',
+      buttons: [[{ id: 'back_main', title: 'Main Menu' }]],
+    }];
+  }
+}
+
+/**
  * BUTTON_LOOKUP dispatch — maps button_id prefixes to handler functions.
  * Returns array of ButtonResponse (multi-message support).
  * Per D-14: bypasses Claude entirely.
  */
-function handleButtonPress(buttonId: string): ButtonResponse[] {
+async function handleButtonPress(buttonId: string, userId?: string): Promise<ButtonResponse[]> {
   // Main menu back navigation
   if (buttonId === 'back_main') return buildMainMenu();
   // Main menu categories
@@ -245,9 +321,9 @@ function handleButtonPress(buttonId: string): ButtonResponse[] {
     const year = parseInt(buttonId.replace('pdf_year_', ''), 10);
     return buildMonthPickerMessages(year);
   }
-  // PDF month picker (triggers generation — handled in Plan 13-03)
-  if (buttonId.startsWith('pdf_month_')) {
-    return [{ reply: 'PDF report generation is not yet available. Check back soon!' }];
+  // PDF month picker — trigger generation
+  if (buttonId.startsWith('pdf_month_') && userId) {
+    return await handlePdfGeneration(buttonId, userId);
   }
   // Unknown button
   return [{ reply: 'I did not recognize that button. Type "menu" to see options.' }];
@@ -784,10 +860,11 @@ serve(async (req) => {
 
     // ---- Button dispatch — bypass Claude entirely (per D-14) ----
     if (button_id) {
-      const responses = handleButtonPress(button_id);
+      const responses = await handleButtonPress(button_id, user_id);
       return jsonResponse({
         reply: responses[0]?.reply ?? '',
         buttons: responses[0]?.buttons,
+        document: responses[0]?.document,
         // Include additional messages if multi-message response
         ...(responses.length > 1 ? { additional_messages: responses.slice(1) } : {}),
       });

@@ -80,7 +80,7 @@ async function sendWhatsAppDocument(
   }
 }
 
-/** Send a process-bot-message response that may contain buttons and additional_messages */
+/** Send a process-bot-message response that may contain buttons, documents, and additional_messages */
 async function sendBotResponse(phone: string, botData: Record<string, unknown>) {
   const reply = (botData['reply'] as string) ?? 'Sorry, I encountered an error.';
   const buttons = botData['buttons'] as Array<Array<{ id: string; title: string }>> | undefined;
@@ -96,6 +96,12 @@ async function sendBotResponse(phone: string, botData: Record<string, unknown>) 
     await sendWhatsAppInteractive(phone, reply, flatButtons.slice(0, 3));
   } else {
     await sendWhatsApp(phone, reply);
+  }
+
+  // Handle document delivery (PDF reports)
+  const doc = botData['document'] as { url: string; filename: string; caption: string } | undefined;
+  if (doc) {
+    await sendWhatsAppDocument(phone, doc.url, doc.filename, doc.caption);
   }
 
   // Send additional messages (multi-message menus)
