@@ -69,7 +69,8 @@
           "sounds": []
         }
       ],
-      ["expo-document-picker", { "usesIcloudStorage": true }]
+      ["expo-document-picker", { "usesIcloudStorage": false }],
+      ["expo-build-properties", { "ios": { "newArchEnabled": false } }]
     ],
     "experiments": {
       "typedRoutes": true
