@@ -21,7 +21,6 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 jest.mock('@/constants/config', () => ({
   SUPABASE_URL: 'https://test.supabase.co',
   SUPABASE_ANON_KEY: 'test-anon-key',
-  SENTRY_DSN: '',
   TELEGRAM_BOT_USERNAME: '',
   WHATSAPP_BOT_PHONE: '',
   STORAGE_BUCKET: 'payment-proofs',

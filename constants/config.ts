@@ -19,11 +19,6 @@ export const SUPABASE_URL = requireEnv('EXPO_PUBLIC_SUPABASE_URL');
 export const SUPABASE_ANON_KEY = requireEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY');
 
 // ── Optional (warn + continue) ──────────────────────────────────────
-export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
-if (!process.env.EXPO_PUBLIC_SENTRY_DSN) {
-  console.warn('[Dwella] EXPO_PUBLIC_SENTRY_DSN not set — crash reporting disabled');
-}
-
 export const TELEGRAM_BOT_USERNAME = process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME ?? '';
 if (!process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME) {
   console.warn('[Dwella] EXPO_PUBLIC_TELEGRAM_BOT_USERNAME not set — Telegram bot link disabled');
