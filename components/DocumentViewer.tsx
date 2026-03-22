@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Document } from '@/lib/types';
 import { getSignedUrl, shareDocument, isImageMime, mimeToExt } from '@/lib/documents';
@@ -122,9 +122,8 @@ export function DocumentViewer({ visible, document, onClose }: DocumentViewerPro
           <Image
             source={{ uri: signedUrl }}
             style={{ width: screenWidth, height: screenHeight - 180 }}
-            contentFit="contain"
-            onError={(e) => {
-              console.error('[DocumentViewer] Image load error:', e.error);
+            resizeMode="contain"
+            onError={() => {
               setError('Could not display image. Tap to retry.');
             }}
           />

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Text, TextInput, ActivityIndicator, Button } from 'react-native-paper';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Image } from 'expo-image';
+import { Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
@@ -409,7 +409,7 @@ export default function MaintenanceDetailScreen() {
                     <Image
                       source={{ uri: url }}
                       style={styles.thumbnail}
-                      contentFit="cover"
+                      resizeMode="cover"
                     />
                   </TouchableOpacity>
                 ))}
@@ -526,7 +526,7 @@ export default function MaintenanceDetailScreen() {
               <Image
                 source={{ uri: selectedPhotoUrl }}
                 style={{ width: screenWidth, height: screenHeight - 100 }}
-                contentFit="contain"
+                resizeMode="contain"
               />
             </ScrollView>
           )}
