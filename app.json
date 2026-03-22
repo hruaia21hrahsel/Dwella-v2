@@ -66,11 +66,14 @@
           "icon": "./assets/icon.png",
           "color": "#4F46E5",
           "defaultChannel": "default",
-          "sounds": []
+          "sounds": [],
+          "mode": "production"
         }
       ],
       ["expo-document-picker", { "usesIcloudStorage": false }],
-      ["expo-build-properties", { "ios": { "newArchEnabled": false } }]
+      ["expo-build-properties", { "ios": { "newArchEnabled": false } }],
+      "expo-secure-store",
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true

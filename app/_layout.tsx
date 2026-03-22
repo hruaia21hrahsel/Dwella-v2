@@ -10,7 +10,6 @@ import { User } from '@/lib/types';
 import { usePostHog } from '@/lib/posthog';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { registerPushToken } from '@/lib/notifications';
-import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
@@ -24,8 +23,6 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
   }),
 });
 
@@ -259,17 +256,25 @@ function InnerLayout() {
 }
 
 export default function RootLayout() {
+  const inner = (
+    <ThemeProvider>
+      <UpdateGate>
+        <InnerLayout />
+      </UpdateGate>
+    </ThemeProvider>
+  );
+
+  if (!POSTHOG_API_KEY) {
+    return inner;
+  }
+
   return (
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
       options={{ host: POSTHOG_HOST }}
       autocapture={{ captureTouches: true, captureScreens: true }}
     >
-      <ThemeProvider>
-        <UpdateGate>
-          <InnerLayout />
-        </UpdateGate>
-      </ThemeProvider>
+      {inner}
     </PostHogProvider>
   );
 }
