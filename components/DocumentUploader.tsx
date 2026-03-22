@@ -10,7 +10,6 @@ import {
   Platform,
 } from 'react-native';
 import { Text, TextInput, Button, ActivityIndicator, Surface } from 'react-native-paper';
-import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import {
@@ -53,7 +52,7 @@ export function DocumentUploader({
   const user = useAuthStore((s) => s.user);
   const showToast = useToastStore((s) => s.showToast);
 
-  const [asset, setAsset] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [asset, setAsset] = useState<{ uri: string; name: string; mimeType: string; size: number } | null>(null);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<DocumentCategory>('other');
   const [scopeTenantId, setScopeTenantId] = useState<string | null>(tenantId);
@@ -76,32 +75,8 @@ export function DocumentUploader({
   }
 
   async function handleChooseFile() {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: [
-        'application/pdf',
-        'image/jpeg',
-        'image/png',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ],
-      copyToCacheDirectory: true,
-      multiple: false,
-    });
-
-    if (result.canceled || !result.assets?.[0]) return;
-
-    const picked = result.assets[0];
-
-    if (picked.size && picked.size > 10485760) {
-      showToast('File exceeds 10 MB limit. Please choose a smaller file.', 'error');
-      return;
-    }
-
-    setAsset(picked);
-    // Pre-fill name without extension
-    const rawName = picked.name ?? '';
-    const dotIndex = rawName.lastIndexOf('.');
-    setName(dotIndex > 0 ? rawName.substring(0, dotIndex) : rawName);
+    // expo-document-picker temporarily removed — use gallery instead
+    showToast('Use the gallery option to select photos.', 'info');
   }
 
   async function handleChooseFromGallery() {
@@ -132,7 +107,7 @@ export function DocumentUploader({
       name: fileName,
       mimeType: img.mimeType ?? 'image/jpeg',
       size: img.fileSize ?? 0,
-    } as DocumentPicker.DocumentPickerAsset);
+    });
 
     const dotIndex = fileName.lastIndexOf('.');
     setName(dotIndex > 0 ? fileName.substring(0, dotIndex) : fileName);

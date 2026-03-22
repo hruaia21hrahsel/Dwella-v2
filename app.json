@@ -70,7 +70,6 @@
           "mode": "production"
         }
       ],
-      ["expo-document-picker", { "usesIcloudStorage": false }],
       ["expo-build-properties", { "ios": { "newArchEnabled": false } }],
       "expo-secure-store",
       "expo-image-picker"
