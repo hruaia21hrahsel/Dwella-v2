@@ -14,21 +14,34 @@ export default function Index() {
   const exitScale = useRef(new Animated.Value(1)).current;
   const isExiting = useRef(false);
   const [canNavigate, setCanNavigate] = useState(false);
+  const animMinElapsed = useRef(false);
+  const authResolved = useRef(false);
 
   useEffect(() => {
     SplashScreen.hideAsync();
+    // Minimum display time so the full entrance animation plays (~2.5s)
+    setTimeout(() => {
+      animMinElapsed.current = true;
+      tryExit();
+    }, 2500);
   }, []);
 
-  // When auth resolves, trigger exit animation
+  const tryExit = () => {
+    if (!animMinElapsed.current || !authResolved.current || isExiting.current) return;
+    isExiting.current = true;
+    Animated.parallel([
+      Animated.timing(exitScale, { toValue: 1.15, duration: 600, useNativeDriver: true }),
+      Animated.timing(exitOpacity, { toValue: 0, duration: 600, useNativeDriver: true }),
+    ]).start(() => {
+      setCanNavigate(true);
+    });
+  };
+
+  // When auth resolves, mark ready and try exit
   useEffect(() => {
-    if (!isLoading && !isExiting.current) {
-      isExiting.current = true;
-      Animated.parallel([
-        Animated.timing(exitScale, { toValue: 1.15, duration: 500, useNativeDriver: true }),
-        Animated.timing(exitOpacity, { toValue: 0, duration: 500, useNativeDriver: true }),
-      ]).start(() => {
-        setCanNavigate(true);
-      });
+    if (!isLoading) {
+      authResolved.current = true;
+      tryExit();
     }
   }, [isLoading]);
 

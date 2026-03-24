@@ -36,11 +36,11 @@ export function AnimatedSplash({ color = '#FFFFFF', size = 160 }: Props) {
 
   useEffect(() => {
     const stagger = Animated.stagger(
-      100,
+      220,
       opacities.map((anim, i) =>
         Animated.timing(anim, {
           toValue: 1,
-          duration: i < 6 ? 350 : 200, // SVG elements: 350ms, sparkles: 200ms
+          duration: i < 6 ? 500 : 300, // SVG elements: 500ms, sparkles: 300ms
           useNativeDriver: true,
         })
       )
