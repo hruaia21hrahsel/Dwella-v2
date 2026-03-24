@@ -1,33 +1,64 @@
-import { useEffect } from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
-import { DwellaLogo } from '@/components/DwellaLogo';
+import { AnimatedSplash } from '@/components/AnimatedSplash';
 
 export default function Index() {
   const { session, isLoading } = useAuthStore();
   const { colors } = useTheme();
 
+  const exitOpacity = useRef(new Animated.Value(1)).current;
+  const exitScale = useRef(new Animated.Value(1)).current;
+  const isExiting = useRef(false);
+  const [canNavigate, setCanNavigate] = useState(false);
+
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <DwellaLogo size={120} color={colors.textOnPrimary} />
-        <Text style={{ color: colors.textOnPrimary, fontSize: 16, fontStyle: 'italic', opacity: 0.85 }}>
-          The AI that runs your rentals.
-        </Text>
-      </View>
-    );
+  // When auth resolves, trigger exit animation
+  useEffect(() => {
+    if (!isLoading && !isExiting.current) {
+      isExiting.current = true;
+      Animated.parallel([
+        Animated.timing(exitScale, { toValue: 1.15, duration: 500, useNativeDriver: true }),
+        Animated.timing(exitOpacity, { toValue: 0, duration: 500, useNativeDriver: true }),
+      ]).start(() => {
+        setCanNavigate(true);
+      });
+    }
+  }, [isLoading]);
+
+  if (canNavigate) {
+    if (session) {
+      return <Redirect href="/(tabs)/dashboard" />;
+    }
+    return <Redirect href="/(auth)/login" />;
   }
 
-  if (session) {
-    return <Redirect href="/(tabs)/dashboard" />;
-  }
-
-  return <Redirect href="/(auth)/login" />;
+  return (
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.primary,
+          opacity: exitOpacity,
+          transform: [{ scale: exitScale }],
+        },
+      ]}
+    >
+      <AnimatedSplash size={160} color={colors.textOnPrimary} />
+    </Animated.View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
