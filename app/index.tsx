@@ -3,14 +3,12 @@ import { Animated, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '@/lib/store';
-import { useTheme } from '@/lib/theme-context';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
 
 const ANIM_MIN_MS = 3000; // full entrance animation duration
 
 export default function Index() {
   const { session, isLoading } = useAuthStore();
-  const { colors } = useTheme();
 
   const exitOpacity = useRef(new Animated.Value(1)).current;
   const exitScale = useRef(new Animated.Value(1)).current;
@@ -63,12 +61,7 @@ export default function Index() {
         },
       ]}
     >
-      <AnimatedSplash
-        color={colors.textOnPrimary}
-        logoWidth={280}
-        gradientStart={colors.primaryDark}
-        gradientEnd="#004D40"
-      />
+      <AnimatedSplash />
     </Animated.View>
   );
 }
