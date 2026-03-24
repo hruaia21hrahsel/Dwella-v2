@@ -51,7 +51,7 @@ export function useTrack() {
   const posthog = usePostHog();
   return useCallback(
     (event: string, properties?: PostHogEventProperties) => {
-      posthog.capture(event, properties);
+      posthog?.capture(event, properties);
     },
     [posthog],
   );

@@ -135,7 +135,7 @@ function AuthGuard() {
               supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', uid).eq('is_archived', false),
               supabase.from('tenants').select('id', { count: 'exact', head: true }).eq('user_id', uid),
             ]);
-            posthog.identify(uid, {
+            posthog?.identify(uid, {
               email: newSession.user.email ?? '',
               name: newSession.user.user_metadata?.full_name ?? '',
               property_count: propCount ?? 0,
@@ -153,7 +153,7 @@ function AuthGuard() {
         })();
       } else {
         setUser(null);
-        posthog.reset();
+        posthog?.reset();
         setLoading(false);
       }
     });
