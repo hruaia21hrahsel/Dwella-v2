@@ -6,6 +6,8 @@ import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
 
+const ANIM_MIN_MS = 3000; // full entrance animation duration
+
 export default function Index() {
   const { session, isLoading } = useAuthStore();
   const { colors } = useTheme();
@@ -19,11 +21,10 @@ export default function Index() {
 
   useEffect(() => {
     SplashScreen.hideAsync();
-    // Minimum display time so the full entrance animation plays (~2.5s)
     setTimeout(() => {
       animMinElapsed.current = true;
       tryExit();
-    }, 2500);
+    }, ANIM_MIN_MS);
   }, []);
 
   const tryExit = () => {
@@ -57,13 +58,17 @@ export default function Index() {
       style={[
         styles.container,
         {
-          backgroundColor: colors.primary,
           opacity: exitOpacity,
           transform: [{ scale: exitScale }],
         },
       ]}
     >
-      <AnimatedSplash size={160} color={colors.textOnPrimary} />
+      <AnimatedSplash
+        color={colors.textOnPrimary}
+        logoWidth={280}
+        gradientStart={colors.primaryDark}
+        gradientEnd="#004D40"
+      />
     </Animated.View>
   );
 }
@@ -71,7 +76,5 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
