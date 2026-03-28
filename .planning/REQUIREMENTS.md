@@ -61,26 +61,26 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUILD-01 | — | Pending |
-| BUILD-02 | — | Pending |
-| STORE-01 | — | Pending |
-| STORE-02 | — | Pending |
-| STORE-03 | — | Pending |
-| STORE-04 | — | Pending |
-| PLAT-01 | — | Pending |
-| PLAT-02 | — | Pending |
-| PLAT-03 | — | Pending |
-| PLAT-04 | — | Pending |
-| PLAT-05 | — | Pending |
-| VERIFY-01 | — | Pending |
-| VERIFY-02 | — | Pending |
-| VERIFY-03 | — | Pending |
+| BUILD-01 | Phase 15 | Pending |
+| BUILD-02 | Phase 15 | Pending |
+| STORE-01 | Phase 16 | Pending |
+| STORE-02 | Phase 16 | Pending |
+| STORE-03 | Phase 16 | Pending |
+| STORE-04 | Phase 15 | Pending |
+| PLAT-01 | Phase 15 | Pending |
+| PLAT-02 | Phase 15 | Pending |
+| PLAT-03 | Phase 15 | Pending |
+| PLAT-04 | Phase 15 | Pending |
+| PLAT-05 | Phase 15 | Pending |
+| VERIFY-01 | Phase 17 | Pending |
+| VERIFY-02 | Phase 17 | Pending |
+| VERIFY-03 | Phase 17 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13
+- Mapped to phases: 13
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-29*
-*Last updated: 2026-03-29 after initial definition*
+*Last updated: 2026-03-29 — traceability mapped after roadmap creation*
