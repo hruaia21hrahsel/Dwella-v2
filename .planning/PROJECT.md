@@ -64,7 +64,22 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 
 ### Active
 
-(None — next milestone requirements TBD)
+(See REQUIREMENTS.md for v1.3 requirements)
+
+## Current Milestone: v1.3 Android Play Store Launch
+
+**Goal:** Ship Dwella to Google Play Store with production signing, store listing, and all platform requirements met.
+
+**Target features:**
+- Release keystore generation + EAS Android credentials setup
+- Privacy policy creation and publication
+- Play Store assets (screenshots, feature graphic, description)
+- Google OAuth configuration (Google Cloud Console + Supabase)
+- Sentry crash monitoring reinstallation or deliberate removal
+- PostHog production env wiring
+- Unused Android permissions cleanup
+- App Links assetlinks.json for verified deep linking
+- End-to-end device testing on physical Android
 
 ### Out of Scope
 
@@ -88,7 +103,7 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 
 ## Context
 
-- **Status:** v1.2 shipped — WhatsApp Bot milestone complete (4 phases, 9 plans, 16 requirements)
+- **Status:** v1.3 in progress — Android Play Store Launch
 - **Codebase:** ~80 screens/components, 12 Edge Functions, 25 SQL migrations, ~28,000 LOC TypeScript
 - **Tech stack:** React Native + Expo SDK 51, Supabase, Zustand, Claude API, Victory Native
 - **Tech debt:** 5 items from v1.2 audit (orphaned whatsapp-send-code function, pdf-reports bucket manual setup, HTML2PDF_API_KEY not in checklist, migration 026 settings dependency, WHATSAPP_BOT_PHONE env gating)
@@ -119,5 +134,22 @@ Every user-facing workflow (auth, property CRUD, payments, invites, documents, m
 | pg_net DB trigger for maintenance notifications (v1.2) | Instant notification on any status change from any source (app, bot, admin) | ✓ Good — fires automatically, no cron lag |
 | Dual access pattern for bot intents (v1.2) | Single handler callable from both Claude freeform and button taps | ✓ Good — no code duplication, consistent responses |
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd:transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-03-21 after v1.2 milestone*
+*Last updated: 2026-03-29 — v1.3 milestone started*
