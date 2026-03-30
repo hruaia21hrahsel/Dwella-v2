@@ -66,7 +66,10 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
   2. Running `npx tsc --noEmit` from the repo root completes without errors caused by Next.js files — the root TypeScript config excludes `website/`
   3. Starting the Expo dev server (`npx expo start`) produces no Metro resolution errors related to `/website` — the blockList is active
   4. Vercel project exists with Root Directory set to `website` and Ignored Build Step configured so mobile-only commits do not trigger website rebuilds
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 15-01-PLAN.md — Scaffold Next.js 15 project, Metro blockList, root config isolation
+- [ ] 15-02-PLAN.md — Vercel deployment configuration and dashboard setup
 
 ### Phase 16: Core Pages & Branding
 **Goal**: Visitors can see the full landing page with all content sections and navigate to the privacy policy — the site is deployable and app-store-submission-ready
@@ -111,6 +114,6 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 12. Media Handling | v1.2 | 2/2 | Complete | 2026-03-21 |
 | 13. Rich Messaging & Menus | v1.2 | 3/3 | Complete | 2026-03-21 |
 | 14. Intents & Outbound Notifications | v1.2 | 2/2 | Complete | 2026-03-21 |
-| 15. Project Setup & Infrastructure | v1.3 | 0/TBD | Not started | - |
+| 15. Project Setup & Infrastructure | v1.3 | 0/2 | In progress | - |
 | 16. Core Pages & Branding | v1.3 | 0/TBD | Not started | - |
 | 17. SEO & Launch | v1.3 | 0/TBD | Not started | - |
