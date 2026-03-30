@@ -35,7 +35,7 @@ export default function OnboardingScreen() {
   function handleSkip() {
     track(EVENTS.ONBOARDING_COMPLETED, { skipped: true });
     setOnboardingCompleted();
-    router.replace('/(tabs)/dashboard');
+    router.replace('/pin-setup');
   }
 
   return (

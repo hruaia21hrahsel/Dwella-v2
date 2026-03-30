@@ -4,9 +4,14 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from './supabase';
 
-// makeRedirectUri generates the correct callback URL for the current
-// environment: custom scheme for standalone builds, proxy URL for Expo Go.
-const REDIRECT_URI = makeRedirectUri({ scheme: 'dwella', path: 'auth/callback' });
+WebBrowser.maybeCompleteAuthSession();
+
+const REDIRECT_URI = makeRedirectUri({
+  native: 'dwella://auth/callback',
+  scheme: 'dwella',
+  path: 'auth/callback',
+});
+console.log('[Dwella] OAuth redirect URI:', REDIRECT_URI);
 
 /**
  * Sign in with Google via Supabase OAuth (implicit flow).
@@ -17,16 +22,22 @@ export async function signInWithGoogle() {
     options: {
       redirectTo: REDIRECT_URI,
       skipBrowserRedirect: true,
+      queryParams: { prompt: 'select_account' },
     },
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[Dwella] Google OAuth error:', error.message);
+    throw error;
+  }
   if (!data.url) throw new Error('No OAuth URL returned');
+  console.log('[Dwella] Opening OAuth URL:', data.url);
 
   if (Platform.OS === 'android') await WebBrowser.warmUpAsync().catch(() => {});
 
   try {
     const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI);
+    console.log('[Dwella] Auth result type:', result.type);
 
     if (result.type === 'success' && result.url) {
       await setSessionFromRedirect(result.url);

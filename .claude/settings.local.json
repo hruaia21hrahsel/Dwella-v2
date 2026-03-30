@@ -1,7 +1,34 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(supabase:*)",
+      "Bash(npx supabase:*)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_a2507846952f7ad1da2567424f42b6930ce858e0 npx supabase:*)",
+      "Bash(sed:*)",
+      "Bash(npx expo:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(psql:*)",
+      "Bash(find C:\\\\Users\\\\Spongeass\\\\Desktop\\\\Claude Code\\\\Dwella v2\\\\app\\\\\\(tabs\\):*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(where:*)",
+      "Bash(magick:*)",
+      "Bash(find:*)",
+      "Bash(mv:*)",
+      "Bash(npx which supabase)",
+      "Read(//c/Users/Spongeass/Desktop/Claude Code/Dwella v2/$APPDATA/npm/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(cmd.exe:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)"
     ]
   }
 }

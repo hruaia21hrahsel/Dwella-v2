@@ -48,7 +48,7 @@ export function TourGuideCard() {
     if (isLast) {
       setOnboardingCompleted();
       setTourStep(null);
-      router.replace('/(tabs)/dashboard');
+      router.replace('/pin-setup');
     } else {
       const next = tourStep! + 1;
       setTourStep(next);
@@ -59,7 +59,7 @@ export function TourGuideCard() {
   function handleSkip() {
     setOnboardingCompleted();
     setTourStep(null);
-    router.replace('/(tabs)/dashboard');
+    router.replace('/pin-setup');
   }
 
   return (
