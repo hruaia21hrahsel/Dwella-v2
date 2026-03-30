@@ -9,9 +9,9 @@ Requirements for a marketing landing page built with Next.js, deployed on Vercel
 
 ### Setup & Infrastructure
 
-- [ ] **SETUP-01**: Next.js 15 project scaffolded in `/website` with its own `package.json` and `tsconfig.json`, isolated from the Expo app
-- [ ] **SETUP-02**: Metro config updated with blockList to exclude `/website` directory from mobile builds
-- [ ] **SETUP-03**: Root `tsconfig.json` excludes `website/` from Expo type checking
+- [x] **SETUP-01**: Next.js 15 project scaffolded in `/website` with its own `package.json` and `tsconfig.json`, isolated from the Expo app
+- [x] **SETUP-02**: Metro config updated with blockList to exclude `/website` directory from mobile builds
+- [x] **SETUP-03**: Root `tsconfig.json` excludes `website/` from Expo type checking
 - [ ] **SETUP-04**: Vercel project configured with `website` as root directory and Ignored Build Step to prevent unnecessary deploys
 
 ### Content Pages
@@ -79,9 +79,9 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01 | Phase 15 | Pending |
-| SETUP-02 | Phase 15 | Pending |
-| SETUP-03 | Phase 15 | Pending |
+| SETUP-01 | Phase 15 | Complete |
+| SETUP-02 | Phase 15 | Complete |
+| SETUP-03 | Phase 15 | Complete |
 | SETUP-04 | Phase 15 | Pending |
 | PAGE-01 | Phase 16 | Pending |
 | PAGE-02 | Phase 16 | Pending |

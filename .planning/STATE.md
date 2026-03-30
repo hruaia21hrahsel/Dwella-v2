@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Dwella Landing Page
-status: planning
-stopped_at: Phase 15 context gathered
-last_updated: "2026-03-30T16:27:44.384Z"
-last_activity: 2026-03-30 — Roadmap created for v1.3 Landing Page (3 phases, 17 requirements mapped)
+status: executing
+stopped_at: Completed 15-01-PLAN.md
+last_updated: "2026-03-30T16:53:10.127Z"
+last_activity: 2026-03-30 — Completed 15-01 project setup (Next.js scaffold + Metro isolation)
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Phase: 15 of 17 (Project Setup & Infrastructure)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-30 — Roadmap created for v1.3 Landing Page (3 phases, 17 requirements mapped)
+Plan: 2 of 2
+Status: Executing Phase 15
+Last activity: 2026-03-30 — Completed 15-01 project setup (Next.js scaffold + Metro isolation)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 - [v1.3]: Dwella brand palette (indigo #4F46E5) canonical — discard teal #009688 from old landing/index.html
 - [v1.3]: Privacy policy in Phase 16 (not Phase 17) — it is a hard blocker for app store submission, not launch polish
 - [v1.3]: Contact section uses mailto: link (not Resend Route Handler) — keeps site fully static, no server-side code
+- [Phase 15]: Tailwind v4 @import syntax used (not v3 directives) per create-next-app scaffold
 
 ### Pending Todos
 
@@ -64,6 +65,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-30T16:27:44.380Z
-Stopped at: Phase 15 context gathered
-Resume file: .planning/phases/15-project-setup-infrastructure/15-CONTEXT.md
+Last session: 2026-03-30T16:53:10.124Z
+Stopped at: Completed 15-01-PLAN.md
+Resume file: None
