@@ -9,7 +9,9 @@
     "web": "expo start --web",
     "ts-check": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "jest"
+    "test": "jest",
+    "website:dev": "npm --prefix website run dev",
+    "website:build": "npm --prefix website run build"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
