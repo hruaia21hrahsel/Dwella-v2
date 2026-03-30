@@ -1,259 +1,207 @@
-# Feature Landscape
+# Feature Research
 
-**Domain:** WhatsApp Cloud API + Telegram bot expansion for property management
-**Researched:** 2026-03-21
-**Confidence:** HIGH (Meta official docs, Telegram Bot API docs, multi-source cross-verification)
+**Domain:** Marketing landing page for a property management mobile app (React Native / Expo)
+**Researched:** 2026-03-30
+**Confidence:** HIGH (multi-source cross-verified: Apple developer docs, SaaS landing page benchmarks, property management competitor analysis, WebSearch)
 
 ---
 
-## Table Stakes
+## Feature Landscape
 
-Features users expect a property management bot to have. Missing these makes the bot feel broken or unusable.
+### Table Stakes (Users Expect These)
+
+Features that visitors assume exist on a mobile app landing page. Missing any of these makes the product look unfinished or untrustworthy.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Outbound rent reminders via WhatsApp | Tenants already receive them via push; WhatsApp reminders reduce no-response rate | MEDIUM | Requires pre-approved **utility template** (non-promotional, transactional). Must be submitted to Meta and approved before any outbound send. Template approval typically takes minutes to 48 hours. |
-| Payment confirmation receipt via WhatsApp | Tenants expect a paper trail after paying | MEDIUM | Utility template, same approval requirement. Variables: `{{tenant_name}}`, `{{amount}}`, `{{month}}`, `{{property_address}}`. |
-| Maintenance status notifications via WhatsApp | Both landlord and tenant expect to know when status changes | MEDIUM | Utility template per status transition (acknowledged, in_progress, resolved). One template per transition or parameterized status variable. |
-| Inbound media: tenant sends photo as payment proof | Tenants already use WhatsApp to send photos — expecting bot to accept them is natural | HIGH | Webhook receives `image` type message with `media_id`. Must call GET `https://graph.facebook.com/v{version}/{media-id}` with Bearer token to retrieve download URL, then download binary and upload to Supabase Storage. **Media URL expires in ~5 min** — must download immediately in the webhook handler. |
-| Interactive main menu on both WhatsApp and Telegram | Bots without navigation feel opaque; menu provides discoverability | HIGH | WhatsApp: `interactive` message type with `type: "button"` (max 3 buttons per message). With 5 menu categories, must split into two messages (3+2) or use list message (max 10 rows). Telegram: inline keyboard, up to 8 buttons per row, 100 per keyboard. |
-| Freeform text alongside button navigation | Users type naturally; forcing button-only is unusable | LOW | RICH-04 requirement. Both platforms support mixed input. Buttons are shortcuts — all actions must also be reachable by typing. |
-| Bot welcome message on account linking | Users need onboarding context when they first connect | LOW | Triggered once on successful link. Free-form text within the 24-hour session window. No template needed if sent immediately after user-initiated linking flow. |
+| Hero section with value proposition | First 3–5 seconds must communicate what the app does and for whom | LOW | Headline under 8 words, sub-headline explains features. Include primary CTA (App Store / Google Play download). |
+| App store download badges (iOS + Android) | Users need a direct path to install; no badge = no conversion | LOW | Apple provides official badge assets with usage guidelines. Link to actual store listings. Badges repeat at bottom of page. |
+| App screenshots / mockups | Visitors must see the product before downloading — standard expectation | MEDIUM | 3–5 screens showing core workflows (dashboard, payments, bot). Use device frames. Provide mobile-optimised sizes. |
+| Feature highlights section | Users need to understand what the app does beyond the hero | LOW | 3–6 cards or rows, each feature with icon, title, 1-sentence description. Covers landlord + tenant dual-role value. |
+| Privacy policy page | **Required by Apple App Store and Google Play** — app will be rejected without a live URL | LOW | Separate `/privacy` route. Covers data collected, storage, retention, third parties (Supabase, Claude, PostHog, Sentry). SSG rendered. |
+| Contact / support section | Users expect a way to reach support before downloading | LOW | Email address or contact form. Links to support channel (email is sufficient for v1.3). |
+| Responsive design (mobile-first) | Over 60% of marketing traffic arrives on mobile — unusable on phone = high bounce | MEDIUM | Next.js + Tailwind handles this cleanly. Hero layout must stack vertically on mobile. Screenshots scale down. |
+| Correct branding (logo, color, typography) | Mismatch between landing page and app destroys trust | LOW | Use existing Dwella brand: `#4F46E5` indigo primary, dark/light palette. Match app's CRED Premium aesthetic. |
+| Page title, meta description, og:image | Baseline SEO — missing these tanks search ranking and social shares | LOW | Next.js App Router `metadata` export. og:image should be 1200×630 branded image. |
+| Fast load time (Core Web Vitals pass) | Google ranks slow pages lower; users bounce off slow pages | MEDIUM | Next.js SSG with Image optimisation resolves most issues. No blocking scripts. Tailwind purges unused CSS. |
 
 ---
 
-## Differentiators
+### Differentiators (Competitive Advantage)
 
-Features that make Dwella's bot stand out from typical rental notification bots.
+Features that go beyond the baseline and make the landing page more convincing.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Menu-driven sub-navigation (5 categories, contextual sub-options) | Most rental bots are dumb notification senders. Multi-level menu makes the bot an action layer, not just an alert channel. | HIGH | WhatsApp: Each sub-menu level uses a new `interactive` message. The 3-button-per-message limit means hierarchical menus require chained messages. Telegram: Inline keyboard supports more buttons per message, making full sub-menus in one message feasible. Must track conversation state in `bot_conversations` table to know which menu level the user is at. |
-| PDF report delivery via bot (user picks month/year) | Landlords want financial reports in their messenger without opening the app | HIGH | Two-turn conversation: bot asks for month/year (buttons or freeform), then generates PDF via existing `generate-pdf` Edge Function and sends as document message. WhatsApp document send requires multipart form or URL upload to WhatsApp media endpoint first. Telegram: send via `sendDocument` — simpler, file upload inline. |
-| Maintenance status query via bot | "What's happening with my leaking sink report?" — natural language question answered without app open | MEDIUM | New intent: `query_maintenance`. Claude API receives maintenance context. Response rendered as formatted text message. No buttons needed for read-only query. |
-| Upcoming payments summary | Tenant asks "what do I owe?" and gets a structured response | MEDIUM | New intent: `query_upcoming_payments`. Pulls from `payments` table for that tenant. Response as formatted text listing month, amount, status, due date. |
-| Property summary for landlords | "How is my portfolio doing?" answered in one bot message | MEDIUM | New intent: `query_property_summary`. Aggregates occupancy, rent collection status, open maintenance counts. Clean summary message. |
-| Document sharing via WhatsApp | Tenant receives lease or landlord sends notice directly via WhatsApp | MEDIUM | WhatsApp outbound document: must upload document to WhatsApp media first via `POST /media`, get `media_id`, then send as `document` type message. Supabase Storage signed URL can be fetched and forwarded. Inbound document from tenant: same two-step retrieve-and-store flow as image, but for PDF/DOCX. |
+| AI bot callout section | Dwella's AI-powered Telegram/WhatsApp bot is a genuine differentiator vs Buildium/AppFolio — most competitors don't have it | LOW | Dedicated section. Explain natural language queries, interactive menus, proactive notifications. Show bot conversation screenshot. |
+| Dual-role explainer (landlord + tenant) | Most property apps target one role — Dwella serves both from one account | LOW | Split visual: left column landlord benefits, right column tenant benefits. Reinforces inclusivity of the product. |
+| Feature comparison table vs manual tracking | Converts users who currently use spreadsheets — largest market segment | MEDIUM | Compare columns: "Spreadsheet / WhatsApp group" vs "Dwella". Rows: payment tracking, maintenance requests, documents, reminders. |
+| Screenshots with context captions | Unlabelled screenshots leave users guessing — captions convert | LOW | 1-line caption per screenshot. E.g. "Track payments and mark proof of payment." |
+| Security / trust signals section | Landlords handle sensitive financial and personal data — trust is a buying factor | LOW | Mention: end-to-end RLS policies, secure auth (Apple/Google), PIN/biometric lock, Sentry crash monitoring. |
+| FAQ section | Reduces pre-download objections without requiring support contact | LOW | 5–8 questions: free vs paid, platform compatibility, data privacy, how tenant invite works, bot setup. |
+| Structured data (JSON-LD) | Rich result eligibility in Google search (SoftwareApplication schema) | LOW | `SoftwareApplication` with `operatingSystem: iOS, Android`, `applicationCategory: BusinessApplication`, `offers`. |
 
 ---
 
-## Anti-Features
+### Anti-Features (Commonly Requested, Often Problematic)
 
-Features to explicitly avoid, even though they may seem natural to add.
+Features to explicitly not build for v1.3.
 
-| Feature | Why Avoid | What to Do Instead |
-|---------|-----------|-------------------|
-| WhatsApp list messages (structured lists) | REQUIREMENTS.md explicitly out-of-scopes them. They require separate interactive format, add implementation complexity, and buttons cover the v1.2 menu depth. | Use interactive reply buttons (max 3) with chained messages for deeper menus |
-| Property deletion via bot | Destructive action on user's core data. Easy to trigger by accident in a messaging UI. Impossible to add "are you sure?" that users take seriously in chat. | Button in Properties sub-menu says "Manage in app" and links to app deep link |
-| Video or voice message handling | Photos and documents cover payment proof and lease sharing. Video adds storage and processing cost with minimal incremental value for rental management. | Accept only `image` and `document` MIME types. Return a friendly error for video/audio. |
-| WhatsApp-only features that diverge from Telegram | Dual bot maintenance doubles complexity if features diverge. Both bots share the same Claude-powered intent layer. | Both bots receive the same menu structure, same intents, same responses — platform formatting differs but logic is shared |
-| Interactive buttons in outbound template messages without approval | Templates with interactive buttons require separate Meta approval. Using unapproved interactive templates causes API rejection. | Submit utility templates with quick reply buttons as part of template approval. Non-template interactive messages only within 24-hour user session. |
-| Stateless menu system (re-render menu on every message) | Without session state, the bot cannot know which sub-menu the user is navigating. Every reply becomes ambiguous. | Store `menu_state` in `bot_conversations` table. On each inbound message, load state, process, update state. |
-| Collecting media from users without immediate download | WhatsApp media URLs expire within 5 minutes of webhook delivery. Delayed download loses the file permanently. | Webhook handler must download media synchronously before returning 200 OK. Upload to Supabase Storage in the same request. |
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Live demo / sandbox environment | Prospects want to try before installing | Requires maintaining a separate demo Supabase environment, seed data, and reset logic — high ops cost | Rich screenshots and an app preview video in the hero achieve the same goal without infrastructure |
+| Pricing page | Users want to know cost upfront | Dwella is not yet a paid SaaS product — listing pricing implies a subscription model that doesn't exist yet | If app is free, state "Free on iOS and Android" in the hero CTA. No pricing page needed. |
+| Blog / content marketing section | Good for SEO long-term | Content strategy requires ongoing investment; v1.3 scope is one landing page — not a content platform | Defer to post-launch when content strategy is defined |
+| User account creation / web sign-up form | Converts web visitors to app users | Creates a second auth entry point disconnected from the Expo app — data sync complexity is non-trivial | Direct all CTAs to App Store / Play Store badges |
+| Testimonials / social proof from real users | Builds trust immediately | App is pre-launch or early beta — fabricated testimonials are a trust liability, real testimonials aren't available yet | Substitute with feature/benefit statements, security trust signals, and "Built for independent landlords" positioning |
+| Cookie consent banner / GDPR popup | Legal compliance | The landing page is SSG with no tracking cookies — Vercel Analytics is cookieless by default. An unnecessary consent popup creates friction | Only add if non-cookieless analytics are used. PostHog in the mobile app does not affect the landing page. |
+| Animation-heavy hero (Framer Motion, parallax) | "Looks premium" | Adds JS bundle weight, can fail Core Web Vitals, adds build complexity with no proven conversion lift | Clean CSS transitions are sufficient. Investment should go to copy and screenshots, not motion. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-Outbound WhatsApp templates (reminders, receipts, maintenance notifications)
-    └──requires──> Approved utility templates in Meta Business Manager
-    └──requires──> WhatsApp-linked user records (phone_number on user or tenant)
-    └──requires──> Updated Edge Functions (send-reminders, auto-confirm-payments, maintenance notification triggers)
-    └──depends on──> SETUP-01, SETUP-02 (account setup and linking)
+App Store download badges
+    └──requires──> Live App Store listing (iOS) — store URL must exist
+    └──requires──> Live Play Store listing (Android) — store URL must exist
+    └──NOTE──> Badges can be "Coming soon" placeholders if store listings aren't live yet
 
-Inbound media handling (MEDIA-01, MEDIA-02)
-    └──requires──> WhatsApp webhook handler updates (detect image/document message type)
-    └──requires──> Meta Graph API media download step (GET /{media-id})
-    └──requires──> Supabase Storage upload (existing `payment-proofs` or `documents` bucket)
-    └──depends on──> SETUP-01, SETUP-02
+Privacy policy page (/privacy)
+    └──required by──> Apple App Store submission (live URL in App Store Connect)
+    └──required by──> Google Play submission
+    └──NOTE──> Must be live BEFORE app store submission; not optional
 
-Interactive menus — WhatsApp (RICH-02, RICH-03)
-    └──requires──> `interactive` message type with `type: "button"` (max 3 buttons)
-    └──requires──> Chained messages for categories exceeding 3 (5 categories = 2 messages)
-    └──requires──> Session state in `bot_conversations` to track menu position
-    └──NOTE──> Interactive messages only work within 24-hour user session window
-    └──NOTE──> Must send template to re-open session if user has been silent >24h
+Hero CTA buttons
+    └──depends on──> App store download badges (links to store)
+    └──enhances──> Screenshots section (reinforces install decision)
 
-Interactive menus — Telegram (RICH-02, RICH-03, RICH-05)
-    └──requires──> InlineKeyboardMarkup with callback_data (max 64 bytes per button)
-    └──requires──> Callback query handler in whatsapp-webhook or separate telegram-webhook
-    └──NOTE──> No session window restriction on Telegram — inline keyboards work anytime
+Feature highlights
+    └──depends on──> Brand colors / design system (from existing app constants)
+    └──enhances──> Dual-role explainer (same feature set, dual audience framing)
 
-New bot intents (INTENT-01, INTENT-02, INTENT-03)
-    └──requires──> Updated Claude API system prompt with maintenance + payment + property context
-    └──requires──> New intent handlers in process-bot-message Edge Function
-    └──depends on──> Existing bot_conversations table and context caching pattern
+SEO metadata (og:image, JSON-LD)
+    └──requires──> Branded og:image asset (1200×630px)
+    └──requires──> App Store listing URL (for JSON-LD offers)
+    └──depends on──> Next.js App Router metadata export
 
-PDF report delivery via bot
-    └──requires──> Two-turn conversation (ask month/year → generate → send)
-    └──requires──> generate-pdf Edge Function (already deployed)
-    └──requires──> WhatsApp: upload PDF to media endpoint → send document message
-    └──requires──> Telegram: sendDocument API call (simpler, no pre-upload)
-    └──depends on──> Interactive menus (sub-menu trigger point)
+Contact section
+    └──no external dependencies
+    └──NOTE──> Email is sufficient — no form submission backend needed for v1.3
 
-Welcome message (RICH-01)
-    └──requires──> Trigger hook on successful WhatsApp account link
-    └──no new infrastructure needed (outbound message send already needed for templates)
-    └──NOTE──> Send within same handler that processes the verification code, before user session expires
+AI bot callout
+    └──no external dependencies (screenshots + copy only)
+    └──depends on──> App screenshots of bot conversation for visual
+
+FAQ section
+    └──no external dependencies
+    └──NOTE──> Implement as static accordion component; no CMS needed
 ```
 
----
+### Dependency Notes
 
-## Message Type Constraints Reference
-
-Critical limits to design within. These drive implementation decisions.
-
-### WhatsApp Interactive Reply Buttons (Session-only, no approval needed)
-
-| Property | Limit |
-|----------|-------|
-| Max buttons per message | **3** |
-| Button title text | **20 characters** |
-| Button ID (payload) | 256 characters |
-| Body text | 1024 characters |
-| Header text (optional) | 60 characters |
-| Footer text (optional) | 60 characters |
-| When usable | Within 24-hour user session window only |
-
-### WhatsApp List Messages (Out of scope for v1.2 — documented for reference)
-
-| Property | Limit |
-|----------|-------|
-| Max rows across all sections | **10** |
-| Row title | 24 characters |
-| Row description | 72 characters |
-| Section title | 24 characters |
-| Button text (opens list) | 20 characters |
-
-### WhatsApp Template Messages (Require Meta approval)
-
-| Property | Limit |
-|----------|-------|
-| Variables | `{{1}}`, `{{2}}` etc. — positional, not named |
-| Quick reply buttons in template | Up to 3 (standard layout), up to 10 (extended layout) |
-| CTA buttons in template | Max 2 (1 URL, 1 phone) |
-| Header media (image) | 5 MB (JPG/PNG) |
-| Document header | 10 MB (PDF) |
-| Approval time | Minutes to 48 hours (usually minutes via automated review) |
-| Categories | Marketing, Utility, Authentication, Service |
-
-**For Dwella v1.2:** All outbound proactive messages (reminders, receipts, notifications) must use **Utility** category templates. Utility = non-promotional, transactional, tied to user's existing account/payment relationship.
-
-### WhatsApp Media Limits
-
-| Type | Max Size | Formats | Caption limit |
-|------|----------|---------|---------------|
-| Image | 5 MB (template), 100 MB (session) | JPG, PNG | 1024 characters |
-| Document (PDF) | 10 MB (template), 100 MB (session) | PDF, DOCX, XLSX, etc. | 1024 characters |
-| Media URL expiry | **~5 minutes** after webhook delivery | — | Download immediately |
-| Meta storage retention | 14 days | — | Download and re-store |
-
-### Telegram Inline Keyboard
-
-| Property | Limit |
-|----------|-------|
-| Max buttons per keyboard | **100** (send/edit), note: 200 cap only for sendMessage, not edits |
-| Max buttons per row | **8** (practical: 4 for readability, 3 for mobile) |
-| callback_data per button | **64 bytes** |
-| Button text | No documented hard limit, but short text recommended |
-| Session window | None — inline keyboards work at any time |
+- **Privacy policy requires live URL before app store submission:** This is the single hardest blocker for App Store review. The `/privacy` page must be deployed before submitting to Apple or Google.
+- **App store badges require live listings:** Use placeholder badges with `#` href until store URLs are known. Swap to real URLs at launch.
+- **SEO metadata depends on og:image asset:** This needs to be created (a branded 1200×630 image) — it is not auto-generated. Must be included as a static asset in `/public/`.
 
 ---
 
-## Session Window: The Critical WhatsApp Constraint
+## MVP Definition
 
-**This is the single most important rule governing interactive messaging on WhatsApp.**
+### Launch With (v1.3)
 
-- Businesses can only send **free-form messages** (including interactive buttons) within **24 hours** of the user's last inbound message.
-- After 24 hours of user silence, the business must send a **pre-approved template** to reopen the conversation.
-- When the user replies to a template, the 24-hour window resets.
-- Interactive buttons within templates require the buttons to be part of the approved template — they cannot be added ad-hoc.
+Minimum viable landing page — what is needed for the App Store submission and first visitors.
 
-**Practical implications for Dwella:**
-- Main menu (RICH-02) can only be shown after user sends any message. Bot cannot proactively push a menu to idle users.
-- Outbound reminders (OUT-01, OUT-02, OUT-03) must use pre-approved templates — they are business-initiated outside the session window.
-- First-time welcome message (RICH-01) works because the linking flow starts with a user message (verification code send).
-- Users who link and then go silent for 24+ hours require a template to re-engage before any interactive content can be sent.
+- [ ] Hero section with value proposition headline, sub-headline, and App Store / Play Store CTA buttons — why essential: first thing every visitor sees
+- [ ] App screenshots section (3–5 screens in device frames) — why essential: primary conversion driver for mobile apps
+- [ ] Feature highlights section (6 key features, icons + descriptions) — why essential: answers "what does it actually do?"
+- [ ] AI bot differentiator callout — why essential: single biggest differentiator vs competitors; deserves its own section
+- [ ] Privacy policy page at `/privacy` — why essential: **required for App Store and Play Store submission, not optional**
+- [ ] Contact / support email — why essential: trust signal; visitors need a way to reach someone
+- [ ] Responsive mobile layout — why essential: majority of landing page traffic is mobile
+- [ ] SEO metadata (title, description, og:image, JSON-LD) — why essential: affects search ranking and social share appearance
+- [ ] Brand alignment (indigo `#4F46E5` palette, Dwella logo) — why essential: mismatch between landing page and app destroys trust
 
-**Telegram has no such restriction.** Inline keyboards can be sent at any time, including proactive outbound messages.
+### Add After Validation (v1.x)
 
----
+Features to add once the base landing page is live and traffic data is available.
 
-## Template Approval: What to Submit to Meta
+- [ ] FAQ section — add when support emails cluster around the same questions
+- [ ] Feature comparison table (Dwella vs spreadsheet) — add when user interviews confirm spreadsheet users as primary audience
+- [ ] Security / trust signals section — add if conversion data shows trust drop-off
+- [ ] Terms of service page — add before any monetisation or subscription features
+- [ ] Real user testimonials — add when 5+ users provide genuine quotes
 
-Templates needed for v1.2. All must be submitted to Meta Business Manager before launch.
+### Future Consideration (v2+)
 
-| Template Name | Category | Variables | Purpose |
-|---------------|----------|-----------|---------|
-| `dwella_rent_reminder` | Utility | `{{1}}` tenant name, `{{2}}` amount, `{{3}}` due date, `{{4}}` property | OUT-01: 3-day before, on-day, 3-day after reminders |
-| `dwella_payment_confirmed` | Utility | `{{1}}` tenant name, `{{2}}` amount, `{{3}}` month, `{{4}}` property | OUT-02: Payment confirmation receipt |
-| `dwella_maintenance_update` | Utility | `{{1}}` tenant name, `{{2}}` request description, `{{3}}` new status | OUT-03: Maintenance status change |
-| `dwella_reopen_session` | Utility | `{{1}}` user name | Re-engage users after 24h silence; leads into menu |
+Features to defer until product-market fit is established.
 
-**Rejection risk:** Template rejection happens when utility templates include promotional language or vague context. Keep all templates factual, specific to existing account relationships, zero promotional content.
-
----
-
-## MVP for v1.2
-
-**Must ship for milestone completion:**
-
-1. Meta Business API setup guide (SETUP-01) — without this, nothing else works
-2. WhatsApp account linking end-to-end (SETUP-02) — prerequisite for all other features
-3. Pre-approved utility templates submitted and approved (reminders, receipt, maintenance notification)
-4. Outbound reminders and receipts via WhatsApp (OUT-01, OUT-02, OUT-03)
-5. Inbound photo payment proof via WhatsApp (MEDIA-01)
-6. Main menu on both bots (RICH-02, RICH-05) — requires session state in `bot_conversations`
-7. Sub-menu navigation (RICH-03) — Properties, Payments, History, Maintenance, Others
-8. New intents: maintenance status, upcoming payments, property summary (INTENT-01, INTENT-02, INTENT-03)
-
-**Ship when base is validated:**
-
-- Inbound document sharing (MEDIA-02) — same flow as media but for documents; lower urgency than photo payment proof
-- PDF report delivery via bot — depends on interactive menu functioning; adds two-turn state complexity
-- Outbound document sharing (send lease via WhatsApp) — requires media upload step; lower urgency than inbound
-
-**Do not build:**
-
-- WhatsApp list messages — explicitly out of scope per REQUIREMENTS.md
-- Per-platform feature divergence — one intent layer, two renderers
-- Video/voice handling — no property management use case worth the complexity
+- [ ] Blog / content marketing — defer until content strategy is resourced
+- [ ] Live demo environment — defer until a maintainable sandbox architecture is designed
+- [ ] Pricing page — defer until subscription model is defined
+- [ ] Changelog / release notes page — defer until regular release cadence is established
 
 ---
 
-## Existing Infrastructure Reuse Map
+## Feature Prioritization Matrix
 
-| Existing System | Reused By |
-|-----------------|-----------|
-| `bot_conversations` table | Session state (`menu_state` column addition needed), conversation history |
-| `process-bot-message` Edge Function | New intents added here (query_maintenance, query_upcoming_payments, query_property_summary) |
-| `telegram-webhook` Edge Function | Extended with callback query handling for inline keyboard |
-| WhatsApp webhook handler (existing) | Extended with `interactive` message sending and `image`/`document` inbound handling |
-| `send-reminders` Edge Function | Extended to send WhatsApp template in addition to push notification |
-| `auto-confirm-payments` Edge Function | Extended to send `dwella_payment_confirmed` template |
-| Maintenance notification triggers (v1.1) | Extended to send `dwella_maintenance_update` template |
-| `generate-pdf` Edge Function | Reused for bot PDF delivery; PDF upload to WhatsApp media endpoint is new |
-| Supabase Storage (`payment-proofs` bucket) | Inbound WhatsApp payment proof photos stored here — same path pattern |
-| Existing Claude API system prompt context | Expanded to include maintenance + upcoming payment data |
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Hero section + CTA | HIGH | LOW | P1 |
+| App Store / Play Store badges | HIGH | LOW | P1 |
+| Privacy policy page | HIGH (legal) | LOW | P1 |
+| App screenshots section | HIGH | MEDIUM | P1 |
+| Feature highlights | HIGH | LOW | P1 |
+| Responsive layout | HIGH | MEDIUM | P1 |
+| SEO metadata + og:image | HIGH | LOW | P1 |
+| AI bot callout | MEDIUM | LOW | P2 |
+| Dual-role explainer | MEDIUM | LOW | P2 |
+| Contact section | MEDIUM | LOW | P2 |
+| Security trust signals | MEDIUM | LOW | P2 |
+| FAQ section | MEDIUM | LOW | P2 |
+| Comparison table | MEDIUM | MEDIUM | P3 |
+| JSON-LD structured data | LOW | LOW | P2 |
+
+**Priority key:**
+- P1: Must have for launch — page is broken or legally non-compliant without it
+- P2: Should have — meaningfully improves conversion or trust
+- P3: Nice to have — adds value but safe to defer
+
+---
+
+## Competitor Feature Analysis
+
+Landing page patterns observed on Buildium, TurboTenant, and Innago (leading independent landlord tools).
+
+| Feature | Buildium | TurboTenant | Innago | Our Approach |
+|---------|----------|-------------|--------|--------------|
+| Hero CTA | "Get a demo" | "Try free" | "Get started free" | "Download on iOS / Android" — mobile-first, no web sign-up |
+| Primary audience messaging | Mid-size PM companies | Independent landlords | Small landlords, free tier | Independent landlords — dual-role (also serves tenants) |
+| Social proof | Customer logos, review badges | Star ratings, testimonial quotes | User count ("10,000+ landlords") | Defer testimonials; use security signals + feature copy instead |
+| Screenshots | Product dashboard screenshots | Mobile app screenshots | Dashboard screenshots | Mobile app screenshots in device frames (matches Dwella's mobile nature) |
+| Pricing transparency | Tiered pricing table | Free tier prominent | Free prominent | "Free to download" — no pricing complexity to explain |
+| Privacy policy | Linked in footer | Linked in footer | Linked in footer | Separate `/privacy` route, also linked in footer |
+| AI / bot feature | Not present | Not present | Not present | Dedicated section — key differentiator |
+
+**Insight:** No major competitor prominently features an AI bot. This is Dwella's clearest differentiator and should receive a dedicated above-the-fold or near-above-the-fold section.
 
 ---
 
 ## Sources
 
-- WhatsApp Cloud API interactive reply buttons — official Meta docs (HIGH confidence): https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/
-- WhatsApp character limits reference (HIGH confidence, multi-source verified): https://help.pickyassist.com/general-guidelines/character-limits-whatsapp
-- WhatsApp list message documentation (HIGH confidence): https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-list-messages/
-- Template category guide July 2025 (HIGH confidence): https://www.chatarchitect.com/news/message-template-category-guide
-- WhatsApp media size limits (MEDIUM confidence, multi-source consistent): https://whatchimp.com/docs/whatsapp-api-maximum-media-size-supported-formats/
-- WhatsApp 24-hour session window (HIGH confidence, official via smsmode): https://www.smsmode.com/en/whatsapp-business-api-customer-care-window-ou-templates-comment-les-utiliser/
-- WhatsApp media download webhook flow (MEDIUM confidence, developer article): https://medium.com/@shreyas.sreedhar/downloading-media-using-whatsapps-cloud-api-webhooks-and-uploading-it-to-aws-s3-bucket-via-nodejs-07c5cbae896f
-- Telegram Bot API buttons documentation (HIGH confidence): https://core.telegram.org/api/bots/buttons
-- Telegram inline keyboard limits, Bot API 7.0 (HIGH confidence): https://core.telegram.org/bots/features
-- WhatsApp outbound messaging 2025 pricing and conversation rules (MEDIUM confidence): https://www.wati.io/en/blog/whatsapp-business-api/whatsapp-api-rate-limits/
-- Interactive button UX patterns for property management bots (MEDIUM confidence): https://www.verloop.io/blog/big-ux-ui-whatsapp-chatbot-challenges-how-to-tackle/
+- Apple App Review Guidelines — privacy policy requirement: https://developer.apple.com/app-store/review/guidelines/ (HIGH confidence)
+- Apple App Store marketing guidelines (badge usage): https://developer.apple.com/app-store/marketing/guidelines/ (HIGH confidence)
+- SaaS landing page best practices 2026 — Fibr AI: https://fibr.ai/landing-page/saas-landing-pages (MEDIUM confidence)
+- SaaS landing page design patterns 2026 — Veza Digital: https://www.vezadigital.com/post/best-saas-landing-page-examples (MEDIUM confidence)
+- Property management landing page elements — Four and Half: https://fourandhalf.com/5-elements-killer-landing-pages-property-managers/ (MEDIUM confidence)
+- Landing page conversion best practices 2026 — Lovable: https://lovable.dev/guides/landing-page-best-practices-convert (MEDIUM confidence)
+- Next.js SEO best practices 2025 — Slatebytes: https://www.slatebytes.com/articles/next-js-seo-in-2025-best-practices-meta-tags-and-performance-optimization-for-high-google-rankings (MEDIUM confidence)
+- SaaS landing page trends 2026 — SaaSFrame: https://www.saasframe.io/blog/10-saas-landing-page-trends-for-2026-with-real-examples (MEDIUM confidence)
+- TurboTenant competitor profile: https://www.turbotenant.com (observed via WebSearch)
+- Innago vs competitor comparison: https://innago.com/comparing-innago-vs-the-competition/ (MEDIUM confidence)
+- App Store screenshot size requirements 2025: https://splitmetrics.com/blog/app-store-screenshots-aso-guide/ (HIGH confidence)
 
 ---
 
-*Feature research for: Dwella v2 v1.2 milestone — WhatsApp Bot Expansion*
-*Researched: 2026-03-21*
+*Feature research for: Dwella v2 v1.3 milestone — Marketing Landing Page*
+*Researched: 2026-03-30*

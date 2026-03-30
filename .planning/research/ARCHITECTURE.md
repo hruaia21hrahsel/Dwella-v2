@@ -1,634 +1,421 @@
-# Architecture Patterns
+# Architecture Research
 
-**Project:** Dwella v2 — v1.2 WhatsApp Bot Expansion
-**Domain:** WhatsApp Cloud API integration with existing Supabase Edge Function architecture
-**Researched:** 2026-03-21
-
----
-
-## Current Architecture Baseline
-
-The existing system uses two parallel webhook Edge Functions that both delegate to one shared AI function:
-
-```
-WhatsApp message → whatsapp-webhook → process-bot-message → reply via sendWhatsApp()
-Telegram message → telegram-webhook → process-bot-message → reply via sendTelegram()
-```
-
-Both webhook functions already pass `source: 'whatsapp' | 'telegram'` to `process-bot-message`. The shared function returns a plain text `reply` string and the webhook functions handle delivery. This separation is the key architectural constraint: **process-bot-message must remain source-agnostic**.
-
-The `send-reminders` Edge Function (scheduled daily) already sends inline WhatsApp text messages directly via `graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages` — so the outbound WhatsApp pattern is already established.
+**Domain:** Next.js landing page integrated into Expo/React Native monorepo
+**Researched:** 2026-03-30
+**Confidence:** HIGH
 
 ---
 
-## What Needs to Change
+## Context: What Already Exists
 
-### New vs. Modified Components
+The repo already has a `landing/index.html` — a fully-written static HTML/CSS file with hero, features, store download links, and basic SEO. This is the content baseline for the Next.js migration. The existing file uses:
 
-| Component | Status | Change |
-|-----------|--------|--------|
-| `whatsapp-webhook` | MODIFY | Add image/document message parsing; add interactive button_reply routing |
-| `process-bot-message` | MODIFY | Add new intents (INTENT-01/02/03); add menu/button response format; accept button_id |
-| `telegram-webhook` | MODIFY | Add inline keyboard sending; add callback_query routing; answerCallbackQuery |
-| `send-reminders` | MODIFY | Update to use template messages for out-of-session-window reliability |
-| `auto-confirm-payments` | MODIFY | Hook into notify-whatsapp after payment promotion |
-| `whatsapp-media` | NEW | Downloads media from Meta CDN, uploads to Supabase Storage |
-| `whatsapp-send` | NEW | Shared outbound helper for all WhatsApp message types |
-| `notify-whatsapp` | NEW | Outbound notifications for payment confirmation and maintenance events |
+- Brand color `#009688` (teal) — **note: PROJECT.md specifies indigo `#4F46E5` as primary brand**
+- Inline CSS, vanilla JS scroll animations
+- Live App Store link (`id6760478576`) and Play Store link
+
+The Next.js site replaces this file. The `/landing` directory can be deleted once `/website` is in place.
 
 ---
 
-## Integration Point 1: Media Messages (MEDIA-01, MEDIA-02)
+## System Overview
 
-### The Problem
-
-The current `whatsapp-webhook` drops non-text messages silently (lines 119-123 of existing code):
-
-```typescript
-const text = (msg['text']?.['body'] as string) ?? '';
-if (!text.trim()) {
-  return new Response('OK', { status: 200 });
-}
 ```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Git Repository Root                         │
+├───────────────────────────┬─────────────────────────────────────┤
+│   Mobile App (Expo)       │   Landing Page (Next.js)            │
+│   ─────────────────────   │   ─────────────────────────────     │
+│   /app       (screens)    │   /website/app/   (Next.js App)     │
+│   /components             │   /website/public/(static assets)   │
+│   /hooks                  │   /website/package.json (isolated)  │
+│   /lib                    │   /website/tsconfig.json (isolated) │
+│   /constants              │   /website/next.config.ts           │
+│   /supabase               │   /website/vercel.json              │
+│   package.json (Expo)     │                                     │
+│   tsconfig.json (Expo)    │                                     │
+│   metro.config.js         │                                     │
+├───────────────────────────┴─────────────────────────────────────┤
+│                   Shared (read-only from /website)               │
+│   /assets/icon.png, /assets/favicon.png, /assets/images/        │
+└─────────────────────────────────────────────────────────────────┘
 
-Image and document messages arrive with `msg.type === 'image'` or `msg.type === 'document'`, not `msg.type === 'text'`.
-
-### Incoming Webhook Payload Structure (MEDIUM confidence)
-
-**Image message:**
-```json
-{
-  "messages": [{
-    "type": "image",
-    "from": "919876543210",
-    "id": "wamid.XXX",
-    "image": {
-      "id": "MEDIA_ID_STRING",
-      "mime_type": "image/jpeg",
-      "sha256": "...",
-      "caption": "Payment for March"
-    }
-  }]
-}
-```
-
-**Document message:**
-```json
-{
-  "messages": [{
-    "type": "document",
-    "from": "919876543210",
-    "document": {
-      "id": "MEDIA_ID_STRING",
-      "mime_type": "application/pdf",
-      "sha256": "...",
-      "filename": "lease.pdf",
-      "caption": "Lease agreement"
-    }
-  }]
-}
-```
-
-### Two-Step Media Download Flow (HIGH confidence — established pattern across multiple sources)
-
-**Step 1 — Resolve media_id to download URL:**
-```
-GET https://graph.facebook.com/v21.0/{MEDIA_ID}
-Authorization: Bearer {WHATSAPP_ACCESS_TOKEN}
-```
-Response: `{ "url": "https://lookaside.fbsbx.com/whatsapp_business/attachments/...", "mime_type": "image/jpeg", "sha256": "...", "file_size": 12345 }`
-
-**CRITICAL:** The returned URL is a temporary `lookaside.fbsbx.com` URL that **expires in 5 minutes** and requires the same Bearer token to download.
-
-**Step 2 — Download the binary:**
-```
-GET {url_from_step_1}
-Authorization: Bearer {WHATSAPP_ACCESS_TOKEN}
-```
-Response: raw binary ArrayBuffer.
-
-**Step 3 — Upload to Supabase Storage:**
-Use the Supabase JS client with service role key to upload to the appropriate bucket (`payment-proofs` for images, `documents` for document messages).
-
-### New Edge Function: `whatsapp-media`
-
-This is the appropriate container for the download+upload logic. Keeping it separate from `whatsapp-webhook` prevents the 5-minute URL expiry from being a concern during the webhook's acknowledgment window (Meta expects a fast response).
-
-**Data flow:**
-```
-whatsapp-webhook receives image message
-  → extracts { media_id, caption, sender_phone, mime_type }
-  → immediately returns 200 OK to Meta
-  → fire-and-forget fetch() to whatsapp-media Edge Function
-    → Step 1: GET graph.facebook.com/{media_id} → resolve download URL
-    → Step 2: GET lookaside URL → download binary ArrayBuffer
-    → Step 3: identify user by whatsapp_phone
-    → Step 4: classify intent from caption (heuristic: contains "payment" → proof, else → document)
-    → Step 5: upload binary to Supabase Storage
-    → Step 6: update payments.proof_url OR insert documents row
-    → Step 7: call whatsapp-send with confirmation reply to sender
-```
-
-**Storage path convention (matching existing patterns):**
-- Payment proof: `payment-proofs/{property_id}/{tenant_id}/{year}-{month}.jpg`
-- Document: `documents/{property_id}/{user_id}/{timestamp}-{filename}`
-
-**NOTE on fire-and-forget:** The `whatsapp-webhook` must return 200 to Meta within the response window. The call to `whatsapp-media` should use `fetch()` without `await` (fire-and-forget). Supabase Edge Functions run on Deno Deploy — `EdgeRuntime.waitUntil()` can be used if available to ensure the async call completes even after response is sent.
-
-### What Changes in `whatsapp-webhook`
-
-Add message type routing before the existing `if (!text.trim())` guard:
-
-```typescript
-const msgType = msg['type'] as string;
-
-if (msgType === 'image' || msgType === 'document') {
-  // Handle media — identify user, fire-and-forget to whatsapp-media
-  const mediaObj = (msg[msgType] as Record<string, unknown>);
-  const media_id = mediaObj['id'] as string;
-  // fire-and-forget (no await)
-  fetch(WHATSAPP_MEDIA_URL, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: linkedUser.id, media_id, mime_type: mediaObj['mime_type'], caption: mediaObj['caption'] })
-  });
-  return new Response('OK', { status: 200 });
-}
-
-if (msgType === 'interactive') {
-  const buttonId = (msg['interactive'] as any)?.['button_reply']?.['id'] as string;
-  // treat buttonId as the intent signal, forward to process-bot-message
-  // ...
-}
+Build pipelines are COMPLETELY SEPARATE:
+  Expo mobile  →  EAS Build  →  App Store / Play Store
+  Next.js site →  Vercel     →  dwella.app (or subdomain)
 ```
 
 ---
 
-## Integration Point 2: Interactive Button Callbacks (RICH-01 through RICH-05)
+## Recommended Project Structure
 
-### WhatsApp Button Reply Payload (MEDIUM confidence — multiple implementation sources agree)
-
-When a user taps a reply button, Meta sends a webhook POST with:
-
-```json
-{
-  "messages": [{
-    "type": "interactive",
-    "from": "919876543210",
-    "interactive": {
-      "type": "button_reply",
-      "button_reply": {
-        "id": "menu_payments",
-        "title": "Payments"
-      }
-    }
-  }]
-}
+```
+website/                        # Next.js project root — ISOLATED from Expo
+├── app/                        # Next.js App Router pages
+│   ├── layout.tsx              # Root layout (metadata, fonts, global CSS)
+│   ├── page.tsx                # Home page (hero + features + CTA)
+│   ├── privacy/
+│   │   └── page.tsx            # Privacy policy (required for app stores)
+│   └── contact/
+│       └── page.tsx            # Contact / support section
+├── components/                 # Web-only React components
+│   ├── HeroSection.tsx
+│   ├── FeatureGrid.tsx
+│   ├── AppStoreBadges.tsx
+│   ├── Footer.tsx
+│   └── NavBar.tsx
+├── lib/                        # Web-only utilities (analytics, etc.)
+├── public/                     # Static assets served at /
+│   ├── favicon.png             # Copied from ../assets/favicon.png at build
+│   ├── icon.png                # Copied from ../assets/icon.png
+│   └── screenshots/            # App screenshots for feature section
+├── styles/
+│   └── globals.css             # Tailwind base + brand tokens
+├── next.config.ts              # Next.js config (output: 'export' for SSG)
+├── package.json                # ISOLATED: next, react, react-dom only
+├── tsconfig.json               # ISOLATED: extends nothing from repo root
+├── tailwind.config.ts          # Tailwind with Dwella brand colors
+├── postcss.config.mjs
+└── vercel.json                 # Vercel deployment config for subdirectory
 ```
 
-The `button_reply.id` is the string set when constructing the outbound interactive message. This is the routing key.
+### Structure Rationale
 
-### Telegram Callback Query Payload (HIGH confidence — official Telegram Bot API)
+- **`website/` at repo root:** Keeps the two build systems physically adjacent without nesting either inside the other. The `/website` name (over `/landing`) is conventional and matches the v1.3 requirements spec.
+- **Separate `package.json`:** Next.js and Expo have incompatible peer dependencies (both pull in React, but with different version expectations). Isolation in `website/` means `npm install` inside that directory installs Next.js dependencies without touching the Expo `node_modules`. The root `package.json` does NOT need workspace configuration for this use case.
+- **Separate `tsconfig.json`:** The root `tsconfig.json` extends `expo/tsconfig.base` and includes all `**/*.ts` files — pulling in Next.js files would cause `react-dom` types to conflict with `react-native` types. The `website/tsconfig.json` must NOT extend the root.
+- **`public/` for assets:** Next.js serves everything in `public/` at the root URL. Copy shared assets here — do not reference `../assets/` with relative paths in Next.js (the build output won't include them).
+- **`output: 'export'` in next.config.ts:** Enables fully static export (no server runtime required). Vercel can serve static exports natively. This is the right choice for a marketing landing page with no dynamic routes.
 
-When a user taps an inline keyboard button, Telegram sends a separate update type:
+---
 
+## Architectural Patterns
+
+### Pattern 1: Complete Build Pipeline Isolation
+
+**What:** The `/website` directory is a self-contained Next.js project with its own `node_modules`, `package.json`, and TypeScript config. No shared configs, no workspace hoisting.
+
+**When to use:** Always, for this repo. Workspace setups (Turborepo, npm workspaces) are designed for sharing code between packages. There is no code to share here — the landing page and mobile app have zero shared React components because React Native components do not run on web without a compatibility layer.
+
+**Trade-offs:** Duplication of a few constants (brand colors) — acceptable. The alternative (workspace setup) adds complexity for no practical benefit.
+
+**Implementation:**
 ```json
+// website/package.json — completely standalone
 {
-  "callback_query": {
-    "id": "12345",
-    "from": { "id": 987654321 },
-    "message": { "chat": { "id": 987654321 } },
-    "data": "menu_payments"
+  "name": "dwella-website",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0"
   }
 }
 ```
 
-**CRITICAL difference from WhatsApp:** Telegram button callbacks arrive as `callback_query` updates, not `message` updates. The `telegram-webhook` currently only handles `update['message']` and will silently drop all button taps. This must be fixed.
+### Pattern 2: Metro Blockklist for /website Directory
 
-Telegram also requires acknowledging the callback query or the button shows a loading spinner indefinitely:
+**What:** Add a `metro.config.js` at the Expo project root with a `blockList` regex that excludes the `/website` directory from Metro's file resolution graph.
+
+**When to use:** Needed because Metro (Expo's bundler) performs a full recursive scan of `projectRoot` by default. If `/website` contains Next.js files with `import` of `next/image` or `react-dom`, Metro will attempt to resolve them and error out.
+
+**Trade-offs:** Adds one config file to the Expo project. Low cost.
+
+**Implementation:**
+```javascript
+// metro.config.js (at repo root, new file)
+const { getDefaultConfig } = require('expo/metro-config');
+const { exclusionList } = require('metro-config');
+const path = require('path');
+
+const config = getDefaultConfig(__dirname);
+
+config.resolver.blockList = exclusionList([
+  // Exclude the Next.js website directory from Metro's graph
+  new RegExp(`^${path.resolve(__dirname, 'website').replace(/\\/g, '/')}(/.*)?$`),
+  // Exclude the old static landing page
+  new RegExp(`^${path.resolve(__dirname, 'landing').replace(/\\/g, '/')}(/.*)?$`),
+]);
+
+module.exports = config;
 ```
-POST https://api.telegram.org/bot{TOKEN}/answerCallbackQuery
-{ "callback_query_id": "12345" }
+
+**Confidence:** HIGH — Metro's `blockList` with `exclusionList` is the documented, established pattern for excluding directories (used widely in React Native Windows, Nx monorepos, and multi-app repos). The `exclusionList` helper from `metro-config` merges the custom patterns with Metro's built-in defaults so default exclusions are preserved.
+
+### Pattern 3: Static Site Generation (SSG) with `output: 'export'`
+
+**What:** Configure Next.js to produce a fully static output at build time — no Node.js server runtime, no server components making DB calls, no API routes.
+
+**When to use:** Marketing landing pages with no user-specific data. The Dwella landing page shows the same content to all visitors.
+
+**Trade-offs:** Cannot use `getServerSideProps` or API routes. Contact form must use a third-party service (Formspree, Resend, etc.) or a Supabase Edge Function URL called client-side.
+
+**Implementation:**
+```typescript
+// website/next.config.ts
+import type { NextConfig } from 'next';
+
+const config: NextConfig = {
+  output: 'export',     // Fully static — no server needed
+  trailingSlash: true,  // Generates /privacy/index.html (cleaner URL handling)
+  images: {
+    unoptimized: true,  // Required with output: 'export' (no Next.js image server)
+  },
+};
+
+export default config;
 ```
 
-### Button State Machine Design
+### Pattern 4: Vercel Root Directory Configuration
 
-Menu state is encoded in button_id strings — no session state needed in DB. This keeps the architecture stateless at the Edge Function level.
+**What:** Create a separate Vercel project pointed at the `/website` subdirectory. Vercel's "Root Directory" setting scopes the build to that directory.
 
-**Button ID convention:**
+**When to use:** Any monorepo with a Next.js app that is not at the repo root.
+
+**Trade-offs:** Requires creating a Vercel project via the dashboard (one-time setup, not codeable). Vercel automatically skips rebuilds when only non-`/website` files change (smart change detection with npm workspace declaration OR via manual Ignored Build Step).
+
+**Vercel project configuration (set in Vercel dashboard):**
 ```
-menu_main           → show main menu
-menu_payments       → show payments submenu
-menu_history        → show history submenu
-menu_maintenance    → show maintenance submenu
-menu_properties     → show properties submenu
-menu_others         → show others submenu
-action_log_payment  → forward to Claude: "log payment"
-action_upcoming     → forward to Claude: "show upcoming payments"
-action_maint_status → forward to Claude: "show maintenance status"
-action_property_sum → forward to Claude: "property summary"
-action_pdf_report   → trigger PDF generation flow (multi-turn)
-action_contact      → show contact info (static response)
+Framework Preset:  Next.js
+Root Directory:    website
+Build Command:     (leave default — next build)
+Output Directory:  (leave default — Next.js handles this)
+Install Command:   npm install
 ```
 
-### Sending Interactive Messages
-
-**WhatsApp interactive button message (max 3 buttons per message — CRITICAL constraint):**
+**Optional `vercel.json` inside `/website` for headers and redirects:**
 ```json
 {
-  "messaging_product": "whatsapp",
-  "to": "+919876543210",
-  "type": "interactive",
-  "interactive": {
-    "type": "button",
-    "body": { "text": "What would you like to do?" },
-    "action": {
-      "buttons": [
-        { "type": "reply", "reply": { "id": "menu_payments", "title": "Payments" } },
-        { "type": "reply", "reply": { "id": "menu_maintenance", "title": "Maintenance" } },
-        { "type": "reply", "reply": { "id": "menu_others", "title": "More..." } }
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
       ]
     }
-  }
+  ]
 }
 ```
-
-**CONSTRAINT:** WhatsApp supports maximum 3 reply buttons per interactive message. The 5-category main menu (Properties, Payments, History, Maintenance, Others) requires either pagination (send two messages) or collapsing into 3 top-level buckets with "More..." expanding to a second message.
-
-**Telegram inline keyboard (no strict button limit):**
-```json
-{
-  "chat_id": 987654321,
-  "text": "What would you like to do?",
-  "reply_markup": {
-    "inline_keyboard": [
-      [{ "text": "Properties", "callback_data": "menu_properties" }],
-      [{ "text": "Payments", "callback_data": "menu_payments" }],
-      [{ "text": "History", "callback_data": "menu_history" }],
-      [{ "text": "Maintenance", "callback_data": "menu_maintenance" }],
-      [{ "text": "Others", "callback_data": "menu_others" }]
-    ]
-  }
-}
-```
-
-### What Changes in `process-bot-message`
-
-The function currently returns `{ reply: string }`. For interactive menus, it must return structured button data. Add a `buttons` field to `BotResponse`:
-
-```typescript
-interface BotResponse {
-  reply: string;
-  intent?: string;
-  action_taken?: string;
-  buttons?: Array<{ id: string; title: string }>;  // NEW
-}
-```
-
-Webhook functions check `buttons` and send interactive messages instead of plain text.
-
-Add `button_id` to `BotRequest` so button callbacks can bypass Claude entirely for pure menu navigation:
-
-```typescript
-interface BotRequest {
-  user_id: string;
-  message: string;
-  source: 'app' | 'telegram' | 'whatsapp';
-  telegram_chat_id?: number;
-  button_id?: string;  // NEW — set when routing from button callback
-}
-```
-
-When `button_id` is present and matches a pure menu key (e.g., `menu_payments`), `process-bot-message` uses a lookup table and skips Claude. Only action buttons (e.g., `action_log_payment`) invoke Claude. This avoids unnecessary API calls and latency for menu navigation.
 
 ---
 
-## Integration Point 3: Outbound Template Messages (OUT-01, OUT-02, OUT-03)
+## Data Flow
 
-### Current State in `send-reminders`
-
-`send-reminders` already sends plain text WhatsApp messages (lines 135-156 of existing code). This works during an active 24-hour conversation window but fails outside it: **Meta's WhatsApp Cloud API only allows free-form text within a 24-hour customer service window**. Outside this window, only pre-approved Template Messages work.
-
-### Template Message Pattern (HIGH confidence — existing in codebase)
-
-`whatsapp-send-code` demonstrates this pattern and it already works in production:
-```json
-{
-  "type": "template",
-  "template": {
-    "name": "dwella_verification",
-    "language": { "code": "en" },
-    "components": [{ "type": "body", "parameters": [{ "type": "text", "text": "123456" }] }]
-  }
-}
-```
-
-Required Meta-approved templates for v1.2:
-
-| Template Name | Trigger | Parameters |
-|--------------|---------|------------|
-| `dwella_rent_reminder` | send-reminders (3 days before / due day / 3 days after) | property_name, due_date, amount |
-| `dwella_payment_confirmed` | auto-confirm-payments or manual confirm | tenant_name, property_name, amount, month |
-| `dwella_maintenance_update` | maintenance status change | tenant_name, request_title, new_status |
-
-**CRITICAL external dependency:** Templates must be submitted to and approved by Meta before deployment. Approval takes 2-7 days. Template submission should begin at project kick-off and run in parallel with Phase 1-3 development.
-
-### New Edge Function: `notify-whatsapp`
-
-Handles OUT-02 (payment confirmed) and OUT-03 (maintenance status change). Called from:
-- `auto-confirm-payments` after promoting `paid` → `confirmed`
-- App client after successful maintenance status update mutation
-
-For maintenance notifications, there is currently no Edge Function that fires on status change — this happens via client-side Supabase mutation with RLS. The app calling `notify-whatsapp` directly after a successful mutation is the cleanest approach without adding pg_net DB trigger complexity.
-
-### Shared `whatsapp-send` Edge Function
-
-Both `send-reminders` and new `notify-whatsapp` duplicate the Meta API fetch call. Extracting a `whatsapp-send` function that wraps all outbound message types eliminates this duplication and centralizes API version management. This mirrors the existing `send-push` pattern (send-reminders calls send-push via `supabase.functions.invoke()`).
-
----
-
-## Integration Point 4: New Bot Intents (INTENT-01, INTENT-02, INTENT-03)
-
-### What Changes in `process-bot-message`
-
-**New intent strings** to add to `ACTION_HANDLERS` and the Claude system prompt:
-
-| Intent | Requirement | Claude entities | Handler reads |
-|--------|-------------|-----------------|---------------|
-| `query_maintenance_status` | INTENT-01 | `{ tenant_name?, property_name? }` | `maintenance_requests` + `maintenance_status_logs` |
-| `query_upcoming_payments` | INTENT-02 | `{ days?: number }` | `payments` WHERE status pending/partial AND due_date upcoming |
-| `query_property_summary` | INTENT-03 | `{ property_name? }` | `properties` + `tenants` + aggregated `payments` |
-
-These are pure query intents — no DB writes. Each needs a new handler function in `process-bot-message` following the existing `ActionHandler` pattern.
-
-### Context Extension for INTENT-01
-
-`buildContext()` currently loads properties/tenants/payments. To support maintenance status queries, it needs to optionally fetch open maintenance requests. Loading them eagerly alongside existing context queries is the simplest approach at current scale (adds one DB query, Postgres handles it easily).
-
----
-
-## Integration Point 5: PDF Report via Bot (RICH-03 History submenu)
-
-The "download PDF report" menu item requires:
-
-1. Bot presents month/year picker (button matrix for last 6 months, or asks user to type month/year)
-2. Bot invokes `generate-pdf` Edge Function (already exists) with `{ user_id, month, year }`
-3. `generate-pdf` returns a signed Supabase Storage URL (modification needed if it currently returns binary)
-4. Bot sends document to user
-
-**WhatsApp outbound document:**
-```json
-{
-  "type": "document",
-  "document": {
-    "link": "https://your-signed-storage-url/report.pdf",
-    "filename": "DwellaReport-March2026.pdf"
-  }
-}
-```
-WhatsApp accepts a `link` URL for outbound documents — no need to upload to Meta first if the Storage URL is accessible.
-
-**Telegram outbound document:**
-```
-POST /sendDocument
-{ "chat_id": 123, "document": "https://signed-url..." }
-```
-Telegram accepts publicly-accessible URLs for PDFs (up to 50MB).
-
-**Required modification to `generate-pdf`:** Must upload the generated PDF to Supabase Storage and return a signed URL instead of (or in addition to) returning binary content.
-
----
-
-## Revised Data Flow Diagram
+### Build-Time (SSG)
 
 ```
-INBOUND TEXT:
-WhatsApp text → whatsapp-webhook → lookup user → process-bot-message → whatsapp-send(text or interactive)
-Telegram text → telegram-webhook → lookup user → process-bot-message → sendTelegram(text or inline keyboard)
-
-INBOUND BUTTON CALLBACK:
-WhatsApp button → whatsapp-webhook (interactive branch) → button_id → process-bot-message(button_id) → whatsapp-send(submenu or action result)
-Telegram button → telegram-webhook (callback_query branch) → answerCallbackQuery + data → process-bot-message(button_id) → sendTelegram(submenu or action result)
-
-INBOUND MEDIA:
-WhatsApp image/doc → whatsapp-webhook (200 OK immediately) → fire-and-forget whatsapp-media → download Meta CDN → upload Supabase Storage → update DB → whatsapp-send(confirmation)
-
-OUTBOUND SCHEDULED:
-send-reminders (daily 9AM) → for each tenant with whatsapp_phone → whatsapp-send(template: dwella_rent_reminder) + send-push
-
-OUTBOUND TRIGGERED:
-auto-confirm-payments → for each confirmed payment with whatsapp_phone → notify-whatsapp → whatsapp-send(template: dwella_payment_confirmed)
-App (maintenance status update) → notify-whatsapp → whatsapp-send(template: dwella_maintenance_update)
-
-OUTBOUND PDF:
-Bot (user requests PDF) → process-bot-message → generate-pdf → signed URL → whatsapp-send(document) or sendTelegram(document)
+next build (run inside /website)
+    ↓
+Next.js reads app/page.tsx, app/privacy/page.tsx, app/contact/page.tsx
+    ↓
+Renders all pages to static HTML + JS bundles
+    ↓
+Output: website/out/ directory (static files)
+    ↓
+Vercel serves out/ as CDN-backed static hosting
 ```
+
+No runtime data fetching. All content is hardcoded in JSX or loaded from local files (e.g., privacy policy markdown).
+
+### Runtime (Visitor)
+
+```
+Browser requests dwella.app
+    ↓
+Vercel CDN serves static HTML (Edge Network — fastest possible)
+    ↓
+Browser hydrates React (client-side JS)
+    ↓
+PostHog web analytics (if configured — separate project key from mobile)
+```
+
+### Asset Sharing Pattern
+
+```
+Mobile app uses:
+  /assets/icon.png
+  /assets/favicon.png
+  /assets/images/logo.png
+
+Landing page needs the same assets. Two options:
+  Option A (recommended): Copy assets into /website/public/ at init time.
+                          Check them into git. No build-time copy step needed.
+  Option B: Reference ../assets/ in a prebuild script.
+            More fragile, adds complexity for no benefit.
+```
+
+Option A is recommended. Assets in `website/public/` are checked into git. When the mobile icon changes, manually copy to `website/public/` and commit — this happens rarely enough to not warrant automation.
 
 ---
 
 ## Component Boundaries
 
-| Component | Responsibility | Communicates With |
-|-----------|---------------|-------------------|
-| `whatsapp-webhook` | Validate HMAC, route by message type (text/interactive/image/document), lookup user by phone | `process-bot-message`, `whatsapp-media`, `whatsapp-send` |
-| `telegram-webhook` | Validate secret, route message/callback_query, lookup user by chat_id, answerCallbackQuery | `process-bot-message`, Telegram Bot API |
-| `process-bot-message` | Claude intent detection, action execution, menu routing (lookup table), context building | Supabase DB, Claude API, `generate-pdf` |
-| `whatsapp-media` | Download media from Meta CDN (2-step), upload to Supabase Storage, update DB row | Meta Graph API (media endpoints), Supabase Storage, Supabase DB, `whatsapp-send` |
-| `whatsapp-send` | Send any outbound WhatsApp message type (text, interactive, template, document) | Meta Graph API (messages endpoint only) |
-| `notify-whatsapp` | Triggered notifications for payment confirmation and maintenance events | Supabase DB (lookup phone), `whatsapp-send` |
-| `send-reminders` | Scheduled rent reminders; calls `whatsapp-send` + `send-push` | Supabase DB, `whatsapp-send`, `send-push` |
-| `auto-confirm-payments` | Hourly payment promotion; triggers `notify-whatsapp` for WhatsApp users | Supabase DB, `notify-whatsapp` |
-| `generate-pdf` | Generate PDF and return signed URL | Supabase Storage |
-| `send-push` | Existing — Expo push notifications; unchanged | Expo Push API |
+| Component | Responsibility | Technology | Notes |
+|-----------|---------------|------------|-------|
+| `/website` | Marketing site, SEO, download funneling | Next.js 15, Tailwind | Isolated build |
+| `/app` (Expo) | Mobile app screens | React Native, Expo Router | Unchanged by this milestone |
+| `/supabase/functions` | Backend logic | Deno Edge Functions | No changes needed for landing page |
+| Vercel | Static hosting, CDN, SSL | Vercel Hobby/Pro | Separate project from EAS |
+| EAS | Mobile app builds | Expo Application Services | Unchanged |
 
 ---
 
-## New Components: Detailed Specifications
+## Integration Points
 
-### 1. `whatsapp-media` (NEW Edge Function)
+### New vs. Modified
 
-**Trigger:** Called fire-and-forget by `whatsapp-webhook` when `msg.type === 'image' | 'document'`
+| File / Directory | Status | Change Description |
+|-----------------|--------|--------------------|
+| `website/` | NEW | Entire Next.js project |
+| `metro.config.js` | NEW | Exclude `/website` and `/landing` from Metro |
+| `landing/` | DELETE | Replaced by `/website` |
+| `tsconfig.json` (root) | MODIFY | Add `"exclude": ["website"]` to prevent root tsc from scanning Next.js files |
+| `.gitignore` | MODIFY | Add `website/.next/`, `website/out/`, `website/node_modules/` |
+| Root `package.json` | NO CHANGE | Do not add workspace config — full isolation is simpler |
 
-**Inputs:**
-```typescript
+### Root `tsconfig.json` Modification
+
+Add `website` to the root TypeScript excludes so `npx tsc --noEmit` (run at repo root for the mobile app) does not attempt to type-check Next.js files:
+
+```json
 {
-  user_id: string;
-  media_id: string;
-  mime_type: string;
-  caption?: string;
-  filename?: string;  // documents only
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"],
+  "exclude": ["supabase/functions", "website"]
 }
 ```
 
-**Logic:**
-1. GET `https://graph.facebook.com/v21.0/{media_id}` with Bearer token → resolve temporary download URL
-2. GET the lookaside URL with Bearer token → binary ArrayBuffer
-3. Classify intent from caption heuristic (contains "payment" keyword → payment-proof bucket, else → documents bucket)
-4. For payment proof: look up tenant context from user's properties, determine month/year from caption or default to current, upload to `payment-proofs/{property_id}/{tenant_id}/{year}-{month}.ext`, update `payments.proof_url`
-5. For document: upload to `documents/{property_id}/{user_id}/{timestamp}-{original_filename}`, insert row in `documents` table
-6. Invoke `whatsapp-send` with a confirmation text message to the sender's phone
+### `.gitignore` Additions
 
-### 2. `whatsapp-send` (NEW Edge Function)
-
-**Trigger:** Called by any Edge Function needing outbound WhatsApp
-
-**Inputs:**
-```typescript
-{
-  to: string;  // E.164 phone number
-  type: 'text' | 'interactive' | 'template' | 'document';
-  // one of:
-  text?: { body: string };
-  interactive?: object;  // full interactive message payload
-  template?: { name: string; language: { code: string }; components: object[] };
-  document?: { link: string; filename: string };
-}
 ```
-
-Eliminates the 40-line fetch block duplicated across `whatsapp-webhook`, `send-reminders`, and future functions. Single point of API version management.
-
-### 3. `notify-whatsapp` (NEW Edge Function)
-
-**Trigger:** Called by `auto-confirm-payments` and app client after maintenance mutations
-
-**Inputs:**
-```typescript
-{
-  type: 'payment_confirmed' | 'maintenance_update';
-  user_id: string;
-  payload: {
-    // payment_confirmed fields:
-    tenant_name?: string;
-    property_name?: string;
-    amount?: number;
-    month?: number;
-    year?: number;
-    // maintenance_update fields:
-    request_title?: string;
-    new_status?: string;
-  };
-}
+# Next.js website
+website/.next/
+website/out/
+website/node_modules/
 ```
-
-Logic: look up `whatsapp_phone` for `user_id`, if found call `whatsapp-send` with the appropriate template.
 
 ---
 
-## Database Changes Required
+## Scaling Considerations
 
-### Migration 025: Session Tracking
+| Scale | Architecture |
+|-------|-------------|
+| Launch (0-10K visitors/mo) | Static export on Vercel Hobby (free). CDN handles all traffic. No infra changes needed. |
+| Growth (10K-1M visitors/mo) | Still static — Vercel CDN scales automatically. No code changes. Consider Vercel Pro for analytics. |
+| Dynamic features needed | Add specific API routes (contact form handler). Keep the rest static. Do not abandon SSG for the whole site. |
 
-No new tables needed for menu state — button IDs carry all state. One addition enables the welcome + auto-menu on new sessions:
+The landing page will never be the bottleneck. Vercel's CDN handles millions of static requests on the free plan.
 
-```sql
--- Track last WhatsApp message time for session detection
-ALTER TABLE public.users
-  ADD COLUMN IF NOT EXISTS last_whatsapp_message_at timestamptz;
+---
 
-CREATE INDEX IF NOT EXISTS idx_users_last_whatsapp
-  ON public.users(last_whatsapp_message_at)
-  WHERE whatsapp_phone IS NOT NULL;
+## Anti-Patterns
+
+### Anti-Pattern 1: Workspace/Monorepo Hoisting
+
+**What people do:** Add `"workspaces": ["website"]` to the root `package.json` to share devDependencies.
+
+**Why it's wrong:** Causes npm/yarn to hoist Next.js deps alongside Expo deps. React and react-dom get hoisted to root `node_modules`, conflicting with `react-native`. Expo's Metro then picks up `react-dom` and errors. This is a well-documented pain point in shared-React-version monorepos.
+
+**Do this instead:** Keep `/website` completely isolated. Run `npm install` from inside `website/`. Accept that `react` and `typescript` are listed in both `package.json` files.
+
+### Anti-Pattern 2: Importing Mobile Components in the Website
+
+**What people do:** Try to reuse `components/TourGuideCard.tsx` or `constants/colors.ts` in the Next.js site via relative imports (`../constants/colors`).
+
+**Why it's wrong:** Those files import `react-native`, which is not available in a Next.js build. Even if colors.ts looks safe, the moment you extend the import tree you hit native modules. The Metro blockList becomes irrelevant because the Next.js compiler (webpack/turbopack) will also error.
+
+**Do this instead:** Duplicate the brand colors into `website/tailwind.config.ts`. It is 4 lines of hex codes. The duplication cost is trivial compared to the compatibility cost.
+
+```typescript
+// website/tailwind.config.ts
+export default {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#4F46E5',      // Indigo — Dwella brand
+        'primary-dark': '#3730A3',
+        accent: '#F59E0B',
+        text: '#0F172A',
+        surface: '#FFFFFF',
+        bg: '#F5F5F7',
+      },
+    },
+  },
+};
 ```
 
-Session detection in `whatsapp-webhook`: if `last_whatsapp_message_at IS NULL OR now() - last_whatsapp_message_at > interval '24 hours'`, trigger welcome message + main menu. Update `last_whatsapp_message_at` on every message processed.
+### Anti-Pattern 3: Using the Static `landing/index.html` as a Next.js Page
 
-### Migration 025 or verify existing: proof_url on payments
+**What people do:** Copy `landing/index.html` into `website/app/page.tsx` as a large JSX blob and call it done.
 
-Check whether `payments` already has a `proof_url` or `proof_storage_path` column (likely from earlier migration). If not:
+**Why it's wrong:** The existing HTML uses `var` declarations, a non-`strict` style, inline `<style>` tags, and vanilla JS. Pasting it into a TypeScript React component creates a large refactor debt and defeats the purpose of using Next.js (structured components, Tailwind, SEO metadata API, image optimization).
 
-```sql
-ALTER TABLE public.payments
-  ADD COLUMN IF NOT EXISTS proof_url text;
-```
+**Do this instead:** Treat the existing HTML as a *content reference* only. Re-implement it as proper Next.js components (`HeroSection`, `FeatureGrid`, `AppStoreBadges`, etc.). The content (copy, links, section structure) is preserved — the implementation is rebuilt cleanly.
+
+### Anti-Pattern 4: Putting `next.config.ts` at the Repo Root
+
+**What people do:** Add Next.js configuration to the project root, assuming Vercel will find it.
+
+**Why it's wrong:** `next.config.ts` at the root is not inside `/website`, so Vercel (configured with Root Directory = `website`) never sees it. The Expo project root has no business containing Next.js config.
+
+**Do this instead:** All Next.js config lives inside `/website`. Vercel's root directory setting handles the rest.
 
 ---
 
 ## Build Order
 
-Respects component dependencies — each phase only requires what the previous phase delivered.
+Ordered by dependency: each step only requires what the previous step established.
 
-### Phase 1: WhatsApp Media Handling (MEDIA-01, MEDIA-02)
-**Depends on:** existing `whatsapp-webhook`, `payment-proofs` bucket, `documents` bucket, `whatsapp-send` helper
-**Delivers:** `whatsapp-send` Edge Function; `whatsapp-media` Edge Function; media type routing in `whatsapp-webhook`; migration 025 (proof_url check)
-**Why first:** Unblocks photo payment proof — highest tenant-facing utility. No menu system needed.
-**Build `whatsapp-send` first** since both `whatsapp-media` and Phase 2 depend on it.
+1. **Scaffold `/website` directory** — run `npx create-next-app@latest website --typescript --tailwind --app --no-src-dir --no-import-alias` from repo root. This installs Next.js, creates the App Router structure, and generates `tsconfig.json` and `next.config.ts`. (New file, 0 dependencies on prior steps.)
 
-### Phase 2: Interactive Buttons + Menu System (RICH-01 through RICH-05)
-**Depends on:** `whatsapp-send` from Phase 1, existing webhook functions, existing `process-bot-message`
-**Delivers:** Modified `process-bot-message` with `buttons` response field and `button_id` input; modified `telegram-webhook` with callback_query routing; modified `whatsapp-webhook` with interactive routing; menu button ID scheme; session tracking migration
-**Why second:** Menu system is the UX backbone for all bot features. Must be complete before testing new intents via buttons.
+2. **Update root `tsconfig.json` and `metro.config.js`** — add `"website"` to the root tsconfig `exclude` array, create `metro.config.js` with the blockList. (Modifies 1 existing file, creates 1 new file. Must happen before running Expo dev server with the website directory present to avoid Metro errors.)
 
-### Phase 3: New Bot Intents (INTENT-01, INTENT-02, INTENT-03)
-**Depends on:** updated `process-bot-message` from Phase 2 (structured response format)
-**Delivers:** Maintenance status, upcoming payments, property summary query handlers in `process-bot-message`; extended `buildContext()` with maintenance data
-**Why third:** Pure additions to existing AI logic. No new infrastructure needed after Phase 2 response format is in place.
+3. **Update `.gitignore`** — add website build artifacts. (1-line addition. Low risk, do early.)
 
-### Phase 4: Outbound Notifications (OUT-01, OUT-02, OUT-03)
-**Depends on:** `whatsapp-send` from Phase 1; Meta template approval (external dependency — submit templates at project start)
-**Delivers:** `notify-whatsapp` Edge Function; `send-reminders` updated to use template messages; `auto-confirm-payments` hooked to `notify-whatsapp`
-**Why fourth:** Template approval is the long-pole. Submitting templates at project start means approval arrives during Phase 1-3 development, so Phase 4 can start without waiting.
+4. **Copy shared assets** — copy `assets/favicon.png`, `assets/icon.png`, `assets/images/logo.png` into `website/public/`. (No code change, file copy only.)
 
-### Phase 5: PDF Bot Delivery (RICH-03 History submenu)
-**Depends on:** menu system from Phase 2; `whatsapp-send` document type; `generate-pdf` modified to return signed URL
-**Delivers:** PDF month/year picker flow; `generate-pdf` modification; document delivery via WhatsApp and Telegram
-**Why last:** Most complex multi-turn flow. All infrastructure is in place after Phase 4.
+5. **Configure `next.config.ts`** — set `output: 'export'`, `trailingSlash: true`, `images.unoptimized: true`. (Inside `/website`, no dependency on Expo.)
 
----
+6. **Configure Tailwind** — add Dwella brand colors to `website/tailwind.config.ts`. (Inside `/website`, no external dependency.)
 
-## Anti-Patterns to Avoid
+7. **Build page components** — implement `HeroSection`, `FeatureGrid`, `AppStoreBadges`, `Footer`, `NavBar`. Wire up in `app/page.tsx`. (Depends on steps 5-6.)
 
-### Anti-Pattern 1: Blocking the Webhook on Media Download
-**What:** Awaiting the full media download inside `whatsapp-webhook` before returning 200
-**Why bad:** Media downloads take 1-10 seconds. Meta expects fast acknowledgment and will retry on slow responses, causing duplicate processing.
-**Instead:** Fire-and-forget to `whatsapp-media`, return 200 immediately.
+8. **Add `/privacy` and `/contact` routes** — create `app/privacy/page.tsx` and `app/contact/page.tsx`. (Depends on step 7 for layout/component reuse.)
 
-### Anti-Pattern 2: Free-Form Text for Outbound Notifications After 24h Window
-**What:** Sending `{ type: 'text' }` for rent reminders or payment confirmations
-**Why bad:** If the user has not messaged in 24 hours, Meta rejects free-form outbound messages with error code 131047. Only pre-approved template messages work outside the session window.
-**Instead:** Always use `{ type: 'template' }` for all scheduled/triggered outbound messages. Use free-form text only for replies within an active inbound-initiated session.
+9. **Verify local build** — run `cd website && npm run build` and confirm `out/` directory is generated with no errors. (Smoke test before touching Vercel.)
 
-### Anti-Pattern 3: Duplicating the outbound fetch block across functions
-**What:** Copy-pasting the 40-line `fetch('graph.facebook.com/messages', ...)` block into every function
-**Why bad:** API version bumps, token handling changes, and error handling improvements must be applied in multiple places simultaneously.
-**Instead:** All outbound WhatsApp goes through `whatsapp-send`. It is the single outbound channel.
+10. **Create Vercel project** — import GitHub repo in Vercel dashboard, set Root Directory to `website`, deploy. (Depends on step 9 passing.)
 
-### Anti-Pattern 4: Claude for every button tap
-**What:** Forwarding `button_id = 'menu_main'` to Claude to determine the response
-**Why bad:** Adds 500-800ms latency and Anthropic API cost for purely deterministic menu navigation.
-**Instead:** Handle menu button_ids with a lookup table in `process-bot-message`. Only action button_ids (e.g., `action_log_payment`) that require AI interpretation invoke Claude.
-
-### Anti-Pattern 5: Session state in DB for menu navigation
-**What:** Storing "user is in payments submenu" in a `bot_sessions` table, read on each message
-**Why bad:** Adds a DB read per message, complicates cleanup, creates stale state bugs when users abandon mid-flow.
-**Instead:** Encode all state in button_id strings. Each button tap is fully self-describing. The existing `bot_conversations` table provides history context when Claude needs it.
-
-### Anti-Pattern 6: Storing media as Base64 in DB
-**What:** Base64-encoding the downloaded binary and storing in a Postgres column
-**Why bad:** Massive row bloat, no streaming, no signed URL generation, defeats the purpose of Supabase Storage.
-**Instead:** Always upload to Supabase Storage, store only the `storage_path` string in DB.
-
----
-
-## Scalability Considerations
-
-| Concern | At current scale | At 1K users | Notes |
-|---------|-----------------|-------------|-------|
-| Media download latency | Non-issue (fire-and-forget) | Non-issue | Each download is independent; async |
-| WhatsApp rate limits | Not a concern | Monitor: Meta imposes per-phone-number limits | Template messages have separate daily limits |
-| Button state collisions | None (stateless buttons) | None | No shared state to corrupt |
-| Claude API calls per button tap | Must avoid for pure menu taps | Critical to avoid | Lookup table for menu, Claude for actions only |
-| `buildContext()` query load | 3-4 queries per AI message | Add caching if needed | Current Supabase plan handles easily |
-| Template approval turnaround | 2-7 days (Meta SLA) | N/A | Submit at project start, not at Phase 4 start |
+11. **Delete `/landing`** — remove the old static HTML directory. (Final cleanup, after Vercel deploy is confirmed live.)
 
 ---
 
 ## Sources
 
-- WhatsApp Cloud API media reference (two-step download): [Media - WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media/)
-- Interactive reply buttons: [Interactive Reply Buttons - WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/)
-- Button reply webhook payload structure (MEDIUM confidence, multiple implementation sources): [GitHub chatwoot issue #12030](https://github.com/chatwoot/chatwoot/issues/12030), [whatsapp-cloud-api PHP wrapper](https://github.com/netflie/whatsapp-cloud-api)
-- Telegram callback_query payload: [Telegram Bot API](https://core.telegram.org/bots/api)
-- Media two-step download flow (MEDIUM confidence, community): [Downloading Media via WhatsApp Cloud API - Medium](https://medium.com/@shreyas.sreedhar/downloading-media-using-whatsapps-cloud-api-webhooks-and-uploading-it-to-aws-s3-bucket-via-nodejs-07c5cbae896f)
-- Template message format (HIGH confidence): existing `whatsapp-send-code/index.ts` working implementation in this codebase
-- WhatsApp 24-hour messaging window constraint: [WhatsApp API Guide 2026 - Chatarmin](https://chatarmin.com/en/blog/whats-app-api-send-messages)
-- `answerCallbackQuery` Telegram requirement: [Telegram Bot API - answerCallbackQuery](https://core.telegram.org/bots/api#answercallbackquery)
+- Vercel monorepo documentation (Root Directory setting, skip unaffected projects): [Using Monorepos — Vercel Docs](https://vercel.com/docs/monorepos) — HIGH confidence
+- Metro `blockList` / `exclusionList` configuration: [Configuring Metro — Metro Docs](https://metrobundler.dev/docs/configuration/) — HIGH confidence
+- Expo SDK 52+ automatic Metro monorepo detection: [Work with monorepos — Expo Docs](https://docs.expo.dev/guides/monorepos/) — HIGH confidence
+- Next.js 15 App Router project structure: [Next.js Documentation](https://nextjs.org/docs) — HIGH confidence
+- `output: 'export'` static export for Next.js: Next.js official docs — HIGH confidence
+- Monorepo React Native + Next.js coexistence pitfalls (hoisting conflicts): [Monorepos with Next.js and React Native — tyhopp.com](https://tyhopp.com/notes/monorepos-next-js-react-native) — MEDIUM confidence (single source, aligns with known Expo behavior)
+
+---
+*Architecture research for: Dwella v1.3 — Next.js Landing Page integration in Expo monorepo*
+*Researched: 2026-03-30*

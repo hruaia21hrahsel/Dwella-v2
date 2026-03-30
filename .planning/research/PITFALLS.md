@@ -1,195 +1,143 @@
 # Pitfalls Research
 
-**Domain:** WhatsApp Cloud API + Interactive Messaging + Media Handling — v1.2 WhatsApp Bot Expansion
-**Researched:** 2026-03-21
-**Confidence:** HIGH (findings cross-verified with Meta official docs, multiple credible third-party sources, and existing Dwella codebase patterns)
+**Domain:** Next.js Marketing Landing Page added to React Native + Expo monorepo — v1.3 Dwella Landing Page
+**Researched:** 2026-03-30
+**Confidence:** HIGH (cross-verified with Vercel official docs, Expo official docs, Next.js official docs, and multiple community post-mortems)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Sending Non-Template Messages Outside the 24-Hour Customer Service Window
+### Pitfall 1: Vercel Deploys Every Commit — Including Mobile-Only Changes
 
 **What goes wrong:**
-The WhatsApp Cloud API enforces a strict 24-hour messaging window. Outside that window — when the user has not sent a message in the past 24 hours — you can only send pre-approved template messages. Sending a free-form text message, an interactive button message, or a media message outside the window fails with a 131047 error ("Re-engagement message"). Developers often discover this only after the feature is deployed when real users are inactive overnight.
+Without explicit "Ignored Build Step" configuration, Vercel rebuilds the website every time any file in the monorepo changes — even commits that only touch the React Native app (`app/`, `components/`, `supabase/`). This burns through the free tier's 100 deployments/day limit and creates noise in the deployment history, making it harder to spot real website regressions.
 
 **Why it happens:**
-Developers test the bot by sending a message and immediately responding. The 24-hour window is always open during testing. Production use cases (reminders, outbound notifications, receipt confirmations) are sent hours or days after the last user message, which is outside the window.
+Vercel's default behavior is to trigger a new deployment on every git push to the branch, regardless of which files changed. Developers who set the Root Directory to `website/` assume Vercel will ignore non-website changes — it does not.
 
 **How to avoid:**
-- All outbound Edge Functions (OUT-01 rent reminders, OUT-02 payment receipts, OUT-03 maintenance notifications) must use approved template messages — never free-form text.
-- Interactive reply button messages (RICH-02, RICH-03 menus) cannot be sent as outbound notifications. They are only valid inside the 24-hour window. If you want to re-engage a user, use a template to open a new window, then follow up with the interactive menu.
-- Design two code paths in the Edge Functions: one for inside-window (interactive buttons allowed) and one for outside-window (template only). Use the WhatsApp error response to detect the state, or track last-interaction time in the database.
+Set the "Ignored Build Step" in Vercel project settings to only build when `website/` files change:
+
+```bash
+git diff HEAD^ HEAD --quiet -- website/
+```
+
+If the exit code is 0 (no changes in `website/`), Vercel skips the build. Verify this via the Vercel dashboard build logs — look for "Skipped Build" entries.
 
 **Warning signs:**
-- Integration test passes but production reminders fail with error 131047.
-- Reminders work in morning tests but fail for users who haven't chatted for a day.
+- Vercel shows a new deployment after a Supabase migration commit.
+- Build history is dominated by skipped or redundant deployments.
+- Getting close to the 100/day free tier limit without shipping any website changes.
 
 **Phase to address:**
-Setup & Outbound Messaging phase. Template design must happen before outbound Edge Functions are coded. Do not wire OUT-01, OUT-02, OUT-03 until approved templates exist for each.
+Phase 1 (Project Setup). Configure "Ignored Build Step" before the first real deployment. Do not defer this — it cannot be retroactively fixed cleanly.
 
 ---
 
-### Pitfall 2: Interactive Button Messages Are Not Templates — Cannot Be Sent Outside the 24-Hour Window
+### Pitfall 2: Root `package.json` and `tsconfig.json` Conflicts Between Expo and Next.js
 
 **What goes wrong:**
-Interactive reply button messages (type: `interactive`, buttons with 3 max) look like templates and feel like templates, but they are NOT template messages. Meta does not require approval for them, but they can only be sent within an active 24-hour conversation window. This makes interactive menus impossible to use as notification openers. The RICH-02 main menu is session-only.
+Expo's Metro bundler and Next.js's Webpack both read `tsconfig.json` for path aliases and module resolution. If a root-level `tsconfig.json` exists (likely, since the Expo project is at the repo root), Next.js will inherit it — causing it to try to resolve React Native-specific paths (`@/components` pointing to native components, `react-native` imports, native-only types). This breaks the Next.js build with module-not-found errors or produces incorrect type resolution.
+
+The inverse also happens: if Expo's Metro picks up `website/tsconfig.json`, it may find conflicting `lib` targets or module formats.
 
 **Why it happens:**
-The Meta documentation separates "template messages" from "interactive messages" in different sections. Developers who build the menu first and the notification flow second often design menus as the notification entry point, which breaks outside the window.
+Developers place the Next.js app in `website/` but forget that TypeScript project references must explicitly scope each subproject. Both tools silently extend parent configs through `tsconfig.json` `extends` chains.
 
 **How to avoid:**
-- Interactive menus (RICH-02, RICH-03) must only be triggered in response to an inbound user message.
-- Outbound proactive messages (reminders, receipts, notifications) must use template messages, not interactive buttons. After the template is received and the user replies, the next response can include an interactive menu.
-- The welcome message (RICH-01) sent after account linking should be a template message (the linking event constitutes the business-initiated open of a conversation window), then a follow-up interactive menu can be sent within that session.
+- Give `website/` its own self-contained `tsconfig.json` with `"extends": "next/typescript/tsconfig.json"` and explicit `include` limited to `["website/**/*"]`.
+- Do NOT use `"extends": "../../tsconfig.json"` — this pulls in Expo's config.
+- Confirm the root `tsconfig.json` (Expo's) has `"exclude": ["website"]` to prevent Metro from scanning the website directory.
+- Test by running `npx tsc --noEmit` from inside `website/` and from the repo root separately.
 
 **Warning signs:**
-- Menu appears in manual testing but fails when triggered by a pg_cron scheduled Edge Function.
-- Error 131047 or 132000 on any message type other than template in a scheduled function.
+- `Module not found: Can't resolve 'react-native'` errors during `next build`.
+- TypeScript errors in `website/` that reference React Native types.
+- Metro complains about parsing JSX or ESM in `website/node_modules`.
 
 **Phase to address:**
-Rich Messaging phase. The distinction between template and interactive must be encoded in the shared bot message dispatch utility before any menu work begins.
+Phase 1 (Project Setup). Set up the tsconfig isolation before writing a single component. Fixing this after pages are built is a painful find-and-replace exercise.
 
 ---
 
-### Pitfall 3: Media URL Expiry — 5-Minute Window After Webhook Delivery
+### Pitfall 3: React Version Mismatch Between Expo and Next.js Causes Silent Runtime Errors
 
 **What goes wrong:**
-When a user sends a photo (e.g., payment proof via MEDIA-01), the WhatsApp webhook delivers a media object containing a media ID, not a direct URL. You must call the Graph API to retrieve a temporary download URL. That URL expires in approximately 5 minutes and requires an Authorization header with the access token to download. If the Edge Function processes the webhook asynchronously or queues it, the URL may already be expired before the download attempt.
+Expo SDK 51 pins React to a specific version (currently 18.2.0). Next.js 14+ supports React 18 and 19. If the workspace hoisting resolves two different React versions — one for the Expo app, one for `website/` — you get "Invalid hook call" errors, hydration mismatches, or subtle rendering bugs that only appear in production builds.
 
 **Why it happens:**
-Developers familiar with Telegram (where `file_id` can be resolved at any time) assume WhatsApp behaves similarly. WhatsApp's CDN URLs are ephemeral and authenticated — they are not public.
+npm/yarn workspaces hoist shared packages to the root `node_modules`. If `website/package.json` specifies `"react": "^19.0.0"` and the root locks React at 18.2.0, the workspace resolver may pull in two copies, one for each package. React does not support multiple instances in one process.
 
 **How to avoid:**
-- The `whatsapp-webhook` Edge Function must download and transfer media to Supabase Storage synchronously as the first action after webhook receipt, before any other processing.
-- Never pass the media ID to a downstream function for later resolution. Resolve and download immediately.
-- The download request must include `Authorization: Bearer {WHATSAPP_TOKEN}` in the header.
-- Store the Supabase Storage path (not the temporary CDN URL) on the payment or document record.
+- `website/` is NOT a workspace package — keep it as a standalone directory with its own `node_modules`, not registered in any root `workspaces` field.
+- If you ever add a root-level `workspaces` config, explicitly exclude `website` or pin React to the same version across all packages.
+- Check `website/node_modules/react` exists as its own copy, not a symlink to the root.
+- `website/package.json` should mirror the Expo project's React version: `"react": "18.2.0"` (exact, not `^`).
 
 **Warning signs:**
-- Media download succeeds during testing but fails intermittently in production (Edge Function cold starts, queue delays).
-- HTTP 401 or 403 errors on media download — the token is correct but the URL has expired.
+- "Warning: Invalid hook call" in the browser console on the website.
+- `next build` succeeds but hydration errors appear in production.
+- `npm ls react` from `website/` shows multiple versions.
 
 **Phase to address:**
-Media Handling phase. The media download-and-store pipeline must be the first thing built and tested before MEDIA-01 or MEDIA-02 are considered complete.
+Phase 1 (Project Setup). Version pinning must be established before installing any additional dependencies in `website/`.
 
 ---
 
-### Pitfall 4: Template Rejection and Automatic Recategorization
+### Pitfall 4: `metadataBase` Not Set — All OG/Twitter Images Point to `localhost`
 
 **What goes wrong:**
-Meta rejects or automatically recategorizes WhatsApp message templates without warning. A template submitted as "Utility" (rent reminder, payment receipt, maintenance notification) can be approved as "Marketing" instead, which costs more per send and is subject to stricter frequency limits. As of April 2025, Meta no longer gives 24-hour notice before recategorizing — the change is immediate.
+Next.js App Router resolves relative URLs for Open Graph and Twitter Card images using `metadataBase`. If `metadataBase` is not set in `layout.tsx`, all image URLs in share previews resolve to `http://localhost:3000/og.png` — which works locally but is completely broken when the page is shared on Twitter, LinkedIn, or iMessage. LinkedIn and Twitter show blank cards. The bug is invisible in development.
 
 **Why it happens:**
-The line between Utility and Marketing is strict: Utility must be non-promotional, tied to a specific transaction or user action, and not contain any upsell language, discount framing, or persuasive phrasing. Words like "Don't miss your payment," "Stay on top of your finances," or any framing that could be construed as encouraging action rather than informing can trigger recategorization.
+The `metadataBase` requirement is a Next.js App Router-specific behavior, not inherited from Pages Router. Developers moving from tutorials or Pages Router examples miss it entirely. The bug is only detectable by testing with a social debugger tool against the actual production URL.
 
 **How to avoid:**
-- Write templates with pure transactional language. Example for rent reminder: "Your rent of {{1}} for {{2}} is due on {{3}}." No call to action, no urgency language, no recommendations.
-- Avoid shortened URLs in template bodies — Meta blocks them. Use full branded domain URLs only.
-- Variable format must be exact: `{{1}}`, `{{2}}` etc. — mismatched braces cause instant rejection.
-- Template display name must not be "Agent", "Bot", "Assistant", or similar generic names. Use "Dwella" or a specific message type name.
-- Build all required templates in the Setup phase before development of outbound functions begins. Account for a 24-72 hour approval window per template.
-- Subscribe to Meta webhook notifications for `message_template_status_update` events to detect automatic recategorization.
+Set `metadataBase` in `app/layout.tsx` using an environment variable with a fallback:
+
+```typescript
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://dwella.app'
+  ),
+  // ...
+}
+```
+
+Verify using the Twitter Card Validator (https://cards-dev.twitter.com/validator) and Facebook Debugger (https://developers.facebook.com/tools/debug/) against the production URL before considering SEO complete.
 
 **Warning signs:**
-- Templates approved as Marketing instead of the submitted Utility category.
-- Outbound function costs higher than expected (Marketing templates billed differently).
-- Webhook event `message_template_status_update` with status `REJECTED` or category change.
+- OG image preview is blank when pasting the URL into Slack or iMessage.
+- Next.js logs a warning: `metadata.metadataBase is not set`.
+- Social media debuggers show `og:image` pointing to `localhost`.
 
 **Phase to address:**
-Setup phase. Templates should be submitted on Day 1 of the milestone, not when outbound functions are being coded. Build the template content as part of setup documentation (SETUP-01).
+Phase 2 (Core Pages) — set `metadataBase` when wiring up the root layout. Verify with social debuggers at the end of Phase 3 (SEO + Launch).
 
 ---
 
-### Pitfall 5: Temporary Access Token Used in Production
+### Pitfall 5: Using `"use client"` Everywhere Kills SSG Performance and SEO
 
 **What goes wrong:**
-During Meta app setup, the Developer Dashboard provides a temporary access token that expires in approximately 24 hours. Projects built with this token appear to work perfectly until the token silently expires, at which point all outbound messages fail with authentication errors. Since Supabase Edge Functions use environment variables, rotating the token requires a manual redeploy.
+Developers familiar with React (or coming from a Create React App background) reflexively add `"use client"` to any component that uses `useState` or `useEffect`. On a landing page, this turns what should be fully static pre-rendered HTML into client-side-rendered JavaScript bundles. Googlebot may not execute the JS, resulting in blank indexed pages. Core Web Vitals (LCP, FCP) degrade significantly because the page requires a JavaScript parse cycle before content appears.
 
 **Why it happens:**
-The temporary token is the fastest path to a working integration. Developers reach the "it works" milestone and move on without reading the production deployment section of Meta's documentation.
+The `"use client"` directive is a safety valve for interactivity. It is overused when developers don't understand the Server Component default in App Router. Animated sections, scroll effects, and mobile menus all seem to "require" client components — but in most cases, only the interactive fragment needs to be a Client Component, not the entire page.
 
 **How to avoid:**
-- Use a System User token from Meta Business Manager from the start. System User tokens do not expire unless manually revoked.
-- Required permissions: `whatsapp_business_management` and `whatsapp_business_messaging`.
-- Store as `WHATSAPP_TOKEN` in Supabase Edge Function secrets (not in `.env` or plaintext config).
-- Never log the token value, even in debug mode.
+- Default all page-level components and layout wrappers to Server Components (no directive needed).
+- Extract only the interactive fragment (e.g., a mobile hamburger menu toggle, a CTA button with hover state) as a `"use client"` child component.
+- Verify the landing page renders with JavaScript disabled: `curl https://dwella.app` should return full HTML with all content, not an empty `<div id="__next">`.
+- Run `next build` and check the route annotations — static routes show a `○` symbol.
 
 **Warning signs:**
-- Outbound messages work then suddenly all fail with HTTP 401.
-- Error logs show token expiry or invalid token errors around the 24-hour mark after setup.
+- `next build` output shows the homepage as `λ` (server-rendered on request) instead of `○` (static).
+- Lighthouse SEO score is below 90 despite correct metadata.
+- `view-source:` on the production URL shows near-empty HTML body.
 
 **Phase to address:**
-Setup phase. The System User token must be configured before any Edge Function using the WhatsApp API is deployed.
-
----
-
-### Pitfall 6: Phone Number Already Registered to WhatsApp App
-
-**What goes wrong:**
-A phone number that is active in WhatsApp (personal or WhatsApp Business app) cannot be registered with the WhatsApp Cloud API without first deleting the existing account from the WhatsApp app on that device. If Dwella's test or production phone number was previously used with the WhatsApp app, registration will fail or the existing account will be wiped unexpectedly.
-
-**Why it happens:**
-Developers try to use their own WhatsApp number or a shared business number for quick testing, not realizing the number must be "clean." The Meta registration flow does not warn clearly that existing data is erased.
-
-**How to avoid:**
-- Use a dedicated phone number (SIM or VoIP) that has never been registered to WhatsApp. Document this as a prerequisite in SETUP-01.
-- Virtual numbers can work but some providers block WhatsApp verification calls. Prefer a physical SIM or a VoIP provider known to work with WhatsApp registration.
-- Landlines with IVR systems cannot receive the verification call.
-
-**Warning signs:**
-- Registration appears to succeed but incoming messages never arrive.
-- The WhatsApp app on the associated device gets logged out unexpectedly.
-
-**Phase to address:**
-Setup phase. Must be addressed in the SETUP-01 documentation as a hard prerequisite.
-
----
-
-### Pitfall 7: Messaging Tier Limits Block Outbound Campaigns
-
-**What goes wrong:**
-New WhatsApp Business API accounts start at 250 business-initiated conversations per 24 hours. Outbound reminders (OUT-01) sent to all active tenants could hit this cap if there are more than 250 tenants in the system. The messages silently fail or queue — there is no automatic retry on the Supabase Edge Function side.
-
-**Why it happens:**
-Developers test with 5-10 fake tenants and do not simulate the 250-conversation limit. The limit escalates automatically over time, but only if quality rating stays High and 50%+ of the current limit is used within 7 days.
-
-**How to avoid:**
-- The `send-reminders` Edge Function must check the WhatsApp API response for HTTP 429 or error code 131056 (Too many messages) and implement exponential backoff.
-- Log failed sends with recipient phone number and retry count to a `whatsapp_delivery_failures` table so missed notifications can be retried.
-- For MVP, the 250-conversation limit is sufficient if the user base is small. Document the limit in SETUP-01 so the user is aware.
-- Tier escalation to 1,000 then 10,000 then 100,000 conversations/day happens automatically over days/weeks of consistent, high-quality usage.
-
-**Warning signs:**
-- Some tenants receive reminders, others do not, with no apparent pattern.
-- Edge Function logs show HTTP 429 responses from the WhatsApp API.
-
-**Phase to address:**
-Outbound Messaging phase. Error handling with backoff must be part of the Edge Function implementation, not a post-launch patch.
-
----
-
-### Pitfall 8: Webhook Returns Slow — Meta Marks Delivery Failed and Retries
-
-**What goes wrong:**
-WhatsApp requires the webhook endpoint to return HTTP 200 within a few seconds. If the Edge Function processes the message synchronously (parsing the payload, calling Claude, writing to DB, sending a reply) before returning 200, it will time out on high-load or cold-start scenarios. Meta then retries the webhook, causing duplicate message processing.
-
-**Why it happens:**
-The existing Telegram webhook (`telegram-webhook`) likely processes synchronously, which works because Telegram is more lenient with timeouts. WhatsApp has a stricter timeout window and will retry aggressively.
-
-**How to avoid:**
-- The `whatsapp-webhook` Edge Function must return HTTP 200 immediately after HMAC signature validation.
-- All message processing (Claude call, DB write, reply dispatch) must happen after the response is sent, or be handed off to a separate `process-bot-message` Edge Function via an async invoke pattern (Supabase `functions.invoke` without awaiting, or via a DB-based queue).
-- Store the incoming webhook payload in a `whatsapp_inbox` table immediately, return 200, then let a separate function process it.
-- Implement deduplication using `message_id` from the webhook payload to prevent duplicate processing on retries. Store processed message IDs with a TTL.
-
-**Warning signs:**
-- Users receive duplicate bot replies.
-- Meta dashboard shows repeated webhook delivery failures despite the Edge Function appearing to work.
-- Supabase Edge Function logs show timeouts.
-
-**Phase to address:**
-Setup phase — webhook architecture must be designed correctly from the start. Retrofitting async processing after the bot logic is written is a significant refactor.
+Phase 2 (Core Pages). Establish the Server vs. Client Component split from the first component written. Refactoring after the fact is possible but tedious.
 
 ---
 
@@ -197,13 +145,12 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Use temporary access token from Dev Dashboard | Faster first integration | Expires in 24h, silent outage | Never — use System User token from start |
-| Process webhook synchronously (no async dispatch) | Simpler code, fewer components | Duplicate messages, Meta retry storms | Never for production |
-| Hardcode template names instead of fetching from Meta API | Faster coding | Templates renamed/recategorized without notice, silent failures | Never |
-| Skip HMAC verification in development | Faster local testing | Forgets to re-enable; security hole in production | Only local dev with env gate |
-| Send free-form text to all users regardless of window state | Simpler code path | Error 131047 floods, no outbound delivery | Never |
-| Download media lazily (not at webhook receipt time) | Decouples processing | 5-minute URL expiry causes silent media loss | Never |
-| Submit templates as Utility without reviewing against policy | Faster setup | Auto-recategorized to Marketing, higher cost | Never |
+| Hardcode `metadataBase` to production URL | Simple, works immediately | Preview deployments use wrong base URL; OG images broken in PR previews | Never — use env var with fallback instead |
+| `"use client"` on entire page components | Avoids thinking about RSC boundaries | Client bundle grows; SSG breaks; SEO degrades | Never for page-level components |
+| Single `vercel.json` at repo root | One config file | Conflicts with Expo build settings if Vercel ever indexes the root | Never — keep `vercel.json` inside `website/` |
+| No "Ignored Build Step" | Zero setup effort | Burns free tier quota; 100 deploys/day limit hit by RN commits | Never — configure on first deploy |
+| Skip `sitemap.xml` for MVP | Saves 30 minutes | Google crawls slowly or misses the privacy policy page (required for App Store review) | Acceptable only if re-added before store submission |
+| Inline all styles as `style={}` | Fast to write | Defeats Tailwind/CSS modules tree-shaking; bundle grows; no dark mode later | Only for one-off prototype, remove before Phase 3 |
 
 ---
 
@@ -211,16 +158,12 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| WhatsApp Cloud API | Using `link` parameter for media instead of uploading and using `id` | Upload media to Meta CDN first via `/media` endpoint, use returned `id` in message |
-| WhatsApp Cloud API | Sending interactive button message as outbound notification | Templates only for outbound; interactive only inside 24h window |
-| WhatsApp Cloud API | Logging full webhook payload including user phone numbers | Scrub PII (phone numbers, names) from logs — GDPR and Meta ToS |
-| WhatsApp Cloud API | Using `allow_category_change: false` on template creation | Removed as of April 2025 — Meta recategorizes regardless |
-| WhatsApp Cloud API | Using URL-shortened links in template bodies | Blocked by Meta — use full branded domain URLs only |
-| Meta Graph API | Calling media download URL without Authorization header | Include `Authorization: Bearer {TOKEN}` — URLs are authenticated |
-| Meta Graph API | Calling media download URL after 5 minutes | Download immediately on webhook receipt and persist to Supabase Storage |
-| Supabase Edge Functions | Calling WhatsApp API with service role key exposed in response | WhatsApp token must live in Edge Function secrets only, never client-side |
-| Supabase Edge Functions | Not handling `status` update webhooks (sent/delivered/read/failed) | WhatsApp sends status callbacks for every outbound message — must return 200 or retry storms begin |
-| Telegram bot | Adding interactive inline keyboards and assuming WhatsApp has equivalent | Telegram supports unlimited inline buttons in grids; WhatsApp reply buttons max 3, max 20 chars each |
+| Vercel + monorepo | Setting Root Directory to `website/` and assuming non-website commits are skipped | Also configure "Ignored Build Step" with `git diff HEAD^ HEAD --quiet -- website/` |
+| Vercel + environment variables | Setting `NEXT_PUBLIC_SITE_URL` to "All Environments" including Preview | Set the production value for Production only; use Vercel's auto-injected `VERCEL_URL` for Preview builds |
+| Next.js `next/image` + external screenshots | Providing a remote URL from Supabase Storage without adding the hostname to `next.config.js` | Add Supabase Storage hostname to `images.remotePatterns` in `next.config.js` before using any remote images |
+| App Store download links | Hardcoding Apple/Google store URLs before the app is live | Use environment variables or a redirect layer so URLs can be updated without a redeploy |
+| Contact form + Resend/Formspree | Building a full server action for the contact form in Phase 1 | Use a static mailto: link or Formspree embed for MVP; upgrade later if needed |
+| Google Fonts via `next/font` | Importing Google Fonts at runtime, bypassing `next/font/google` | Always use `next/font/google` — it self-hosts fonts at build time, eliminating external DNS lookups and layout shifts |
 
 ---
 
@@ -228,11 +171,11 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Synchronous webhook processing | Duplicate messages, Meta delivery failures | Return 200 immediately, process async | Every request under load or cold start |
-| Resolving media ID to URL inside the same function that processes business logic | Intermittent media loss | Download media as the first step, before any other logic | When function execution takes >5 minutes end-to-end |
-| Sending all tenant reminders in a single Edge Function iteration | Hits 250 conversation/day tier limit; partial delivery with no retry | Process in batches with backoff, log failures | >250 active tenants |
-| Polling for template approval status in a loop | Rate limit errors on Meta Graph API | Subscribe to `message_template_status_update` webhooks | First time template approval takes longer than expected |
-| Generating PDF in-memory and sending directly to WhatsApp | Memory limit on Edge Function runtime (~150MB) | Generate PDF to Supabase Storage, get signed URL, send URL as document message | PDF reports with many months of data |
+| Hero background image not using `priority` prop | LCP image loads late; Lighthouse LCP > 2.5s | Add `priority` to the `<Image>` that is the hero element | Immediately on first page load |
+| Unoptimized app screenshot PNGs | Page weight > 2MB; slow mobile load | Export screenshots at 2x retina max, use `next/image` with WebP conversion | When screenshots are > 300KB each |
+| Loading all sections as client components | FCP/LCP degraded; JS bundle > 500KB | Keep sections as Server Components; only interactive elements are Client | Any traffic with slow connections |
+| No font subsetting | 100–200KB extra font payload | `next/font/google` handles subsetting automatically via `subsets` option | On first load, especially on mobile |
+| Third-party analytics script blocking render | TBT > 200ms; INP degraded | Load PostHog (or any analytics) using `next/script` with `strategy="afterInteractive"` | Any page with analytics |
 
 ---
 
@@ -240,12 +183,11 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Skipping HMAC-SHA256 verification on WhatsApp webhook | Any attacker can send fake messages, triggering bot actions | Always verify `X-Hub-Signature-256` header against raw request body before processing; use `timingSafeEqual` |
-| Comparing HMAC signature after JSON parsing | Signature mismatch due to JSON re-serialization differences | Verify against the raw bytes before parsing |
-| Storing WhatsApp token in `.env` committed to repo | Token exposed via git history | Store only in Supabase Edge Function secrets (`supabase secrets set WHATSAPP_TOKEN=...`) |
-| Trusting `from` field in webhook payload without cross-referencing DB | Tenant impersonation — attacker sends message pretending to be a different phone number | Cross-reference `from` phone number against `users` table before any bot action |
-| Logging phone numbers from webhook payload | PII exposure in Supabase logs (queryable by team members) | Hash or truncate phone numbers in all log statements |
-| Processing message without checking for `message_id` deduplication | Replay attacks via resent webhooks | Store processed `message_id` values with TTL check before processing |
+| Exposing Supabase anon key in website env vars | Key visible in client bundle; potential abuse | The landing page has NO backend calls — do not add any Supabase SDK or keys to `website/` |
+| Contact form without rate limiting | Spam/abuse via open form | Use Formspree (has built-in rate limiting) or add turnstile CAPTCHA if self-hosting form handler |
+| Serving privacy policy as client-rendered SPA | Google may not index it; App Store reviewers may see a blank page | Privacy policy must be a static Server Component with full HTML at `view-source:` |
+| No `robots.txt` | Crawlers index staging/preview URLs | Add `robots.txt` disallowing preview deployments; only allow production domain |
+| `X-Frame-Options` not set | Clickjacking possible on the site | Vercel adds security headers by default, but verify `X-Frame-Options: DENY` is present in response headers |
 
 ---
 
@@ -253,26 +195,27 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Sending the main menu (5 categories) as every reply | Bot feels spammy, WhatsApp conversation becomes cluttered | Send the menu only on session start (RICH-02); after a transaction, send a confirmation then offer "Need anything else?" |
-| Button label text truncated at 20 characters | "Upcoming Payments" becomes "Upcoming Payments" but "Maintenance Status" becomes "Maintenance Stat..." | Review every button label at design time; keep all labels under 20 chars |
-| WhatsApp bot sends Telegram Markdown formatting (`*bold*`, `_italic_`) | Raw asterisks and underscores visible to WhatsApp users | Build a platform-aware message formatter — WhatsApp uses its own bold/italic syntax or plain text |
-| Freeform AI response sent without checking if interactive session is active | Long AI responses outside a session window fail silently | Always check window state; if outside window, send truncated summary via approved template |
-| Welcome message sent every time user links/re-links account | Duplicate welcome messages confuse returning users | Track `welcome_sent` boolean on `users` table, send RICH-01 only on first link |
-| Interactive menu with 5 buttons sent but WhatsApp only shows 3 maximum | User sees only first 3 buttons, last 2 categories invisible | WhatsApp reply buttons cap at 3. Use 3 buttons for primary actions + a "More..." button that triggers a follow-up menu |
+| Navigation menu on the landing page | Visitors distracted from the download CTA; lower conversion | Remove the nav entirely or use a minimal sticky CTA bar; single-goal pages outperform full-nav pages |
+| App Store links missing on mobile | Mobile users most likely to download; they bounce if links are broken | Test App Store deep links on a real device before launch; use `target="_blank"` with `rel="noopener"` |
+| Screenshots that show an empty/demo state | Visitors can't visualize the product; credibility gap | Use screenshots with realistic sample data (fake tenant names, real payment flows) |
+| No social proof section | Visitors have no trust signals; low conversion | Add even 2–3 testimonials or a "landlord managing X properties" stat before launch |
+| Page doesn't explain who it's for | Landlords and tenants both exist in the product; confusing positioning | Lead with a landlord-first headline (they pay/sign up); mention tenants as secondary |
+| CTA says "Download" with no platform specificity | Users on iOS see both buttons and pick wrong one | Detect `navigator.userAgent` client-side and show only the relevant store button, or show both labeled clearly |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **WhatsApp account linking (SETUP-02):** Verification code flow tested but no test for already-registered phone number edge case — verify that re-linking an already-linked number is handled gracefully.
-- [ ] **Media upload (MEDIA-01):** Photo sends correctly in happy path but no test for file size >5MB (header image limit) or >100MB (global limit) — verify rejection is user-friendly, not a silent 400 error.
-- [ ] **Outbound reminders (OUT-01):** Reminder fires for all tenants in test but no test for user who has never initiated WhatsApp conversation — first outbound message to a cold number requires the user to have opted in; cannot message someone who has never messaged the business first.
-- [ ] **Template messages (all OUT-* requirements):** Template approved in Meta dashboard but no test for what happens when variable count in the API call doesn't match the template definition — verify error handling.
-- [ ] **Interactive menus (RICH-02, RICH-03):** Buttons render in WhatsApp Web but not tested on WhatsApp Desktop (Windows/Mac) or older Android versions — test across clients.
-- [ ] **PDF delivery (History → download PDF):** PDF generates and sends in isolation but not tested after a large report — verify PDF file size stays under the 100MB document limit (in practice, keep under 10MB for usability).
-- [ ] **Telegram menu parity (RICH-05):** WhatsApp menu built and working but Telegram inline keyboard not updated to match — verify both platforms serve the same menu structure before closing the phase.
-- [ ] **Webhook deduplication:** Bot reply sent once in testing, but no test for Meta retrying the same webhook — verify `message_id` deduplication prevents double-processing.
-- [ ] **Quality rating monitoring:** Messages send successfully at launch but no alert configured for when quality rating drops to Yellow — set up a monitoring webhook or periodic check before going live.
+- [ ] **OG image:** Verify with https://cards-dev.twitter.com/validator and https://developers.facebook.com/tools/debug/ against the live URL — not just `curl`.
+- [ ] **Privacy policy page:** Confirm `view-source:` returns full text content (not a loading spinner requiring JS) — required for Apple App Store review.
+- [ ] **sitemap.xml:** Confirm `/sitemap.xml` returns valid XML and includes both `/` and `/privacy` — submit to Google Search Console.
+- [ ] **robots.txt:** Confirm `/robots.txt` exists and allows the production domain while disallowing Vercel preview URLs.
+- [ ] **App Store links:** Test both iOS (App Store) and Android (Play Store) links on a real device — not just a desktop browser.
+- [ ] **Ignored Build Step:** Commit a change to `app/` only and confirm Vercel shows "Skipped Build" in the deployment log.
+- [ ] **fonts:** Confirm no render-blocking font requests in Lighthouse — fonts should be self-hosted via `next/font/google`.
+- [ ] **JavaScript disabled:** Load the production URL with JS disabled in DevTools — all content should be readable.
+- [ ] **Mobile viewport:** Test at 375px (iPhone SE) and 390px (iPhone 15) — not just desktop.
+- [ ] **`metadataBase`:** Confirm `next build` produces no `metadataBase` warning in the build output.
 
 ---
 
@@ -280,13 +223,12 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Temporary token expired, all outbound fails | LOW | Generate System User token, update Supabase secret, redeploy Edge Functions |
-| Template rejected or recategorized | MEDIUM | Rewrite template copy to pure transactional language, resubmit (24-72h turnaround), update template name in Edge Function env var |
-| Phone number quality rating drops to Red | HIGH | Stop all outbound campaigns immediately, audit message content and opt-in processes, wait 7 days for rating to recover, appeal to Meta if unjustified |
-| Duplicate messages sent due to webhook retry | MEDIUM | Deploy deduplication logic, mark already-processed messages in DB, manually identify and notify affected users |
-| Media loss due to delayed download | MEDIUM | Cannot recover expired CDN URLs — inform affected users to resend media; deploy synchronous download fix immediately |
-| Interactive menu shows only 3 of 5 buttons | LOW | Redesign menu to use 3 primary buttons + "More" overflow pattern; redeploy |
-| 24-hour window violation causing notification failure | LOW | Switch affected outbound function to approved template; retry failed sends with template |
+| Vercel deploys on every commit (no Ignored Build Step) | LOW | Add the `git diff` check to Vercel "Ignored Build Step" setting in the dashboard — no code changes required |
+| tsconfig conflict causing build failures | MEDIUM | Create a standalone `website/tsconfig.json`, add `"exclude": ["website"]` to root tsconfig, rerun `tsc --noEmit` from both roots |
+| React version mismatch (dual instances) | MEDIUM | Remove `website` from workspaces, install deps fresh in `website/` with `npm install`, pin React version to match Expo |
+| `metadataBase` missing from production | LOW | Add the env var to Vercel and `metadataBase` to `layout.tsx`; trigger a new deploy; resubmit to social debuggers |
+| All components are `"use client"` | HIGH | Audit each component; remove the directive from any component that does not use hooks or browser APIs; test `next build` route annotations |
+| OG image broken after deploy | LOW | Test with Facebook Debugger and Twitter Card Validator; most likely cause is missing `metadataBase` or image behind auth |
 
 ---
 
@@ -294,41 +236,32 @@ Setup phase — webhook architecture must be designed correctly from the start. 
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Non-template messages outside 24h window | Setup & Outbound (Phase 1 or 2) | Every outbound Edge Function uses `type: template`; integration test with 25h gap between messages |
-| Interactive buttons outside 24h window | Rich Messaging phase | Menu dispatch only fires on inbound message handler path, never from scheduled functions |
-| Media URL 5-minute expiry | Media Handling phase | Media download is the first await in webhook handler; integration test with artificial 10s delay confirms failure |
-| Template rejection/recategorization | Setup phase (Day 1) | All templates approved (not Pending) before any outbound function is deployed; webhook for status updates subscribed |
-| Temporary access token used | Setup phase (Day 1) | `WHATSAPP_TOKEN` set via `supabase secrets set`, System User visible in Meta Business Manager |
-| Phone number already registered | Setup phase (before registration) | SETUP-01 documentation includes clean-number prerequisite |
-| Messaging tier 250 cap | Outbound Messaging phase | `send-reminders` logs HTTP 429 responses to a failures table; manual test with simulated 429 response |
-| Webhook timeout / duplicate processing | Webhook architecture (Phase 1) | `whatsapp-webhook` returns 200 before Claude call; `message_id` deduplication in place before any testing |
+| Vercel rebuilds on every RN commit | Phase 1 (Project Setup) | Commit a change to `app/` only; confirm "Skipped Build" in Vercel dashboard |
+| tsconfig conflict (Expo vs Next.js) | Phase 1 (Project Setup) | Run `npx tsc --noEmit` from repo root and from `website/` independently — zero errors in both |
+| React version mismatch | Phase 1 (Project Setup) | `npm ls react` from `website/` shows single version matching Expo's pinned version |
+| `metadataBase` not set | Phase 2 (Core Pages) | `next build` log shows no `metadataBase` warning |
+| Overuse of `"use client"` | Phase 2 (Core Pages) | `next build` output shows `○ /` (static) not `λ /` (dynamic) |
+| Privacy policy not statically rendered | Phase 2 (Core Pages) | `view-source:` on `/privacy` returns full legal text without JS |
+| OG image broken in production | Phase 3 (SEO + Launch) | Twitter Card Validator and Facebook Debugger both show correct preview |
+| No sitemap submitted | Phase 3 (SEO + Launch) | Google Search Console shows sitemap submitted and indexed |
+| App Store links broken on mobile | Phase 3 (SEO + Launch) | Tested on real iOS and Android device |
+| Performance traps (LCP > 2.5s) | Phase 3 (SEO + Launch) | Lighthouse mobile LCP < 2.5s, Performance score > 90 |
 
 ---
 
 ## Sources
 
-- [WhatsApp Business API: 24-Hour Messaging Window — smsmode](https://www.smsmode.com/en/whatsapp-business-api-customer-care-window-ou-templates-comment-les-utiliser/)
-- [WhatsApp API Rate Limits: How They Work — Wati](https://www.wati.io/en/blog/whatsapp-business-api/whatsapp-api-rate-limits/)
-- [Interactive Reply Buttons — Meta for Developers](https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/)
-- [Interactive Reply Buttons Developer Docs — Meta](https://developers.facebook.com/documentation/business-messaging/whatsapp/messages/interactive-reply-buttons-messages/)
-- [Media — WhatsApp Cloud API — Meta for Developers](https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media/)
-- [Supported Media Types and Sizes — AWS End User Messaging (mirrors Meta specs)](https://docs.aws.amazon.com/social-messaging/latest/userguide/supported-media-types.html)
-- [Downloading Media via WhatsApp Cloud API Webhook — Medium](https://medium.com/@shreyas.sreedhar/downloading-media-using-whatsapps-cloud-api-webhooks-and-uploading-it-to-aws-s3-bucket-via-nodejs-07c5cbae896f)
-- [WhatsApp Template Approval: 27 Reasons Meta Rejects Messages — WUSeller](https://www.wuseller.com/blog/whatsapp-template-approval-checklist-27-reasons-meta-rejects-messages/)
-- [Why Meta Rejects WhatsApp Templates — Fyno](https://www.fyno.io/blog/why-is-meta-rejecting-my-whatsapp-business-templates-cm2efjq2s0057m1jlzfh7olqz)
-- [WhatsApp Template Recategorized from Utility to Marketing — msg91](https://msg91.com/guide/whatsapp-template-recategorized-from-utility-marketing-fix)
-- [WhatsApp API Message Template Category Update July 2025 — YCloud](https://www.ycloud.com/blog/whatsapp-api-message-template-category-guidelines-update/)
-- [Messaging Limits — Meta for Developers](https://developers.facebook.com/docs/whatsapp/messaging-limits/)
-- [WhatsApp Rate Limits for Developers — Fyno](https://www.fyno.io/blog/whatsapp-rate-limits-for-developers-a-guide-to-smooth-sailing-clycvmek2006zuj1oof8uiktv)
-- [WhatsApp Cloud API Webhook Setup — Pons Blog](https://pons.chat/blog/whatsapp-cloud-api-webhook-nextjs)
-- [Guide to WhatsApp Webhooks — Hookdeck](https://hookdeck.com/webhooks/platforms/guide-to-whatsapp-webhooks-features-and-best-practices)
-- [Shadow Delivery Mystery — Siri Prasad on Medium](https://medium.com/@siri.prasad/the-shadow-delivery-mystery-why-your-whatsapp-cloud-api-webhooks-silently-fail-and-how-to-fix-2c7383fec59f)
-- [Permanent Access Token — Anjok Technologies](https://anjoktechnologies.in/blog/-whatsapp-cloud-api-permanent-access-token-step-by-step-system-user-2026-complete-correct-guide-by-anjok-technologies)
-- [WhatsApp Business Registration Phone Pitfalls — Sobot](https://www.sobot.io/article/troubleshoot-new-number-for-whatsapp-business-registration-issues/)
-- [WhatsApp Messaging Limits and Quality Ratings — PickyAssist](https://pickyassist.com/blog/whatsapps-messaging-limits-quality-ratings-on-2025/)
-- [WhatsApp Cloud API PDF error 131053 bug report — Chatwoot GitHub](https://github.com/chatwoot/chatwoot/issues/13656)
-- [Building a Scalable Webhook Architecture for WhatsApp — ChatArchitect](https://www.chatarchitect.com/news/building-a-scalable-webhook-architecture-for-custom-whatsapp-solutions)
+- [Vercel Monorepos Documentation](https://vercel.com/docs/monorepos) — official guidance on Root Directory and Ignored Build Step
+- [Vercel Monorepos FAQ](https://vercel.com/docs/monorepos/monorepo-faq) — common monorepo deployment questions
+- [How to configure Vercel deploys for a monorepo package — DEV Community](https://dev.to/gdbroman/how-to-configure-vercel-deploys-for-a-monorepo-package-4ok1) — Ignored Build Step patterns
+- [Expo Work with Monorepos — Expo Documentation](https://docs.expo.dev/guides/monorepos/) — Metro watchFolders and nohoist guidance
+- [Expo issues with npm workspaces / monorepos — GitHub Issue #30143](https://github.com/expo/expo/issues/30143) — community-reported hoisting conflicts
+- [Next.js Metadata and OG Images — Getting Started](https://nextjs.org/docs/app/getting-started/metadata-and-og-images) — metadataBase requirement
+- [Open Graph images using the Next.js App Router — Strongly Typed](https://stronglytyped.uk/articles/open-graph-images-nextjs-app-router) — production OG image pitfalls
+- [How to Optimize Core Web Vitals in NextJS App Router for 2025 — Makers' Den](https://makersden.io/blog/optimize-web-vitals-in-nextjs-2025) — LCP/CLS patterns
+- [Typical Next.js SEO Pitfalls to Avoid — FocusReactive](https://focusreactive.com/typical-next-js-seo-pitfalls-to-avoid-in-2024/) — client-side rendering SEO failures
+- [10 Landing Page Mistakes You Should Absolutely Avoid in 2025 — Moosend](https://moosend.com/blog/landing-page-mistakes/) — UX and conversion pitfalls
 
 ---
-*Pitfalls research for: Dwella v1.2 WhatsApp Bot Expansion*
-*Researched: 2026-03-21*
+*Pitfalls research for: Next.js landing page added to React Native + Expo monorepo*
+*Researched: 2026-03-30*

@@ -1,370 +1,264 @@
 # Technology Stack
 
-**Project:** Dwella v2 — v1.2 WhatsApp Bot Expansion
-**Researched:** 2026-03-21
-**Scope:** NEW capabilities only. Existing stack (Expo SDK 51, Supabase, Claude API, Zustand, Victory Native) is validated and unchanged.
+**Project:** Dwella v2 — v1.3 Marketing Landing Page
+**Researched:** 2026-03-30
+**Confidence:** HIGH
+**Scope:** NEW capabilities only. Existing stack (Expo SDK 54, Supabase, Claude API, Zustand, Victory Native) is validated and unchanged. This file covers only the `/website` Next.js addition.
 
 ---
 
 ## Executive Finding
 
-This milestone adds **zero new npm packages** and **zero new Deno libraries**. Every new capability is achieved by extending the calls to existing HTTP APIs. The "stack" additions are entirely API surface extensions and new Edge Functions written in the same pattern already used in production.
+The landing page lives in `/website` as a **standalone Next.js app** — no monorepo tooling required, no Turborepo, no workspaces. It shares zero runtime code with the Expo app. The connection is visual only: Dwella brand colors and assets. This keeps the Expo `package.json` clean and the website independently deployable.
+
+Total new dependencies: **6 production + 4 dev**.
 
 ---
 
-## What Is Already In Place (Do Not Re-Research)
+## Recommended Stack
 
-| Capability | Where | Status |
-|------------|-------|--------|
-| WhatsApp Cloud API v21.0 calls | `whatsapp-webhook`, `whatsapp-send-code`, `send-reminders` | Working. Auth pattern established. |
-| WhatsApp template message sending | `whatsapp-send-code` | `dwella_verification` template already approved and in use. |
-| WhatsApp outbound text messages | `send-reminders` | Sends plain text today — needs upgrade to templates for outbound. |
-| Telegram Bot API calls | `telegram-webhook` | Working. `sendMessage` with `parse_mode: 'Markdown'`. |
-| process-bot-message shared AI logic | `process-bot-message` | Claude API structured intent dispatch already working. |
-| Supabase Storage binary upload | `payment-proofs` bucket | Pattern established — `arraybuffer` upload via service role. |
-| Deno `fetch` for external APIs | All Edge Functions | Native Deno — no library needed. |
+### Core Technologies
 
----
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Next.js | 15.2.4 | React framework + SSG | Current stable. App Router (not Pages Router) is the standard path in 2025-2026. Turbopack included for fast dev. Built-in `generateMetadata`, `sitemap.ts`, `robots.ts` mean zero third-party SEO dependencies. |
+| React | 19.x | UI runtime | Required by Next.js 15. No choice here — use what `create-next-app` bootstraps. |
+| TypeScript | 5.x | Type safety | Consistent with existing Expo codebase which has zero TS errors. The landing page should match. |
+| Tailwind CSS | 4.x | Styling | v4 is the correct default for new projects in 2026. No `tailwind.config.js` file — configuration lives in CSS via `@theme` directives. Up to 10x faster builds than v3. PostCSS plugin: `@tailwindcss/postcss`. |
 
-## API Layer: WhatsApp Cloud API
+### Supporting Libraries
 
-### Version Lock
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| `motion` | 12.x | Scroll-reveal and entrance animations | Use for hero section fade-in, feature card stagger, and section entrance animations. Import from `motion/react` (not the old `framer-motion` package, though both work). Only add `motion` if animations are needed — do not add for purely static sections. |
+| `react-hook-form` | 7.x | Contact/waitlist form state | Use for the contact or waitlist form. Uncontrolled components, no re-renders, zero dependencies, 27.9 kB. Pair with `zod` + `@hookform/resolvers` for schema validation. |
+| `zod` | 3.x | Form schema validation | Shared between client (RHF) and Server Action — same schema validates on both sides. |
+| `@hookform/resolvers` | 3.x | RHF + Zod bridge | Connects RHF's `useForm` to a Zod resolver. One import. |
+| `resend` | 4.x | Contact form email delivery | Use to deliver contact form submissions to a Dwella inbox. The `resend` npm package wraps their API. Free tier: 3,000 emails/month, 100/day. Modern DX — setup in 8 minutes vs. SendGrid's 45. React Email integration if you want styled confirmation emails. |
 
-**Use v21.0 exclusively.** The codebase already uses `graph.facebook.com/v21.0` in `whatsapp-webhook`, `whatsapp-send-code`, and `send-reminders`. All new calls must use the same version. Do not mix API versions across Edge Functions.
+### Development Tools
 
-**Base URL:** `https://graph.facebook.com/v21.0`
-
-### New Endpoints Needed
-
-| Endpoint | Method | Purpose | Used By |
-|----------|--------|---------|---------|
-| `/{phone_number_id}/messages` | POST | Send interactive button messages | `whatsapp-webhook` (menu replies) |
-| `/{phone_number_id}/messages` | POST | Send template messages (reminders, receipts, alerts) | `whatsapp-outbound` (new Edge Function) |
-| `/{phone_number_id}/messages` | POST | Send document messages (PDF report delivery) | `whatsapp-outbound` |
-| `/{media_id}` | GET | Retrieve temporary download URL for incoming media | `whatsapp-webhook` (MEDIA-01, MEDIA-02) |
-| `/{phone_number_id}/media` | POST multipart | Upload outbound PDF before sending as document message | `whatsapp-outbound` (RICH-03 PDF delivery) |
-
-All calls use the existing `Authorization: Bearer {WHATSAPP_ACCESS_TOKEN}` header — no new credentials.
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| `@tailwindcss/postcss` | Tailwind v4 PostCSS integration | Required by Tailwind v4 — replaces the v3 `tailwindcss` PostCSS plugin. |
+| ESLint + `eslint-config-next` | Linting | Included by `create-next-app`. Do not add extra plugins — the Next.js ESLint config already covers React and accessibility rules. |
+| TypeScript strict mode | Type checking | Set `"strict": true` in `/website/tsconfig.json`. Match existing Expo app discipline. |
+| Vercel CLI | Local preview + deployment | `npx vercel --cwd website` to preview before pushing. Free for the Hobby plan which covers a marketing site. |
 
 ---
 
-### Interactive Reply Buttons (RICH-02, RICH-03, RICH-05)
+## Installation
 
-Interactive buttons replace plain text replies for menu-driven flows. Sent by setting `type: "interactive"` on the message object.
+Run these commands from the `/website` directory after `npx create-next-app@latest website --typescript --eslint --app --tailwind`:
 
-**Hard constraints (HIGH confidence — Meta official SDK docs + community verification):**
-- Maximum **3 buttons per message** — this is a hard API limit, not a soft guideline.
-- Button `title` max **20 characters** — keep labels short. "Log Payment" yes; "Record a payment for this month" no.
-- Button `id` max **256 bytes** — use short namespaced strings: `"menu:payments"`, `"sub:payments:log"`.
-- Interactive messages **can only be sent within the 24-hour customer service window** — a user must have messaged first to open the window. Proactive outbound (reminders, notifications) must use approved templates regardless of button intent.
+```bash
+# From /website directory
 
-**The 5-category menu problem:** The RICH-02 requirement lists 5 categories (Properties, Payments, History, Maintenance, Others). Five exceeds the 3-button limit. Resolution: split into two sequential messages — message 1 sends buttons 1-3, message 2 sends buttons 4-5. Or condense to 3 top-level categories and fold less-common options into an "Others" text-triggered path. This is a design decision for the phase, not a stack blocker.
+# Animation (add only if you build animated sections)
+npm install motion
 
-**Request body for interactive button message:**
-```json
-{
-  "messaging_product": "whatsapp",
-  "recipient_type": "individual",
-  "to": "<E.164_phone>",
-  "type": "interactive",
-  "interactive": {
-    "type": "button",
-    "body": { "text": "What would you like to do?" },
-    "action": {
-      "buttons": [
-        { "type": "reply", "reply": { "id": "menu:payments", "title": "Payments" } },
-        { "type": "reply", "reply": { "id": "menu:maintenance", "title": "Maintenance" } },
-        { "type": "reply", "reply": { "id": "menu:history", "title": "History" } }
-      ]
-    }
-  }
-}
+# Form handling
+npm install react-hook-form zod @hookform/resolvers
+
+# Email delivery for contact form
+npm install resend
 ```
 
-**Incoming button reply webhook shape** (what the webhook receives when a user taps a button):
-```json
-{
-  "type": "interactive",
-  "interactive": {
-    "type": "button_reply",
-    "button_reply": { "id": "menu:payments", "title": "Payments" }
-  }
-}
-```
-
-The existing `whatsapp-webhook` currently reads only `msg['text']?.['body']`. It must additionally read `msg['interactive']?.['button_reply']?.['id']` to handle button callbacks. This is a 10-line addition to the existing webhook handler.
+Tailwind CSS v4 and its PostCSS integration are included automatically by `create-next-app` when you pass `--tailwind`. No separate install needed.
 
 ---
 
-### Media Handling (MEDIA-01, MEDIA-02)
-
-**Incoming media (tenant sends payment photo via WhatsApp):**
-
-Webhook payload includes `msg['image']?.['id']` or `msg['document']?.['id']` — a temporary Media ID string. The existing webhook ignores these fields and returns early on non-text messages. This must be changed.
-
-Two-step retrieval process (no library — raw Deno `fetch`):
-1. `GET https://graph.facebook.com/v21.0/{media_id}` with `Authorization: Bearer {token}` → returns JSON with `url` field (valid for 5 minutes only)
-2. `GET {url}` with `Authorization: Bearer {token}` → returns binary file content as `ArrayBuffer`
-
-Then upload to Supabase Storage (`payment-proofs` bucket) using existing pattern.
-
-**File size limits (HIGH confidence — verified against AWS Social Messaging docs, which mirror Meta's official limits):**
-| Type | MIME Types | Max Size |
-|------|-----------|---------|
-| Image | `image/jpeg`, `image/png` | 5 MB |
-| Document | `application/pdf` | 100 MB (practical: much less) |
-
-**Outbound media (bot delivers PDF report to user):**
-
-Required for RICH-03 "download PDF report" flow:
-1. Generate PDF (base64 or binary) via `generate-pdf` Edge Function
-2. Upload to WhatsApp media: `POST /{phone_number_id}/media` as `multipart/form-data` with fields `messaging_product=whatsapp`, `type=application/pdf`, `file=<binary>` → returns `{ "id": "<media_id>" }`
-3. Send document message: `POST /{phone_number_id}/messages` with `type: "document"` and `document: { "id": "<media_id>", "filename": "dwella-report-2026-03.pdf" }`
-
-Deno handles `multipart/form-data` natively via the built-in `FormData` class — no additional import needed. Supabase Storage returns `Blob` from `storage.from(bucket).download(path)` which can be appended directly to `FormData`.
-
----
-
-### Template Messages: Outbound Proactive Messaging (OUT-01, OUT-02, OUT-03)
-
-Templates are the **only** mechanism for sending proactive messages when the user has not messaged in the last 24 hours. The `dwella_verification` template is already approved and working — this establishes the pattern for all new templates.
-
-**New templates to create and submit for approval:**
-
-| Template Name | Category | Parameters | Use Case |
-|---------------|----------|-----------|---------|
-| `dwella_verification` | Utility | `{{1}}` = code | Already approved. Do not change. |
-| `dwella_rent_reminder` | Utility | `{{1}}` = property name, `{{2}}` = days until/overdue, `{{3}}` = amount | OUT-01: 3 days before, on due date, 3 days overdue |
-| `dwella_payment_receipt` | Utility | `{{1}}` = tenant name, `{{2}}` = property name, `{{3}}` = amount, `{{4}}` = month | OUT-02: payment confirmed |
-| `dwella_maintenance_update` | Utility | `{{1}}` = property name, `{{2}}` = new status, `{{3}}` = request summary | OUT-03: maintenance status change |
-
-**Why Utility (not Marketing):** Rent reminders, payment receipts, and maintenance status updates are transactional notifications triggered by user-initiated events. They contain no promotional content. Utility templates have two advantages: (1) they are free when sent within the 24-hour customer service window, and (2) they face less scrutiny during approval. If a template contains any promotional language it will be reclassified as Marketing automatically by Meta's scanner.
-
-**Approval timeline:** 1 minute to 48 hours typically. Templates must be submitted via Meta Business Manager before any Edge Function can use them. Template creation is a prerequisite step, not a code task — it must appear in the setup guide (SETUP-01) as a manual human step.
-
-**Pricing context (July 1 2025 change):** Meta moved from conversation-based to per-message pricing on July 1 2025. Utility templates within a 24-hour window are free. Outside the window, cost is per delivered message by country. For an India-based user base the cost is small but non-zero. This does not change the implementation approach.
-
-**Template request body pattern (established in `whatsapp-send-code`):**
-```json
-{
-  "messaging_product": "whatsapp",
-  "to": "<phone>",
-  "type": "template",
-  "template": {
-    "name": "dwella_rent_reminder",
-    "language": { "code": "en" },
-    "components": [
-      {
-        "type": "body",
-        "parameters": [
-          { "type": "text", "text": "Sunset Apartments" },
-          { "type": "text", "text": "3 days" },
-          { "type": "text", "text": "₹15,000" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-The existing `send-reminders` Edge Function already sends WhatsApp text messages outside the template system. This will break once the 24-hour window closes. It must be replaced with template calls for all three outbound scenarios (OUT-01, OUT-02, OUT-03).
-
----
-
-## API Layer: Telegram Bot API
-
-### Version
-
-The Telegram Bot API is versioned implicitly by the bot API server — no URL version segment. The existing `telegram-webhook` calls `api.telegram.org/bot{token}/sendMessage` with `parse_mode: 'Markdown'`. No URL change is needed.
-
-Bot API 9.x (current as of 2025) supports inline keyboards with callback data. Since the API endpoint is the same, there is no version migration to perform.
-
-### Inline Keyboards (RICH-02, RICH-03, RICH-05)
-
-Telegram inline keyboards are attached via `reply_markup` in any `sendMessage` call. Unlike WhatsApp's 3-button hard limit, Telegram supports arbitrary rows and columns — the full 5-category main menu can appear in a single message.
-
-**`callback_data` limit: 64 bytes (HIGH confidence — consistent across all sources).** Keep IDs short. `"menu:payments"` is 13 bytes; `"sub:history:pdf"` is 15 bytes — both well within limit.
-
-**JSON structure for `sendMessage` with inline keyboard:**
-```json
-{
-  "chat_id": 123456789,
-  "text": "What would you like to do?",
-  "parse_mode": "Markdown",
-  "reply_markup": {
-    "inline_keyboard": [
-      [
-        { "text": "Properties", "callback_data": "menu:properties" },
-        { "text": "Payments", "callback_data": "menu:payments" }
-      ],
-      [
-        { "text": "History", "callback_data": "menu:history" },
-        { "text": "Maintenance", "callback_data": "menu:maintenance" }
-      ],
-      [
-        { "text": "Others", "callback_data": "menu:others" }
-      ]
-    ]
-  }
-}
-```
-
-The inner arrays are rows; multiple buttons in the same array appear side by side. This allows the 5-category grid layout.
-
-### Callback Query Handling
-
-When a user taps an inline button, Telegram sends a `callback_query` update — **not** a `message` update. The existing `telegram-webhook` reads only `update['message']` and returns early if it is absent. This must be extended to also read `update['callback_query']`.
-
-**New endpoint required:** `answerCallbackQuery` must be called after processing every callback query to clear Telegram's loading spinner. Without this call, the button appears stuck to the user.
+## Directory Structure
 
 ```
-POST https://api.telegram.org/bot{token}/answerCallbackQuery
-Body: { "callback_query_id": "<id>", "text": "" }
+/website                      ← standalone Next.js app, its own package.json
+  app/
+    layout.tsx                ← root metadata (title, OG, metadataBase)
+    page.tsx                  ← landing page (Hero + Features + Download + Contact)
+    privacy/
+      page.tsx                ← Privacy Policy (required for App Store)
+    api/
+      contact/
+        route.ts              ← Server Route: validates form, calls Resend
+    sitemap.ts                ← auto-generates sitemap.xml
+    robots.ts                 ← auto-generates robots.txt
+  components/
+    Hero.tsx
+    Features.tsx
+    DownloadBadges.tsx
+    ContactForm.tsx
+  public/
+    screenshots/              ← App Store screenshot PNGs
+    og-image.png              ← 1200x630 OG image
+  package.json                ← independent of root Expo package.json
+  next.config.ts
+  tsconfig.json
 ```
 
-**Incoming callback_query update shape:**
-```json
-{
-  "callback_query": {
-    "id": "1234567890",
-    "from": { "id": 987654321 },
-    "message": { "chat": { "id": 987654321 }, "message_id": 42 },
-    "data": "menu:payments"
-  }
-}
-```
-
-The `message.chat.id` is the `chatId` used to send the reply. The `data` field is the `callback_data` value that was set when the button was created.
+The root `package.json` and `node_modules` are **untouched**. Metro (Expo's bundler) will not see the `/website` directory.
 
 ---
 
-## New Edge Functions
+## Monorepo Approach: Subdirectory, Not Workspaces
 
-| Function | Responsibility | Why New (Not Modified) |
-|----------|---------------|----------------------|
-| `whatsapp-outbound` | Sends all proactive outbound WhatsApp messages: template-based reminders, payment receipts, maintenance alerts, and PDF document delivery | Outbound logic separated from the inbound webhook handler. Called by `send-reminders`, `auto-confirm-payments`, and the maintenance status update trigger. Keeps webhook handler focused on inbound parsing. |
-| `generate-pdf` | Generates PDF report for a given user + month/year, uploads to Supabase Storage, returns download URL | Already planned in CLAUDE.md. Required for RICH-03 "History > download PDF report". PDF generation in Deno uses HTML string + a headless rendering approach or a pre-built PDF library available via esm.sh. |
+**Decision: Simple subdirectory. No Turborepo. No `pnpm workspaces`.**
 
----
+Rationale:
+- No shared code between the Expo app and the website. They share brand colors only — copy the hex values, do not create a shared package.
+- Turborepo is worthwhile when you have shared packages (e.g., `packages/ui`, `packages/config`). Without shared packages it adds complexity with zero benefit.
+- The root `package.json` uses `npm`. Adding workspaces would require either converting to a monorepo workspace or using pnpm — both break existing Expo tooling in ways that require Metro reconfiguration.
+- Vercel deploys the `/website` subdirectory independently by setting the `Root Directory` to `website` in the Vercel project settings.
 
-## Existing Edge Functions: Required Modifications
-
-| Function | What Changes |
-|----------|-------------|
-| `whatsapp-webhook` | (1) Parse `msg['type'] === 'interactive'` and extract `button_reply.id`. (2) Parse `msg['type'] === 'image'` or `'document'` and download media via the two-step media retrieval flow. (3) Route button `id` values through a menu state machine that sends the next interactive message. (4) On account linking success (SETUP-02 + RICH-01), send a welcome interactive message instead of plain text. |
-| `telegram-webhook` | (1) Read `update['callback_query']` alongside `update['message']`. (2) Call `answerCallbackQuery` after every callback. (3) Modify `sendTelegram` to accept optional `reply_markup` parameter for inline keyboard. (4) Add menu dispatch routing on `callback_data` values. |
-| `process-bot-message` | (1) Add `query_maintenance_status`, `query_upcoming_payments`, `query_property_summary` to `ACTION_HANDLERS` and Claude system prompt. (2) Extend `buildContext` to include maintenance requests for the current user. (3) Update `BotRequest` interface: add `interactive_button_id?: string` so button taps can bypass Claude entirely for deterministic menu navigation. |
-| `send-reminders` | Replace the plain `type: "text"` WhatsApp sends (lines 136-153) with calls to `whatsapp-outbound` using the `dwella_rent_reminder` template. |
+**Git root remains at `/`** — one repo, one `.git`, one remote. The `/website` directory is just another directory in the tree.
 
 ---
 
-## Environment Variables: No New Additions
+## SEO: Built-in, No Third-Party Plugins
 
-All new API calls reuse existing credentials:
+**Decision: Use Next.js 15's built-in metadata system. Do not install `next-sitemap`.**
 
-| Variable | Used By | Already Configured |
-|----------|---------|-------------------|
-| `WHATSAPP_ACCESS_TOKEN` | All WhatsApp API calls | Yes |
-| `WHATSAPP_PHONE_NUMBER_ID` | All WhatsApp API calls | Yes |
-| `WHATSAPP_APP_SECRET` | HMAC validation in webhook | Yes |
-| `WHATSAPP_VERIFY_TOKEN` | Webhook verification challenge | Yes |
-| `TELEGRAM_BOT_TOKEN` | All Telegram API calls | Yes |
-| `TELEGRAM_WEBHOOK_SECRET` | Webhook secret validation | Yes |
+Next.js 15 App Router provides:
+- `export const metadata: Metadata` in any `layout.tsx` / `page.tsx` — static title, description, OG tags, Twitter cards
+- `generateMetadata()` — dynamic metadata for routes that need it (not needed here — this is a static marketing site)
+- `app/sitemap.ts` — exports a typed function returning `MetadataRoute.Sitemap`; Next.js serializes to XML at `/sitemap.xml`
+- `app/robots.ts` — exports `MetadataRoute.Robots`; served at `/robots.txt`
 
----
+All three are zero-dependency, generated at build time, and work correctly with Vercel's CDN edge cache. `next-sitemap` is a post-build process that was necessary before these built-ins existed; it is no longer needed for new projects.
 
-## What NOT to Add
-
-| Rejected Option | Reason |
-|-----------------|--------|
-| `@whatsapp/nodejs-sdk` (Meta's official SDK) | Adds esm.sh CDN dependency for something that `fetch` already handles. The existing production pattern (raw REST calls) is working, audited, and HMAC-validated. A library wrapper adds abstraction without benefit. |
-| `grammy`, `telegraf`, or any Telegram bot library | Same reason — the Telegram handler is a thin webhook dispatcher. A library would replace 136 lines of audited code with framework magic and a version dependency. |
-| WhatsApp List Messages (`type: "list"`) | Explicitly out of scope in REQUIREMENTS.md. Interactive buttons cover the v1.2 menu requirement. Lists add complexity for no additional benefit in this use case. |
-| Session state database table for menu navigation | Introduces schema migration + RLS policy for transient state. Use the `bot_conversations.metadata` column (already present) to store the current menu context per user, or embed state in button `id` values (stateless: `"sub:payments:log"` tells the handler exactly where the user is without a lookup). Stateless design preferred. |
-| `deno-puppeteer` / `playwright` for PDF generation | Headless browser in a Supabase Edge Function is not supported (no Chromium binary, 150 MB cold start). Use an HTML-to-PDF Deno library from esm.sh or pre-generate PDFs by formatting data as structured text and encoding as PDF primitives. The `generate-pdf` function already exists in CLAUDE.md plans. |
-| Video / voice message handling in WhatsApp | Explicitly out of scope in REQUIREMENTS.md. Photo + document covers the v1.2 use cases. |
+**Set `metadataBase` in root layout** — without it, OG image URLs are relative paths that social platforms cannot fetch.
 
 ---
 
-## Integration Flow Summary
+## Animation: Motion for React (Optional but Recommended)
 
-```
-Incoming WhatsApp text message
-  → whatsapp-webhook
-  → (unchanged path) → process-bot-message → Claude API → reply
+**Decision: Use `motion` from `motion/react`. Add only if the design calls for animated entrances.**
 
-Incoming WhatsApp button tap
-  → whatsapp-webhook (msg.type === "interactive")
-  → Extract button_reply.id → menu state machine
-  → Send next interactive message OR forward to process-bot-message with intent context
+The library was rebranded from Framer Motion to Motion in late 2024. Both `framer-motion` and `motion` packages exist on npm; new projects should use `motion`. Current version: 12.x (12.38.0 as of March 2026).
 
-Incoming WhatsApp photo / document
-  → whatsapp-webhook (msg.type === "image" | "document")
-  → GET graph.facebook.com/v21.0/{media_id} → get temporary URL
-  → GET {url} with auth → binary ArrayBuffer
-  → Supabase Storage upload (payment-proofs bucket)
-  → Update payment row → reply with confirmation
+Use cases on a marketing page:
+- Hero headline fade-up on load
+- Feature card stagger on scroll into view (use `whileInView` + `viewport={{ once: true }}`)
+- Section entrance animations
 
-Outbound proactive (rent reminder / payment receipt / maintenance alert)
-  → send-reminders / auto-confirm-payments / maintenance trigger
-  → whatsapp-outbound (new Edge Function)
-  → POST /{phone_number_id}/messages with type: "template"
+Do **not** use CSS animations for these — Motion's `whileInView` with `viewport={{ once: true }}` is simpler, more controllable, and avoids the `IntersectionObserver` boilerplate.
 
-Outbound PDF report via bot
-  → user sends "menu:history" → "sub:history:pdf" → picks month/year
-  → generate-pdf Edge Function → PDF binary → POST /{phone_number_id}/media
-  → POST /{phone_number_id}/messages with type: "document"
-
-Incoming Telegram text message
-  → telegram-webhook (update.message path, unchanged)
-  → process-bot-message → Claude API → sendMessage (+ optional inline_keyboard)
-
-Incoming Telegram button tap
-  → telegram-webhook (update.callback_query path, new)
-  → answerCallbackQuery (clear spinner)
-  → menu dispatch on callback_query.data → sendMessage with inline_keyboard
-```
+**Server Component constraint:** `motion` components are Client Components. Wrap only the animated parts in `'use client'` boundaries. Keep the page shell and `layout.tsx` as Server Components to preserve SEO benefits.
 
 ---
 
-## Pre-Implementation Checklist (Before Writing Code)
+## Form Handling: React Hook Form + Zod + Resend Server Route
 
-These must be completed by the developer before the implementation phases:
+**Decision: RHF on the client, Zod on client + server, Resend in a Next.js Route Handler.**
 
-- [ ] Create `dwella_rent_reminder` template in Meta Business Manager, submit for approval
-- [ ] Create `dwella_payment_receipt` template in Meta Business Manager, submit for approval
-- [ ] Create `dwella_maintenance_update` template in Meta Business Manager, submit for approval
-- [ ] Verify Meta App is in Live mode (not Development mode) — webhooks and templates require Live mode
-- [ ] Verify WhatsApp Business Account is connected to the Meta App and phone number is registered
+Pattern:
+1. `ContactForm.tsx` (`'use client'`) — RHF `useForm` with `zodResolver`
+2. On submit: `POST /api/contact` with form data
+3. `app/api/contact/route.ts` (Server) — validates again with same Zod schema, calls `resend.emails.send()`
+4. Success/error state returned to client
+
+**Do not use Next.js Server Actions for the contact form.** Server Actions are the right choice for data mutations in authenticated apps. For a public contact form on a marketing page, a simple Route Handler (`POST /api/contact`) is more debuggable, more testable, and easier to rate-limit if needed.
+
+**Resend free tier** is sufficient for a marketing site: 3,000 emails/month, 100/day. The `resend` npm SDK is 4.x, under active development. Uses the same `RESEND_API_KEY` environment variable on Vercel.
 
 ---
 
-## Confidence Assessment
+## Deployment: Vercel
 
-| Area | Confidence | Source |
-|------|-----------|--------|
-| WhatsApp Cloud API v21.0 version | HIGH | Already in production codebase |
-| Interactive button JSON structure | HIGH | Meta official Node.js SDK docs + multiple verifications |
-| 3-button hard limit | HIGH | Consistent across Meta docs, community, and third-party providers |
-| Media two-step retrieval flow | HIGH | Multiple developer implementations confirm the pattern |
-| File size limits (5 MB image, 100 MB doc) | HIGH | AWS Social Messaging docs (mirrors Meta), cross-verified |
-| Template approval timeline | MEDIUM | Third-party sources; Meta's own timeline is "minutes to 48 hours" |
-| Template category (Utility vs Marketing) | HIGH | Meta's July 2025 category guidelines are well-documented |
-| Telegram callback_data 64 byte limit | HIGH | Consistent across python-telegram-bot docs and all community sources |
-| answerCallbackQuery requirement | HIGH | Telegram Bot API spec — missing call causes stuck UI |
-| Telegram inline_keyboard row/column flexibility | HIGH | Confirmed in API spec and multiple implementations |
+**Decision: Vercel Hobby plan. Root directory set to `website`.**
+
+Configuration in Vercel project settings:
+- **Root Directory:** `website`
+- **Build Command:** `next build` (default)
+- **Output Directory:** `.next` (default)
+- **Framework Preset:** Next.js (auto-detected)
+
+Vercel Hobby plan limits relevant to a marketing site:
+- 100 deployments/day — more than sufficient
+- 100 GB Fast Data Transfer/month — fine for a static site
+- Static pages are served from the edge CDN at no function invocation cost
+- The contact form Route Handler counts as a serverless function invocation: 1M/month free
+
+**Custom domain:** Add in Vercel project settings. Point DNS `CNAME` to `cname.vercel-dns.com`. No extra cost on Hobby for custom domains.
+
+**Vercel Pro is not needed** until/unless the site scales beyond 100 GB/month transfer or you need team collaboration features.
+
+---
+
+## Alternatives Considered
+
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| Next.js 15 (App Router) | Astro | Astro is excellent for pure content sites with zero JavaScript. Dwella's contact form and animations require React. Next.js is the obvious choice when the team already knows React. |
+| Next.js 15 (App Router) | Next.js 14 (Pages Router) | Pages Router is legacy. App Router is the default since Next.js 13. No reason to start a new project on the old router. |
+| Tailwind CSS v4 | Tailwind CSS v3 | "There is zero reason to start with v3 in 2026." v4 is faster, CSS-native, and is now the default in `create-next-app`. |
+| Tailwind CSS v4 | CSS Modules | CSS Modules have no productivity advantage over Tailwind for a 3-5 page marketing site. Tailwind's utility classes are faster for rapid layout work. |
+| `motion` | CSS transitions only | CSS is fine for hover states. Motion's `whileInView` is irreplaceable for scroll-triggered entrance animations without IntersectionObserver boilerplate. |
+| React Hook Form | Formik | Formik is effectively unmaintained (last commit >1 year ago). RHF has 2x the npm downloads and is under active development. |
+| Resend | SendGrid | SendGrid setup takes 45 minutes and requires domain verification + SMTP config. Resend is designed for React/Next.js developers: setup in 8 minutes, free tier covers a marketing site indefinitely. |
+| Simple subdirectory | Turborepo monorepo | Turborepo adds value only when you have shared packages. With zero shared packages between Expo and Next.js, Turborepo is pure overhead. |
+| Built-in `sitemap.ts` | `next-sitemap` package | `next-sitemap` was a workaround before Next.js added native sitemap support. Use the built-in — it's typed, requires no post-build step, and is one less dependency. |
+
+---
+
+## What NOT to Use
+
+| Avoid | Why | Use Instead |
+|-------|-----|-------------|
+| `next-sitemap` | Unnecessary post-build dependency — Next.js 15 has native `sitemap.ts` and `robots.ts` support | `app/sitemap.ts` (built-in) |
+| Formik | Unmaintained. Last release >1 year ago. 2x fewer downloads than React Hook Form | `react-hook-form` |
+| `react-spring` | Heavy bundle for spring physics. Overkill for a marketing page with entrance animations | `motion` (framer-motion) |
+| `@vercel/analytics` | Adds JavaScript tracking overhead. Dwella already uses PostHog in the app. For a simple marketing page, no analytics is fine unless you need download click tracking. | None, or add PostHog snippet later |
+| Turborepo / pnpm workspaces | Unnecessary complexity with no shared packages between Expo and Next.js | Simple subdirectory with independent `package.json` |
+| `styled-components` / Emotion | Server Component incompatible without complex setup. CSS-in-JS has been largely superseded by Tailwind for new projects | Tailwind CSS v4 |
+| `gray-matter` / MDX | Only add if blog posts are in scope. They are not. | Not needed |
+| `next-themes` | Dark mode toggling is not in scope for a marketing page. Dwella's app handles dark mode separately. | Not needed |
+
+---
+
+## Version Compatibility
+
+| Package | Compatible With | Notes |
+|---------|-----------------|-------|
+| Next.js 15.2.4 | React 19.x | React 19 is required (not just compatible) by Next.js 15 |
+| Tailwind CSS v4 | Next.js 15 | Official guide at tailwindcss.com/docs/guides/nextjs confirms v4 + Next.js 15 support |
+| `motion` 12.x | React 19 | Tested against Next.js 16 / React 19 in March 2026 — no breaking changes |
+| `react-hook-form` 7.x | React 19 | Works with React 19 `useActionState` pattern; can coexist with Server Actions |
+| `zod` 3.x | TypeScript 5.x | No issues. Zod 4 is in development but 3.x is stable and widely used |
+| Resend 4.x | Next.js 15 Route Handlers | Official Next.js integration guide on resend.com/nextjs |
+
+---
+
+## Environment Variables
+
+Add to Vercel project (website scope only — do NOT add to Expo EAS env):
+
+| Variable | Value | Where Set |
+|----------|-------|-----------|
+| `RESEND_API_KEY` | From Resend dashboard | Vercel project settings > Environment Variables |
+| `CONTACT_EMAIL` | Email address to receive contact form submissions | Vercel project settings > Environment Variables |
+
+The website does **not** need Supabase credentials. It is a public marketing page with no authenticated database access.
 
 ---
 
 ## Sources
 
-- [WhatsApp Cloud API — Interactive Reply Buttons](https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive-reply-buttons-messages/) — button JSON structure, 3-button limit (HIGH confidence)
-- [WhatsApp Node.js SDK — Interactive Message Reference](https://whatsapp.github.io/WhatsApp-Nodejs-SDK/api-reference/messages/interactive/) — Meta official SDK confirming structure (HIGH confidence)
-- [WhatsApp Cloud API — Media Reference](https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media/) — media endpoints (HIGH confidence, via search)
-- [AWS End User Messaging Social — Supported Media Types](https://docs.aws.amazon.com/social-messaging/latest/userguide/supported-media-types.html) — MIME types and size limits (HIGH confidence)
-- [WhatsApp Template Category Guidelines July 2025](https://www.ycloud.com/blog/whatsapp-api-message-template-category-guidelines-update/) — Utility vs Marketing classification (HIGH confidence)
-- [WhatsApp API Pricing Update July 2025](https://www.ycloud.com/blog/whatsapp-api-pricing-update) — per-message pricing context (HIGH confidence)
-- [24-hour Customer Service Window](https://www.smsmode.com/en/whatsapp-business-api-customer-care-window-ou-templates-comment-les-utiliser/) — session window rules (HIGH confidence)
-- [Telegram Bot API](https://core.telegram.org/bots/api) — InlineKeyboardMarkup, callback_query (HIGH confidence)
-- [Telegram InlineKeyboardButton callback_data — python-telegram-bot](https://docs.python-telegram-bot.org/en/stable/telegram.callbackquery.html) — 64 byte limit cross-verification (HIGH confidence)
-- Existing codebase: `whatsapp-webhook/index.ts`, `send-reminders/index.ts`, `telegram-webhook/index.ts` — confirmed v21.0 usage, auth pattern, and existing gaps (HIGH confidence)
+- [Next.js 15.2.4 Current Stable](https://www.abhs.in/blog/nextjs-current-version-march-2026-stable-release-whats-new) — version confirmation (MEDIUM confidence — third-party)
+- [Next.js 15 Release Blog](https://nextjs.org/blog/next-15) — React 19 requirement, Turbopack stable, async APIs (HIGH confidence — official)
+- [Next.js Metadata API — generateMetadata](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) — SEO built-ins (HIGH confidence — official docs)
+- [Next.js sitemap.xml built-in](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap) — native sitemap support (HIGH confidence — official docs)
+- [Tailwind CSS v4 Upgrade Guide](https://tailwindcss.com/docs/upgrade-guide) — v4 architecture changes, CSS-native config (HIGH confidence — official docs)
+- [Tailwind CSS v4 + Next.js install guide](https://tailwindcss.com/docs/guides/nextjs) — official integration (HIGH confidence — official docs)
+- [Motion for React (framer-motion rebrand)](https://motion.dev/docs/react) — import from `motion/react`, version 12.x (HIGH confidence — official)
+- [Should I use Framer Motion or Motion One?](https://motion.dev/blog/should-i-use-framer-motion-or-motion-one) — React integration recommendation (HIGH confidence — official)
+- [React Hook Form](https://react-hook-form.com/) — uncontrolled components, 7.x stable (HIGH confidence — official)
+- [Resend Next.js integration](https://resend.com/nextjs) — official Next.js guide (HIGH confidence — official)
+- [Resend vs SendGrid 2026](https://dev.to/theawesomeblog/resend-vs-sendgrid-2026-which-email-api-actually-ships-faster-dg8) — DX comparison (MEDIUM confidence — community)
+- [Vercel Pricing 2026](https://vercel.com/pricing) — Hobby plan limits (HIGH confidence — official)
+- [Expo Monorepos Guide](https://docs.expo.dev/guides/monorepos/) — confirmed no Metro reconfiguration needed with SDK 52+ for monorepo (HIGH confidence — official Expo docs)
+- [Migrate from next-sitemap to App Directory sitemap](https://mikebifulco.com/posts/migrate-from-next-sitemap-to-app-directory-sitemap) — confirms built-in is sufficient (MEDIUM confidence — community)
+
+---
+
+*Stack research for: Next.js marketing landing page in Expo monorepo*
+*Researched: 2026-03-30*
