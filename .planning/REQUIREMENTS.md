@@ -79,28 +79,29 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETUP-01 | TBD | Pending |
-| SETUP-02 | TBD | Pending |
-| SETUP-03 | TBD | Pending |
-| SETUP-04 | TBD | Pending |
-| PAGE-01 | TBD | Pending |
-| PAGE-02 | TBD | Pending |
-| PAGE-03 | TBD | Pending |
-| PAGE-04 | TBD | Pending |
-| PAGE-05 | TBD | Pending |
-| PAGE-06 | TBD | Pending |
-| BRAND-01 | TBD | Pending |
-| BRAND-02 | TBD | Pending |
-| BRAND-03 | TBD | Pending |
-| SEO-01 | TBD | Pending |
-| SEO-02 | TBD | Pending |
-| SEO-03 | TBD | Pending |
-| SEO-04 | TBD | Pending |
+| SETUP-01 | Phase 15 | Pending |
+| SETUP-02 | Phase 15 | Pending |
+| SETUP-03 | Phase 15 | Pending |
+| SETUP-04 | Phase 15 | Pending |
+| PAGE-01 | Phase 16 | Pending |
+| PAGE-02 | Phase 16 | Pending |
+| PAGE-03 | Phase 16 | Pending |
+| PAGE-04 | Phase 16 | Pending |
+| PAGE-05 | Phase 16 | Pending |
+| PAGE-06 | Phase 16 | Pending |
+| BRAND-01 | Phase 16 | Pending |
+| BRAND-02 | Phase 16 | Pending |
+| BRAND-03 | Phase 16 | Pending |
+| SEO-01 | Phase 17 | Pending |
+| SEO-02 | Phase 17 | Pending |
+| SEO-03 | Phase 17 | Pending |
+| SEO-04 | Phase 17 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 17 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 17
+- Mapped to phases: 17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-30*
+*Traceability updated: 2026-03-30 (roadmap created)*

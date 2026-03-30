@@ -5,7 +5,7 @@
 - ✅ **v1.0 Launch Audit & Hardening** — Phases 1-5 (shipped 2026-03-19)
 - ✅ **v1.1 Tools Expansion** — Phases 6-10 (shipped 2026-03-21)
 - ✅ **v1.2 WhatsApp Bot** — Phases 11-14 (shipped 2026-03-21)
-- 🚧 **v1.3 Android Play Store Launch** — Phases 15-17 (in progress)
+- 🚧 **v1.3 Dwella Landing Page** — Phases 15-17 (in progress)
 
 ## Phases
 
@@ -47,47 +47,50 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.3 Android Play Store Launch (In Progress)
+### 🚧 v1.3 Dwella Landing Page (In Progress)
 
-**Milestone Goal:** Ship Dwella to Google Play Store with production signing, all platform config wired, and the app verified on a physical Android device.
+**Milestone Goal:** Build and deploy a marketing landing page for Dwella using Next.js in `/website`, isolated from the Expo build pipeline, hosted on Vercel, with all content pages live including the privacy policy required for app store submissions.
 
-- [ ] **Phase 15: Build, Signing & Platform Config** - EAS production keystore, Android permissions cleanup, Google OAuth, App Links, PostHog/Sentry config, and privacy policy linked
-- [ ] **Phase 16: Store Listing Assets** - Screenshots, feature graphic, and store copy submitted in Play Console (user-driven manual tasks)
-- [ ] **Phase 17: Android Verification** - End-to-end device testing confirming auth, push notifications, and deep links work on physical Android
+- [ ] **Phase 15: Project Setup & Infrastructure** - Next.js 15 scaffold in `/website` with full build pipeline isolation (Metro blockList, tsconfig exclusion, Vercel config)
+- [ ] **Phase 16: Core Pages & Branding** - All content pages built (hero, features, screenshots, download badges, privacy policy, contact) with Dwella brand palette and responsive layout
+- [ ] **Phase 17: SEO & Launch** - OG image, sitemap, robots.txt, and production deployment verified on Vercel subdomain
 
 ## Phase Details
 
-### Phase 15: Build, Signing & Platform Config
-**Goal**: The app builds with a production-signed Android binary and all platform configuration is correct before submission
+### Phase 15: Project Setup & Infrastructure
+**Goal**: The `/website` Next.js project exists, builds independently, and is completely isolated from the Expo app's build pipeline before any component work begins
 **Depends on**: Phase 14
-**Requirements**: BUILD-01, BUILD-02, STORE-04, PLAT-01, PLAT-02, PLAT-03, PLAT-04, PLAT-05
+**Requirements**: SETUP-01, SETUP-02, SETUP-03, SETUP-04
 **Success Criteria** (what must be TRUE):
-  1. `eas build --platform android --profile production` completes without credential errors and produces a signed AAB
-  2. Privacy policy is reachable at a public URL and that URL is set in `app.json` under `android.privacyPolicyUrl`
-  3. Google OAuth sign-in works end-to-end (Google Cloud Console OAuth client + Supabase Google provider both configured with the production package name)
-  4. `AndroidManifest.xml` contains no `RECORD_AUDIO` or `SYSTEM_ALERT_WINDOW` permission entries
-  5. Sentry is either fully configured with a real DSN and capturing events, or all Sentry imports and calls are removed with no remaining build-time references
+  1. Running `npm run build` inside `/website` produces a static export without errors and without touching any Expo or React Native files
+  2. Running `npx tsc --noEmit` from the repo root completes without errors caused by Next.js files — the root TypeScript config excludes `website/`
+  3. Starting the Expo dev server (`npx expo start`) produces no Metro resolution errors related to `/website` — the blockList is active
+  4. Vercel project exists with Root Directory set to `website` and Ignored Build Step configured so mobile-only commits do not trigger website rebuilds
 **Plans**: TBD
 
-### Phase 16: Store Listing Assets
-**Goal**: The Play Store listing is complete and ready for review submission
+### Phase 16: Core Pages & Branding
+**Goal**: Visitors can see the full landing page with all content sections and navigate to the privacy policy — the site is deployable and app-store-submission-ready
 **Depends on**: Phase 15
-**Requirements**: STORE-01, STORE-02, STORE-03
+**Requirements**: PAGE-01, PAGE-02, PAGE-03, PAGE-04, PAGE-05, PAGE-06, BRAND-01, BRAND-02, BRAND-03
 **Success Criteria** (what must be TRUE):
-  1. Play Console shows at least 4 screenshots uploaded covering key app screens (properties list, payment flow, bot chat, notifications)
-  2. Feature graphic (1024x500px) is uploaded and visible in the Play Console listing preview
-  3. App title, short description, and full description with feature bullets are saved in Play Console with no placeholder text remaining
+  1. The home page shows a hero section with tagline, description, and app store download CTA buttons linked to the live iOS and Android store listings
+  2. The home page shows a feature highlights section covering property management, payments, maintenance, and reports with icons and descriptions
+  3. The home page shows app screenshots displayed in device mockup frames
+  4. The privacy policy is accessible at `/privacy` and renders its full legal text without requiring JavaScript (visible at `view-source:`)
+  5. The site renders correctly at 375px (mobile), 768px (tablet), and 1280px (desktop) viewports with no layout overflow or broken elements
+  6. All branded elements use the Dwella indigo (#4F46E5) palette and scroll animations are visible on feature cards
 **Plans**: TBD
+**UI hint**: yes
 
-### Phase 17: Android Verification
-**Goal**: The production build is confirmed working on a physical Android device across all critical user paths
+### Phase 17: SEO & Launch
+**Goal**: The site is live on a public Vercel URL with working social sharing previews, a valid sitemap, and all SEO metadata confirmed correct in production
 **Depends on**: Phase 16
-**Requirements**: VERIFY-01, VERIFY-02, VERIFY-03
+**Requirements**: SEO-01, SEO-02, SEO-03, SEO-04
 **Success Criteria** (what must be TRUE):
-  1. App installs and launches to the onboarding screen on a physical Android device running the production build
-  2. Email/password login, Google OAuth login, and navigation between tabs all complete without errors on the physical device
-  3. A push notification sent from Supabase is received and tapped on the physical Android device and routes to the correct screen
-  4. Tapping a `dwella://` deep link on the physical Android device opens the correct in-app screen
+  1. Pasting the production URL into the Twitter Card Validator and Facebook Debugger shows the correct OG title, description, and 1200x630 OG image — no "localhost" references appear
+  2. `https://<domain>/sitemap.xml` returns a valid XML sitemap listing the home page and privacy policy URLs
+  3. `https://<domain>/robots.txt` returns a valid robots.txt that allows crawling of the production domain
+  4. The site is accessible at a live Vercel subdomain (e.g., `dwella.vercel.app`) and the privacy policy URL at `/privacy` is publicly reachable for app store submission
 **Plans**: TBD
 
 ## Progress
@@ -108,6 +111,6 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 12. Media Handling | v1.2 | 2/2 | Complete | 2026-03-21 |
 | 13. Rich Messaging & Menus | v1.2 | 3/3 | Complete | 2026-03-21 |
 | 14. Intents & Outbound Notifications | v1.2 | 2/2 | Complete | 2026-03-21 |
-| 15. Build, Signing & Platform Config | v1.3 | 0/TBD | Not started | - |
-| 16. Store Listing Assets | v1.3 | 0/TBD | Not started | - |
-| 17. Android Verification | v1.3 | 0/TBD | Not started | - |
+| 15. Project Setup & Infrastructure | v1.3 | 0/TBD | Not started | - |
+| 16. Core Pages & Branding | v1.3 | 0/TBD | Not started | - |
+| 17. SEO & Launch | v1.3 | 0/TBD | Not started | - |
