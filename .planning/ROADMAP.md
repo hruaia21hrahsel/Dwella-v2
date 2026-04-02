@@ -117,3 +117,12 @@ Plans:
 | 15. Project Setup & Infrastructure | v1.3 | 1/2 | In Progress|  |
 | 16. Core Pages & Branding | v1.3 | 0/TBD | Not started | - |
 | 17. SEO & Launch | v1.3 | 0/TBD | Not started | - |
+
+### Phase 18: Apple App Store Beta Testing Prep
+**Goal:** All config gaps in app.json, eas.json, and UpdateGate.tsx are closed, a production EAS build is submitted to TestFlight, and the build launches without crashing on a physical device
+**Requirements**: EAS-01, EAS-02, EAS-03, EAS-04, EAS-05, EAS-06, EAS-07, EAS-08, EAS-09
+**Depends on:** Phase 17
+**Plans:** 2 plans
+Plans:
+- [ ] 18-01-PLAN.md — Fix app.json, eas.json, and UpdateGate.tsx config gaps (EAS-01 through EAS-07)
+- [ ] 18-02-PLAN.md — Trigger EAS build, submit to TestFlight, verify launch (EAS-08, EAS-09)
