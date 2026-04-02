@@ -122,7 +122,7 @@ Plans:
 **Goal:** All config gaps in app.json, eas.json, and UpdateGate.tsx are closed, a production EAS build is submitted to TestFlight, and the build launches without crashing on a physical device
 **Requirements**: EAS-01, EAS-02, EAS-03, EAS-04, EAS-05, EAS-06, EAS-07, EAS-08, EAS-09
 **Depends on:** Phase 17
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 18-01-PLAN.md — Fix app.json, eas.json, and UpdateGate.tsx config gaps (EAS-01 through EAS-07)
-- [ ] 18-02-PLAN.md — Trigger EAS build, submit to TestFlight, verify launch (EAS-08, EAS-09)
+- [x] 18-02-PLAN.md — Trigger EAS build, submit to TestFlight, verify launch (EAS-08, EAS-09)
