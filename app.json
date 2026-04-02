@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "cover",
-      "backgroundColor": "#009688"
+      "backgroundColor": "#4F46E5"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -18,8 +18,18 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.dwella.app",
+      "appleTeamId": "35G5HXD9K9",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
       }
     },
     "android": {
