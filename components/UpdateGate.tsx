@@ -5,7 +5,7 @@ import { Text, Button, Surface } from 'react-native-paper';
 import { useTheme } from '@/lib/theme-context';
 
 const STORE_URL = Platform.select({
-  ios: 'https://apps.apple.com/app/dwella/id[APP_ID]',
+  ios: 'https://apps.apple.com/app/dwella/id6760478576',
   android: 'https://play.google.com/store/apps/details?id=com.dwella.app',
 }) ?? '';
 
