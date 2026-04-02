@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack, router, useRouter, useSegments, type Href } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -258,6 +258,12 @@ function InnerLayout() {
 }
 
 export default function RootLayout() {
+  // Defer PostHog by one frame so its AsyncStorage reads don't race with
+  // Zustand rehydration at startup (causes Hermes SIGSEGV on iOS — see
+  // .planning/debug/build23-crash.crash).
+  const [postHogReady, setPostHogReady] = useState(false);
+  useEffect(() => { setPostHogReady(true); }, []);
+
   const inner = (
     <ThemeProvider>
       <UpdateGate>
@@ -266,7 +272,7 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 
-  if (!POSTHOG_API_KEY) {
+  if (!POSTHOG_API_KEY || !postHogReady) {
     return inner;
   }
 
@@ -274,7 +280,7 @@ export default function RootLayout() {
     <PostHogProvider
       apiKey={POSTHOG_API_KEY}
       options={{ host: POSTHOG_HOST }}
-      autocapture={{ captureTouches: true, captureScreens: true }}
+      autocapture={{ captureTouches: false, captureScreens: false }}
     >
       {inner}
     </PostHogProvider>
