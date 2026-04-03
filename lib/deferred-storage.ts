@@ -1,43 +1,35 @@
 /**
- * Deferred AsyncStorage wrapper.
+ * SecureStore-backed storage adapter.
  *
- * On iOS the native AsyncStorage TurboModule can SIGABRT when multiple
- * callers (Zustand persist, Supabase session restore) hit it concurrently
- * before the React Native bridge is fully initialised.
+ * Replaces AsyncStorage to avoid a crash-on-launch caused by the native
+ * AsyncStorage TurboModule (`RCT_EXPORT_METHOD` with void+callback).
+ * The void method invocation path in React Native's ObjCTurboModule throws
+ * an NSException during startup, and the error handler then crashes Hermes
+ * by accessing the JS runtime from a background dispatch thread (SIGSEGV).
  *
- * This wrapper queues all getItem / setItem / removeItem calls until
- * `enableStorage()` is called (once, from a useEffect in RootLayout).
- * After that, calls pass straight through to the real AsyncStorage.
+ * expo-secure-store uses the Expo Modules bridge (EXNativeModulesProxy)
+ * which dispatches via Promise-based invocation — a completely different
+ * native path that doesn't have this bug.
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
-let ready = false;
-const pending: Array<() => void> = [];
-
-/** Call once from a useEffect to flush queued storage operations. */
-export function enableStorage() {
-  ready = true;
-  for (const fn of pending) fn();
-  pending.length = 0;
-}
+const OPTS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
+};
 
 export const DeferredStorage = {
-  getItem: (key: string): Promise<string | null> => {
-    if (ready) return AsyncStorage.getItem(key);
-    return new Promise((resolve) => {
-      pending.push(() => AsyncStorage.getItem(key).then(resolve));
-    });
-  },
-  setItem: (key: string, value: string): Promise<void> => {
-    if (ready) return AsyncStorage.setItem(key, value);
-    return new Promise((resolve) => {
-      pending.push(() => AsyncStorage.setItem(key, value).then(resolve));
-    });
-  },
-  removeItem: (key: string): Promise<void> => {
-    if (ready) return AsyncStorage.removeItem(key);
-    return new Promise((resolve) => {
-      pending.push(() => AsyncStorage.removeItem(key).then(resolve));
-    });
-  },
+  getItem: (key: string): Promise<string | null> =>
+    SecureStore.getItemAsync(key, OPTS),
+
+  setItem: (key: string, value: string): Promise<void> =>
+    SecureStore.setItemAsync(key, value, OPTS),
+
+  removeItem: (key: string): Promise<void> =>
+    SecureStore.deleteItemAsync(key, OPTS),
 };
+
+/**
+ * No-op kept for backwards compatibility — RootLayout still calls this.
+ * With SecureStore there's no deferral needed.
+ */
+export function enableStorage() {}
