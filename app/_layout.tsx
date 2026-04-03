@@ -16,6 +16,7 @@ import { ThemeProvider, useTheme } from '@/lib/theme-context';
 import { UpdateGate } from '@/components/UpdateGate';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { useToastStore } from '@/lib/toast';
+import { enableStorage } from '@/lib/deferred-storage';
 SplashScreen.preventAutoHideAsync();
 
 function usePaperTheme() {
@@ -263,11 +264,14 @@ function InnerLayout() {
 }
 
 export default function RootLayout() {
-  // Defer PostHog by one frame so its AsyncStorage reads don't race with
-  // Zustand rehydration at startup (causes Hermes SIGSEGV on iOS — see
-  // .planning/debug/build23-crash.crash).
+  // Flush deferred AsyncStorage operations once the RN bridge is ready.
+  // This prevents the TurboModule SIGABRT caused by concurrent native
+  // AsyncStorage calls from Zustand + Supabase at module-import time.
   const [postHogReady, setPostHogReady] = useState(false);
-  useEffect(() => { setPostHogReady(true); }, []);
+  useEffect(() => {
+    enableStorage();
+    setPostHogReady(true);
+  }, []);
 
   const inner = (
     <ThemeProvider>

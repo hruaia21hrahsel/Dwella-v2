@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Session } from '@supabase/supabase-js';
 import { User } from './types';
+import { DeferredStorage } from './deferred-storage';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'dwella-store',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => DeferredStorage),
       // Only persist onboardingCompletedByUser and themeMode. isLocked must reset
       // to true on every cold launch so the PIN screen is always shown.
       partialize: (state) => ({
