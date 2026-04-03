@@ -18,16 +18,6 @@ import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { useToastStore } from '@/lib/toast';
 SplashScreen.preventAutoHideAsync();
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 function usePaperTheme() {
   const { colors, isDark } = useTheme();
   const base = isDark ? MD3DarkTheme : MD3LightTheme;
@@ -228,6 +218,21 @@ function AuthGuard() {
 function InnerLayout() {
   const { colors, isDark } = useTheme();
   const paperTheme = usePaperTheme();
+
+  // Defer notification handler registration to avoid TurboModule SIGABRT at
+  // startup — the native void call races with Zustand/AsyncStorage rehydration
+  // when run at module top level (see testflight_feedback crash build 24).
+  useEffect(() => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }, []);
 
   return (
     <PaperProvider theme={paperTheme}>
