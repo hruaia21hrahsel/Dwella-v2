@@ -47,7 +47,7 @@ function usePaperTheme() {
 }
 
 function AuthGuard() {
-  const { session, user, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, pendingRoute, setPendingRoute } = useAuthStore();
+  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, pendingRoute, setPendingRoute } = useAuthStore();
   const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
@@ -80,13 +80,19 @@ function AuthGuard() {
 
         if (newSession?.user) {
           const uid = newSession.user.id;
-          const fallbackUser = {
+          const immediateUser = {
             id: uid,
             email: newSession.user.email ?? '',
             full_name: newSession.user.user_metadata?.full_name ?? null,
             phone: newSession.user.user_metadata?.phone ?? null,
           };
 
+          // Set user IMMEDIATELY from session metadata so hooks and
+          // routing have a user object right away. The DB fetch below
+          // will update with the full profile (avatar_url, telegram, etc).
+          setUser(immediateUser as any);
+
+          // Async: upsert + fetch full profile, then update user
           try {
             await supabase.from('users').upsert(
               {
@@ -102,10 +108,9 @@ function AuthGuard() {
               .select('*')
               .eq('id', uid)
               .single();
-            setUser(data ?? fallbackUser);
+            if (data) setUser(data);
           } catch {
-            // If DB queries fail, still provide a minimal user so hooks don't stall
-            setUser(fallbackUser as any);
+            // immediateUser already set above — no action needed
           }
           registerPushToken(uid);
         } else {
@@ -143,12 +148,6 @@ function AuthGuard() {
       return;
     }
 
-    // Wait for user to be loaded before navigating to the app.
-    // On first login, setSession() fires before the async DB upsert
-    // completes, so user is still null. Without this guard, we'd
-    // navigate to dashboard with user=null and all hooks return empty.
-    if (!user) return;
-
     // Session exists. Check if the UI is locally locked.
     isBiometricEnabled(session.user.id).then((pinEnabled) => {
       // Bail out if the effect has re-fired since we started the async check.
@@ -174,7 +173,7 @@ function AuthGuard() {
         }
       }
     });
-  }, [session, user, isLoading, segments, isLocked, pendingRoute]);
+  }, [session, isLoading, segments, isLocked, pendingRoute]);
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
