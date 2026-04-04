@@ -55,17 +55,6 @@
       "expo-apple-authentication",
       "@react-native-community/datetimepicker",
       [
-        "expo-build-properties",
-        {
-          "ios": {
-            "hermesEnabled": false
-          },
-          "android": {
-            "hermesEnabled": false
-          }
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
