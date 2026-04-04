@@ -2,14 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Stack, router, useRouter, useSegments, type Href } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import * as Notifications from 'expo-notifications';
-import * as SplashScreen from 'expo-splash-screen';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { User } from '@/lib/types';
 import { usePostHog } from '@/lib/posthog';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
-import { registerPushToken } from '@/lib/notifications';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
@@ -52,6 +49,7 @@ function AuthGuard() {
   // Dismiss splash screen once loading finishes (or after a safety timeout)
   useEffect(() => {
     if (!isLoading) {
+      const SplashScreen = require('expo-splash-screen') as typeof import('expo-splash-screen');
       SplashScreen.hideAsync();
     }
   }, [isLoading]);
@@ -139,6 +137,7 @@ function AuthGuard() {
             const msg = err instanceof Error ? err.message : 'Failed to load profile';
             useToastStore.getState().showToast('Profile sync failed. Some data may be outdated.', 'error');
           }
+          const { registerPushToken } = require('@/lib/notifications') as typeof import('@/lib/notifications');
           registerPushToken(uid);
         })();
       } else {
@@ -203,6 +202,9 @@ function AuthGuard() {
   }, [session, isLoading, segments, isLocked, pendingRoute]);
 
   useEffect(() => {
+    // Lazy-load expo-notifications to avoid native ServerRegistrationModule
+    // Keychain access at import time, which crashes Hermes (build 29).
+    const Notifications = require('expo-notifications') as typeof import('expo-notifications');
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
       interface NotificationData { screen?: string; }
       const notifData = response.notification.request.content.data as NotificationData;
@@ -219,10 +221,10 @@ function InnerLayout() {
   const { colors, isDark } = useTheme();
   const paperTheme = usePaperTheme();
 
-  // Defer notification handler registration to avoid TurboModule SIGABRT at
-  // startup — the native void call races with Zustand/AsyncStorage rehydration
-  // when run at module top level (see testflight_feedback crash build 24).
+  // Lazy-load expo-notifications to avoid native ServerRegistrationModule
+  // Keychain access at import time, which crashes Hermes (build 29).
   useEffect(() => {
+    const Notifications = require('expo-notifications') as typeof import('expo-notifications');
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -268,9 +270,9 @@ export default function RootLayout() {
   // AsyncStorage calls from Zustand + Supabase at module-import time.
   const [postHogReady, setPostHogReady] = useState(false);
   useEffect(() => {
-    // Defer SplashScreen.preventAutoHideAsync to avoid TurboModule SIGSEGV on
-    // launch — the native void method invocation crashes Hermes when dispatched
-    // at module scope before the RN bridge is fully initialised (builds 24-28).
+    // Lazy-load expo-splash-screen to avoid TurboModule native init at import
+    // time — same class of crash as expo-notifications (builds 24-29).
+    const SplashScreen = require('expo-splash-screen') as typeof import('expo-splash-screen');
     SplashScreen.preventAutoHideAsync();
     enableStorage();
     setPostHogReady(true);
