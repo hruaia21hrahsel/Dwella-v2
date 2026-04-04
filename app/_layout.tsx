@@ -242,7 +242,6 @@ function InnerLayout() {
       const Notifications = require('expo-notifications') as typeof import('expo-notifications');
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
-          shouldShowAlert: true,
           shouldPlaySound: true,
           shouldSetBadge: false,
           shouldShowBanner: true,
