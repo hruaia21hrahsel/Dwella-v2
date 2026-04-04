@@ -4,6 +4,7 @@ import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { signInWithGoogle, signInWithApple, isAppleSignInAvailable } from '@/lib/social-auth';
 import { useAuthStore } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
@@ -25,6 +26,7 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
   const [appleAvailable, setAppleAvailable] = useState(true);
 
   useEffect(() => {
+    WebBrowser.maybeCompleteAuthSession();
     isAppleSignInAvailable().then(setAppleAvailable);
   }, []);
 

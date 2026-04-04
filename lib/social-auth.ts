@@ -4,8 +4,6 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from './supabase';
 
-WebBrowser.maybeCompleteAuthSession();
-
 const REDIRECT_URI = makeRedirectUri({
   native: 'dwella://auth/callback',
   scheme: 'dwella',

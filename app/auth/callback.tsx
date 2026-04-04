@@ -4,9 +4,6 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '@/lib/supabase';
 
-// Must be called in the redirect screen so openAuthSessionAsync knows the
-// auth session has completed (required on Android Custom Tabs).
-WebBrowser.maybeCompleteAuthSession();
 import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 import { useRouter } from 'expo-router';
@@ -27,6 +24,10 @@ export default function AuthCallbackScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const handled = useRef(false);
+
+  useEffect(() => {
+    WebBrowser.maybeCompleteAuthSession();
+  }, []);
 
   useEffect(() => {
     // If session is already set (scenario A), AuthGuard will navigate away.
