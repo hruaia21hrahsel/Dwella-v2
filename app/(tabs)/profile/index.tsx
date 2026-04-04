@@ -202,7 +202,13 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     setLoggingOut(true);
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Even if signOut fails (e.g. invalid refresh token), clear local state
+    }
+    // Always clear local auth so the UI redirects to login
+    useAuthStore.getState().clearAuth();
     setLoggingOut(false);
   }
 

@@ -33,7 +33,11 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
   /** After successful OAuth, navigate immediately — don't wait for AuthGuard. */
   function navigateAfterAuth() {
     setLocked(false);
-    router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
+    // Read fresh state — the closure's onboardingCompleted is stale (captured before login)
+    const store = useAuthStore.getState();
+    const uid = store.user?.id ?? '';
+    const completed = store.onboardingCompletedByUser[uid] ?? false;
+    router.replace(completed ? '/(tabs)/dashboard' : '/onboarding');
   }
 
   /** After OAuth, sync session + user into Zustand so hooks have data immediately. */
