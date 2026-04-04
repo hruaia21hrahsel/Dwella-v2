@@ -6,11 +6,10 @@ import { InteractionManager } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { User } from '@/lib/types';
-import { usePostHog } from '@/lib/posthog';
+import { usePostHog, getPostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
-import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { useToastStore } from '@/lib/toast';
 import { enableStorage } from '@/lib/deferred-storage';
 
@@ -300,9 +299,24 @@ function LazyUpdateGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const [postHogReady, setPostHogReady] = useState(false);
+  // Lazy-loaded PostHogProvider — posthog-react-native depends on
+  // @react-native-async-storage/async-storage whose TurboModule crashes
+  // Hermes when it auto-registers on iOS 26.3 (builds 23-32).
+  const [PHProvider, setPHProvider] = useState<React.ComponentType<{
+    apiKey: string;
+    options: { host: string };
+    autocapture: { captureTouches: boolean; captureScreens: boolean };
+    children: React.ReactNode;
+  }> | null>(null);
+
   useEffect(() => {
     enableStorage();
-    setPostHogReady(true);
+    // Defer PostHog native module loading until after interactions
+    InteractionManager.runAfterInteractions(() => {
+      const Provider = getPostHogProvider();
+      setPHProvider(() => Provider);
+      setPostHogReady(true);
+    });
   }, []);
 
   const inner = (
@@ -313,17 +327,17 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 
-  if (!POSTHOG_API_KEY || !postHogReady) {
+  if (!POSTHOG_API_KEY || !postHogReady || !PHProvider) {
     return inner;
   }
 
   return (
-    <PostHogProvider
+    <PHProvider
       apiKey={POSTHOG_API_KEY}
       options={{ host: POSTHOG_HOST }}
       autocapture={{ captureTouches: false, captureScreens: false }}
     >
       {inner}
-    </PostHogProvider>
+    </PHProvider>
   );
 }

@@ -1,6 +1,8 @@
-import { usePostHog } from 'posthog-react-native';
-import { type PostHogEventProperties } from '@posthog/core';
+import { usePostHog } from '@/lib/posthog';
 import { useCallback } from 'react';
+
+// Re-export usePostHog from the lazy wrapper (not directly from posthog-react-native)
+export { usePostHog } from '@/lib/posthog';
 
 // ── Event Names ────────────────────────────────────────────────────────
 export const EVENTS = {
@@ -50,15 +52,9 @@ export const EVENTS = {
 export function useTrack() {
   const posthog = usePostHog();
   return useCallback(
-    (event: string, properties?: PostHogEventProperties) => {
+    (event: string, properties?: Record<string, string | number | boolean | null>) => {
       posthog?.capture(event, properties);
     },
     [posthog],
   );
 }
-
-// ── Non-hook capture (for use outside components) ──────────────────────
-// Import posthog-react-native's default instance for fire-and-forget captures
-// in plain functions (e.g. lib/invite.ts).  Falls back silently if PostHog
-// hasn't initialised yet.
-export { usePostHog } from 'posthog-react-native';
