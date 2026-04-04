@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
-import { useRouter } from 'expo-router';
 import { signInWithGoogle, signInWithApple, isAppleSignInAvailable } from '@/lib/social-auth';
 import { useAuthStore } from '@/lib/store';
-import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme-context';
 
 interface SocialAuthButtonsProps {
@@ -17,9 +15,6 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthButtonsProps) {
   const { colors, isDark } = useTheme();
-  const router = useRouter();
-  const { onboardingCompletedByUser, setLocked, user } = useAuthStore();
-  const onboardingCompleted = onboardingCompletedByUser[user?.id ?? ''] ?? false;
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(true);
@@ -30,37 +25,26 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
 
   const isLoading = googleLoading || appleLoading;
 
-  /** After successful OAuth, navigate immediately — don't wait for AuthGuard. */
-  function navigateAfterAuth() {
-    setLocked(false);
-    // Read fresh state — the closure's onboardingCompleted is stale (captured before login)
-    const store = useAuthStore.getState();
-    const uid = store.user?.id ?? '';
-    const completed = store.onboardingCompletedByUser[uid] ?? false;
-    router.replace(completed ? '/(tabs)/dashboard' : '/onboarding');
-  }
-
-  /** After OAuth, sync session + user into Zustand so hooks have data immediately. */
-  async function syncAuthState() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
-    const store = useAuthStore.getState();
-    store.setSession(session);
-    // Set user so data hooks don't bail with if (!user) return
-    const uid = session.user.id;
-    const fallbackUser = {
-      id: uid,
-      email: session.user.email ?? '',
-      full_name: session.user.user_metadata?.full_name ?? null,
-      phone: session.user.user_metadata?.phone ?? null,
-    };
-    try {
-      const { data } = await supabase.from('users').select('*').eq('id', uid).single();
-      store.setUser(data ?? fallbackUser);
-    } catch {
-      store.setUser(fallbackUser as any);
-    }
-    return true;
+  /**
+   * After successful OAuth we do NOT navigate here.
+   *
+   * Why: Supabase fires the onAuthStateChange(SIGNED_IN) event before
+   * signInWithGoogle() returns. AuthGuard picks that up, does its async
+   * user-upsert, calls setLoading(false), and its routing effect fires —
+   * that is the ONE canonical navigation call, and it sets
+   * initialRedirectDone.current=true so it never fires again.
+   *
+   * If we also called router.replace() here we'd get a double-navigation:
+   * SocialAuthButtons navigates immediately, then AuthGuard navigates a
+   * second time (because initialRedirectDone is still false). That second
+   * replace corrupts expo-router's state and breaks data hooks, sign-out,
+   * and the log-payment button — all 4 reported symptoms.
+   *
+   * Solution: just unlock the app (setLocked(false)) and let AuthGuard
+   * drive routing. AuthGuard already handles the onboarding check.
+   */
+  function unlockAfterAuth() {
+    useAuthStore.getState().setLocked(false);
   }
 
   async function handleGoogle() {
@@ -69,8 +53,7 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
       onLoading?.(true);
       const result = await signInWithGoogle();
       if (result.success) {
-        await syncAuthState();
-        navigateAfterAuth();
+        unlockAfterAuth();
         return;
       }
       // User cancelled — not an error
@@ -88,8 +71,7 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
       onLoading?.(true);
       const result = await signInWithApple();
       if (result.success) {
-        await syncAuthState();
-        navigateAfterAuth();
+        unlockAfterAuth();
         return;
       }
     } catch (err: any) {
