@@ -1,16 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { Stack, router, useRouter, useSegments, type Href } from 'expo-router';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { Stack, useRouter, useSegments, type Href } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
+import { InteractionManager } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { User } from '@/lib/types';
 import { usePostHog } from '@/lib/posthog';
-import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
-import { UpdateGate } from '@/components/UpdateGate';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { useToastStore } from '@/lib/toast';
 import { enableStorage } from '@/lib/deferred-storage';
@@ -46,17 +45,23 @@ function AuthGuard() {
   /** Incremented each time the routing effect fires; stale async callbacks bail out. */
   const routingGeneration = useRef(0);
 
-  // Dismiss splash screen once loading finishes (or after a safety timeout)
+  // Dismiss splash screen once loading finishes (or after a safety timeout).
+  // No preventAutoHideAsync needed — Expo SDK 54 keeps the native splash
+  // visible by default until hideAsync() is called explicitly.
   useEffect(() => {
     if (!isLoading) {
-      const SplashScreen = require('expo-splash-screen') as typeof import('expo-splash-screen');
-      SplashScreen.hideAsync();
+      // Delay the native TurboModule call until all interactions are done
+      // to avoid the performVoidMethodInvocation crash during startup.
+      InteractionManager.runAfterInteractions(() => {
+        const SplashScreen = require('expo-splash-screen') as typeof import('expo-splash-screen');
+        SplashScreen.hideAsync();
+      });
     }
   }, [isLoading]);
 
   // ── Supabase auth listener ─────────────────────────────────────────
   useEffect(() => {
-    // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
+    // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 3s
     const fallback = setTimeout(() => setLoading(false), 3000);
 
     // Clear stale sessions on startup — if the refresh token is expired/revoked,
@@ -137,6 +142,7 @@ function AuthGuard() {
             const msg = err instanceof Error ? err.message : 'Failed to load profile';
             useToastStore.getState().showToast('Profile sync failed. Some data may be outdated.', 'error');
           }
+          // Lazy-load expo-notifications transitively via lib/notifications
           const { registerPushToken } = require('@/lib/notifications') as typeof import('@/lib/notifications');
           registerPushToken(uid);
         })();
@@ -175,6 +181,8 @@ function AuthGuard() {
     }
 
     // Session exists. Check if the UI is locally locked.
+    // Lazy-load biometric-auth to defer expo-secure-store native init.
+    const { isBiometricEnabled } = require('@/lib/biometric-auth') as typeof import('@/lib/biometric-auth');
     isBiometricEnabled(session.user.id).then((pinEnabled) => {
       // Bail out if the effect has re-fired since we started the async check.
       if (gen !== routingGeneration.current) return;
@@ -201,18 +209,24 @@ function AuthGuard() {
     });
   }, [session, isLoading, segments, isLocked, pendingRoute]);
 
+  // Defer notification listener setup until after all startup interactions
+  // complete — prevents TurboModule void method crash during launch.
   useEffect(() => {
-    // Lazy-load expo-notifications to avoid native ServerRegistrationModule
-    // Keychain access at import time, which crashes Hermes (build 29).
-    const Notifications = require('expo-notifications') as typeof import('expo-notifications');
-    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      interface NotificationData { screen?: string; }
-      const notifData = response.notification.request.content.data as NotificationData;
-      const screen = notifData?.screen;
-      if (screen) router.push(screen as Href);
+    const handle = InteractionManager.runAfterInteractions(() => {
+      const Notifications = require('expo-notifications') as typeof import('expo-notifications');
+      const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+        interface NotificationData { screen?: string; }
+        const notifData = response.notification.request.content.data as NotificationData;
+        const screen = notifData?.screen;
+        if (screen) router.push(screen as Href);
+      });
+      // Store cleanup for when effect unmounts
+      cleanupRef.current = () => sub.remove();
     });
-    return () => sub.remove();
+    return () => { handle.cancel(); cleanupRef.current?.(); };
   }, []);
+
+  const cleanupRef = useRef<(() => void) | null>(null);
 
   return null;
 }
@@ -221,19 +235,21 @@ function InnerLayout() {
   const { colors, isDark } = useTheme();
   const paperTheme = usePaperTheme();
 
-  // Lazy-load expo-notifications to avoid native ServerRegistrationModule
-  // Keychain access at import time, which crashes Hermes (build 29).
+  // Defer notification handler setup until after startup interactions.
   useEffect(() => {
-    const Notifications = require('expo-notifications') as typeof import('expo-notifications');
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
+    const handle = InteractionManager.runAfterInteractions(() => {
+      const Notifications = require('expo-notifications') as typeof import('expo-notifications');
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
     });
+    return () => handle.cancel();
   }, []);
 
   return (
@@ -264,25 +280,36 @@ function InnerLayout() {
   );
 }
 
+/**
+ * Lazy-loaded UpdateGate — prevents expo-updates native module from
+ * auto-initializing at bundle evaluation time.
+ */
+function LazyUpdateGate({ children }: { children: React.ReactNode }) {
+  const [UpdateGate, setUpdateGate] = useState<React.ComponentType<{ children: React.ReactNode }> | null>(null);
+
+  useEffect(() => {
+    InteractionManager.runAfterInteractions(() => {
+      const mod = require('@/components/UpdateGate') as typeof import('@/components/UpdateGate');
+      setUpdateGate(() => mod.UpdateGate);
+    });
+  }, []);
+
+  if (!UpdateGate) return <>{children}</>;
+  return <UpdateGate>{children}</UpdateGate>;
+}
+
 export default function RootLayout() {
-  // Flush deferred AsyncStorage operations once the RN bridge is ready.
-  // This prevents the TurboModule SIGABRT caused by concurrent native
-  // AsyncStorage calls from Zustand + Supabase at module-import time.
   const [postHogReady, setPostHogReady] = useState(false);
   useEffect(() => {
-    // Lazy-load expo-splash-screen to avoid TurboModule native init at import
-    // time — same class of crash as expo-notifications (builds 24-29).
-    const SplashScreen = require('expo-splash-screen') as typeof import('expo-splash-screen');
-    SplashScreen.preventAutoHideAsync();
     enableStorage();
     setPostHogReady(true);
   }, []);
 
   const inner = (
     <ThemeProvider>
-      <UpdateGate>
+      <LazyUpdateGate>
         <InnerLayout />
-      </UpdateGate>
+      </LazyUpdateGate>
     </ThemeProvider>
   );
 
