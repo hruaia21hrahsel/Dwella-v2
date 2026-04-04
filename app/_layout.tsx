@@ -17,7 +17,6 @@ import { UpdateGate } from '@/components/UpdateGate';
 import { PostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
 import { useToastStore } from '@/lib/toast';
 import { enableStorage } from '@/lib/deferred-storage';
-SplashScreen.preventAutoHideAsync();
 
 function usePaperTheme() {
   const { colors, isDark } = useTheme();
@@ -269,6 +268,10 @@ export default function RootLayout() {
   // AsyncStorage calls from Zustand + Supabase at module-import time.
   const [postHogReady, setPostHogReady] = useState(false);
   useEffect(() => {
+    // Defer SplashScreen.preventAutoHideAsync to avoid TurboModule SIGSEGV on
+    // launch — the native void method invocation crashes Hermes when dispatched
+    // at module scope before the RN bridge is fully initialised (builds 24-28).
+    SplashScreen.preventAutoHideAsync();
     enableStorage();
     setPostHogReady(true);
   }, []);
