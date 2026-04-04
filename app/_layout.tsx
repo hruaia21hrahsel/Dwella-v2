@@ -62,67 +62,66 @@ function AuthGuard() {
     }
   }, [isLoading]);
 
-  // ── Supabase auth listener ─────────────────────────────────────────
+  // ── Supabase auth listener (synchronous only — no DB calls here) ──
   useEffect(() => {
     // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
     const fallback = setTimeout(() => setLoading(false), 3000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       clearTimeout(fallback);
-      try {
-        setSession(newSession);
+      setSession(newSession);
 
-        // When the user actively signs in (email/password, Google, Apple),
-        // unlock the app so AuthGuard skips the PIN screen.
-        if (event === 'SIGNED_IN') {
-          setLocked(false);
-        }
-
-        if (newSession?.user) {
-          const uid = newSession.user.id;
-          const immediateUser = {
-            id: uid,
-            email: newSession.user.email ?? '',
-            full_name: newSession.user.user_metadata?.full_name ?? null,
-            phone: newSession.user.user_metadata?.phone ?? null,
-          };
-
-          // Set user IMMEDIATELY from session metadata so hooks and
-          // routing have a user object right away. The DB fetch below
-          // will update with the full profile (avatar_url, telegram, etc).
-          setUser(immediateUser as any);
-
-          // Async: upsert + fetch full profile, then update user
-          try {
-            await supabase.from('users').upsert(
-              {
-                id: uid,
-                email: newSession.user.email ?? '',
-                full_name: newSession.user.user_metadata?.full_name ?? null,
-                phone: newSession.user.user_metadata?.phone ?? null,
-              },
-              { onConflict: 'id', ignoreDuplicates: true }
-            );
-            const { data } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', uid)
-              .single();
-            if (data) setUser(data);
-          } catch {
-            // immediateUser already set above — no action needed
-          }
-          registerPushToken(uid);
-        } else {
-          setUser(null);
-        }
-      } finally {
-        setLoading(false);
+      if (event === 'SIGNED_IN') {
+        setLocked(false);
       }
+
+      if (newSession?.user) {
+        // Set user immediately from session metadata — no async DB calls
+        // inside this callback (they can deadlock with auth state updates).
+        setUser({
+          id: newSession.user.id,
+          email: newSession.user.email ?? '',
+          full_name: newSession.user.user_metadata?.full_name ?? null,
+          phone: newSession.user.user_metadata?.phone ?? null,
+        } as any);
+      } else {
+        setUser(null);
+      }
+
+      setLoading(false);
     });
 
     return () => { subscription.unsubscribe(); clearTimeout(fallback); };
   }, []);
+
+  // ── Async user profile fetch (runs OUTSIDE the auth callback) ─────
+  useEffect(() => {
+    if (!session?.user) return;
+    const uid = session.user.id;
+
+    (async () => {
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: uid,
+            email: session.user.email ?? '',
+            full_name: session.user.user_metadata?.full_name ?? null,
+            phone: session.user.user_metadata?.phone ?? null,
+          },
+          { onConflict: 'id', ignoreDuplicates: true }
+        );
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', uid)
+          .single();
+        if (data) setUser(data);
+      } catch {
+        // Immediate user from session metadata is already set — safe to ignore
+      }
+      registerPushToken(uid);
+    })();
+  }, [session?.user?.id]);
 
   // ── Routing logic ──────────────────────────────────────────────────
   //
