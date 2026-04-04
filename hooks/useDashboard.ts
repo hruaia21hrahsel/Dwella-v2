@@ -143,11 +143,17 @@ export function useDashboard(year: number, month: number): DashboardData {
     }
   }, [user?.id, year]);
 
+  // Refetch on focus (e.g. navigating back to dashboard)
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load]),
   );
+
+  // Also refetch when user changes (e.g. null → real user after first login)
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // Realtime subscription on payments table
   useEffect(() => {

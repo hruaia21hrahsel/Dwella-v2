@@ -70,14 +70,6 @@ function AuthGuard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       clearTimeout(fallback);
       try {
-        // Block routing until user is fully loaded — without this,
-        // setSession() triggers the routing effect immediately (isLoading
-        // is already false from the initial null-session check), navigating
-        // to dashboard before setUser() runs. Hooks see user=null and
-        // return empty data.
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          setLoading(true);
-        }
         setSession(newSession);
 
         // When the user actively signs in (email/password, Google, Apple),
