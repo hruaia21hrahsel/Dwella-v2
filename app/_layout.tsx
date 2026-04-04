@@ -47,7 +47,7 @@ function usePaperTheme() {
 }
 
 function AuthGuard() {
-  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, pendingRoute, setPendingRoute } = useAuthStore();
+  const { session, user, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, pendingRoute, setPendingRoute } = useAuthStore();
   const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
@@ -143,6 +143,12 @@ function AuthGuard() {
       return;
     }
 
+    // Wait for user to be loaded before navigating to the app.
+    // On first login, setSession() fires before the async DB upsert
+    // completes, so user is still null. Without this guard, we'd
+    // navigate to dashboard with user=null and all hooks return empty.
+    if (!user) return;
+
     // Session exists. Check if the UI is locally locked.
     isBiometricEnabled(session.user.id).then((pinEnabled) => {
       // Bail out if the effect has re-fired since we started the async check.
@@ -168,7 +174,7 @@ function AuthGuard() {
         }
       }
     });
-  }, [session, isLoading, segments, isLocked, pendingRoute]);
+  }, [session, user, isLoading, segments, isLocked, pendingRoute]);
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
