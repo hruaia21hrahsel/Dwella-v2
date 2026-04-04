@@ -36,16 +36,36 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
     router.replace(onboardingCompleted ? '/(tabs)/dashboard' : '/onboarding');
   }
 
+  /** After OAuth, sync session + user into Zustand so hooks have data immediately. */
+  async function syncAuthState() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return false;
+    const store = useAuthStore.getState();
+    store.setSession(session);
+    // Set user so data hooks don't bail with if (!user) return
+    const uid = session.user.id;
+    const fallbackUser = {
+      id: uid,
+      email: session.user.email ?? '',
+      full_name: session.user.user_metadata?.full_name ?? null,
+      phone: session.user.user_metadata?.phone ?? null,
+    };
+    try {
+      const { data } = await supabase.from('users').select('*').eq('id', uid).single();
+      store.setUser(data ?? fallbackUser);
+    } catch {
+      store.setUser(fallbackUser as any);
+    }
+    return true;
+  }
+
   async function handleGoogle() {
     try {
       setGoogleLoading(true);
       onLoading?.(true);
       const result = await signInWithGoogle();
       if (result.success) {
-        // Sync session into Zustand before navigating — onAuthStateChange fires
-        // asynchronously, so the store may still have session:null at this point.
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) useAuthStore.getState().setSession(session);
+        await syncAuthState();
         navigateAfterAuth();
         return;
       }
@@ -64,8 +84,7 @@ export function SocialAuthButtons({ onError, onLoading, disabled }: SocialAuthBu
       onLoading?.(true);
       const result = await signInWithApple();
       if (result.success) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) useAuthStore.getState().setSession(session);
+        await syncAuthState();
         navigateAfterAuth();
         return;
       }
