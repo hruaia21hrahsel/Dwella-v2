@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, createContext, useContext } from 'react';
 import { Stack, useRouter, useSegments, type Href } from 'expo-router';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +6,7 @@ import { InteractionManager } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { User } from '@/lib/types';
-import { usePostHog, getPostHogProvider, POSTHOG_API_KEY, POSTHOG_HOST } from '@/lib/posthog';
+import { usePostHog, getPostHogProvider, getUsePostHog, POSTHOG_API_KEY, POSTHOG_HOST, PostHogClientContext } from '@/lib/posthog';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
@@ -39,6 +39,8 @@ function AuthGuard() {
   const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
+  // usePostHog() reads from PostHogClientContext — no require() happens here.
+  // Returns undefined until RootLayout loads posthog-rn and mounts the bridge.
   const posthog = usePostHog();
   const initialRedirectDone = useRef(false);
   /** Incremented each time the routing effect fires; stale async callbacks bail out. */
@@ -297,25 +299,61 @@ function LazyUpdateGate({ children }: { children: React.ReactNode }) {
   return <UpdateGate>{children}</UpdateGate>;
 }
 
+/**
+ * PostHogBridge — mounted INSIDE PostHogProvider.
+ *
+ * Reads the PostHog client from PostHogProvider's context (using the real
+ * usePostHog hook from posthog-react-native) and writes it into our own
+ * PostHogClientContext so that AuthGuard and other consumers can access the
+ * client without ever calling require('posthog-react-native') during render.
+ *
+ * This component is only rendered after posthog-react-native is fully loaded
+ * and PHProvider is mounted — so calling the real usePostHog hook here is safe.
+ */
+function PostHogBridge({ children, realUsePostHog }: {
+  children: React.ReactNode;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  realUsePostHog: () => any;
+}) {
+  const client = realUsePostHog();
+  return (
+    <PostHogClientContext.Provider value={client}>
+      {children}
+    </PostHogClientContext.Provider>
+  );
+}
+
 export default function RootLayout() {
   const [postHogReady, setPostHogReady] = useState(false);
   // Lazy-loaded PostHogProvider — posthog-react-native depends on
-  // @react-native-async-storage/async-storage whose TurboModule crashes
-  // Hermes when it auto-registers on iOS 26.3 (builds 23-32).
+  // @react-native-async-storage/async-storage whose OptionalAsyncStorage.js
+  // loads AsyncStorage TurboModule at module evaluation time, crashing
+  // iOS 26.3 / RN 0.81 when loaded during render (builds 23-33).
   const [PHProvider, setPHProvider] = useState<React.ComponentType<{
     apiKey: string;
     options: { host: string };
     autocapture: { captureTouches: boolean; captureScreens: boolean };
     children: React.ReactNode;
   }> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [realUsePostHog, setRealUsePostHog] = useState<(() => unknown) | null>(null);
 
   useEffect(() => {
     enableStorage();
-    // Defer PostHog native module loading until after interactions
+    // Defer PostHog native module loading until after interactions.
+    // CRITICAL: require('posthog-react-native') must NEVER happen in render —
+    // only inside useEffect+InteractionManager to avoid the AsyncStorage
+    // TurboModule crash-on-launch.
     InteractionManager.runAfterInteractions(() => {
-      const Provider = getPostHogProvider();
-      setPHProvider(() => Provider);
-      setPostHogReady(true);
+      try {
+        const Provider = getPostHogProvider();
+        const hookFn = getUsePostHog();
+        setPHProvider(() => Provider);
+        setRealUsePostHog(() => hookFn);
+        setPostHogReady(true);
+      } catch {
+        // PostHog load failed — app continues without analytics
+      }
     });
   }, []);
 
@@ -327,17 +365,26 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 
-  if (!POSTHOG_API_KEY || !postHogReady || !PHProvider) {
-    return inner;
+  // Before PostHog is ready: wrap with a context that provides undefined client.
+  // AuthGuard's usePostHog() returns undefined → posthog?.reset() is a safe no-op.
+  if (!POSTHOG_API_KEY || !postHogReady || !PHProvider || !realUsePostHog) {
+    return (
+      <PostHogClientContext.Provider value={undefined}>
+        {inner}
+      </PostHogClientContext.Provider>
+    );
   }
 
+  // After PostHog is ready: mount the provider and bridge the client into context.
   return (
     <PHProvider
       apiKey={POSTHOG_API_KEY}
       options={{ host: POSTHOG_HOST }}
       autocapture={{ captureTouches: false, captureScreens: false }}
     >
-      {inner}
+      <PostHogBridge realUsePostHog={realUsePostHog}>
+        {inner}
+      </PostHogBridge>
     </PHProvider>
   );
 }
