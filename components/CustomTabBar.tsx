@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/lib/theme-context';
+import { haptics } from '@/lib/haptics';
 
 const TAB_HEIGHT = Platform.select({ ios: 60, android: 64, default: 64 })!;
 
@@ -37,6 +38,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         canPreventDefault: true,
       });
       if (!isFocused && !event.defaultPrevented) {
+        haptics.tap();
         navigation.navigate(route.name);
       }
     }
@@ -72,7 +74,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         {/* Log Payment — center slot */}
         <Pressable
           style={styles.tab}
-          onPress={() => router.push('/log-payment')}
+          onPress={() => {
+            haptics.light();
+            router.push('/log-payment');
+          }}
         >
           <View
             style={{

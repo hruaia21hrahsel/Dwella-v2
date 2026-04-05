@@ -21,6 +21,7 @@ import { useToastStore } from '@/lib/toast';
 import { isPinSet } from '@/lib/biometric-auth';
 import { generateTelegramLinkToken } from '@/lib/bot';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
+import { haptics } from '@/lib/haptics';
 
 // See PinReminderDialog for the rationale behind this settle delay.
 const ROUTING_SETTLE_MS = 700;
@@ -99,6 +100,7 @@ export function TelegramLinkReminderDialog() {
 
   async function handleLink() {
     if (!uid || linking) return;
+    haptics.medium();
     setLinking(true);
     try {
       const token = await generateTelegramLinkToken(uid);
@@ -106,6 +108,7 @@ export function TelegramLinkReminderDialog() {
       await Linking.openURL(deepLink);
       setTelegramReminderDismissed(true);
     } catch (err) {
+      haptics.error();
       useToastStore.getState().showToast(
         err instanceof Error ? err.message : 'Could not start Telegram link',
         'error',
@@ -116,6 +119,7 @@ export function TelegramLinkReminderDialog() {
   }
 
   function handleDismiss() {
+    haptics.tap();
     setTelegramReminderDismissed(true);
   }
 

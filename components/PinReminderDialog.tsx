@@ -17,6 +17,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 import { isPinSet } from '@/lib/biometric-auth';
+import { haptics } from '@/lib/haptics';
 
 // Grace period after the session becomes available before the dialog is
 // allowed to render. On cold launch, expo-router's segments briefly
@@ -83,11 +84,13 @@ export function PinReminderDialog() {
     !inOnboarding;
 
   function handleSetup() {
+    haptics.medium();
     setPinReminderDismissed(true);
     router.push('/pin-setup');
   }
 
   function handleDismiss() {
+    haptics.tap();
     setPinReminderDismissed(true);
   }
 
