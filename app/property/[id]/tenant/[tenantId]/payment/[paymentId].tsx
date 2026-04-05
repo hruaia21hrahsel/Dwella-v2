@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { Payment, Tenant, Property } from '@/lib/types';
 import { useTheme } from '@/lib/theme-context';
-import { sharePaymentReceipt } from '@/lib/pdf';
+import { sharePaymentReceipt, cachePaymentReceipt } from '@/lib/pdf';
 import { useToastStore } from '@/lib/toast';
 import { formatCurrency, formatDate, getMonthName } from '@/lib/utils';
 import { PaymentStatusBadge } from '@/components/PaymentStatusBadge';
@@ -82,8 +82,23 @@ export default function PaymentDetailScreen() {
         auto_confirmed: false,
       })
       .eq('id', payment.id);
-    if (error) useToastStore.getState().showToast(error.message, 'error');
-    else fetchPayment();
+    if (error) {
+      useToastStore.getState().showToast(error.message, 'error');
+    } else {
+      // Silently cache the receipt PDF to Supabase Storage so the
+      // Telegram bot can serve it on demand without an external PDF API.
+      // Fire-and-forget; any failure is logged inside cachePaymentReceipt.
+      if (tenant && property) {
+        const confirmedPayment: Payment = {
+          ...payment,
+          status: 'confirmed',
+          confirmed_at: new Date().toISOString(),
+          auto_confirmed: false,
+        };
+        void cachePaymentReceipt(confirmedPayment, tenant, property, landlordName);
+      }
+      fetchPayment();
+    }
     setConfirming(false);
   }
 

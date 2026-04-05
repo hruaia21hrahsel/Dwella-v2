@@ -2,6 +2,43 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { Payment, Tenant, Property } from './types';
 import { formatCurrency, formatDate, getMonthName } from './utils';
+import { supabase } from './supabase';
+
+const RECEIPTS_BUCKET = 'receipts';
+
+/**
+ * Read the bytes of a local file:// URI as a Blob for upload.
+ * React Native's fetch() transparently supports file:// URIs.
+ */
+async function readFileAsBlob(uri: string): Promise<Blob> {
+  const res = await fetch(uri);
+  return await res.blob();
+}
+
+/**
+ * Upload the rendered PDF to the private `receipts` bucket at
+ * `{payment_id}.pdf`. Best-effort — swallows errors so the caller
+ * (sharing flow, confirmation flow) is never blocked by cache failures.
+ *
+ * The Telegram bot (service_role) reads from this bucket to deliver
+ * receipts on demand without any external HTML→PDF API.
+ */
+async function uploadReceiptPdf(paymentId: string, fileUri: string): Promise<void> {
+  try {
+    const blob = await readFileAsBlob(fileUri);
+    const { error } = await supabase.storage
+      .from(RECEIPTS_BUCKET)
+      .upload(`${paymentId}.pdf`, blob, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+    if (error) {
+      console.warn('[pdf] receipt cache upload failed:', error.message);
+    }
+  } catch (err) {
+    console.warn('[pdf] receipt cache upload exception:', err);
+  }
+}
 
 function buildReceiptHtml(
   payment: Payment,
@@ -119,10 +156,36 @@ export async function sharePaymentReceipt(
 ): Promise<void> {
   const html = buildReceiptHtml(payment, tenant, property, landlordName);
   const { uri } = await Print.printToFileAsync({ html });
+  // Cache to Supabase Storage so the Telegram bot can serve it later.
+  // Best-effort — any failure is logged but never blocks sharing.
+  uploadReceiptPdf(payment.id, uri);
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',
     dialogTitle: `Receipt — ${getMonthName(payment.month)} ${payment.year}`,
   });
+}
+
+/**
+ * Silently generate + upload a receipt PDF without prompting the user
+ * to share. Used on payment confirmation so the Telegram bot has a
+ * ready-to-send PDF waiting in Supabase Storage.
+ *
+ * Best-effort: errors are swallowed so a cache failure never breaks
+ * the foreground flow (confirming a payment).
+ */
+export async function cachePaymentReceipt(
+  payment: Payment,
+  tenant: Tenant,
+  property: Property,
+  landlordName: string
+): Promise<void> {
+  try {
+    const html = buildReceiptHtml(payment, tenant, property, landlordName);
+    const { uri } = await Print.printToFileAsync({ html });
+    await uploadReceiptPdf(payment.id, uri);
+  } catch (err) {
+    console.warn('[pdf] cachePaymentReceipt failed:', err);
+  }
 }
 
 function buildAnnualSummaryHtml(
