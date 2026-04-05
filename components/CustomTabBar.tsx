@@ -15,7 +15,7 @@ const TAB_CONFIG: Record<string, { label: string; icon: string; iconOutline: str
   'bot/index':       { label: 'Assistant',   icon: 'robot',           iconOutline: 'robot-outline' },
 };
 
-// Order: Home, Properties, [Log], Tools, Assistant
+// Order: Home, Properties, [Payment], Tools, Assistant
 const LEFT_TABS = ['dashboard/index', 'properties'];
 const RIGHT_TABS = ['tools/index', 'bot/index'];
 
@@ -93,7 +93,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               <MaterialCommunityIcons name="plus" size={22} color="#fff" />
             </LinearGradient>
           </View>
-          <Text style={[styles.fabLabel, { color: colors.primary }]}>Log</Text>
+          <Text style={[styles.fabLabel, { color: colors.primary }]}>Payment</Text>
         </Pressable>
 
         {RIGHT_TABS.map((name) => {
