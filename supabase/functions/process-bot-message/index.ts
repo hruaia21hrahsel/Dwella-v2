@@ -5,6 +5,11 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Shared secret used to gate this function now that verify_jwt is off.
+// Callers (telegram-webhook) must send the same value in the
+// `x-bot-internal-secret` header. Enforced in the serve handler below.
+const BOT_INTERNAL_SECRET = Deno.env.get('BOT_INTERNAL_SECRET') ?? '';
+
 // ----------------------------------------------------------------
 // Types
 // ----------------------------------------------------------------
@@ -907,6 +912,17 @@ serve(async (req) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
       },
+    });
+  }
+
+  // Shared-secret gate — only valid internal callers (telegram-webhook)
+  // can reach this function. Runs before JSON parsing so bad actors
+  // don't get to pay the parse cost.
+  const incomingSecret = req.headers.get('x-bot-internal-secret') ?? '';
+  if (!BOT_INTERNAL_SECRET || incomingSecret !== BOT_INTERNAL_SECRET) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }
 

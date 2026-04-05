@@ -389,6 +389,17 @@ verify_jwt = false
 [functions.invite-redirect]
 verify_jwt = false
 
+# process-bot-message is called server-to-server from telegram-webhook.
+# Recent Supabase changes around the new publishable/secret API keys
+# broke auto-injection of SUPABASE_SERVICE_ROLE_KEY into edge function
+# environments, causing the internal fetch to send the wrong bearer
+# token and fail JWT verification. We disable verify_jwt here and
+# enforce a shared BOT_INTERNAL_SECRET header check inside the
+# function itself — a namespace we control that can't be silently
+# replaced by the platform.
+[functions.process-bot-message]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

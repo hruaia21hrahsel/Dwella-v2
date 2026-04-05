@@ -6,6 +6,13 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const PROCESS_BOT_URL = `${SUPABASE_URL}/functions/v1/process-bot-message`;
 
+// Shared secret for the internal call to process-bot-message.
+// Not in the SUPABASE_* namespace so the platform can't silently
+// replace it with a new-format API key. verify_jwt is disabled on
+// process-bot-message and this header is enforced inside that
+// function instead.
+const BOT_INTERNAL_SECRET = Deno.env.get('BOT_INTERNAL_SECRET') ?? '';
+
 interface TelegramInlineButton {
   text: string;
   callback_data: string;
@@ -126,6 +133,12 @@ async function forwardToBot(chatId: number, userId: string, prompt: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // verify_jwt is disabled on process-bot-message; this shared
+        // secret is the internal auth gate instead.
+        'x-bot-internal-secret': BOT_INTERNAL_SECRET,
+        // Still include a bearer for compatibility with any future
+        // re-enablement of JWT verification. SUPABASE_SERVICE_KEY may
+        // be empty in some runtimes — harmless when verify_jwt is off.
         Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
       },
       body: JSON.stringify({
