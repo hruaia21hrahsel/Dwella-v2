@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { buildReceiptPdf } from './pdf.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -426,7 +427,83 @@ const handleGetRentReceipt: ActionHandler = async (supabase, userId, entities) =
     };
   }
 
-  // Fallback: formatted Markdown text receipt
+  // ── Cache miss: generate the PDF server-side with pdf-lib ──
+  // Look up landlord name for the receipt header.
+  let landlordName = 'Landlord';
+  if (property?.owner_id) {
+    const { data: ownerRow } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', property.owner_id)
+      .single();
+    if (ownerRow?.full_name) landlordName = ownerRow.full_name;
+  }
+
+  try {
+    const pdfBytes = await buildReceiptPdf(
+      {
+        id: payment.id,
+        month: payment.month,
+        year: payment.year,
+        amount_due: payment.amount_due,
+        amount_paid: payment.amount_paid,
+        status: payment.status,
+        paid_at: payment.paid_at ?? null,
+        confirmed_at: payment.confirmed_at ?? null,
+        due_date: payment.due_date,
+        notes: payment.notes ?? null,
+      },
+      {
+        tenant_name: tenant.tenant_name,
+        flat_no: tenant.flat_no,
+        monthly_rent: tenant.monthly_rent,
+        lease_start: tenant.lease_start,
+        lease_end: tenant.lease_end ?? null,
+      },
+      {
+        name: property?.name ?? '—',
+        address: property?.address ?? null,
+        city: property?.city ?? null,
+      },
+      landlordName,
+    );
+
+    // Upload to Storage (same path as client-cached PDFs — upsert so
+    // if the app later caches a prettier version, it overwrites ours)
+    const { error: uploadErr } = await supabase.storage
+      .from('receipts')
+      .upload(cachePath, pdfBytes, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      console.error('[get_rent_receipt] upload failed:', uploadErr.message);
+      throw uploadErr;
+    }
+
+    // Create a fresh signed URL for the newly-uploaded file
+    const { data: freshSigned } = await supabase.storage
+      .from('receipts')
+      .createSignedUrl(cachePath, 600);
+
+    if (freshSigned?.signedUrl) {
+      return {
+        text: `Here's your ${monthName(payMonth)} ${payYear} rent receipt.`,
+        document: {
+          url: freshSigned.signedUrl,
+          filename: `rent-receipt-${tenant.tenant_name.replace(/\s+/g, '-')}-${payMonth}-${payYear}.pdf`,
+          caption: `Rent receipt — ${tenant.tenant_name} — ${monthName(payMonth)} ${payYear}`,
+        },
+      };
+    }
+  } catch (err) {
+    console.error('[get_rent_receipt] server-side PDF generation failed:', err);
+    // Fall through to the text fallback below
+  }
+
+  // Final fallback: formatted Markdown text receipt (only reached if
+  // PDF generation threw — should be rare)
   const statusLabel = String(payment.status).charAt(0).toUpperCase() + String(payment.status).slice(1);
   const lines = [
     `*Rent Payment Receipt*`,
@@ -443,7 +520,6 @@ const handleGetRentReceipt: ActionHandler = async (supabase, userId, entities) =
   if (payment.paid_at) {
     lines.push(`*Paid On:* ${new Date(payment.paid_at).toLocaleDateString('en-IN')}`);
   }
-  lines.push('', `_The PDF version isn't cached yet. Open this payment in the Dwella app once and the PDF will be delivered here next time._`);
   return lines.join('\n');
 };
 
@@ -833,11 +909,12 @@ RESPONSE FORMAT: Always respond with valid JSON matching this schema:
 }
 
 RULES:
-- For action intents, extract as many entities as possible from the message and context.
+- For action intents, extract as many entities as possible from the CURRENT user message. Do NOT carry month, year, tenant_name, or amount from earlier messages in history. Each request is standalone unless it is a pure yes/no confirmation of a pending_action.
+- If the user's current message mentions a month (including abbreviations like "jan", "feb", "mar", "sep"), use THAT exact month. Convert month names to their 1-12 numeric value (January=1, February=2, March=3, April=4, May=5, June=6, July=7, August=8, September=9, October=10, November=11, December=12).
 - If the user says a tenant name, match it to the tenant list in context. Use the exact name from context.
-- If month/year is not specified for payment actions, default to the current month/year.
+- If month/year is not specified in the current message for payment actions, default to the current month/year shown in context — never infer from previous messages.
 - If amount is not specified for log_payment, default to the tenant's monthly_rent.
-- Set needs_confirmation: true for log_payment, confirm_payment, add_property, add_tenant.
+- Set needs_confirmation: true for log_payment, confirm_payment, add_property, add_tenant, archive_property, archive_tenant, update_tenant, bulk_send_reminder.
 - Set needs_confirmation: false for queries, send_reminder, and get_rent_receipt.
 - Keep replies concise and conversational. Use ₹ for Indian Rupees. Format dates as DD MMM YYYY.`;
 
