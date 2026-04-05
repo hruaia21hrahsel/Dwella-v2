@@ -21,13 +21,32 @@ interface DocumentPayload {
   caption?: string;
 }
 
+interface InlineButton {
+  text: string;
+  callback_data: string;
+}
+
+interface ReplyMarkup {
+  inline_keyboard: InlineButton[][];
+}
+
 interface BotResponse {
   reply: string;
   intent?: string;
   action_taken?: string;
   pending_action?: PendingAction | null;
   document?: DocumentPayload;
+  reply_markup?: ReplyMarkup;
 }
+
+// Inline keyboard attached to any reply that asks for yes/no confirmation.
+// telegram-webhook maps taps back to text "yes"/"no" and re-invokes the bot.
+const CONFIRM_KEYBOARD: ReplyMarkup = {
+  inline_keyboard: [[
+    { text: '✓ Confirm', callback_data: 'confirm' },
+    { text: '✗ Cancel', callback_data: 'cancel' },
+  ]],
+};
 
 type ActionHandlerResult = string | { text: string; document?: DocumentPayload };
 
@@ -423,6 +442,236 @@ const handleGetRentReceipt: ActionHandler = async (supabase, userId, entities) =
   return lines.join('\n');
 };
 
+// ----------------------------------------------------------------
+// handleArchiveProperty — soft-deletes a property owned by the user.
+// Mirrors the client-side cascade (app/(tabs)/properties/index.tsx):
+// archive child tenants first, then the property itself.
+// ----------------------------------------------------------------
+const handleArchiveProperty: ActionHandler = async (supabase, userId, entities) => {
+  const { property_name } = entities as { property_name?: string };
+  if (!property_name) return 'Which property should I archive?';
+
+  const { data: props } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('owner_id', userId)
+    .eq('is_archived', false)
+    .ilike('name', `%${property_name}%`);
+
+  if (!props || props.length === 0) return `No active property matches "${property_name}".`;
+  if (props.length > 1) {
+    const names = props.map((p: any) => `"${p.name}"`).join(', ');
+    return `Multiple properties match: ${names}. Please be more specific.`;
+  }
+  const property = props[0] as any;
+  const now = new Date().toISOString();
+
+  // Cascade: archive all active tenants under this property first
+  const { error: tenantErr } = await supabase
+    .from('tenants')
+    .update({ is_archived: true, archived_at: now })
+    .eq('property_id', property.id)
+    .eq('is_archived', false);
+  if (tenantErr) return `Failed to archive tenants: ${tenantErr.message}`;
+
+  const { error: propErr } = await supabase
+    .from('properties')
+    .update({ is_archived: true, archived_at: now })
+    .eq('id', property.id);
+  if (propErr) return `Failed to archive property: ${propErr.message}`;
+
+  return `Archived "${property.name}" and all its tenants. You can restore it from the Dwella app if needed.`;
+};
+
+// ----------------------------------------------------------------
+// handleArchiveTenant — soft-deletes a single tenant.
+// ----------------------------------------------------------------
+const handleArchiveTenant: ActionHandler = async (supabase, userId, entities) => {
+  const { tenant_name } = entities as { tenant_name?: string };
+  if (!tenant_name) return 'Which tenant should I archive?';
+
+  const result = await findTenantByName(supabase, userId, tenant_name);
+  if (!result) return `Could not find an active tenant matching "${tenant_name}".`;
+  const { tenant, property } = result;
+  if (!(await verifyOwnership(supabase, userId, property.id))) {
+    return 'You do not own this property.';
+  }
+
+  const { error } = await supabase
+    .from('tenants')
+    .update({ is_archived: true, archived_at: new Date().toISOString() })
+    .eq('id', tenant.id);
+  if (error) return `Failed to archive tenant: ${error.message}`;
+
+  return `Archived ${tenant.tenant_name} (Flat ${tenant.flat_no}, ${property.name}).`;
+};
+
+// ----------------------------------------------------------------
+// handleUpdateTenant — edit any subset of a tenant's mutable fields.
+// ----------------------------------------------------------------
+const handleUpdateTenant: ActionHandler = async (supabase, userId, entities) => {
+  const {
+    tenant_name,
+    new_name,
+    monthly_rent,
+    due_day,
+    flat_no,
+    lease_start,
+    lease_end,
+    security_deposit,
+  } = entities as {
+    tenant_name?: string;
+    new_name?: string;
+    monthly_rent?: number;
+    due_day?: number;
+    flat_no?: string;
+    lease_start?: string;
+    lease_end?: string;
+    security_deposit?: number;
+  };
+
+  if (!tenant_name) return 'Which tenant should I update?';
+
+  const result = await findTenantByName(supabase, userId, tenant_name);
+  if (!result) return `Could not find a tenant matching "${tenant_name}".`;
+  const { tenant, property } = result;
+  if (!(await verifyOwnership(supabase, userId, property.id))) {
+    return 'You do not own this property.';
+  }
+
+  const updates: Record<string, unknown> = {};
+  const changeSummary: string[] = [];
+
+  if (new_name && new_name !== tenant.tenant_name) {
+    updates.tenant_name = new_name;
+    changeSummary.push(`name → "${new_name}"`);
+  }
+  if (typeof monthly_rent === 'number' && monthly_rent !== tenant.monthly_rent) {
+    updates.monthly_rent = monthly_rent;
+    changeSummary.push(`rent → ₹${monthly_rent}`);
+  }
+  if (typeof due_day === 'number' && due_day !== tenant.due_day) {
+    if (due_day < 1 || due_day > 28) return 'Due day must be between 1 and 28.';
+    updates.due_day = due_day;
+    changeSummary.push(`due day → ${due_day}`);
+  }
+  if (flat_no && flat_no !== tenant.flat_no) {
+    updates.flat_no = flat_no;
+    changeSummary.push(`flat → ${flat_no}`);
+  }
+  if (lease_start && lease_start !== tenant.lease_start) {
+    updates.lease_start = lease_start;
+    changeSummary.push(`lease start → ${lease_start}`);
+  }
+  if (lease_end !== undefined && lease_end !== tenant.lease_end) {
+    updates.lease_end = lease_end || null;
+    changeSummary.push(lease_end ? `lease end → ${lease_end}` : 'lease end cleared');
+  }
+  if (typeof security_deposit === 'number' && security_deposit !== tenant.security_deposit) {
+    updates.security_deposit = security_deposit;
+    changeSummary.push(`deposit → ₹${security_deposit}`);
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return `No changes to apply for ${tenant.tenant_name}.`;
+  }
+
+  const { error } = await supabase.from('tenants').update(updates).eq('id', tenant.id);
+  if (error) return `Failed to update tenant: ${error.message}`;
+
+  return `Updated ${tenant.tenant_name}: ${changeSummary.join(', ')}.`;
+};
+
+// ----------------------------------------------------------------
+// handleBulkSendReminder — fan-out reminders to many tenants at once.
+// Scope options:
+//   - "overdue"  → only tenants with an overdue payment this month
+//   - "unpaid"   → pending + partial + overdue (default)
+//   - "all"      → every active tenant, regardless of status
+// Optional property_name filter. Only tenants who have accepted their
+// invite (tenants.user_id IS NOT NULL) can receive a notification.
+// ----------------------------------------------------------------
+const handleBulkSendReminder: ActionHandler = async (supabase, userId, entities) => {
+  const { scope, property_name } = entities as {
+    scope?: 'overdue' | 'unpaid' | 'all';
+    property_name?: string;
+  };
+  const effectiveScope: 'overdue' | 'unpaid' | 'all' = scope ?? 'unpaid';
+
+  // Resolve properties the user owns (optionally filtered)
+  let propQuery = supabase
+    .from('properties')
+    .select('id, name')
+    .eq('owner_id', userId)
+    .eq('is_archived', false);
+  if (property_name) propQuery = propQuery.ilike('name', `%${property_name}%`);
+  const { data: properties } = await propQuery;
+  if (!properties || properties.length === 0) {
+    return property_name
+      ? `No active property matches "${property_name}".`
+      : 'You do not own any active properties.';
+  }
+  const propertyIds = (properties as any[]).map((p) => p.id);
+  const propertyNameById: Record<string, string> = {};
+  for (const p of properties as any[]) propertyNameById[p.id] = p.name;
+
+  // Fetch tenants with their current-month payment
+  const now = new Date();
+  const curMonth = now.getMonth() + 1;
+  const curYear = now.getFullYear();
+  const { data: tenants } = await supabase
+    .from('tenants')
+    .select('id, tenant_name, flat_no, monthly_rent, user_id, property_id, payments(*)')
+    .in('property_id', propertyIds)
+    .eq('is_archived', false);
+
+  if (!tenants || tenants.length === 0) return 'No active tenants to remind.';
+
+  const targets: Array<{
+    id: string;
+    tenant_name: string;
+    flat_no: string;
+    monthly_rent: number;
+    user_id: string;
+    property_id: string;
+  }> = [];
+
+  for (const t of tenants as any[]) {
+    if (!t.user_id) continue; // tenant hasn't accepted invite
+    const currentPayment = (t.payments as any[] | null)?.find(
+      (p) => p.month === curMonth && p.year === curYear,
+    );
+    const status: string | undefined = currentPayment?.status;
+
+    let include = false;
+    if (effectiveScope === 'all') include = true;
+    else if (effectiveScope === 'overdue') include = status === 'overdue';
+    else if (effectiveScope === 'unpaid')
+      include = !status || ['pending', 'partial', 'overdue'].includes(status);
+
+    if (include) targets.push(t);
+  }
+
+  if (targets.length === 0) {
+    return `No tenants match the "${effectiveScope}" criteria right now. Nothing to send.`;
+  }
+
+  // Fire notifications in parallel
+  const rows = targets.map((t) => ({
+    user_id: t.user_id,
+    tenant_id: t.id,
+    type: 'reminder',
+    title: 'Rent Reminder',
+    body: `Hi ${t.tenant_name}, this is a friendly reminder about your rent payment for ${propertyNameById[t.property_id] ?? 'your property'} (Flat ${t.flat_no}). Your monthly rent is ₹${t.monthly_rent}.`,
+  }));
+
+  const { error } = await supabase.from('notifications').insert(rows);
+  if (error) return `Failed to send reminders: ${error.message}`;
+
+  const names = targets.map((t) => t.tenant_name).join(', ');
+  return `Sent ${targets.length} reminder${targets.length === 1 ? '' : 's'} (${effectiveScope}): ${names}.`;
+};
+
 const ACTION_HANDLERS: Record<string, ActionHandler> = {
   log_payment: handleLogPayment,
   add_property: handleAddProperty,
@@ -430,6 +679,10 @@ const ACTION_HANDLERS: Record<string, ActionHandler> = {
   send_reminder: handleSendReminder,
   confirm_payment: handleConfirmPayment,
   get_rent_receipt: handleGetRentReceipt,
+  archive_property: handleArchiveProperty,
+  archive_tenant: handleArchiveTenant,
+  update_tenant: handleUpdateTenant,
+  bulk_send_reminder: handleBulkSendReminder,
 };
 
 // Intents that require confirmation before execution
@@ -438,6 +691,10 @@ const CONFIRM_REQUIRED_INTENTS = new Set([
   'confirm_payment',
   'add_property',
   'add_tenant',
+  'archive_property',
+  'archive_tenant',
+  'update_tenant',
+  'bulk_send_reminder',
 ]);
 
 // ----------------------------------------------------------------
@@ -553,6 +810,10 @@ AVAILABLE ACTIONS — You can perform these for the user:
 - add_tenant: Add a tenant to a property. Entities: { property_name, tenant_name, flat_no?, monthly_rent?, due_day? }
 - send_reminder: Send a rent reminder to a tenant. Entities: { tenant_name }
 - get_rent_receipt: Fetch and send a rent payment receipt (PDF preferred, text fallback). Entities: { tenant_name?, month?, year? }. Tenant users may omit tenant_name to get their own receipt. Defaults to current month/year if not specified. This is a read action — never needs confirmation.
+- archive_property: Soft-delete (archive) a property the landlord owns. Cascades to archive all its tenants. Entities: { property_name }. DESTRUCTIVE — always needs confirmation.
+- archive_tenant: Soft-delete (archive) a single tenant. Entities: { tenant_name }. DESTRUCTIVE — always needs confirmation.
+- update_tenant: Edit a tenant's mutable fields. Entities: { tenant_name, new_name?, monthly_rent?, due_day?, flat_no?, lease_start?, lease_end?, security_deposit? }. Provide only the fields that should change — others stay untouched. Dates must be ISO format YYYY-MM-DD. due_day must be 1–28. Always needs confirmation.
+- bulk_send_reminder: Send rent reminders to multiple tenants at once. Entities: { scope?: "overdue" | "unpaid" | "all", property_name? }. "overdue" = only tenants overdue this month; "unpaid" = pending + partial + overdue (default); "all" = every active tenant regardless of status. Optional property_name filters to one property. Only tenants who have accepted their invite receive it. Always needs confirmation.
 
 QUERY INTENTS (no action needed):
 - query_status, query_summary, query_overdue, query_tenant, general_chat
@@ -716,6 +977,7 @@ serve(async (req) => {
           reply: result.reply,
           intent: result.intent,
           pending_action: actionMetadata.pending_action,
+          reply_markup: CONFIRM_KEYBOARD,
         });
       } else {
         // Execute immediately (e.g. send_reminder, get_rent_receipt)
