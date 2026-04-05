@@ -64,34 +64,60 @@ function AuthGuard() {
 
   // ── Supabase auth listener (synchronous only — no DB calls here) ──
   useEffect(() => {
-    // Safety net: if onAuthStateChange never fires (bad config, network), unblock after 8s
-    const fallback = setTimeout(() => setLoading(false), 3000);
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      clearTimeout(fallback);
-      setSession(newSession);
-
-      if (event === 'SIGNED_IN') {
-        setLocked(false);
-      }
-
-      if (newSession?.user) {
-        // Set user immediately from session metadata — no async DB calls
-        // inside this callback (they can deadlock with auth state updates).
-        setUser({
-          id: newSession.user.id,
-          email: newSession.user.email ?? '',
-          full_name: newSession.user.user_metadata?.full_name ?? null,
-          phone: newSession.user.user_metadata?.phone ?? null,
-        } as any);
-      } else {
-        setUser(null);
-      }
-
+    // Safety net: if onAuthStateChange never fires (bad config, network,
+    // or malformed stored session) unblock the UI after 3s so the user
+    // never sees the in-app splash forever.
+    const fallback = setTimeout(() => {
+      console.warn('[AuthGuard] onAuthStateChange fallback fired — forcing setLoading(false)');
       setLoading(false);
-    });
+    }, 3000);
 
-    return () => { subscription.unsubscribe(); clearTimeout(fallback); };
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const result = supabase.auth.onAuthStateChange((event, newSession) => {
+        // CRITICAL: wrap the whole body in try/finally so ANY throw
+        // (store setter, stale session object, etc) cannot leave
+        // isLoading stuck at true. setLoading(false) must always run.
+        try {
+          setSession(newSession);
+
+          if (event === 'SIGNED_IN') {
+            setLocked(false);
+          }
+
+          if (newSession?.user) {
+            // Set user immediately from session metadata — no async DB calls
+            // inside this callback (they can deadlock with auth state updates).
+            setUser({
+              id: newSession.user.id,
+              email: newSession.user.email ?? '',
+              full_name: newSession.user.user_metadata?.full_name ?? null,
+              phone: newSession.user.user_metadata?.phone ?? null,
+            } as any);
+          } else {
+            setUser(null);
+          }
+        } catch (err) {
+          console.error('[AuthGuard] onAuthStateChange handler threw:', err);
+        } finally {
+          // Only clear the fallback once we have successfully reached
+          // this point — otherwise leave the fallback armed so the UI
+          // can still recover.
+          clearTimeout(fallback);
+          setLoading(false);
+        }
+      });
+      subscription = result.data.subscription;
+    } catch (err) {
+      // Subscription setup itself failed — keep the fallback armed so
+      // the UI still unblocks after 3s.
+      console.error('[AuthGuard] supabase.auth.onAuthStateChange subscribe failed:', err);
+    }
+
+    return () => {
+      subscription?.unsubscribe();
+      clearTimeout(fallback);
+    };
   }, []);
 
   // ── Async user profile fetch (runs OUTSIDE the auth callback) ─────

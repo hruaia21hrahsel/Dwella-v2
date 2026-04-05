@@ -14,6 +14,22 @@ export default function Index() {
     SplashScreen.hideAsync();
   }, []);
 
+  // Escape hatch: if AuthGuard never flips isLoading to false (bad
+  // stored session, thrown handler, etc.), this view would otherwise
+  // hang forever on the in-app splash. Force-release after 4s so the
+  // user always reaches either login or dashboard. This is a belt-and-
+  // suspenders backup to the 3s fallback already inside AuthGuard.
+  useEffect(() => {
+    if (!isLoading) return;
+    const t = setTimeout(() => {
+      if (useAuthStore.getState().isLoading) {
+        console.warn('[Index] isLoading still true after 4s — forcing release');
+        useAuthStore.getState().setLoading(false);
+      }
+    }, 4000);
+    return () => clearTimeout(t);
+  }, [isLoading]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
