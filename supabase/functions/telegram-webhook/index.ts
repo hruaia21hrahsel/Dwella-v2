@@ -146,12 +146,45 @@ serve(async (req) => {
       }),
     });
 
-    const botData = await botRes.json() as {
+    // Parse body once — even error responses may be JSON with a `details`
+    // field we want to surface rather than swallow.
+    const rawBody = await botRes.text();
+    let botData: {
       reply?: string;
       error?: string;
+      details?: string;
       document?: { url: string; filename: string; caption?: string };
-    };
-    const reply = botData.reply ?? 'Sorry, I encountered an error. Please try again.';
+    } = {};
+    try {
+      botData = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      console.error('[telegram-webhook] non-JSON body from process-bot-message:', rawBody.slice(0, 500));
+    }
+
+    if (!botRes.ok) {
+      // Log the real failure server-side so it shows up in function logs,
+      // and tell the user something more specific than "Sorry, try again".
+      console.error(
+        '[telegram-webhook] process-bot-message returned',
+        botRes.status,
+        botData.error ?? '',
+        botData.details ?? rawBody.slice(0, 500),
+      );
+      await sendTelegram(
+        chatId,
+        `I hit a snag processing that message (status ${botRes.status}). Please try again in a moment.`,
+      );
+      return new Response('OK', { status: 200 });
+    }
+
+    if (!botData.reply) {
+      console.error('[telegram-webhook] process-bot-message returned 200 but no reply field:', rawBody.slice(0, 500));
+      await sendTelegram(
+        chatId,
+        'I got an empty response from the assistant. Please try rephrasing your message.',
+      );
+      return new Response('OK', { status: 200 });
+    }
 
     // If the bot returned a document (e.g. a cached rent receipt PDF),
     // send it first, then follow with the text reply so the recipient
@@ -164,10 +197,13 @@ serve(async (req) => {
         botData.document.caption,
       );
     }
-    await sendTelegram(chatId, reply);
+    await sendTelegram(chatId, botData.reply);
   } catch (err) {
-    console.error('Telegram webhook forwarding error:', err);
-    await sendTelegram(chatId, 'Sorry, something went wrong. Please try again later.');
+    console.error('[telegram-webhook] forwarding error:', err);
+    await sendTelegram(
+      chatId,
+      `Sorry, I couldn't reach the assistant (${err instanceof Error ? err.message : 'network error'}). Please try again.`,
+    );
   }
 
   return new Response('OK', { status: 200 });
