@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Alert,
   TouchableOpacity,
@@ -40,6 +41,21 @@ export default function BotScreen() {
   const [pendingUserText, setPendingUserText] = useState<string | null>(null);
   const listRef = useRef<FlatList<BotConversation>>(null);
   const insets = useSafeAreaInsets();
+
+  // Keep the latest message above the keyboard: scroll to end whenever
+  // the keyboard shows. The FlatList doesn't reposition on its own when
+  // its viewport shrinks, so without this the newest bubble hides behind
+  // the input row.
+  useEffect(() => {
+    const evt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const sub = Keyboard.addListener(evt, () => {
+      // Wait a frame so the KAV has applied its padding before we scroll.
+      requestAnimationFrame(() => {
+        listRef.current?.scrollToEnd({ animated: true });
+      });
+    });
+    return () => sub.remove();
+  }, []);
 
   // Optimistic bubble: show the user's message immediately while the server round-trips.
   const displayMessages = useMemo<BotConversation[]>(() => {
@@ -235,6 +251,13 @@ export default function BotScreen() {
             outlineStyle={styles.inputOutline}
             multiline
             maxLength={MAX_INPUT_LENGTH}
+            onFocus={() => {
+              // Fallback for the "tap input while keyboard is already up"
+              // case, where keyboardWillShow won't fire a second time.
+              requestAnimationFrame(() => {
+                listRef.current?.scrollToEnd({ animated: true });
+              });
+            }}
             accessibilityLabel="Message input"
           />
           {showCounter && (
