@@ -57,11 +57,8 @@ export default function LoginScreen() {
     }
 
     setLocked(false);
-    const pinSet = await isPinSet(data.session!.user.id);
-    if (!pinSet && data.session) {
-      router.replace('/pin-setup');
-      return;
-    }
+    // PIN setup is now nudged via the global PinReminderDialog rather than
+    // a hard redirect, so users who skip setup aren't blocked from the app.
     setLoading(false);
   }
 

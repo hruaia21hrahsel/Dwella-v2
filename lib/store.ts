@@ -25,6 +25,12 @@ interface AuthState {
   tourStep: number | null;
   /** In-memory only. Route AuthGuard should navigate to instead of the default post-auth destination. */
   pendingRoute: string | null;
+  /**
+   * In-memory only. Whether the "set up a PIN" reminder dialog has been
+   * dismissed or acknowledged during the current session. Resets to false
+   * on every SIGNED_IN event so the CTA reappears on each fresh login.
+   */
+  pinReminderDismissed: boolean;
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
@@ -38,6 +44,7 @@ interface AuthState {
   setTourStep: (step: number | null) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setPendingRoute: (route: string | null) => void;
+  setPinReminderDismissed: (dismissed: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,6 +59,7 @@ export const useAuthStore = create<AuthState>()(
       isLocked: true,
       tourStep: null,
       pendingRoute: null,
+      pinReminderDismissed: false,
       setSession: (session) => set({ session }),
       setUser: (user) => set({ user }),
       setLoading: (isLoading) => set({ isLoading }),
@@ -85,6 +93,7 @@ export const useAuthStore = create<AuthState>()(
       setTourStep: (tourStep) => set({ tourStep }),
       setThemeMode: (themeMode) => set({ themeMode }),
       setPendingRoute: (pendingRoute) => set({ pendingRoute }),
+      setPinReminderDismissed: (pinReminderDismissed) => set({ pinReminderDismissed }),
     }),
     {
       name: 'dwella-store',

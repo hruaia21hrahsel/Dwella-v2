@@ -10,6 +10,7 @@ import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { registerPushToken } from '@/lib/notifications';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
+import { PinReminderDialog } from '@/components/PinReminderDialog';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 
@@ -83,6 +84,8 @@ function AuthGuard() {
 
           if (event === 'SIGNED_IN') {
             setLocked(false);
+            // Re-arm the PIN reminder dialog for every fresh login.
+            useAuthStore.getState().setPinReminderDismissed(false);
           }
 
           if (newSession?.user) {
@@ -233,6 +236,7 @@ function InnerLayout() {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <AuthGuard />
       <TourGuideCard />
+      <PinReminderDialog />
       <ToastProvider />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="(auth)" />

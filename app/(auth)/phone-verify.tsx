@@ -108,10 +108,9 @@ export default function PhoneVerifyScreen() {
       savePinSession(uid, data.session.refresh_token);
     }
 
-    const pinSet = await isPinSet(uid);
-    if (!pinSet) {
-      useAuthStore.getState().setPendingRoute('/pin-setup');
-    }
+    // PIN setup is now nudged via the global PinReminderDialog rather than
+    // a pendingRoute to /pin-setup, so phone users go straight to the app
+    // and can dismiss the CTA if they want.
 
     setLoading(false);
     // AuthGuard handles navigation
