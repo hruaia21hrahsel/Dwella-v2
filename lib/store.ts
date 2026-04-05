@@ -57,19 +57,29 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (isLoading) => set({ isLoading }),
       clearAuth: () => set({ session: null, user: null, isLoading: false }),
       bumpPropertyRefresh: () => set((s) => ({ propertyRefreshAt: s.propertyRefreshAt + 1 })),
-      setOnboardingCompleted: () => set((s) => ({
-        onboardingCompletedByUser: {
-          ...s.onboardingCompletedByUser,
-          [s.user?.id ?? '_anon']: true,
-        },
-      })),
+      setOnboardingCompleted: () => set((s) => {
+        // Prefer the Supabase session user id — it's set synchronously from
+        // the auth event, whereas store.user is populated from a separate
+        // effect and may briefly lag. Fall back to store.user.id, then to an
+        // anonymous bucket. Readers (AuthGuard) use the same key, so these
+        // must stay in sync.
+        const uid = s.session?.user?.id ?? s.user?.id ?? '_anon';
+        return {
+          onboardingCompletedByUser: {
+            ...s.onboardingCompletedByUser,
+            [uid]: true,
+          },
+        };
+      }),
       resetOnboarding: () => set((s) => {
-        const { [s.user?.id ?? '_anon']: _, ...rest } = s.onboardingCompletedByUser;
+        const uid = s.session?.user?.id ?? s.user?.id ?? '_anon';
+        const { [uid]: _, ...rest } = s.onboardingCompletedByUser;
         return { onboardingCompletedByUser: rest };
       }),
       isOnboardingCompleted: (): boolean => {
         const s = get();
-        return s.onboardingCompletedByUser[s.user?.id ?? '_anon'] ?? false;
+        const uid = s.session?.user?.id ?? s.user?.id ?? '_anon';
+        return s.onboardingCompletedByUser[uid] ?? false;
       },
       setLocked: (isLocked) => set({ isLocked }),
       setTourStep: (tourStep) => set({ tourStep }),

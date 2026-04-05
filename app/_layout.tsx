@@ -47,7 +47,7 @@ function usePaperTheme() {
 }
 
 function AuthGuard() {
-  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, pendingRoute, setPendingRoute } = useAuthStore();
+  const { session, isLoading, isLocked, setSession, setUser, setLoading, setLocked, onboardingCompletedByUser, tourStep, pendingRoute, setPendingRoute } = useAuthStore();
   const onboardingCompleted = onboardingCompletedByUser[session?.user?.id ?? ''] ?? false;
   const segments = useSegments();
   const router = useRouter();
@@ -184,10 +184,23 @@ function AuthGuard() {
         return;
       }
 
-      // Unlocked — go to the app. Only redirect if coming from auth screens
-      // or on the very first load. Leave pin-setup and onboarding alone so
+      // Unlocked — go to the app. Leave pin-setup and onboarding alone so
       // the user can finish without being bounced by subsequent state updates.
       if (inPinSetup || inOnboarding) return;
+
+      // Onboarding gate: first-time users must see the welcome + tour. If
+      // the user hasn't completed onboarding and isn't already on an
+      // allowed screen (auth/pin-setup/onboarding), force them to
+      // /onboarding regardless of how they got here. The tour itself
+      // navigates to tab screens while tourStep is non-null, so skip the
+      // gate when the tour is actively running.
+      if (!onboardingCompleted && tourStep === null && !inAuthGroup) {
+        router.replace('/onboarding');
+        return;
+      }
+
+      // Initial post-auth redirect. Only fire when coming from auth screens
+      // or on the very first load.
       if (inAuthGroup || !initialRedirectDone.current) {
         initialRedirectDone.current = true;
         if (pendingRoute) {
@@ -198,7 +211,7 @@ function AuthGuard() {
         }
       }
     });
-  }, [session, isLoading, segments, isLocked, pendingRoute]);
+  }, [session, isLoading, segments, isLocked, pendingRoute, onboardingCompleted, tourStep]);
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
