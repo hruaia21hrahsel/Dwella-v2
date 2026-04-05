@@ -23,27 +23,6 @@ export default function ToolsScreen() {
       route: '/expenses',
       color: colors.statusPartial,
     },
-    {
-      label: 'AI Insights',
-      description: 'AI-powered analytics and recommendations',
-      icon: 'chart-timeline-variant-shimmer',
-      route: '/tools/ai-insights',
-      color: '#8B5CF6',
-    },
-    {
-      label: 'Smart Reminders',
-      description: 'AI-drafted personalized rent reminders',
-      icon: 'bell-badge-outline',
-      route: '/tools/smart-reminders',
-      color: '#EC4899',
-    },
-    {
-      label: 'AI Search',
-      description: 'Search your data with natural language',
-      icon: 'text-search',
-      route: '/tools/ai-search',
-      color: '#0EA5E9',
-    },
   ] as const;
 
   return (
