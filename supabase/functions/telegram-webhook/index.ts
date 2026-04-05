@@ -50,6 +50,53 @@ async function answerCallbackQuery(callbackQueryId: string, text?: string) {
 }
 
 /**
+ * Edit an existing message's text + keyboard in place. Used to transform
+ * picker messages as the user drills down through steps (tenant → month
+ * → receipt) so the old button grid doesn't linger in the chat.
+ */
+async function editMessageText(
+  chatId: number,
+  messageId: number,
+  text: string,
+  replyMarkup?: TelegramReplyMarkup,
+) {
+  const body: Record<string, unknown> = {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: 'Markdown',
+  };
+  if (replyMarkup) body.reply_markup = replyMarkup;
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/editMessageText`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    console.warn('[telegram] editMessageText failed:', err);
+  }
+}
+
+// Inline month helpers so the picker doesn't need lib/ imports (Deno
+// Edge Functions can't reach the app's TypeScript lib tree).
+const MONTH_NAMES_SHORT = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+const MONTH_NAMES_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const STATUS_EMOJI: Record<string, string> = {
+  confirmed: '✓',
+  paid: '●',
+  partial: '◐',
+  pending: '○',
+  overdue: '⚠',
+};
+
+/**
  * Show "Bot is typing…" in the Telegram chat header. The indicator
  * auto-expires after ~5 seconds, so we repeat it every 4 seconds for
  * the duration of a slow Claude call so the user never sees dead air.
@@ -80,7 +127,7 @@ const MAIN_MENU: TelegramReplyMarkup = {
       { text: '⚠ Overdue', callback_data: 'menu:overdue' },
     ],
     [
-      { text: '📄 My Receipt', callback_data: 'menu:receipt' },
+      { text: '📄 Receipts', callback_data: 'menu:receipt' },
       { text: '🔔 Remind All', callback_data: 'menu:remind_all' },
     ],
     [
@@ -90,14 +137,211 @@ const MAIN_MENU: TelegramReplyMarkup = {
   ],
 };
 
+// menu:receipt is handled specially (opens an interactive picker flow),
+// so it intentionally has no canonical prompt here — the callback_query
+// branch intercepts it before the prompt lookup.
 const MENU_PROMPTS: Record<string, string> = {
   'menu:status': 'What is the current rent payment status across all my tenants?',
   'menu:overdue': 'Which tenants are overdue this month?',
-  'menu:receipt': 'Send me my rent receipt for the current month.',
   'menu:remind_all': 'Send a rent reminder to all my unpaid tenants.',
   'menu:properties': 'Give me a summary of my properties.',
   'menu:tenants': 'List all my active tenants with their rent and due day.',
 };
+
+// ----------------------------------------------------------------
+// Interactive receipt picker
+// ----------------------------------------------------------------
+// Three-step flow driven entirely by inline buttons:
+//   1. menu:receipt       → show tenant list (this file, DB lookup)
+//   2. rcpt_t:{tenant_id} → show last 12 months for that tenant
+//   3. rcpt_p:{payment_id} → construct NLP prompt, forward to bot
+//
+// Only step 3 talks to process-bot-message. Steps 1-2 are pure DB
+// queries inside the webhook, so there's no Claude latency until
+// the user actually commits to a specific month.
+// ----------------------------------------------------------------
+
+type SupabaseClientType = ReturnType<typeof createClient>;
+
+async function showReceiptTenantPicker(
+  supabaseClient: SupabaseClientType,
+  chatId: number,
+  messageId: number,
+  userId: string,
+) {
+  // Landlord's owned tenants + the user's own tenancies, in parallel.
+  const [ownedRes, mineRes] = await Promise.all([
+    supabaseClient
+      .from('properties')
+      .select('name, tenants(id, tenant_name, flat_no, is_archived)')
+      .eq('owner_id', userId)
+      .eq('is_archived', false),
+    supabaseClient
+      .from('tenants')
+      .select('id, tenant_name, flat_no, properties(name)')
+      .eq('user_id', userId)
+      .eq('is_archived', false),
+  ]);
+
+  interface PickerEntry {
+    id: string;
+    label: string;
+  }
+  const entries: PickerEntry[] = [];
+  const seen = new Set<string>();
+
+  for (const p of ((ownedRes.data ?? []) as any[])) {
+    for (const t of ((p.tenants ?? []) as any[])) {
+      if (t.is_archived) continue;
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      entries.push({
+        id: t.id,
+        label: `${t.tenant_name} (${t.flat_no})`,
+      });
+    }
+  }
+  for (const t of ((mineRes.data ?? []) as any[])) {
+    if (seen.has(t.id)) continue;
+    seen.add(t.id);
+    const propName = (t.properties as any)?.name ?? '—';
+    entries.push({
+      id: t.id,
+      label: `${t.tenant_name} · ${propName}`,
+    });
+  }
+
+  if (entries.length === 0) {
+    await editMessageText(
+      chatId,
+      messageId,
+      "*Rent Receipt*\n\nYou don't have any tenants linked to your account yet.",
+    );
+    return;
+  }
+
+  // Two buttons per row, truncate long labels so they fit on mobile.
+  const buttons: TelegramInlineButton[][] = [];
+  for (let i = 0; i < entries.length; i += 2) {
+    const row: TelegramInlineButton[] = [];
+    for (let j = 0; j < 2 && i + j < entries.length; j++) {
+      const e = entries[i + j];
+      const label = e.label.length > 24 ? e.label.slice(0, 23) + '…' : e.label;
+      row.push({ text: label, callback_data: `rcpt_t:${e.id}` });
+    }
+    buttons.push(row);
+  }
+
+  await editMessageText(
+    chatId,
+    messageId,
+    '*Rent Receipt*\n\nWho is the receipt for?',
+    { inline_keyboard: buttons },
+  );
+}
+
+async function showReceiptMonthPicker(
+  supabaseClient: SupabaseClientType,
+  chatId: number,
+  messageId: number,
+  userId: string,
+  tenantId: string,
+) {
+  // Verify access — user must be the landlord of this tenant's property
+  // OR be the tenant themselves. Without this check, a user could
+  // manipulate callback_data to peek at other landlords' tenants.
+  const { data: tenantRow } = await supabaseClient
+    .from('tenants')
+    .select('id, tenant_name, user_id, properties(owner_id)')
+    .eq('id', tenantId)
+    .eq('is_archived', false)
+    .single();
+
+  if (!tenantRow) {
+    await editMessageText(chatId, messageId, 'That tenant no longer exists.');
+    return;
+  }
+  const ownerId = ((tenantRow as any).properties)?.owner_id;
+  const tenantUserId = (tenantRow as any).user_id;
+  if (ownerId !== userId && tenantUserId !== userId) {
+    await editMessageText(chatId, messageId, 'You do not have access to that tenant.');
+    return;
+  }
+
+  const { data: payments } = await supabaseClient
+    .from('payments')
+    .select('id, month, year, status')
+    .eq('tenant_id', tenantId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .limit(12);
+
+  if (!payments || payments.length === 0) {
+    await editMessageText(
+      chatId,
+      messageId,
+      `*${(tenantRow as any).tenant_name}*\n\nNo payment records yet.`,
+    );
+    return;
+  }
+
+  const buttons: TelegramInlineButton[][] = [];
+  for (let i = 0; i < payments.length; i += 2) {
+    const row: TelegramInlineButton[] = [];
+    for (let j = 0; j < 2 && i + j < payments.length; j++) {
+      const p = payments[i + j] as any;
+      const emoji = STATUS_EMOJI[p.status] ?? '•';
+      row.push({
+        text: `${MONTH_NAMES_SHORT[p.month - 1]} ${p.year} ${emoji}`,
+        callback_data: `rcpt_p:${p.id}`,
+      });
+    }
+    buttons.push(row);
+  }
+  // Back button so the user can bounce to the tenant list
+  buttons.push([{ text: '« Back to tenants', callback_data: 'menu:receipt' }]);
+
+  await editMessageText(
+    chatId,
+    messageId,
+    `*${(tenantRow as any).tenant_name}*\n\nPick a month:`,
+    { inline_keyboard: buttons },
+  );
+}
+
+async function deliverReceiptByPaymentId(
+  supabaseClient: SupabaseClientType,
+  chatId: number,
+  userId: string,
+  paymentId: string,
+) {
+  // Look up the payment + tenant + property to build a precise NLP prompt
+  // and verify the caller has access.
+  const { data: payment } = await supabaseClient
+    .from('payments')
+    .select('month, year, tenants(tenant_name, user_id, properties(owner_id))')
+    .eq('id', paymentId)
+    .single();
+
+  if (!payment) {
+    await sendTelegram(chatId, 'That payment record no longer exists.');
+    return;
+  }
+
+  const row = payment as any;
+  const tenantName = row.tenants?.tenant_name;
+  const ownerId = row.tenants?.properties?.owner_id;
+  const tenantUserId = row.tenants?.user_id;
+
+  if (userId !== ownerId && userId !== tenantUserId) {
+    await sendTelegram(chatId, 'You do not have access to that receipt.');
+    return;
+  }
+
+  const fullMonth = MONTH_NAMES_FULL[row.month - 1] ?? String(row.month);
+  const prompt = `Get the rent receipt for ${tenantName} for ${fullMonth} ${row.year}`;
+  await forwardToBot(chatId, userId, prompt);
+}
 
 /**
  * Send a document (PDF, etc.) to a Telegram chat.
@@ -260,23 +504,16 @@ serve(async (req) => {
     const data = (callbackQuery['data'] as string | undefined) ?? '';
     const cbMessage = callbackQuery['message'] as Record<string, unknown> | undefined;
     const cbChatId = (cbMessage?.['chat'] as Record<string, unknown> | undefined)?.['id'] as number | undefined;
+    const cbMessageId = cbMessage?.['message_id'] as number | undefined;
 
     // Always acknowledge within 10s so the Telegram client stops the
     // spinner on the tapped button. The toast text gives instant visible
     // feedback before the "typing…" header indicator kicks in.
-    await answerCallbackQuery(queryId, 'Got it, thinking…');
+    await answerCallbackQuery(queryId, 'Got it…');
 
     if (!cbChatId) return new Response('OK', { status: 200 });
 
-    // Map the callback to canonical text to forward through NLP.
-    let forwardText: string | null = null;
-    if (data === 'confirm') forwardText = 'yes';
-    else if (data === 'cancel') forwardText = 'no';
-    else if (data in MENU_PROMPTS) forwardText = MENU_PROMPTS[data];
-
-    if (!forwardText) return new Response('OK', { status: 200 });
-
-    // Look up linked user and forward (same path as regular text below).
+    // Look up linked user once — every branch needs it.
     const { data: linked } = await supabaseClient
       .from('users')
       .select('id')
@@ -290,8 +527,37 @@ serve(async (req) => {
       );
       return new Response('OK', { status: 200 });
     }
+    const linkedUserId = linked.id as string;
 
-    await forwardToBot(cbChatId, linked.id as string, forwardText);
+    // ── Interactive receipt picker (3-step flow, handled locally) ──
+    if (data === 'menu:receipt') {
+      if (cbMessageId) {
+        await showReceiptTenantPicker(supabaseClient, cbChatId, cbMessageId, linkedUserId);
+      }
+      return new Response('OK', { status: 200 });
+    }
+    if (data.startsWith('rcpt_t:')) {
+      const tenantId = data.slice('rcpt_t:'.length);
+      if (cbMessageId) {
+        await showReceiptMonthPicker(supabaseClient, cbChatId, cbMessageId, linkedUserId, tenantId);
+      }
+      return new Response('OK', { status: 200 });
+    }
+    if (data.startsWith('rcpt_p:')) {
+      const paymentId = data.slice('rcpt_p:'.length);
+      await deliverReceiptByPaymentId(supabaseClient, cbChatId, linkedUserId, paymentId);
+      return new Response('OK', { status: 200 });
+    }
+
+    // ── Generic flows: confirmation + other menu buttons ──
+    let forwardText: string | null = null;
+    if (data === 'confirm') forwardText = 'yes';
+    else if (data === 'cancel') forwardText = 'no';
+    else if (data in MENU_PROMPTS) forwardText = MENU_PROMPTS[data];
+
+    if (!forwardText) return new Response('OK', { status: 200 });
+
+    await forwardToBot(cbChatId, linkedUserId, forwardText);
     return new Response('OK', { status: 200 });
   }
 
