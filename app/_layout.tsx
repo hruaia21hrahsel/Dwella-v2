@@ -4,6 +4,7 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
+import { Asset } from 'expo-asset';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
@@ -16,6 +17,17 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 
 SplashScreen.preventAutoHideAsync();
+
+// Preload onboarding assets at module load so the first-login welcome
+// screen renders its logo instantly. Without this, require('icon.png')
+// decodes lazily on first mount and leaves the image slot blank for
+// several seconds after the rest of the screen appears.
+// Fire-and-forget — any failure just falls back to the lazy decode path.
+Asset.loadAsync([
+  require('@/assets/icon.png'),
+]).catch((err) => {
+  console.warn('[_layout] asset preload failed:', err);
+});
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
