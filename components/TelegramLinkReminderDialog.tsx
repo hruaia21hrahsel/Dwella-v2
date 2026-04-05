@@ -22,11 +22,15 @@ import { isPinSet } from '@/lib/biometric-auth';
 import { generateTelegramLinkToken } from '@/lib/bot';
 import { TELEGRAM_BOT_USERNAME } from '@/constants/config';
 
+// See PinReminderDialog for the rationale behind this settle delay.
+const ROUTING_SETTLE_MS = 700;
+
 export function TelegramLinkReminderDialog() {
   const {
     session,
     user,
     isLoading,
+    isLocked,
     tourStep,
     pinReminderDismissed,
     telegramReminderDismissed,
@@ -34,6 +38,7 @@ export function TelegramLinkReminderDialog() {
   } = useAuthStore();
   const [pinReady, setPinReady] = useState<boolean | null>(null);
   const [linking, setLinking] = useState(false);
+  const [settled, setSettled] = useState(false);
   const segments = useSegments();
   const { colors, shadows } = useTheme();
 
@@ -54,6 +59,19 @@ export function TelegramLinkReminderDialog() {
     };
   }, [uid, pinReminderDismissed]);
 
+  // Settle gate — don't evaluate visibility until the initial routing
+  // transition on cold launch has had time to finish. Matches
+  // PinReminderDialog so both dialogs stay silent during the splash → app
+  // handoff.
+  useEffect(() => {
+    if (!session || isLoading || isLocked) {
+      setSettled(false);
+      return;
+    }
+    const t = setTimeout(() => setSettled(true), ROUTING_SETTLE_MS);
+    return () => clearTimeout(t);
+  }, [session, isLoading, isLocked]);
+
   const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'auth';
   const inPinSetup = segments[0] === 'pin-setup';
   const inOnboarding = segments[0] === 'onboarding';
@@ -66,7 +84,9 @@ export function TelegramLinkReminderDialog() {
   const telegramLinked = !!user?.telegram_chat_id;
 
   const visible =
+    settled &&
     !isLoading &&
+    !isLocked &&
     !!session &&
     !!user &&
     !telegramLinked &&

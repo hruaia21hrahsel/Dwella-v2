@@ -189,6 +189,15 @@ function AuthGuard() {
         return;
       }
 
+      // No PIN set → the app isn't meaningfully "locked" for this user,
+      // so clear the isLocked flag. It starts true on every cold launch
+      // and is only cleared when the user unlocks with a PIN; without
+      // this, isLocked would be stuck at true forever for no-PIN users,
+      // which breaks any downstream gate that relies on it.
+      if (!pinEnabled && isLocked) {
+        setLocked(false);
+      }
+
       // Unlocked — go to the app. Leave pin-setup and onboarding alone so
       // the user can finish without being bounced by subsequent state updates.
       if (inPinSetup || inOnboarding) return;

@@ -18,9 +18,18 @@ import { useAuthStore } from '@/lib/store';
 import { useTheme } from '@/lib/theme-context';
 import { isPinSet } from '@/lib/biometric-auth';
 
+// Grace period after the session becomes available before the dialog is
+// allowed to render. On cold launch, expo-router's segments briefly
+// reflect the previously visited route (e.g. "(tabs)") before AuthGuard's
+// async routing effect redirects to /lock or /onboarding. Without this
+// delay the dialog evaluates visibility against stale segments and flashes
+// for a single frame before the redirect hides it.
+const ROUTING_SETTLE_MS = 700;
+
 export function PinReminderDialog() {
-  const { session, isLoading, tourStep, pinReminderDismissed, setPinReminderDismissed } = useAuthStore();
+  const { session, isLoading, isLocked, tourStep, pinReminderDismissed, setPinReminderDismissed } = useAuthStore();
   const [pinReady, setPinReady] = useState<boolean | null>(null);
+  const [settled, setSettled] = useState(false);
   const router = useRouter();
   const segments = useSegments();
   const { colors, shadows } = useTheme();
@@ -45,12 +54,26 @@ export function PinReminderDialog() {
     };
   }, [uid, pinReminderDismissed]);
 
+  // Arm the settle timer: wait until after the session is loaded AND the
+  // app is unlocked (the lock screen is gone) before letting the dialog
+  // render. Reset when the user logs out or gets re-locked.
+  useEffect(() => {
+    if (!session || isLoading || isLocked) {
+      setSettled(false);
+      return;
+    }
+    const t = setTimeout(() => setSettled(true), ROUTING_SETTLE_MS);
+    return () => clearTimeout(t);
+  }, [session, isLoading, isLocked]);
+
   const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'auth';
   const inPinSetup = segments[0] === 'pin-setup';
   const inOnboarding = segments[0] === 'onboarding';
 
   const visible =
+    settled &&
     !isLoading &&
+    !isLocked &&
     !!session &&
     pinReady === false &&
     !pinReminderDismissed &&
