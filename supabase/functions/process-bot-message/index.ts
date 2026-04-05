@@ -15,12 +15,21 @@ interface BotRequest {
   telegram_chat_id?: number;
 }
 
+interface DocumentPayload {
+  url: string;
+  filename: string;
+  caption?: string;
+}
+
 interface BotResponse {
   reply: string;
   intent?: string;
   action_taken?: string;
   pending_action?: PendingAction | null;
+  document?: DocumentPayload;
 }
+
+type ActionHandlerResult = string | { text: string; document?: DocumentPayload };
 
 interface ClaudeIntent {
   intent: string;
@@ -40,7 +49,21 @@ type ActionHandler = (
   supabase: ReturnType<typeof createClient>,
   userId: string,
   entities: Record<string, unknown>,
-) => Promise<string>;
+) => Promise<ActionHandlerResult>;
+
+// ----------------------------------------------------------------
+// Inline helpers (Deno Edge Function — cannot import from /lib)
+// ----------------------------------------------------------------
+const MONTH_NAMES_INLINE = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+const monthName = (m: number) => MONTH_NAMES_INLINE[m - 1] ?? String(m);
+
+function unwrapActionResult(result: ActionHandlerResult): { text: string; document?: DocumentPayload } {
+  if (typeof result === 'string') return { text: result };
+  return { text: result.text, document: result.document };
+}
 
 // ----------------------------------------------------------------
 // Action Handlers
@@ -288,12 +311,125 @@ const handleSendReminder: ActionHandler = async (supabase, userId, entities) => 
   return `Reminder sent to ${tenant.tenant_name}!`;
 };
 
+// ----------------------------------------------------------------
+// handleGetRentReceipt — fetch a cached receipt PDF from Supabase
+// Storage (uploaded by the app on share or on confirmation) and
+// return it as a document payload. Falls back to a formatted text
+// receipt if no PDF is cached yet.
+// ----------------------------------------------------------------
+const handleGetRentReceipt: ActionHandler = async (supabase, userId, entities) => {
+  const { tenant_name, month, year } = entities as {
+    tenant_name?: string;
+    month?: number;
+    year?: number;
+  };
+
+  const now = new Date();
+  const payMonth = month ?? (now.getMonth() + 1);
+  const payYear = year ?? now.getFullYear();
+
+  let payment: any = null;
+  let tenant: any = null;
+  let property: any = null;
+
+  if (tenant_name) {
+    // Landlord asking for a specific tenant's receipt
+    const result = await findTenantByName(supabase, userId, tenant_name);
+    if (!result) return `I couldn't find a tenant matching "${tenant_name}" in your properties.`;
+    tenant = result.tenant;
+    property = result.property;
+
+    const { data } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('tenant_id', tenant.id)
+      .eq('month', payMonth)
+      .eq('year', payYear)
+      .single();
+    payment = data;
+  } else {
+    // User is a tenant asking for their own receipt
+    const { data: tenantRows } = await supabase
+      .from('tenants')
+      .select('*, properties(*), payments(*)')
+      .eq('user_id', userId)
+      .eq('is_archived', false);
+
+    if (!tenantRows || tenantRows.length === 0) {
+      return "I couldn't find any tenancies linked to your account. If you're a landlord, tell me which tenant the receipt is for.";
+    }
+    if (tenantRows.length > 1) {
+      const names = (tenantRows as any[])
+        .map((t) => `${(t.properties as any)?.name ?? 'Property'} (Flat ${t.flat_no})`)
+        .join(', ');
+      return `You have multiple tenancies (${names}). Which one should I pull the receipt for?`;
+    }
+    tenant = tenantRows[0];
+    property = (tenant as any).properties;
+    payment = ((tenant as any).payments as any[] | null ?? []).find(
+      (p) => p.month === payMonth && p.year === payYear,
+    );
+  }
+
+  if (!payment) {
+    return `I don't see a payment record for ${monthName(payMonth)} ${payYear}.`;
+  }
+
+  // Try to fetch the cached PDF from Storage
+  const cachePath = `${payment.id}.pdf`;
+  const { data: signed } = await supabase.storage
+    .from('receipts')
+    .createSignedUrl(cachePath, 600); // 10 minutes
+
+  let pdfAvailable = false;
+  if (signed?.signedUrl) {
+    try {
+      const head = await fetch(signed.signedUrl, { method: 'HEAD' });
+      pdfAvailable = head.ok;
+    } catch {
+      pdfAvailable = false;
+    }
+  }
+
+  if (pdfAvailable && signed?.signedUrl) {
+    return {
+      text: `Here's your ${monthName(payMonth)} ${payYear} rent receipt.`,
+      document: {
+        url: signed.signedUrl,
+        filename: `rent-receipt-${tenant.tenant_name.replace(/\s+/g, '-')}-${payMonth}-${payYear}.pdf`,
+        caption: `Rent receipt — ${tenant.tenant_name} — ${monthName(payMonth)} ${payYear}`,
+      },
+    };
+  }
+
+  // Fallback: formatted Markdown text receipt
+  const statusLabel = String(payment.status).charAt(0).toUpperCase() + String(payment.status).slice(1);
+  const lines = [
+    `*Rent Payment Receipt*`,
+    `${monthName(payMonth)} ${payYear}`,
+    ``,
+    `*Tenant:* ${tenant.tenant_name}`,
+    `*Property:* ${property?.name ?? '—'}${property?.city ? ', ' + property.city : ''}`,
+    `*Flat:* ${tenant.flat_no}`,
+    ``,
+    `*Amount Due:* ₹${payment.amount_due}`,
+    `*Amount Paid:* ₹${payment.amount_paid}`,
+    `*Status:* ${statusLabel}`,
+  ];
+  if (payment.paid_at) {
+    lines.push(`*Paid On:* ${new Date(payment.paid_at).toLocaleDateString('en-IN')}`);
+  }
+  lines.push('', `_The PDF version isn't cached yet. Open this payment in the Dwella app once and the PDF will be delivered here next time._`);
+  return lines.join('\n');
+};
+
 const ACTION_HANDLERS: Record<string, ActionHandler> = {
   log_payment: handleLogPayment,
   add_property: handleAddProperty,
   add_tenant: handleAddTenant,
   send_reminder: handleSendReminder,
   confirm_payment: handleConfirmPayment,
+  get_rent_receipt: handleGetRentReceipt,
 };
 
 // Intents that require confirmation before execution
@@ -416,6 +552,7 @@ AVAILABLE ACTIONS — You can perform these for the user:
 - add_property: Add a new property. Entities: { name, address?, city?, total_units? }
 - add_tenant: Add a tenant to a property. Entities: { property_name, tenant_name, flat_no?, monthly_rent?, due_day? }
 - send_reminder: Send a rent reminder to a tenant. Entities: { tenant_name }
+- get_rent_receipt: Fetch and send a rent payment receipt (PDF preferred, text fallback). Entities: { tenant_name?, month?, year? }. Tenant users may omit tenant_name to get their own receipt. Defaults to current month/year if not specified. This is a read action — never needs confirmation.
 
 QUERY INTENTS (no action needed):
 - query_status, query_summary, query_overdue, query_tenant, general_chat
@@ -435,7 +572,7 @@ RULES:
 - If month/year is not specified for payment actions, default to the current month/year.
 - If amount is not specified for log_payment, default to the tenant's monthly_rent.
 - Set needs_confirmation: true for log_payment, confirm_payment, add_property, add_tenant.
-- Set needs_confirmation: false for queries and send_reminder.
+- Set needs_confirmation: false for queries, send_reminder, and get_rent_receipt.
 - Keep replies concise and conversational. Use ₹ for Indian Rupees. Format dates as DD MMM YYYY.`;
 
   const messages = [
@@ -541,8 +678,14 @@ serve(async (req) => {
         const handler = ACTION_HANDLERS[pendingAction.action];
         if (handler) {
           const actionResult = await handler(supabase, user_id, pendingAction.entities);
-          await saveMessages(supabase, user_id, message, actionResult);
-          return jsonResponse({ reply: actionResult, intent: pendingAction.action, action_taken: pendingAction.description });
+          const { text: actionText, document: actionDoc } = unwrapActionResult(actionResult);
+          await saveMessages(supabase, user_id, message, actionText);
+          return jsonResponse({
+            reply: actionText,
+            intent: pendingAction.action,
+            action_taken: pendingAction.description,
+            document: actionDoc,
+          });
         }
       } else if (isCancellation(message)) {
         const cancelReply = 'No problem, I\'ve cancelled that action.';
@@ -575,10 +718,16 @@ serve(async (req) => {
           pending_action: actionMetadata.pending_action,
         });
       } else {
-        // Execute immediately (e.g. send_reminder)
+        // Execute immediately (e.g. send_reminder, get_rent_receipt)
         const actionResult = await handler(supabase, user_id, result.entities);
-        await saveMessages(supabase, user_id, message, actionResult);
-        return jsonResponse({ reply: actionResult, intent: result.intent, action_taken: result.action_description });
+        const { text: actionText, document: actionDoc } = unwrapActionResult(actionResult);
+        await saveMessages(supabase, user_id, message, actionText);
+        return jsonResponse({
+          reply: actionText,
+          intent: result.intent,
+          action_taken: result.action_description,
+          document: actionDoc,
+        });
       }
     } else {
       // Query intent — return reply as-is

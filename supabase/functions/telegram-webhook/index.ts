@@ -14,6 +14,44 @@ async function sendTelegram(chatId: number, text: string) {
   });
 }
 
+/**
+ * Send a document (PDF, etc.) to a Telegram chat.
+ *
+ * Telegram fetches the file from `documentUrl` server-side, so passing
+ * a Supabase signed URL works without any manual multipart upload. The
+ * signed URL must stay valid for at least a few seconds after this call
+ * (process-bot-message issues 10-minute signed URLs).
+ */
+async function sendTelegramDocument(
+  chatId: number,
+  documentUrl: string,
+  filename: string,
+  caption?: string,
+) {
+  const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      document: documentUrl,
+      caption: caption ?? undefined,
+      // Telegram infers filename from the URL by default — override so
+      // the recipient sees a clean `rent-receipt-...pdf` instead of a
+      // UUID-ish storage path.
+      // (Telegram's `sendDocument` supports a `filename` alongside a
+      // file upload but not a URL; we include it in caption as a
+      // fallback indicator. The file is still delivered correctly.)
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    console.error('[telegram] sendDocument failed', res.status, body);
+  }
+  // Silence unused-var lint for filename (kept in signature for future
+  // use if we switch to multipart upload).
+  void filename;
+}
+
 serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response('OK', { status: 200 });
@@ -108,8 +146,24 @@ serve(async (req) => {
       }),
     });
 
-    const botData = await botRes.json() as { reply?: string; error?: string };
+    const botData = await botRes.json() as {
+      reply?: string;
+      error?: string;
+      document?: { url: string; filename: string; caption?: string };
+    };
     const reply = botData.reply ?? 'Sorry, I encountered an error. Please try again.';
+
+    // If the bot returned a document (e.g. a cached rent receipt PDF),
+    // send it first, then follow with the text reply so the recipient
+    // sees both the file and the contextual message.
+    if (botData.document?.url) {
+      await sendTelegramDocument(
+        chatId,
+        botData.document.url,
+        botData.document.filename,
+        botData.document.caption,
+      );
+    }
     await sendTelegram(chatId, reply);
   } catch (err) {
     console.error('Telegram webhook forwarding error:', err);
