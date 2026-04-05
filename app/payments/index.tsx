@@ -217,9 +217,30 @@ export default function PaymentsScreen() {
 
   // ── Render ──
 
+  const topBar = (
+    <LinearGradient
+      colors={[colors.surface, colors.primarySoft]}
+      start={{ x: 0.35, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={[styles.topBar, { paddingTop: insets.top, shadowColor: colors.primary }]}
+    >
+      <TouchableOpacity
+        style={styles.topBarBtn}
+        onPress={() => router.back()}
+        activeOpacity={0.7}
+        accessibilityLabel="Go back"
+      >
+        <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
+      </TouchableOpacity>
+      <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>Payment History</Text>
+      <View style={styles.topBarBtn} />
+    </LinearGradient>
+  );
+
   if (propertiesLoading || loading) {
     return (
-      <View style={{ flex: 1, paddingTop: insets.top }}>
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        {topBar}
         <ListSkeleton count={5} />
       </View>
     );
@@ -227,31 +248,22 @@ export default function PaymentsScreen() {
 
   if (!isLandlord) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-        <EmptyState
-          icon="receipt"
-          title="No payments yet"
-          subtitle="Add properties and tenants to start tracking payments."
-        />
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        {topBar}
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            icon="receipt"
+            title="No payments yet"
+            subtitle="Add properties and tenants to start tracking payments."
+          />
+        </View>
       </View>
     );
   }
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* Top bar */}
-      <LinearGradient
-        colors={[colors.surface, colors.primarySoft]}
-        start={{ x: 0.35, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.topBar, { paddingTop: insets.top, shadowColor: colors.primary }]}
-      >
-        <TouchableOpacity style={styles.topBarBtn} onPress={() => router.back()} activeOpacity={0.7}>
-          <MaterialCommunityIcons name="arrow-left" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.topBarTitle, { color: colors.textPrimary }]}>Payment History</Text>
-        <View style={styles.topBarBtn} />
-      </LinearGradient>
+      {topBar}
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
