@@ -34,7 +34,7 @@ const COUNTER_THRESHOLD = 800;
 export default function BotScreen() {
   const { colors, shadows } = useTheme();
   const { user } = useAuthStore();
-  const { messages, loading, clearHistory } = useBotConversations(user?.id);
+  const { messages, loading, clearHistory, refetch } = useBotConversations(user?.id);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [pendingUserText, setPendingUserText] = useState<string | null>(null);
@@ -84,6 +84,10 @@ export default function BotScreen() {
 
       try {
         await sendBotMessage(user.id, trimmed);
+        // Realtime isn't reliable here — pull the authoritative list so the
+        // user's message and the assistant's reply appear without needing
+        // the screen to be re-focused.
+        await refetch({ silent: true });
       } catch (err) {
         useToastStore.getState().showToast(String(err), 'error');
       } finally {
@@ -91,7 +95,7 @@ export default function BotScreen() {
         setPendingUserText(null);
       }
     },
-    [user, sending],
+    [user, sending, refetch],
   );
 
   const handleSend = useCallback(() => {

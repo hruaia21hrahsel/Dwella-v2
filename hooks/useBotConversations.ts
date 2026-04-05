@@ -7,12 +7,12 @@ export function useBotConversations(userId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const fetch = useCallback(async (opts?: { silent?: boolean }) => {
     if (!userId) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!opts?.silent) setLoading(true);
     setError(null);
     try {
       const { data, error: fetchError } = await supabase
@@ -26,13 +26,13 @@ export function useBotConversations(userId: string | undefined) {
     } catch (err: any) {
       setError(err.message ?? 'Failed to load conversations');
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, [userId]);
 
   useEffect(() => {
     fetch();
-  }, [fetch]);
+  }, [userId]);
 
   // Realtime subscription
   useEffect(() => {
