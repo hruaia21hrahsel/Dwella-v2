@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,18 +6,30 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { Text, TextInput, IconButton, ActivityIndicator } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/lib/store';
 import { useToastStore } from '@/lib/toast';
 import { useBotConversations } from '@/hooks/useBotConversations';
 import { sendBotMessage } from '@/lib/bot';
 import { ChatBubble } from '@/components/ChatBubble';
-import { EmptyState } from '@/components/EmptyState';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { useTheme } from '@/lib/theme-context';
 import { BotConversation } from '@/lib/types';
+
+const EXAMPLES = [
+  "Log Rahul's March rent as paid",
+  'Add a new property called Sunrise Apartments',
+  "Who hasn't paid this month?",
+  'Send a reminder to all overdue tenants',
+];
+
+const MAX_INPUT_LENGTH = 1000;
+const COUNTER_THRESHOLD = 800;
 
 export default function BotScreen() {
   const { colors, shadows } = useTheme();
@@ -25,8 +37,30 @@ export default function BotScreen() {
   const { messages, loading, clearHistory } = useBotConversations(user?.id);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [pendingUserText, setPendingUserText] = useState<string | null>(null);
   const listRef = useRef<FlatList<BotConversation>>(null);
   const insets = useSafeAreaInsets();
+
+  // Optimistic bubble: show the user's message immediately while the server round-trips.
+  const displayMessages = useMemo<BotConversation[]>(() => {
+    if (!pendingUserText || !user) return messages;
+    // Suppress the optimistic row if the realtime insert has already echoed it back.
+    const alreadyEchoed = messages.some(
+      (m) => m.role === 'user' && m.content === pendingUserText,
+    );
+    if (alreadyEchoed) return messages;
+    const optimistic: BotConversation = {
+      id: `pending-${pendingUserText}`,
+      user_id: user.id,
+      role: 'user',
+      content: pendingUserText,
+      created_at: new Date().toISOString(),
+      metadata: null,
+    };
+    return [...messages, optimistic];
+  }, [messages, pendingUserText, user]);
+
+  const hasConversation = displayMessages.length > 0;
 
   function handleClear() {
     Alert.alert(
@@ -35,25 +69,30 @@ export default function BotScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Clear', style: 'destructive', onPress: clearHistory },
-      ]
+      ],
     );
   }
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || !user || sending) return;
+  const sendMessage = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || !user || sending) return;
 
-    setInput('');
-    setSending(true);
+      setInput('');
+      setPendingUserText(trimmed);
+      setSending(true);
 
-    try {
-      await sendBotMessage(user.id, text.trim());
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 200);
-    } catch (err) {
-      useToastStore.getState().showToast(String(err), 'error');
-    } finally {
-      setSending(false);
-    }
-  }, [user, sending]);
+      try {
+        await sendBotMessage(user.id, trimmed);
+      } catch (err) {
+        useToastStore.getState().showToast(String(err), 'error');
+      } finally {
+        setSending(false);
+        setPendingUserText(null);
+      }
+    },
+    [user, sending],
+  );
 
   const handleSend = useCallback(() => {
     sendMessage(input);
@@ -68,8 +107,8 @@ export default function BotScreen() {
   }, [sendMessage]);
 
   // Find the last assistant message index for showing action buttons
-  const lastAssistantIndex = messages.length > 0
-    ? messages.reduce((lastIdx, msg, idx) => msg.role === 'assistant' ? idx : lastIdx, -1)
+  const lastAssistantIndex = displayMessages.length > 0
+    ? displayMessages.reduce((lastIdx, msg, idx) => (msg.role === 'assistant' ? idx : lastIdx), -1)
     : -1;
 
   const renderItem = useCallback(
@@ -81,107 +120,220 @@ export default function BotScreen() {
         onCancel={handleCancel}
       />
     ),
-    [lastAssistantIndex, handleConfirm, handleCancel]
+    [lastAssistantIndex, handleConfirm, handleCancel],
   );
 
+  const canSend = !!input.trim() && !sending;
+  const showCounter = input.length >= COUNTER_THRESHOLD;
+
+  const clearButton = hasConversation ? (
+    <IconButton
+      icon="delete-sweep"
+      size={22}
+      onPress={handleClear}
+      iconColor={colors.textSecondary}
+      accessibilityLabel="Clear conversation history"
+    />
+  ) : null;
+
   return (
-    <View style={[styles.flex, { backgroundColor: colors.background }]}>
-      <DwellaHeader />
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.flex, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={insets.top + 60}
+      keyboardVerticalOffset={0}
     >
-      {/* Messages */}
-      {messages.length > 0 && (
-        <View style={styles.chatTopBar}>
-          <View style={{ flex: 1 }} />
-          <IconButton icon="delete-sweep" size={22} onPress={handleClear} iconColor={colors.textSecondary} />
-        </View>
-      )}
+      <DwellaHeader rightSlot={clearButton} />
+
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
-      ) : messages.length === 0 ? (
-        <View style={styles.emptyWrap}>
-          <EmptyState
-            icon="robot"
-            title="Hi! I'm your Dwella Assistant"
-            subtitle={"Ask me anything or tell me what to do!\n\nExamples:\n• \"Log Rahul's March rent as paid\"\n• \"Add a new property called Sunrise Apartments\"\n• \"Who hasn't paid this month?\"\n• \"Send a reminder to all overdue tenants\""}
-          />
-        </View>
+      ) : !hasConversation ? (
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.introContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.introIcon, { backgroundColor: colors.primarySoft, ...shadows.sm }]}>
+            <MaterialCommunityIcons name="robot" size={40} color={colors.primary} />
+          </View>
+          <Text style={[styles.introTitle, { color: colors.textPrimary }]}>
+            Hi! I'm your Dwella Assistant
+          </Text>
+          <Text style={[styles.introSubtitle, { color: colors.textSecondary }]}>
+            Ask me anything or tell me what to do.
+          </Text>
+
+          <Text style={[styles.examplesLabel, { color: colors.textDisabled }]}>Try asking</Text>
+          <View style={styles.examplesList}>
+            {EXAMPLES.map((example) => (
+              <TouchableOpacity
+                key={example}
+                style={[styles.exampleChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => setInput(example)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`Use example: ${example}`}
+              >
+                <MaterialCommunityIcons
+                  name="lightbulb-on-outline"
+                  size={16}
+                  color={colors.primary}
+                  style={{ marginRight: 10 }}
+                />
+                <Text style={[styles.exampleText, { color: colors.textPrimary }]} numberOfLines={2}>
+                  {example}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       ) : (
         <FlatList
           ref={listRef}
-          data={messages}
+          data={displayMessages}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={[styles.list, { paddingBottom: 8 }]}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
         />
       )}
 
-      {/* Sending indicator */}
-      {sending && (
+      {/* Sending indicator — only when there's an actual conversation in flight */}
+      {sending && hasConversation && (
         <View style={styles.typingRow}>
           <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
-          <Text variant="bodySmall" style={[styles.typingText, { color: colors.textSecondary }]}>Thinking…</Text>
+          <Text variant="bodySmall" style={{ color: colors.textSecondary }}>
+            Thinking…
+          </Text>
         </View>
       )}
 
       {/* Input */}
-      <View style={[styles.inputRow, { backgroundColor: colors.surface, ...shadows.sm, shadowOffset: { width: 0, height: -2 } }, { paddingBottom: insets.bottom + 8 }]}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Ask anything or give a command…"
-          mode="outlined"
-          style={[styles.input, { backgroundColor: colors.surface }]}
-          outlineStyle={styles.inputOutline}
-          multiline
-          maxLength={1000}
-          returnKeyType="send"
-          blurOnSubmit={false}
-          onSubmitEditing={handleSend}
-        />
+      <View
+        style={[
+          styles.inputRow,
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+            paddingBottom: insets.bottom + 8,
+          },
+        ]}
+      >
+        <View style={styles.inputWrap}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Message your Assistant…"
+            mode="outlined"
+            style={[styles.input, { backgroundColor: colors.surface }]}
+            outlineStyle={styles.inputOutline}
+            multiline
+            maxLength={MAX_INPUT_LENGTH}
+            accessibilityLabel="Message input"
+          />
+          {showCounter && (
+            <Text style={[styles.counter, { color: input.length >= MAX_INPUT_LENGTH ? colors.statusOverdue : colors.textDisabled }]}>
+              {input.length}/{MAX_INPUT_LENGTH}
+            </Text>
+          )}
+        </View>
         <IconButton
           icon="send"
           mode="contained"
-          containerColor={colors.primary}
-          iconColor="#fff"
+          containerColor={canSend ? colors.primary : colors.border}
+          iconColor={canSend ? '#fff' : colors.textDisabled}
           size={22}
           onPress={handleSend}
-          disabled={!input.trim() || sending}
+          disabled={!canSend}
           style={styles.sendBtn}
+          accessibilityLabel="Send message"
         />
       </View>
     </KeyboardAvoidingView>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  chatTopBar: { flexDirection: 'row', alignItems: 'center' },
-  emptyWrap: { flex: 1, justifyContent: 'center' },
   list: { paddingTop: 12 },
+  introContent: {
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    alignItems: 'center',
+  },
+  introIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  introTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  introSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  examplesLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    alignSelf: 'flex-start',
+    marginTop: 28,
+    marginBottom: 10,
+  },
+  examplesList: {
+    width: '100%',
+    gap: 8,
+  },
+  exampleChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  exampleText: {
+    flex: 1,
+    fontSize: 14,
+  },
   typingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 6,
   },
-  typingText: {},
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 12,
     paddingTop: 8,
     gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
-  input: { flex: 1, maxHeight: 120 },
+  inputWrap: {
+    flex: 1,
+  },
+  input: {
+    maxHeight: 120,
+  },
   inputOutline: { borderRadius: 24 },
+  counter: {
+    fontSize: 11,
+    textAlign: 'right',
+    marginTop: 2,
+    marginRight: 8,
+  },
   sendBtn: { marginBottom: 2 },
 });

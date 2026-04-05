@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/theme-context';
@@ -14,9 +15,10 @@ function getGreeting(): string {
 
 interface DwellaHeaderProps {
   style?: StyleProp<ViewStyle>;
+  rightSlot?: ReactNode;
 }
 
-export function DwellaHeader({ style }: DwellaHeaderProps = {}) {
+export function DwellaHeader({ style, rightSlot }: DwellaHeaderProps = {}) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { user } = useAuthStore();
@@ -47,6 +49,7 @@ export function DwellaHeader({ style }: DwellaHeaderProps = {}) {
       </View>
 
       <View style={{ flex: 1 }} />
+      {rightSlot}
       <NotificationsHeaderButton />
     </View>
   );
