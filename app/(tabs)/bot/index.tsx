@@ -159,7 +159,7 @@ export default function BotScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.flex, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={0}
     >
       <DwellaHeader rightSlot={clearButton} />
@@ -211,6 +211,7 @@ export default function BotScreen() {
       ) : (
         <FlatList
           ref={listRef}
+          style={styles.flex}
           data={displayMessages}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
