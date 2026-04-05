@@ -50,6 +50,24 @@ async function answerCallbackQuery(callbackQueryId: string, text?: string) {
 }
 
 /**
+ * Show "Bot is typing…" in the Telegram chat header. The indicator
+ * auto-expires after ~5 seconds, so we repeat it every 4 seconds for
+ * the duration of a slow Claude call so the user never sees dead air.
+ */
+async function sendTypingAction(chatId: number) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendChatAction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, action: 'typing' }),
+    });
+  } catch (err) {
+    // Typing indicator is best-effort — never let it break the main flow.
+    console.warn('[telegram] sendChatAction failed:', err);
+  }
+}
+
+/**
  * Main menu inline keyboard shown on `/menu`. Each button's callback_data
  * maps to a canonical natural-language prompt that we re-send through the
  * normal NLP pipeline — so the bot's existing intent classifier handles
@@ -128,6 +146,15 @@ async function sendTelegramDocument(
  * so callback taps and typed messages go through exactly one code path.
  */
 async function forwardToBot(chatId: number, userId: string, prompt: string) {
+  // Kick off the typing indicator immediately and keep it alive every 4s.
+  // Telegram auto-expires it after ~5s, so re-sending covers long Claude
+  // calls (typically 2-8s). The interval is cleared in `finally` below
+  // so the indicator dies the instant we send a real reply.
+  sendTypingAction(chatId);
+  const typingInterval = setInterval(() => {
+    sendTypingAction(chatId);
+  }, 4000);
+
   try {
     const botRes = await fetch(PROCESS_BOT_URL, {
       method: 'POST',
@@ -201,6 +228,8 @@ async function forwardToBot(chatId: number, userId: string, prompt: string) {
       chatId,
       `Sorry, I couldn't reach the assistant (${err instanceof Error ? err.message : 'network error'}). Please try again.`,
     );
+  } finally {
+    clearInterval(typingInterval);
   }
 }
 
@@ -232,8 +261,10 @@ serve(async (req) => {
     const cbMessage = callbackQuery['message'] as Record<string, unknown> | undefined;
     const cbChatId = (cbMessage?.['chat'] as Record<string, unknown> | undefined)?.['id'] as number | undefined;
 
-    // Always acknowledge within 10s so the Telegram client stops the spinner.
-    await answerCallbackQuery(queryId);
+    // Always acknowledge within 10s so the Telegram client stops the
+    // spinner on the tapped button. The toast text gives instant visible
+    // feedback before the "typing…" header indicator kicks in.
+    await answerCallbackQuery(queryId, 'Got it, thinking…');
 
     if (!cbChatId) return new Response('OK', { status: 200 });
 
