@@ -31,6 +31,12 @@ interface AuthState {
    * on every SIGNED_IN event so the CTA reappears on each fresh login.
    */
   pinReminderDismissed: boolean;
+  /**
+   * In-memory only. Whether the "link Telegram" reminder dialog has been
+   * dismissed or acknowledged during the current session. Resets to false
+   * on every SIGNED_IN event.
+   */
+  telegramReminderDismissed: boolean;
   setSession: (session: Session | null) => void;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
@@ -45,6 +51,7 @@ interface AuthState {
   setThemeMode: (mode: ThemeMode) => void;
   setPendingRoute: (route: string | null) => void;
   setPinReminderDismissed: (dismissed: boolean) => void;
+  setTelegramReminderDismissed: (dismissed: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -60,6 +67,7 @@ export const useAuthStore = create<AuthState>()(
       tourStep: null,
       pendingRoute: null,
       pinReminderDismissed: false,
+      telegramReminderDismissed: false,
       setSession: (session) => set({ session }),
       setUser: (user) => set({ user }),
       setLoading: (isLoading) => set({ isLoading }),
@@ -94,6 +102,7 @@ export const useAuthStore = create<AuthState>()(
       setThemeMode: (themeMode) => set({ themeMode }),
       setPendingRoute: (pendingRoute) => set({ pendingRoute }),
       setPinReminderDismissed: (pinReminderDismissed) => set({ pinReminderDismissed }),
+      setTelegramReminderDismissed: (telegramReminderDismissed) => set({ telegramReminderDismissed }),
     }),
     {
       name: 'dwella-store',

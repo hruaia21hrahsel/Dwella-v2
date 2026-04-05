@@ -11,6 +11,7 @@ import { registerPushToken } from '@/lib/notifications';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { PinReminderDialog } from '@/components/PinReminderDialog';
+import { TelegramLinkReminderDialog } from '@/components/TelegramLinkReminderDialog';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 
@@ -84,8 +85,9 @@ function AuthGuard() {
 
           if (event === 'SIGNED_IN') {
             setLocked(false);
-            // Re-arm the PIN reminder dialog for every fresh login.
+            // Re-arm the post-login CTAs for every fresh login.
             useAuthStore.getState().setPinReminderDismissed(false);
+            useAuthStore.getState().setTelegramReminderDismissed(false);
           }
 
           if (newSession?.user) {
@@ -237,6 +239,7 @@ function InnerLayout() {
       <AuthGuard />
       <TourGuideCard />
       <PinReminderDialog />
+      <TelegramLinkReminderDialog />
       <ToastProvider />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="(auth)" />
