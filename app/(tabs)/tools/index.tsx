@@ -23,6 +23,20 @@ export default function ToolsScreen() {
       route: '/expenses',
       color: colors.statusPartial,
     },
+    {
+      label: 'EMI Calculator',
+      description: 'Estimate home loan EMI and amortization',
+      icon: 'calculator-variant',
+      route: '/tools/emi-calculator',
+      color: colors.statusPaid,
+    },
+    {
+      label: 'Rental Yield',
+      description: 'Calculate gross and net rental yield',
+      icon: 'chart-line',
+      route: '/tools/rental-yield',
+      color: colors.success,
+    },
   ] as const;
 
   return (

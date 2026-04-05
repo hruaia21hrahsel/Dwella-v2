@@ -229,6 +229,8 @@ function InnerLayout() {
         <Stack.Screen name="log-payment" options={{ headerShown: false, presentation: 'modal' }} />
         <Stack.Screen name="payments/index" options={{ headerShown: false }} />
         <Stack.Screen name="expenses/index" options={{ headerShown: false }} />
+        <Stack.Screen name="tools/emi-calculator" options={{ headerShown: false }} />
+        <Stack.Screen name="tools/rental-yield" options={{ headerShown: false }} />
         <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         <Stack.Screen name="invite/[token]" />
         <Stack.Screen name="pin-setup" options={{ headerShown: false }} />
