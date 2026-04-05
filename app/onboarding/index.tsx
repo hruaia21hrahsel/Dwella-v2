@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,9 +48,12 @@ export default function OnboardingScreen() {
 
       {/* Centred welcome content */}
       <View style={styles.content}>
-        <View style={styles.iconCircle}>
-          <MaterialCommunityIcons name="home-heart" size={64} color={colors.textOnGradient} />
-        </View>
+        <Image
+          source={require('@/assets/icon.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="Dwella logo"
+        />
 
         <Text style={[styles.title, { color: colors.textOnGradient }]}>Welcome to Dwella</Text>
         <Text style={[styles.tagline, { color: colors.textOnGradient }]}>The AI that runs your rentals.</Text>
@@ -92,13 +95,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 24,
   },
-  iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.20)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 140,
+    height: 140,
+    borderRadius: 32,
     marginBottom: 8,
   },
   title: {
