@@ -1,6 +1,20 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+last_updated: "2026-04-06T02:34:08.590Z"
+progress:
+  total_phases: 7
+  completed_phases: 0
+  total_plans: 9
+  completed_plans: 4
+  percent: 44
+---
+
 # Project State: Dwella v1.0 Launch Prep
 
-**Last updated:** 2026-04-06
+**Last updated:** 2026-04-06 (session 2)
 
 ## Project Reference
 
@@ -12,9 +26,9 @@
 
 **Milestone:** v1.0 Launch Prep
 **Phase:** 01-fact-finding-unblockers
-**Plan:** 02 (next)
-**Status:** Phase 1 in progress - Plan 01 (NoBroker scrub + license audit) complete
-**Progress:** `[░░░░░░░░░░░░░░░░░░░░]` 0/7 phases complete (2 plans done)
+**Plan:** 02, 03, 04, 05 (all at human checkpoint)
+**Status:** Ready to execute
+**Progress:** `[██░░░░░░░░░░░░░░░░░░]` 0/7 phases complete (2/6 plans done)
 
 ## Performance Metrics
 
@@ -24,7 +38,7 @@
 | Requirements mapped | 38 |
 | Phases planned | 7 |
 | Phases completed | 0 |
-| Plans completed | 2 |
+| Plans completed | 2 (00, 01) |
 
 ## Accumulated Context
 
@@ -39,7 +53,7 @@
 
 ### Todos
 
-- Execute Phase 1 plans 02-05 (Plan 01 NoBroker scrub + license audit complete)
+- Complete 4 human checkpoints for Phase 1 plans 02-05 (scaffolds ready, awaiting manual data entry)
 
 ### Blockers
 
@@ -47,9 +61,14 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session outcome:** Plan 01-01 (NoBroker scrub + license audit) executed. NoBroker references removed (0fe5e50), THIRD-PARTY-LICENSES.md and npm-licenses.json committed (a7510dc). IP-02, IP-03, IP-05 closed.
+**Last session outcome:** Plans 00 + 01 complete. Plans 02-05 scaffolded with {FILL IN} placeholders — all 4 paused at human checkpoints requiring browser logins, manual searches, and dev builds.
 
-**Next session start:** Execute Phase 1 plans 02-05 (trademark clearance, DPA registration, tracker audit, asset provenance).
+**Next session start:** Fill the 4 checkpoint scaffolds, then type "done [plan#]" to trigger verification + commit for each:
+
+- Plan 02: `.planning/legal/dpa-register.md`, `cross-border-transfers.md`, `PROJECT.md` Infrastructure (~10 min — Supabase region + Anthropic DPA)
+- Plan 03: `.planning/legal/trademark-clearance-dwella.md` (~30 min — USPTO, EUIPO, IP India searches)
+- Plan 04: `.planning/legal/tracker-audit.md` + `runtime-hostnames.txt` (~10 min — dev build network capture)
+- Plan 05: `.planning/legal/asset-provenance.md` (~5 min — recall asset origins)
 
 ---
 *State initialized: 2026-04-05 after roadmap creation*
