@@ -20,12 +20,21 @@
 const APP_STORE_URL  = 'https://apps.apple.com/app/id6760478576';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella.app';
 
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req: Request) => {
   const url   = new URL(req.url);
   const token = url.searchParams.get('token')?.trim();
 
   if (!token) {
     return new Response('Missing invite token.', { status: 400 });
+  }
+
+  if (!UUID_V4_REGEX.test(token)) {
+    return new Response(
+      '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Invalid Invite</title></head><body style="font-family:-apple-system,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#F8FAFC"><div style="text-align:center;padding:2rem"><h1 style="color:#EF4444">Invalid Invite Link</h1><p>This invite link is malformed. Please ask your landlord for a new invite.</p></div></body></html>',
+      { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+    );
   }
 
   const ua = req.headers.get('user-agent') ?? '';
