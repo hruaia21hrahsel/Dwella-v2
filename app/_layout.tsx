@@ -4,11 +4,13 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Sentry from '@sentry/react-native';
 import { Asset } from 'expo-asset';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
 import { isBiometricEnabled } from '@/lib/biometric-auth';
 import { registerPushToken } from '@/lib/notifications';
+import { SENTRY_DSN } from '@/constants/config';
 import { DwellaHeader } from '@/components/DwellaHeader';
 import { TourGuideCard } from '@/components/TourGuideCard';
 import { PinReminderDialog } from '@/components/PinReminderDialog';
@@ -17,6 +19,18 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { ThemeProvider, useTheme } from '@/lib/theme-context';
 
 SplashScreen.preventAutoHideAsync();
+
+// SEC-04: Sentry observability — JS-only mode (enableNative: false avoids
+// the native iOS plugin crash that caused original removal). Free tier
+// captures 5K errors/month.
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    enableNative: false,
+    tracesSampleRate: 0.2,
+    debug: __DEV__,
+  });
+}
 
 // Preload onboarding assets at module load so the first-login welcome
 // screen renders its logo instantly. Without this, require('icon.png')
@@ -286,10 +300,12 @@ function InnerLayout() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <ThemeProvider>
       <InnerLayout />
     </ThemeProvider>
   );
 }
+
+export default Sentry.wrap(RootLayout);

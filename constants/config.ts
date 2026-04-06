@@ -8,6 +8,9 @@ export const TELEGRAM_BOT_USERNAME = process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNA
 
 export const BOT_MODEL = 'claude-sonnet-4-20250514';
 
+// SEC-04: Sentry observability — DSN from env var, never hardcoded
+export const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
+
 export const AUTO_CONFIRM_HOURS = 48;
 export const REMINDER_DAYS_BEFORE = 3;
 export const REMINDER_DAYS_AFTER = 3;
