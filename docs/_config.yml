@@ -1,0 +1,7 @@
+title: Dwella Legal
+baseurl: /Dwella-v2
+markdown: kramdown
+plugins:
+  - jekyll-seo-tag
+exclude:
+  - README.md
