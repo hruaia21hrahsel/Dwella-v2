@@ -64,10 +64,10 @@ Plans:
   5. Rate limiting is enforced on `telegram-webhook`, `invite-redirect`, and `process-bot-message` and a manual abuse simulation is blocked at the configured threshold
 **Plans:** 4 plans
 Plans:
-- [ ] 03-01-PLAN.md — XSS fix: UUID validation on invite-redirect token
-- [ ] 03-02-PLAN.md — Telegram webhook secret-token auth + config.toml docs
-- [ ] 03-03-PLAN.md — Rate limiting on all public edge functions
-- [ ] 03-04-PLAN.md — Sentry observability restoration (mobile + edge functions)
+- [x] 03-01-PLAN.md — XSS fix: UUID validation on invite-redirect token
+- [x] 03-02-PLAN.md — Telegram webhook secret-token auth + config.toml docs
+- [x] 03-03-PLAN.md — Rate limiting on all public edge functions
+- [x] 03-04-PLAN.md — Sentry observability restoration (mobile + edge functions)
 
 ### Phase 4: Data Rights & Compliance Flows
 **Goal**: Make GDPR/DPDP/CCPA data-subject rights technically executable — erasure, access, portability, retention — end to end
