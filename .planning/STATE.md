@@ -64,11 +64,15 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session outcome:** Phase 1 plans 00, 01, 02, 05 complete (plans 03 + 04 deferred — need trademark searches and runtime capture). Phase 2 fully complete — Privacy Policy and ToS live at GitHub Pages. Requirements closed: IP-02, IP-03, IP-04, IP-05, COMP-05, COMP-06, LEGAL-01, LEGAL-02, LEGAL-03, LEGAL-04, COMP-08, COMP-09.
+**Last session:** 2026-04-06
+**Stopped at:** Phase 3 context gathered — ready for planning
+**Resume file:** `.planning/phases/03-security-hardening/03-CONTEXT.md`
 
-**Next session start:** `/gsd-resume-work` then either:
-1. `/gsd-discuss-phase 3 --auto` — start Phase 3 (Security Hardening)
-2. Complete deferred Phase 1 checkpoints:
+**Session outcome:** Phase 3 (Security Hardening) context captured via interactive discussion. 16 decisions locked across 5 areas: webhook auth (secret-token + 401), XSS fix (UUID regex gate), observability (Sentry re-enablement for app + edge functions), rate limiting (in-function DB counter, 60 req/min). Phase 1 plans 03 + 04 still deferred.
+
+**Next session start:** `/gsd-resume-work` then:
+1. `/gsd-plan-phase 3` — plan Phase 3 (Security Hardening)
+2. Or complete deferred Phase 1 checkpoints:
    - Plan 03: trademark searches (~30 min — USPTO, EUIPO, IP India)
    - Plan 04: runtime network capture (~10 min — dev build + hostnames)
 
