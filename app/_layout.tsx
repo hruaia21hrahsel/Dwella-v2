@@ -4,7 +4,7 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from '@sentry/browser';
 import { Asset } from 'expo-asset';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store';
@@ -26,7 +26,6 @@ SplashScreen.preventAutoHideAsync();
 if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
-    enableNative: false,
     tracesSampleRate: 0.2,
     debug: __DEV__,
   });
@@ -308,4 +307,4 @@ function RootLayout() {
   );
 }
 
-export default Sentry.wrap(RootLayout);
+export default RootLayout;
