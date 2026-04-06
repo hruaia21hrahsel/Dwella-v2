@@ -324,22 +324,13 @@ Source: [CCPA statute effective 2026-01-01](https://cppa.ca.gov/regulations/pdf/
 | A3 | Indian Income Tax Act S44AA requires 6-year retention of financial records (rounded to 7y) | Pitfall 6 | Retention period may be wrong; could be shorter or longer |
 | A4 | GitHub Pages renders Markdown files with default Jekyll theme without additional config | Architecture Patterns | May need `_config.yml` or theme setup |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact URL path resolution**
-   - What we know: GitHub Pages serves from `/docs` folder. D-02 wants `...Dwella-v2/privacy-policy`.
-   - What's unclear: Whether files at `docs/privacy-policy.md` resolve to `/Dwella-v2/privacy-policy` or `/Dwella-v2/privacy-policy.html`. Jekyll permalink front matter may be needed.
-   - Recommendation: Place files directly in `docs/` (not `docs/legal/`), test URL resolution after enabling GitHub Pages. Add Jekyll `permalink` front matter as fallback.
+1. **Exact URL path resolution** — RESOLVED: Files placed in `docs/` directly with Jekyll `permalink` front matter per Plan 02-01 Task 1. URLs will resolve to `/Dwella-v2/privacy-policy` and `/Dwella-v2/terms-of-service`.
 
-2. **Developer's real name and email in privacy policy**
-   - What we know: D-12 requires naming the natural person as data controller with contact email.
-   - What's unclear: Whether the developer wants their full legal name in a public document.
-   - Recommendation: Plan should include a placeholder `{DEVELOPER_NAME}` and `{DEVELOPER_EMAIL}` that the developer fills in before publishing.
+2. **Developer's real name and email in privacy policy** — RESOLVED: `{DEVELOPER_NAME}` and `{DEVELOPER_EMAIL}` placeholder tokens used throughout both documents; developer fills these in at Plan 02-03 checkpoint before publishing.
 
-3. **Supervisory authority for complaints**
-   - What we know: GDPR Art 13(2)(d) requires naming the right to complain to a supervisory authority.
-   - What's unclear: Which DPA to name --- user's local DPA (varies), or a general reference.
-   - Recommendation: Use generic language: "You have the right to lodge a complaint with your local data protection supervisory authority." For DPDP, specifically name the Data Protection Board of India.
+3. **Supervisory authority for complaints** — RESOLVED: Generic language used ("your local data protection supervisory authority"); DPDP section specifically names the Data Protection Board of India.
 
 ## Validation Architecture
 
