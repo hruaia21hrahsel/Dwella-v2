@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { checkRateLimit, getClientIp } from '../_shared/rate-limit.ts';
+import { initSentry, flushSentry, captureException } from '../_shared/sentry.ts';
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -480,13 +481,17 @@ async function forwardToBot(chatId: number, userId: string, prompt: string) {
 }
 
 serve(async (req) => {
+  initSentry();
+
   if (req.method !== 'POST') {
+    await flushSentry();
     return new Response('OK', { status: 200 });
   }
 
   // SEC-01: Telegram secret-token verification — reject before parsing body
   const secretHeader = req.headers.get('x-telegram-bot-api-secret-token') ?? '';
   if (!TELEGRAM_WEBHOOK_SECRET || secretHeader !== TELEGRAM_WEBHOOK_SECRET) {
+    await flushSentry();
     return new Response('', { status: 401 });
   }
 
@@ -494,8 +499,12 @@ serve(async (req) => {
   const clientIp = getClientIp(req);
   const allowed = await checkRateLimit(clientIp, 'telegram-webhook', 60);
   if (!allowed) {
+    await flushSentry();
     return new Response('', { status: 429 });
   }
+
+  // SEC-04: Sentry try/finally wrapper — ensures flush on every exit path
+  try {
 
   let update: Record<string, unknown>;
   try {
@@ -668,4 +677,12 @@ serve(async (req) => {
 
   await forwardToBot(chatId, linkedUser.id as string, text);
   return new Response('OK', { status: 200 });
+
+  } catch (err) {
+    captureException(err);
+    console.error('[telegram-webhook] unhandled error:', err);
+    return new Response('Internal server error', { status: 500 });
+  } finally {
+    await flushSentry();
+  }
 });

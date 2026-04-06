@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { buildReceiptPdf } from './pdf.ts';
 import { checkRateLimit, getClientIp } from '../_shared/rate-limit.ts';
+import { initSentry, flushSentry, captureException } from '../_shared/sentry.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -984,7 +985,10 @@ async function saveMessages(
 // Main handler
 // ----------------------------------------------------------------
 serve(async (req) => {
+  initSentry();
+
   if (req.method === 'OPTIONS') {
+    await flushSentry();
     return new Response(null, {
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -998,6 +1002,7 @@ serve(async (req) => {
   // don't get to pay the parse cost.
   const incomingSecret = req.headers.get('x-bot-internal-secret') ?? '';
   if (!BOT_INTERNAL_SECRET || incomingSecret !== BOT_INTERNAL_SECRET) {
+    await flushSentry();
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
       status: 403,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -1008,6 +1013,7 @@ serve(async (req) => {
   const clientIp = getClientIp(req);
   const allowed = await checkRateLimit(clientIp, 'process-bot-message', 60);
   if (!allowed) {
+    await flushSentry();
     return new Response(JSON.stringify({ error: 'Too Many Requests' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },
@@ -1101,11 +1107,14 @@ serve(async (req) => {
       return jsonResponse({ reply: result.reply, intent: result.intent, action_taken: result.action_description });
     }
   } catch (err) {
+    captureException(err);
     console.error('process-bot-message error:', err);
     return new Response(JSON.stringify({ error: 'Internal server error', details: String(err) }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
+  } finally {
+    await flushSentry();
   }
 });
 

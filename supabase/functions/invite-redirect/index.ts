@@ -18,6 +18,7 @@
  */
 
 import { checkRateLimit, getClientIp } from '../_shared/rate-limit.ts';
+import { initSentry, flushSentry, captureException } from '../_shared/sentry.ts';
 
 const APP_STORE_URL  = 'https://apps.apple.com/app/id6760478576';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella.app';
@@ -25,6 +26,8 @@ const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella
 const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 Deno.serve(async (req: Request) => {
+  initSentry();
+  try {
   const url   = new URL(req.url);
   const token = url.searchParams.get('token')?.trim();
 
@@ -245,4 +248,12 @@ Deno.serve(async (req: Request) => {
       'X-Content-Type-Options': 'nosniff',
     },
   });
+
+  } catch (err) {
+    captureException(err);
+    console.error('[invite-redirect] unhandled error:', err);
+    return new Response('Internal server error', { status: 500 });
+  } finally {
+    await flushSentry();
+  }
 });
