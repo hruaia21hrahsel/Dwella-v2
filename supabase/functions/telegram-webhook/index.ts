@@ -12,6 +12,7 @@ const PROCESS_BOT_URL = `${SUPABASE_URL}/functions/v1/process-bot-message`;
 // process-bot-message and this header is enforced inside that
 // function instead.
 const BOT_INTERNAL_SECRET = Deno.env.get('BOT_INTERNAL_SECRET') ?? '';
+const TELEGRAM_WEBHOOK_SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET') ?? '';
 
 interface TelegramInlineButton {
   text: string;
@@ -480,6 +481,12 @@ async function forwardToBot(chatId: number, userId: string, prompt: string) {
 serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response('OK', { status: 200 });
+  }
+
+  // SEC-01: Telegram secret-token verification — reject before parsing body
+  const secretHeader = req.headers.get('x-telegram-bot-api-secret-token') ?? '';
+  if (!TELEGRAM_WEBHOOK_SECRET || secretHeader !== TELEGRAM_WEBHOOK_SECRET) {
+    return new Response('', { status: 401 });
   }
 
   let update: Record<string, unknown>;
