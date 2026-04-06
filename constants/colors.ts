@@ -3,7 +3,7 @@ import { LightTheme } from './theme';
 // Backward compatibility — static light-theme colors for files that haven't migrated yet.
 // New code should use `useTheme()` from `@/lib/theme-context` instead.
 export const Colors = {
-  // Brand — NoBroker Teal
+  // Brand
   primary: LightTheme.colors.primary,
   primaryLight: LightTheme.colors.primaryLight,
   primaryDark: LightTheme.colors.primaryDark,
