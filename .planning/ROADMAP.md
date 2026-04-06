@@ -48,7 +48,7 @@ This is **brownfield launch prep**, not feature building. Every phase is scoped 
   5. A visible "Do Not Sell or Share My Personal Information" section (CCPA affirmative disclosure) and a DPDP grievance officer contact are present in the published Privacy Policy
 **Plans:** 3 plans
 Plans:
-- [ ] 02-01-PLAN.md — Privacy Policy + GitHub Pages infrastructure
+- [x] 02-01-PLAN.md — Privacy Policy + GitHub Pages infrastructure
 - [x] 02-02-PLAN.md — Terms of Service / EULA
 - [ ] 02-03-PLAN.md — Enable GitHub Pages + developer review checkpoint
 

@@ -12,8 +12,8 @@ Every requirement below is a hard blocker to public v1.0 launch on the App Store
 
 ### Legal Artifacts (LEGAL)
 
-- [ ] **LEGAL-01**: Privacy Policy exists, GDPR Articles 13/14 compliant, DPDP notice requirements met, CCPA "collected information" disclosures present, and is publicly hosted at a stable URL
-- [ ] **LEGAL-02**: Privacy Policy discloses every data flow surfaced by `.planning/codebase/INTEGRATIONS.md` (Supabase region, Anthropic US, Telegram, Expo Push) with purpose, legal basis, and retention period per category
+- [x] **LEGAL-01**: Privacy Policy exists, GDPR Articles 13/14 compliant, DPDP notice requirements met, CCPA "collected information" disclosures present, and is publicly hosted at a stable URL
+- [x] **LEGAL-02**: Privacy Policy discloses every data flow surfaced by `.planning/codebase/INTEGRATIONS.md` (Supabase region, Anthropic US, Telegram, Expo Push) with purpose, legal basis, and retention period per category
 - [x] **LEGAL-03**: Terms of Service / EULA exists, covers both landlord and tenant roles, explicitly disclaims that Dwella is a record-keeper (not a payment processor, escrow agent, or legal advisor), and names the solo developer's jurisdiction as governing law
 - [x] **LEGAL-04**: ToS includes a forward-looking paid-features clause so post-launch monetization does not require a full rewrite
 - [ ] **LEGAL-05**: In-app "first run" screen presents ToS + Privacy Policy and records consent (timestamp + version) in the database before the user can use the app
@@ -29,8 +29,8 @@ Every requirement below is a hard blocker to public v1.0 launch on the App Store
 - [ ] **COMP-05**: Supabase region confirmed via dashboard, documented in PROJECT.md, and disclosed in the privacy policy with explicit cross-border transfer language if region is outside EU and users include EU residents
 - [ ] **COMP-06**: Data Processing Addendum (DPA) signed with Anthropic (Claude API). Supabase DPA confirmed already in place via their standard terms. Both referenced in privacy policy sub-processor list
 - [ ] **COMP-07**: Telegram bot explicitly documented as "user-initiated third-party channel" with separate consent — users who never touch the bot must not have their data sent to Telegram
-- [ ] **COMP-08**: CCPA "Do Not Sell or Share My Personal Information" link present (even though Dwella does not sell data, the link is required for the affirmative disclosure)
-- [ ] **COMP-09**: DPDP Act 2023 grievance officer contact documented in the privacy policy (can be the solo developer's email initially)
+- [x] **COMP-08**: CCPA "Do Not Sell or Share My Personal Information" link present (even though Dwella does not sell data, the link is required for the affirmative disclosure)
+- [x] **COMP-09**: DPDP Act 2023 grievance officer contact documented in the privacy policy (can be the solo developer's email initially)
 - [ ] **COMP-10**: Cookie / tracker audit: confirm no third-party analytics SDKs, no ad SDKs, no silent trackers. Document as "no tracking" in stores
 
 ### Store Submission Surfaces (STORE)
@@ -113,8 +113,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LEGAL-01 | Phase 2 | Pending |
-| LEGAL-02 | Phase 2 | Pending |
+| LEGAL-01 | Phase 2 | Complete |
+| LEGAL-02 | Phase 2 | Complete |
 | LEGAL-03 | Phase 2 | Complete |
 | LEGAL-04 | Phase 2 | Complete |
 | LEGAL-05 | Phase 5 | Pending |
@@ -127,8 +127,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | COMP-05 | Phase 1 | Pending |
 | COMP-06 | Phase 1 | Pending |
 | COMP-07 | Phase 4 | Pending |
-| COMP-08 | Phase 2 | Pending |
-| COMP-09 | Phase 2 | Pending |
+| COMP-08 | Phase 2 | Complete |
+| COMP-09 | Phase 2 | Complete |
 | COMP-10 | Phase 1 | Pending |
 | STORE-01 | Phase 6 | Pending |
 | STORE-02 | Phase 6 | Pending |
