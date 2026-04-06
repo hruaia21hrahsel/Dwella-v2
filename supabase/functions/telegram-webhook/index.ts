@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkRateLimit, getClientIp } from '../_shared/rate-limit.ts';
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -487,6 +488,13 @@ serve(async (req) => {
   const secretHeader = req.headers.get('x-telegram-bot-api-secret-token') ?? '';
   if (!TELEGRAM_WEBHOOK_SECRET || secretHeader !== TELEGRAM_WEBHOOK_SECRET) {
     return new Response('', { status: 401 });
+  }
+
+  // SEC-05: Rate limiting — 60 requests/min per IP
+  const clientIp = getClientIp(req);
+  const allowed = await checkRateLimit(clientIp, 'telegram-webhook', 60);
+  if (!allowed) {
+    return new Response('', { status: 429 });
   }
 
   let update: Record<string, unknown>;

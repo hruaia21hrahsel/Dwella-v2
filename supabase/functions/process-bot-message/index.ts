@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { buildReceiptPdf } from './pdf.ts';
+import { checkRateLimit, getClientIp } from '../_shared/rate-limit.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -1000,6 +1001,16 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
       status: 403,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  // SEC-05: Rate limiting — 60 requests/min per IP
+  const clientIp = getClientIp(req);
+  const allowed = await checkRateLimit(clientIp, 'process-bot-message', 60);
+  if (!allowed) {
+    return new Response(JSON.stringify({ error: 'Too Many Requests' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 

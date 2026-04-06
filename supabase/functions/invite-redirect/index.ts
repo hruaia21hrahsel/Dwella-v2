@@ -17,6 +17,8 @@
  * TODO before launch: replace the placeholder store URLs below with real ones.
  */
 
+import { checkRateLimit, getClientIp } from '../_shared/rate-limit.ts';
+
 const APP_STORE_URL  = 'https://apps.apple.com/app/id6760478576';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.dwella.app';
 
@@ -34,6 +36,16 @@ Deno.serve(async (req: Request) => {
     return new Response(
       '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>Invalid Invite</title></head><body style="font-family:-apple-system,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#F8FAFC"><div style="text-align:center;padding:2rem"><h1 style="color:#EF4444">Invalid Invite Link</h1><p>This invite link is malformed. Please ask your landlord for a new invite.</p></div></body></html>',
       { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+    );
+  }
+
+  // SEC-05: Rate limiting — 10 requests/min per IP
+  const clientIp = getClientIp(req);
+  const allowed = await checkRateLimit(clientIp, 'invite-redirect', 10);
+  if (!allowed) {
+    return new Response(
+      '<!DOCTYPE html><html><body><h1>Too Many Requests</h1><p>Please try again in a minute.</p></body></html>',
+      { status: 429, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
     );
   }
 
