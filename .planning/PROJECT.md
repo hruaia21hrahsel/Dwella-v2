@@ -127,6 +127,19 @@ Landlords can run the landlord side of their life (log rent, send reminders, iss
 | Gate Claude API bot behind explicit in-app consent on first use | Sending tenant PII to a US third party without consent is a GDPR Article 6 violation | — Pending |
 | No new features in this milestone | Scope discipline — launch readiness, not product expansion | ✓ Agreed at milestone kickoff |
 
+## Infrastructure
+
+**Backend:** Supabase (managed Postgres + Auth + Storage + Edge Functions + Realtime)
+**Supabase project region:** `ap-northeast-1` (Northeast Asia / Tokyo)
+**Supabase provider:** AWS (t4g.micro)
+**Region confirmed via:** Supabase dashboard -> Project Settings -> General, on 2026-04-06
+**Cross-border transfer analysis:** See `.planning/legal/cross-border-transfers.md`.
+
+**Other runtime infrastructure:**
+- Anthropic Claude API (US) --- AI bot inference, consent-gated per LEGAL-06
+- Telegram Bot API (global) --- user-initiated only per COMP-07
+- Expo Push -> APNs (Apple, US) + FCM (Google, US) --- payment reminders
+
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
