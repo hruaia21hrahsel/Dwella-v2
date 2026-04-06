@@ -111,7 +111,7 @@ This is **brownfield launch prep**, not feature building. Every phase is scoped 
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Fact-Finding & Unblockers | 0/0 | Not started | - |
+| 1. Fact-Finding & Unblockers | 1/6 | In progress | - |
 | 2. Legal Artifact Drafting | 0/0 | Not started | - |
 | 3. Security Hardening | 0/0 | Not started | - |
 | 4. Data Rights & Compliance Flows | 0/0 | Not started | - |
