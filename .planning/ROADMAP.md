@@ -62,7 +62,12 @@ Plans:
   3. Every edge function with `verify_jwt = false` has a documented alternative auth mechanism (shared secret, webhook signature, or explicit "public with rate limiting" designation) recorded in `supabase/config.toml` comments
   4. A production observability solution is active: errors from any Edge Function or mobile build are visible in a dashboard within 24 hours of occurrence (Sentry re-enabled or documented alternative)
   5. Rate limiting is enforced on `telegram-webhook`, `invite-redirect`, and `process-bot-message` and a manual abuse simulation is blocked at the configured threshold
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 03-01-PLAN.md — XSS fix: UUID validation on invite-redirect token
+- [ ] 03-02-PLAN.md — Telegram webhook secret-token auth + config.toml docs
+- [ ] 03-03-PLAN.md — Rate limiting on all public edge functions
+- [ ] 03-04-PLAN.md — Sentry observability restoration (mobile + edge functions)
 
 ### Phase 4: Data Rights & Compliance Flows
 **Goal**: Make GDPR/DPDP/CCPA data-subject rights technically executable — erasure, access, portability, retention — end to end
@@ -117,7 +122,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Fact-Finding & Unblockers | 1/6 | In progress | - |
 | 2. Legal Artifact Drafting | 0/3 | Planned | - |
-| 3. Security Hardening | 0/0 | Not started | - |
+| 3. Security Hardening | 0/4 | Planned | - |
 | 4. Data Rights & Compliance Flows | 0/0 | Not started | - |
 | 5. In-App Legal Surfaces | 0/0 | Not started | - |
 | 6. Store Submission Preparation | 0/0 | Not started | - |
@@ -143,7 +148,7 @@ All 38 v1 requirements mapped to exactly one phase:
 - Phase 6 (7): STORE-01, STORE-02, STORE-03, STORE-04, STORE-05, STORE-06, STORE-07
 - Phase 7 (4): OPS-01, OPS-02, OPS-03, OPS-04
 
-**Total: 38/38 ✓** — No orphans, no duplicates.
+**Total: 38/38** -- No orphans, no duplicates.
 
 ---
 *Roadmap created: 2026-04-05 via /gsd-new-project for v1.0 Launch Prep milestone*
