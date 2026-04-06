@@ -6,7 +6,7 @@ permalink: /privacy-policy
 
 # Privacy Policy
 
-**Version 1.0** | **Effective Date: {EFFECTIVE_DATE}** | **Last Updated: {EFFECTIVE_DATE}**
+**Version 1.0** | **Effective Date: April 6, 2026** | **Last Updated: April 6, 2026**
 
 Dwella is a rental property management app for landlords and tenants. This Privacy Policy explains what personal data we collect, why we collect it, how we use and protect it, and what rights you have over your data. We are committed to transparency and to complying with applicable data protection laws, including the EU General Data Protection Regulation (GDPR), the Indian Digital Personal Data Protection Act 2023 (DPDP Act), and the California Consumer Privacy Act as amended by the California Privacy Rights Act (CCPA/CPRA).
 
@@ -36,15 +36,15 @@ Dwella is a rental property management app for landlords and tenants. This Priva
 
 The data controller responsible for your personal data is:
 
-**{DEVELOPER_NAME}**
-Email: {DEVELOPER_EMAIL}
+**Samuel L Hrahsel**
+Email: hruaia21hrahsel@gmail.com
 Address: Aizawl, Mizoram, India
 
-As the data controller, {DEVELOPER_NAME} determines the purposes and means of processing your personal data in connection with the Dwella application.
+As the data controller, Samuel L Hrahsel determines the purposes and means of processing your personal data in connection with the Dwella application.
 
 ## 2. Data Protection Officer
 
-Dwella is operated by a sole individual developer. Under GDPR Article 37, the appointment of a Data Protection Officer is not required as we do not carry out large-scale systematic monitoring or processing of special categories of data. For all privacy inquiries, contact {DEVELOPER_EMAIL}.
+Dwella is operated by a sole individual developer. Under GDPR Article 37, the appointment of a Data Protection Officer is not required as we do not carry out large-scale systematic monitoring or processing of special categories of data. For all privacy inquiries, contact hruaia21hrahsel@gmail.com.
 
 ## 3. Information We Collect
 
@@ -64,7 +64,7 @@ We collect the following categories of personal data, each for a specific purpos
 
 Our primary legal basis for processing your personal data is the performance of our contract with you (GDPR Article 6(1)(b)) -- that is, providing the Dwella rental management service you signed up for.
 
-We do not rely on legitimate interests (Article 6(1)(f)) as a primary basis for processing. Where legitimate interests may apply -- for example, in maintaining security logs to protect the integrity of our service -- the interest pursued is the security and availability of the application. You have the right to object to processing based on legitimate interests at any time by contacting {DEVELOPER_EMAIL}. We will cease such processing unless we can demonstrate compelling legitimate grounds that override your interests, rights, and freedoms.
+We do not rely on legitimate interests (Article 6(1)(f)) as a primary basis for processing. Where legitimate interests may apply -- for example, in maintaining security logs to protect the integrity of our service -- the interest pursued is the security and availability of the application. You have the right to object to processing based on legitimate interests at any time by contacting hruaia21hrahsel@gmail.com. We will cease such processing unless we can demonstrate compelling legitimate grounds that override your interests, rights, and freedoms.
 
 ## 5. Sub-Processors and Recipients
 
@@ -100,23 +100,23 @@ We retain your personal data only for as long as necessary to fulfill the purpos
 - **Notifications:** Retained for 90 days, then automatically deleted.
 - **Push Tokens:** Retained until you log out or delete your account.
 
-When you delete content within the app, it is initially archived (soft-deleted) and retained for up to 30 days before permanent deletion. You may request immediate permanent deletion by contacting {DEVELOPER_EMAIL}.
+When you delete content within the app, it is initially archived (soft-deleted) and retained for up to 30 days before permanent deletion. You may request immediate permanent deletion by contacting hruaia21hrahsel@gmail.com.
 
 ## 8. Your Rights
 
 Under the GDPR, you have the following rights regarding your personal data:
 
-- **Right of Access (Art 15):** You have the right to obtain confirmation of whether your personal data is being processed and, if so, to access that data and receive a copy. You can request a data export from the app settings or by contacting {DEVELOPER_EMAIL}.
+- **Right of Access (Art 15):** You have the right to obtain confirmation of whether your personal data is being processed and, if so, to access that data and receive a copy. You can request a data export from the app settings or by contacting hruaia21hrahsel@gmail.com.
 
-- **Right to Rectification (Art 16):** You have the right to have inaccurate personal data corrected. You can update most of your information directly in the app, or contact {DEVELOPER_EMAIL} for assistance.
+- **Right to Rectification (Art 16):** You have the right to have inaccurate personal data corrected. You can update most of your information directly in the app, or contact hruaia21hrahsel@gmail.com for assistance.
 
-- **Right to Erasure (Art 17):** You have the right to request the deletion of your personal data. Account deletion is available in the app settings. For immediate permanent deletion (bypassing the 30-day soft-delete period), contact {DEVELOPER_EMAIL}.
+- **Right to Erasure (Art 17):** You have the right to request the deletion of your personal data. Account deletion is available in the app settings. For immediate permanent deletion (bypassing the 30-day soft-delete period), contact hruaia21hrahsel@gmail.com.
 
-- **Right to Restriction of Processing (Art 18):** You have the right to request that we restrict the processing of your personal data in certain circumstances (for example, while we verify the accuracy of contested data). Contact {DEVELOPER_EMAIL} to exercise this right.
+- **Right to Restriction of Processing (Art 18):** You have the right to request that we restrict the processing of your personal data in certain circumstances (for example, while we verify the accuracy of contested data). Contact hruaia21hrahsel@gmail.com to exercise this right.
 
-- **Right to Data Portability (Art 20):** You have the right to receive your personal data in a structured, commonly used, machine-readable format and to transmit that data to another controller. Data export is available in the app settings or by contacting {DEVELOPER_EMAIL}.
+- **Right to Data Portability (Art 20):** You have the right to receive your personal data in a structured, commonly used, machine-readable format and to transmit that data to another controller. Data export is available in the app settings or by contacting hruaia21hrahsel@gmail.com.
 
-- **Right to Object (Art 21):** You have the right to object to the processing of your personal data where we rely on legitimate interests as the legal basis. Contact {DEVELOPER_EMAIL} to exercise this right.
+- **Right to Object (Art 21):** You have the right to object to the processing of your personal data where we rely on legitimate interests as the legal basis. Contact hruaia21hrahsel@gmail.com to exercise this right.
 
 We will respond to all data subject requests within 30 days. If we need more time (up to an additional 60 days for complex requests), we will inform you of the extension and the reasons for the delay.
 
@@ -125,7 +125,7 @@ We will respond to all data subject requests within 30 days. If we need more tim
 Where we process your data based on consent (specifically: AI bot features and tenant-side data sharing via invites), you have the right to withdraw consent at any time. Withdrawing consent does not affect the lawfulness of processing carried out before withdrawal.
 
 - **To withdraw consent for AI features:** Disable them in the app settings.
-- **To withdraw consent for data sharing as a tenant:** Contact {DEVELOPER_EMAIL}.
+- **To withdraw consent for data sharing as a tenant:** Contact hruaia21hrahsel@gmail.com.
 
 ## 10. Right to Complain
 
@@ -149,7 +149,7 @@ Dwella is a mobile application and does not use cookies. We do not use any third
 
 ## 14. Children's Privacy
 
-Dwella is not directed at children under the age of 16. We do not knowingly collect personal data from children. If you believe we have inadvertently collected data from a child, contact {DEVELOPER_EMAIL} and we will promptly delete the data.
+Dwella is not directed at children under the age of 16. We do not knowingly collect personal data from children. If you believe we have inadvertently collected data from a child, contact hruaia21hrahsel@gmail.com and we will promptly delete the data.
 
 ## 15. Changes to This Policy
 
@@ -163,14 +163,14 @@ Under the Digital Personal Data Protection Act, 2023, you have the right to acce
 
 For complaints or queries regarding your personal data, contact:
 
-**Grievance Officer:** {DEVELOPER_NAME}
-**Email:** {DEVELOPER_EMAIL}
+**Grievance Officer:** Samuel L Hrahsel
+**Email:** hruaia21hrahsel@gmail.com
 
 If you are not satisfied with our response, you may complain to the Data Protection Board of India once it is constituted and operational.
 
 ### Cross-Border Transfers
 
-Cross-border transfers of your data to Japan and the United States are permitted under Section 16 of the DPDP Act, as no restricted-country list has been notified by the Central Government as of {EFFECTIVE_DATE}.
+Cross-border transfers of your data to Japan and the United States are permitted under Section 16 of the DPDP Act, as no restricted-country list has been notified by the Central Government as of April 6, 2026.
 
 ## 17. For Users in California (CCPA/CPRA)
 
@@ -198,12 +198,12 @@ As a California resident, you have the following rights:
 - **Right to Opt-Out of Sale or Sharing:** Not applicable -- Dwella does not sell or share personal information.
 - **Right to Non-Discrimination:** We will not discriminate against you for exercising any of your CCPA rights.
 
-To exercise any of these rights, contact {DEVELOPER_EMAIL}. We will respond to verifiable consumer requests within 45 days.
+To exercise any of these rights, contact hruaia21hrahsel@gmail.com. We will respond to verifiable consumer requests within 45 days.
 
 ## 18. Contact Us
 
 If you have any questions about this Privacy Policy or our data practices, please contact:
 
-**{DEVELOPER_NAME}**
-Email: {DEVELOPER_EMAIL}
+**Samuel L Hrahsel**
+Email: hruaia21hrahsel@gmail.com
 Address: Aizawl, Mizoram, India

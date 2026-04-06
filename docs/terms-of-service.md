@@ -6,7 +6,7 @@ permalink: /terms-of-service
 
 # Terms of Service
 
-**Version 1.0** | **Effective Date: {EFFECTIVE_DATE}** | **Last Updated: {EFFECTIVE_DATE}**
+**Version 1.0** | **Effective Date: April 6, 2026** | **Last Updated: April 6, 2026**
 
 These terms govern your use of the Dwella mobile application. By using Dwella, you agree to these terms. Please read them carefully.
 
@@ -14,7 +14,7 @@ These terms govern your use of the Dwella mobile application. By using Dwella, y
 
 ## 1. Agreement to Terms
 
-By downloading, installing, or using the Dwella application ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree, do not use the App. These Terms constitute a legally binding agreement between you and {DEVELOPER_NAME} ("we", "us", "our"), an individual developer based in Aizawl, Mizoram, India.
+By downloading, installing, or using the Dwella application ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree, do not use the App. These Terms constitute a legally binding agreement between you and Samuel L Hrahsel ("we", "us", "our"), an individual developer based in Aizawl, Mizoram, India.
 
 ## 2. Description of Service
 
@@ -71,13 +71,13 @@ Dwella offers optional AI-powered features through a Telegram bot and in-app AI 
 - May occasionally produce inaccurate or incomplete information -- always verify AI-generated content before relying on it.
 - Can be disabled at any time through the app settings.
 
-You acknowledge that AI-generated responses are not professional advice and should not be treated as such. {DEVELOPER_NAME} is not liable for any decisions made based on AI-generated content.
+You acknowledge that AI-generated responses are not professional advice and should not be treated as such. Samuel L Hrahsel is not liable for any decisions made based on AI-generated content.
 
 ## 7. Intellectual Property
 
-The App and its original content, features, and functionality are owned by {DEVELOPER_NAME}. The App is protected by copyright and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of the App without prior written permission from {DEVELOPER_NAME}.
+The App and its original content, features, and functionality are owned by Samuel L Hrahsel. The App is protected by copyright and other intellectual property laws. You may not copy, modify, distribute, sell, or lease any part of the App without prior written permission from Samuel L Hrahsel.
 
-The Dwella name, logo, and associated branding are the property of {DEVELOPER_NAME}. Unauthorized use of any trademarks or branding is prohibited.
+The Dwella name, logo, and associated branding are the property of Samuel L Hrahsel. Unauthorized use of any trademarks or branding is prohibited.
 
 ## 8. User Content
 
@@ -106,7 +106,7 @@ No paid features are available at the time of this version of the Terms. This se
 
 ## 11. Limitation of Liability
 
-To the maximum extent permitted by applicable law, {DEVELOPER_NAME} shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from:
+To the maximum extent permitted by applicable law, Samuel L Hrahsel shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses resulting from:
 
 - Your access to or use of (or inability to use) the App.
 - Any conduct or content of any third party on the App.
@@ -115,13 +115,13 @@ To the maximum extent permitted by applicable law, {DEVELOPER_NAME} shall not be
 - Payment disputes between landlords and tenants (Dwella is a record-keeper only).
 - Any interruption, suspension, or termination of the App or any part thereof.
 
-In no event shall the total liability of {DEVELOPER_NAME} exceed the amount you have paid to use the App in the twelve (12) months preceding the claim, or fifty Indian rupees (INR 50), whichever is greater.
+In no event shall the total liability of Samuel L Hrahsel exceed the amount you have paid to use the App in the twelve (12) months preceding the claim, or fifty Indian rupees (INR 50), whichever is greater.
 
 ## 12. Disclaimer of Warranties
 
 The App is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, whether express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.
 
-{DEVELOPER_NAME} does not warrant that:
+Samuel L Hrahsel does not warrant that:
 
 - The App will be available at all times or without interruption.
 - The App will be free of errors, bugs, or security vulnerabilities.
@@ -130,7 +130,7 @@ The App is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, w
 
 ## 13. Indemnification
 
-You agree to indemnify, defend, and hold harmless {DEVELOPER_NAME} from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable legal fees) arising from or related to:
+You agree to indemnify, defend, and hold harmless Samuel L Hrahsel from and against any and all claims, damages, losses, liabilities, costs, and expenses (including reasonable legal fees) arising from or related to:
 
 - Your use of the App or violation of these Terms.
 - Your violation of any applicable law or regulation.
@@ -161,7 +161,7 @@ These Terms shall be governed by and construed in accordance with the laws of In
 
 Any disputes arising from or relating to these Terms or your use of the App shall be subject to the exclusive jurisdiction of the courts in Aizawl, Mizoram, India.
 
-Before initiating any formal legal proceedings, both parties agree to attempt to resolve disputes informally by contacting {DEVELOPER_EMAIL}. If the dispute is not resolved within thirty (30) days, either party may proceed with formal legal action.
+Before initiating any formal legal proceedings, both parties agree to attempt to resolve disputes informally by contacting hruaia21hrahsel@gmail.com. If the dispute is not resolved within thirty (30) days, either party may proceed with formal legal action.
 
 ## 17. Severability
 
@@ -169,16 +169,16 @@ If any provision of these Terms is found to be invalid, illegal, or unenforceabl
 
 ## 18. Entire Agreement
 
-These Terms, together with the [Privacy Policy](https://hruaia21hrahsel.github.io/Dwella-v2/privacy-policy), constitute the entire agreement between you and {DEVELOPER_NAME} regarding your use of the App. These Terms supersede any prior agreements, communications, or understandings, whether written or oral, relating to the subject matter herein.
+These Terms, together with the [Privacy Policy](https://hruaia21hrahsel.github.io/Dwella-v2/privacy-policy), constitute the entire agreement between you and Samuel L Hrahsel regarding your use of the App. These Terms supersede any prior agreements, communications, or understandings, whether written or oral, relating to the subject matter herein.
 
 ## 19. Contact
 
 If you have any questions, concerns, or complaints about these Terms or the App, please contact:
 
-**{DEVELOPER_NAME}**
-Email: {DEVELOPER_EMAIL}
+**Samuel L Hrahsel**
+Email: hruaia21hrahsel@gmail.com
 Location: Aizawl, Mizoram, India
 
 ---
 
-*These Terms of Service were last updated on {EFFECTIVE_DATE}.*
+*These Terms of Service were last updated on April 6, 2026.*
