@@ -14,8 +14,8 @@ Every requirement below is a hard blocker to public v1.0 launch on the App Store
 
 - [ ] **LEGAL-01**: Privacy Policy exists, GDPR Articles 13/14 compliant, DPDP notice requirements met, CCPA "collected information" disclosures present, and is publicly hosted at a stable URL
 - [ ] **LEGAL-02**: Privacy Policy discloses every data flow surfaced by `.planning/codebase/INTEGRATIONS.md` (Supabase region, Anthropic US, Telegram, Expo Push) with purpose, legal basis, and retention period per category
-- [ ] **LEGAL-03**: Terms of Service / EULA exists, covers both landlord and tenant roles, explicitly disclaims that Dwella is a record-keeper (not a payment processor, escrow agent, or legal advisor), and names the solo developer's jurisdiction as governing law
-- [ ] **LEGAL-04**: ToS includes a forward-looking paid-features clause so post-launch monetization does not require a full rewrite
+- [x] **LEGAL-03**: Terms of Service / EULA exists, covers both landlord and tenant roles, explicitly disclaims that Dwella is a record-keeper (not a payment processor, escrow agent, or legal advisor), and names the solo developer's jurisdiction as governing law
+- [x] **LEGAL-04**: ToS includes a forward-looking paid-features clause so post-launch monetization does not require a full rewrite
 - [ ] **LEGAL-05**: In-app "first run" screen presents ToS + Privacy Policy and records consent (timestamp + version) in the database before the user can use the app
 - [ ] **LEGAL-06**: In-app consent flow before any tenant PII is sent to the Claude API via the bot. User must explicitly opt in to AI features; opt-out disables bot intents that require PII context
 - [ ] **LEGAL-07**: In-app Settings screen links to current Privacy Policy, ToS, and data-rights request form/email
@@ -115,8 +115,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 |-------------|-------|--------|
 | LEGAL-01 | Phase 2 | Pending |
 | LEGAL-02 | Phase 2 | Pending |
-| LEGAL-03 | Phase 2 | Pending |
-| LEGAL-04 | Phase 2 | Pending |
+| LEGAL-03 | Phase 2 | Complete |
+| LEGAL-04 | Phase 2 | Complete |
 | LEGAL-05 | Phase 5 | Pending |
 | LEGAL-06 | Phase 5 | Pending |
 | LEGAL-07 | Phase 5 | Pending |

@@ -49,7 +49,7 @@ This is **brownfield launch prep**, not feature building. Every phase is scoped 
 **Plans:** 3 plans
 Plans:
 - [ ] 02-01-PLAN.md — Privacy Policy + GitHub Pages infrastructure
-- [ ] 02-02-PLAN.md — Terms of Service / EULA
+- [x] 02-02-PLAN.md — Terms of Service / EULA
 - [ ] 02-03-PLAN.md — Enable GitHub Pages + developer review checkpoint
 
 ### Phase 3: Security Hardening
