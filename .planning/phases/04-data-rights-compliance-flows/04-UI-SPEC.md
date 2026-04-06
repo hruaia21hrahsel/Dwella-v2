@@ -52,7 +52,9 @@ Exceptions: none — existing profile screen already uses this scale (16px card 
 | Body | 14px | 400 (regular) | 1.5 |
 | Section Title | 11px | 700 (bold), uppercase, 0.5px letter-spacing | 1.2 |
 | Heading | 20px | 700 (bold) | 1.2 |
-| Button Label | 14px | 600 (semibold) | 1.0 (single line) |
+| Button Label | 14px | 700 (bold) | 1.0 (single line) |
+
+**Weights used:** 2 total — 400 (regular) for body text and descriptions, 700 (bold) for section titles, headings, and button labels.
 
 **Source:** Extracted from existing profile screen `styles` object. All new text must match these exact values. The section title pattern (11px, uppercase, bold, secondary color) is mandatory for the "Your Data" and "Danger Zone" card headers.
 
@@ -64,10 +66,10 @@ Exceptions: none — existing profile screen already uses this scale (16px card 
 |------|---------------------|-------|
 | Dominant (60%) | `#F5F5F7` / `#1f1f1e` | Screen background (`colors.background`) |
 | Secondary (30%) | `#FFFFFF` / `#161616` | GlassCard surfaces (`colors.surface`) |
-| Accent (10%) | `#009688` / `#4DB6AC` | "Export My Data" button gradient, primary interactive elements (`colors.primary`) |
+| Accent (10%) | `#009688` / `#4DB6AC` | "Export My Data" GradientButton only (`colors.primary`) |
 | Destructive | `#EF4444` / `#F87171` | "Delete Account" button text, Danger Zone border, destructive labels (`colors.error`) |
 
-Accent reserved for: "Export My Data" GradientButton only. All other elements on the new sections use outlined or text button styles with `colors.error` for destructive actions or `colors.textSecondary` for neutral labels.
+Accent reserved for: "Export My Data" `GradientButton` only. This matches the existing profile screen pattern where `GradientButton` is used for the primary CTA. All other elements on the new sections use outlined or text button styles with `colors.error` for destructive actions or `colors.textSecondary` for neutral labels.
 
 Destructive reserved for: "Delete Account" button text color, "Delete Account" button border, Danger Zone section title text, the "DELETE" confirmation input border when focused.
 
@@ -84,8 +86,8 @@ All components below already exist in the project. No new components are created
 | Card wrapper | `GlassCard` | `style={[styles.sectionCard]}` — same as existing cards |
 | Section title | `Text` (RN Paper) | "YOUR DATA", 11px, bold, uppercase, `colors.textSecondary` |
 | Description | `Text` variant="bodySmall" | "Download a copy of all your data in JSON format.", 13px, `colors.textSecondary` |
-| Export button | `Button` (RN Paper) | `mode="contained-tonal"`, `icon="download"`, label "Export My Data" |
-| Loading state | `Button` | `loading={true}`, `disabled={true}`, label "Preparing Export..." |
+| Export button | `GradientButton` | `icon="download"`, label "Export My Data" |
+| Loading state | `GradientButton` | `loading={true}`, `disabled={true}`, label "Preparing Export..." |
 
 **Placement:** Immediately after the "Help" GlassCard, before the current "Sign Out" button.
 
@@ -104,7 +106,7 @@ All components below already exist in the project. No new components are created
 
 | Element | Component | Props / Style |
 |---------|-----------|---------------|
-| Modal trigger | `Alert.alert` (React Native) | Title + message + two buttons (Cancel / Continue) |
+| Modal trigger | `Alert.alert` (React Native) | Title + message + two buttons (Cancel / Proceed to Confirm) |
 | Confirmation screen | Inline view replacing profile content OR new modal view | See interaction flow below |
 | Confirmation input | `TextInput` (RN Paper) | `mode="outlined"`, placeholder "Type DELETE to confirm", `outlineColor={colors.error}`, `activeOutlineColor={colors.error}` |
 | Confirm button | `Button` (RN Paper) | `mode="contained"`, `buttonColor={colors.error}`, `textColor="#FFFFFF"`, label "Permanently Delete Account", `disabled` until input matches "DELETE" (case-insensitive) |
@@ -122,9 +124,9 @@ All components below already exist in the project. No new components are created
 2. Button enters loading state: label changes to "Preparing Export...", spinner appears, button disabled
 3. Edge Function assembles JSON, uploads to Storage, returns signed URL
 4. On success: system opens signed URL in device browser for download
-   → Toast: "Your data export is ready." (success)
+   -> Toast: "Your data export is ready." (success)
 5. On error: button returns to default state
-   → Toast: "{error message}" (error)
+   -> Toast: "{error message}" (error)
 6. Button returns to default state after success or error
 ```
 
@@ -137,24 +139,24 @@ All components below already exist in the project. No new components are created
 2. Alert.alert appears:
    Title: "Delete Your Account?"
    Message: "This will permanently delete all your data after a 30-day grace period. This action cannot be undone from the app."
-   Buttons: [Cancel (cancel style)] [Continue (destructive style)]
-3. If "Continue": navigate to confirmation view or show inline confirmation
+   Buttons: [Cancel (cancel style)] [Proceed to Confirm (destructive style)]
+3. If "Proceed to Confirm": navigate to confirmation view or show inline confirmation
 4. User sees:
    - Grace period explanation text
    - TextInput with placeholder "Type DELETE to confirm"
    - "Permanently Delete Account" button (disabled, red background)
    - "Cancel" text button
 5. User types "DELETE" (case-insensitive match)
-   → "Permanently Delete Account" button becomes enabled (opacity 1.0)
+   -> "Permanently Delete Account" button becomes enabled (opacity 1.0)
 6. User taps "Permanently Delete Account"
-   → Button enters loading state
-   → Edge Function marks account for deletion
-   → Telegram notification sent (if linked)
-   → All sessions invalidated
-   → Local auth state cleared
-   → User is redirected to login screen
+   -> Button enters loading state
+   -> Edge Function marks account for deletion
+   -> Telegram notification sent (if linked)
+   -> All sessions invalidated
+   -> Local auth state cleared
+   -> User is redirected to login screen
 7. On error: button returns to default state
-   → Toast: "Could not delete account. Please try again." (error)
+   -> Toast: "Could not delete account. Please try again." (error)
 ```
 
 ### State Transitions for Delete Button
@@ -183,7 +185,7 @@ All components below already exist in the project. No new components are created
 | Delete alert title | Delete Your Account? |
 | Delete alert message | This will permanently delete all your data after a 30-day grace period. This action cannot be undone from the app. |
 | Delete alert cancel | Cancel |
-| Delete alert continue | Continue |
+| Delete alert continue | Proceed to Confirm |
 | Confirmation heading | Confirm Account Deletion |
 | Confirmation body | Your account will be scheduled for deletion. After 30 days, all personal data will be permanently erased. To cancel during the grace period, email the developer. |
 | Confirmation input placeholder | Type DELETE to confirm |
@@ -228,7 +230,7 @@ Vertical scroll order after this phase:
 5. "Security" GlassCard (existing)
 6. "Appearance" GlassCard (existing)
 7. "Help" GlassCard (existing)
-8. "Your Data" GlassCard (NEW — Export My Data)
+8. "Your Data" GlassCard (NEW — Export My Data via GradientButton)
 9. "Danger Zone" GlassCard (NEW — Delete Account, red border)
 10. "Sign Out" outlined button (existing, moved below Danger Zone)
 ```
