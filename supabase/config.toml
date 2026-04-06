@@ -377,26 +377,25 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
-# ── Public webhooks ──────────────────────────────────────────────────
-# Telegram posts updates directly to this endpoint and cannot send a
-# Supabase JWT. Disable verify_jwt so Telegram's webhook requests reach
-# the function instead of being rejected with 401 at the edge.
+# -- Public endpoints (verify_jwt = false) ------------------------------------
+# Each function below has verify_jwt disabled because the caller cannot
+# present a Supabase JWT. The alternative authentication mechanism is
+# documented inline.
+
+# auth: X-Telegram-Bot-Api-Secret-Token header verified against
+#        TELEGRAM_WEBHOOK_SECRET env var (SEC-01). Rejects 401 on mismatch.
 [functions.telegram-webhook]
 verify_jwt = false
 
-# invite-redirect is hit from mobile browsers via a bare URL; no JWT is
-# available there either, so keep it public.
+# auth: intentionally public endpoint — accepts bare browser requests.
+#        Input validated via UUID v4 regex on token param (SEC-02).
+#        Rate-limited at 10 req/min per IP (SEC-05).
 [functions.invite-redirect]
 verify_jwt = false
 
-# process-bot-message is called server-to-server from telegram-webhook.
-# Recent Supabase changes around the new publishable/secret API keys
-# broke auto-injection of SUPABASE_SERVICE_ROLE_KEY into edge function
-# environments, causing the internal fetch to send the wrong bearer
-# token and fail JWT verification. We disable verify_jwt here and
-# enforce a shared BOT_INTERNAL_SECRET header check inside the
-# function itself — a namespace we control that can't be silently
-# replaced by the platform.
+# auth: x-bot-internal-secret header verified against BOT_INTERNAL_SECRET
+#        env var. Only called server-to-server from telegram-webhook.
+#        Rejects 403 on mismatch.
 [functions.process-bot-message]
 verify_jwt = false
 
