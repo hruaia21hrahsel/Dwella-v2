@@ -46,7 +46,11 @@ This is **brownfield launch prep**, not feature building. Every phase is scoped 
   3. Terms of Service / EULA is published at a stable public URL, covers both landlord and tenant roles, explicitly disclaims that Dwella is a record-keeper (not a payment processor, escrow agent, or legal advisor), and names the solo developer's jurisdiction as governing law
   4. ToS contains a forward-looking paid-features clause that permits future monetization without a full rewrite
   5. A visible "Do Not Sell or Share My Personal Information" section (CCPA affirmative disclosure) and a DPDP grievance officer contact are present in the published Privacy Policy
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — Privacy Policy + GitHub Pages infrastructure
+- [ ] 02-02-PLAN.md — Terms of Service / EULA
+- [ ] 02-03-PLAN.md — Enable GitHub Pages + developer review checkpoint
 
 ### Phase 3: Security Hardening
 **Goal**: Close the edge-function attack surface and restore production observability so the privacy policy's "we monitor for incidents" claim is truthful
@@ -112,7 +116,7 @@ This is **brownfield launch prep**, not feature building. Every phase is scoped 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Fact-Finding & Unblockers | 1/6 | In progress | - |
-| 2. Legal Artifact Drafting | 0/0 | Not started | - |
+| 2. Legal Artifact Drafting | 0/3 | Planned | - |
 | 3. Security Hardening | 0/0 | Not started | - |
 | 4. Data Rights & Compliance Flows | 0/0 | Not started | - |
 | 5. In-App Legal Surfaces | 0/0 | Not started | - |
