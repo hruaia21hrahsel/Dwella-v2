@@ -25,10 +25,10 @@ progress:
 ## Current Position
 
 **Milestone:** v1.0 Launch Prep
-**Phase:** 01-fact-finding-unblockers
-**Plan:** 02, 03, 04, 05 (all at human checkpoint)
-**Status:** Ready to execute
-**Progress:** [███████░░░] 67%
+**Phase:** Phase 2 complete, Phase 1 has 2 deferred checkpoints
+**Plan:** Phase 1 plans 03, 04 deferred; Phase 3 next
+**Status:** Phase 2 shipped, ready for Phase 3
+**Progress:** [████░░░░░░░░░░░░░░░░] 1/7 phases complete (7/9 plans done)
 
 ## Performance Metrics
 
@@ -38,7 +38,7 @@ progress:
 | Requirements mapped | 38 |
 | Phases planned | 7 |
 | Phases completed | 0 |
-| Plans completed | 2 (00, 01) |
+| Plans completed | 7 (P1: 00,01,02,05; P2: 01,02,03) |
 | Phase 02 P02 | 3m | 1 tasks | 1 files |
 | Phase 02 P01 | 178s | 2 tasks | 2 files |
 
@@ -55,7 +55,8 @@ progress:
 
 ### Todos
 
-- Complete 4 human checkpoints for Phase 1 plans 02-05 (scaffolds ready, awaiting manual data entry)
+- Complete 2 deferred Phase 1 checkpoints: Plan 03 (trademark searches ~30min) and Plan 04 (runtime capture ~10min)
+- Begin Phase 3: Security Hardening
 
 ### Blockers
 
@@ -63,14 +64,13 @@ None. Roadmap is ready for phase planning.
 
 ## Session Continuity
 
-**Last session outcome:** Plans 00 + 01 complete. Plans 02-05 scaffolded with {FILL IN} placeholders — all 4 paused at human checkpoints requiring browser logins, manual searches, and dev builds.
+**Last session outcome:** Phase 1 plans 00, 01, 02, 05 complete (plans 03 + 04 deferred — need trademark searches and runtime capture). Phase 2 fully complete — Privacy Policy and ToS live at GitHub Pages. Requirements closed: IP-02, IP-03, IP-04, IP-05, COMP-05, COMP-06, LEGAL-01, LEGAL-02, LEGAL-03, LEGAL-04, COMP-08, COMP-09.
 
-**Next session start:** Fill the 4 checkpoint scaffolds, then type "done [plan#]" to trigger verification + commit for each:
-
-- Plan 02: `.planning/legal/dpa-register.md`, `cross-border-transfers.md`, `PROJECT.md` Infrastructure (~10 min — Supabase region + Anthropic DPA)
-- Plan 03: `.planning/legal/trademark-clearance-dwella.md` (~30 min — USPTO, EUIPO, IP India searches)
-- Plan 04: `.planning/legal/tracker-audit.md` + `runtime-hostnames.txt` (~10 min — dev build network capture)
-- Plan 05: `.planning/legal/asset-provenance.md` (~5 min — recall asset origins)
+**Next session start:** `/gsd-resume-work` then either:
+1. `/gsd-discuss-phase 3 --auto` — start Phase 3 (Security Hardening)
+2. Complete deferred Phase 1 checkpoints:
+   - Plan 03: trademark searches (~30 min — USPTO, EUIPO, IP India)
+   - Plan 04: runtime network capture (~10 min — dev build + hostnames)
 
 ---
 *State initialized: 2026-04-05 after roadmap creation*
